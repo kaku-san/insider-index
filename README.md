@@ -96,10 +96,21 @@ xStocks are tokenized stock exposures, not listed equity. V1 never places a trad
 ```bash
 npm install
 cp .env.example .env.local
+```
+
+Fill the keys in `.env.local` for the live path you want to test, then:
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Without API keys:
+Open [http://localhost:3000](http://localhost:3000).
+
+- **Form4 is live** when `FORM4API_KEY` is set (mock Form 4 + House PTRs when empty)
+- **Jupiter + Helius** power live quotes when `JUPITER_API_KEY` and `HELIUS_API_KEY` are set
+- **Privy** connects the Solana wallet when `NEXT_PUBLIC_PRIVY_APP_ID` is set (`PRIVY_APP_ID` / `PRIVY_APP_SECRET` for the server SDK)
+
+Without API keys the app stays fixtures-only:
 
 1. The feed loads mock Form 4 buys for allowlisted tickers
 2. Inspect a filing
@@ -115,14 +126,13 @@ must succeed with the example env (no real secrets in the repo).
 
 ## Environment
 
-See `.env.example`:
+Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.env*.local`. See `.env.example` for empty placeholders:
 
-- `FORM4API_KEY`
-- `NEXT_PUBLIC_PRIVY_APP_ID`
-- `PRIVY_APP_ID`
-- `PRIVY_APP_SECRET`
-- `HELIUS_API_KEY`
-- `JUPITER_API_KEY`
+- `FORM4API_KEY` — live Form4 + Congress tape when set
+- `NEXT_PUBLIC_PRIVY_APP_ID` — Privy wallet (`NEXT_PUBLIC_PRIVY_APPID` alias also accepted)
+- `PRIVY_APP_ID` / `PRIVY_APP_SECRET` — Privy server SDK
+- `HELIUS_API_KEY` — builds `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` (public Solana RPC when empty)
+- `JUPITER_API_KEY` — live Jupiter Swap V2 `/order` → `/execute`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
