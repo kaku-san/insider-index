@@ -87,7 +87,9 @@ export function IndexTicket({ id }: { id: string }) {
   async function signBasket(rebalance = false) {
     if (!index || !quote) return;
     if (!wallet.authenticated || !wallet.solanaAddress) {
-      setStatus("Connect the stub wallet first.");
+      setStatus(
+        wallet.mode === "live" ? "Connect a Privy Solana wallet first." : "Connect the stub wallet first.",
+      );
       return;
     }
     if (!attested) {

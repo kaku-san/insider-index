@@ -34,7 +34,7 @@ Form 4 feed  →  inspect filing  →  USDC amount  →  Jupiter /order
 | Layer | Implementation |
 | --- | --- |
 | App | Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui |
-| Auth / wallet | Privy Solana provider stub (`NEXT_PUBLIC_PRIVY_APP_ID`, `PRIVY_APP_ID`, `PRIVY_APP_SECRET`) |
+| Auth / wallet | Real `@privy-io/react-auth` Solana when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet otherwise |
 | Disclosures | `src/lib/disclosures/form4.ts` adapter + mock allowlisted Form 4s |
 | Congress | `src/lib/disclosures/congress.ts` empty stub, skipped |
 | Swaps | Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` |
@@ -108,7 +108,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - **Form4 is live** when `FORM4API_KEY` is set (mock Form 4 + House PTRs when empty)
 - **Jupiter + Helius** power live quotes when `JUPITER_API_KEY` and `HELIUS_API_KEY` are set
-- **Privy** connects the Solana wallet when `NEXT_PUBLIC_PRIVY_APP_ID` is set (`PRIVY_APP_ID` / `PRIVY_APP_SECRET` for the server SDK)
+- **Privy** is the real `@privy-io/react-auth` Solana provider when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet only if that id is missing. Every trade still requires an explicit user signature.
 
 Without API keys the app stays fixtures-only:
 
@@ -137,7 +137,16 @@ Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.e
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-Do not commit real keys. When a key is present the matching stub attempts the live HTTP call and falls back to mock data if the provider is unavailable.
+Do not commit real keys. Live vs fixture:
+
+| Adapter | On (key set) | Off (key missing) |
+| --- | --- | --- |
+| Form4 / Congress | Live Form4API (`FORM4API_KEY`) | mock-form4 + mock House PTRs |
+| Jupiter `/order` + `/execute` | Live Swap V2 (`JUPITER_API_KEY`) | stub quote/fill |
+| Helius RPC | `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` | public Solana RPC |
+| Privy | Real `@privy-io/react-auth` Solana provider (`NEXT_PUBLIC_PRIVY_APP_ID`) | stub wallet |
+
+Form4 / Jupiter fall back to mock/stub if the live provider errors. Privy never auto-signs.
 
 ## Deploy
 

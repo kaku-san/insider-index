@@ -50,7 +50,7 @@ export function PositionsTable() {
         </div>
         <h1 className="text-3xl font-semibold text-white">Tracked positions</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          User-signed xStock buys only. Connect the stub wallet to filter to your
+          User-signed xStock buys only. Connect your wallet to filter to your
           session, or leave it disconnected to see the in-memory book.
         </p>
       </div>
@@ -91,7 +91,7 @@ export function PositionsTable() {
             {positions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center text-zinc-500">
-                  No positions yet. Inspect a Form 4 and complete a signed stub trade.
+                  No positions yet. Inspect a Form 4 and complete a signed trade.
                 </TableCell>
               </TableRow>
             ) : null}

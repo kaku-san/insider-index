@@ -75,7 +75,11 @@ export function TradeApprove({ id }: { id: string }) {
   async function approveAndExecute() {
     if (!disclosure?.xstockMint || !order) return;
     if (!wallet.authenticated || !wallet.solanaAddress) {
-      setStatus("Connect the Privy Solana stub wallet first.");
+      setStatus(
+        wallet.mode === "live"
+          ? "Connect a Privy Solana wallet first."
+          : "Connect the Privy Solana stub wallet first.",
+      );
       return;
     }
     if (!attested) {
@@ -87,7 +91,11 @@ export function TradeApprove({ id }: { id: string }) {
     setStatus("Waiting for user signature…");
     try {
       const signedTransaction = await wallet.signTransaction(order.transaction);
-      setStatus("Submitting Jupiter /execute stub…");
+      setStatus(
+        order.mode === "live"
+          ? "Submitting Jupiter /execute…"
+          : "Submitting Jupiter /execute stub…",
+      );
       const response = await fetch("/api/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,8 +140,8 @@ export function TradeApprove({ id }: { id: string }) {
           {disclosure.side === "sell" ? "Copy sell" : "Copy buy"} {disclosure.xstockSymbol} from {disclosure.insiderName}
         </h1>
         <p className="mt-1 text-zinc-400">
-          USDC in, allowlisted xStock out. Jupiter Swap V2 is stubbed as /order →
-          user sign → /execute.
+          USDC in, allowlisted xStock out. Jupiter Swap V2 /order → you sign →
+          /execute. Nothing is signed without you.
         </p>
       </div>
 
@@ -167,7 +175,7 @@ export function TradeApprove({ id }: { id: string }) {
               onChange={(event) => setAttested(event.target.checked)}
             />
             I am not located in the United States, United Kingdom, Canada, or Australia,
-            and I understand this is a user-signed stub, not unattended trading.
+            and I understand this is a user-signed trade, not unattended trading.
           </label>
           {order ? (
             <div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-3 text-sm text-emerald-100">
