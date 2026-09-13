@@ -4,7 +4,7 @@ Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
 
 **Form 4 / Congress disclosure → FOMO profile → copy one print or buy that person's index → user-signed xStock basket on Solana → rebalance on the next filing.**
 
-This repository is a Vercel-ready Next.js App Router app. Live Form4API, Privy, Jupiter, Helius, and Supabase clients are stubbed behind env keys so `npm run build` works without secrets.
+This repository is a Next.js App Router app. **Demo / production host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev) (Barely Stable on Hetzner + Traefik). Do not use a Vercel URL as the public demo. Live Form4API, Privy, Jupiter, Helius, and Supabase clients are stubbed behind env keys so `npm run build` works without secrets.
 
 ## Product scope
 
@@ -26,7 +26,7 @@ Out of V1:
 
 ```
 Form 4 feed  →  inspect filing  →  USDC amount  →  Jupiter /order
-                                                  user signs in Privy stub
+                                                  user signs in Privy
                                                   Jupiter /execute
                                                   position store
 ```
@@ -150,4 +150,24 @@ Form4 / Jupiter fall back to mock/stub if the live provider errors. Privy never 
 
 ## Deploy
 
-The app is a standard Next.js project. Deploy the repo root to Vercel and copy the same env names into the project settings.
+**Public host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev)
+
+| Where | How |
+| --- | --- |
+| Local | `cp .env.example .env.local`, fill keys, `npm run dev` |
+| Server | gitignored `.env` at `/srv/projects/stocklana` — the deploy script never rsyncs `.env` / `.env.local` |
+| Traefik | Compose router rule is locked in `docker-compose.yml` |
+
+```
+Host(`stocklana.barelystable.dev`)
+```
+
+```bash
+./scripts/deploy.sh
+```
+
+rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. Wildcard DNS already points at the Barely Stable / Hetzner host.
+
+`NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present in the server `.env` at image **build** time so the client bundle is live, not stub.
+
+Allow `https://stocklana.barelystable.dev` in the Privy dashboard allowed origins. Do not commit real keys.
