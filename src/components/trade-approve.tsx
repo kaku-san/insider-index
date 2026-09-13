@@ -186,7 +186,11 @@ export function TradeApprove({ id }: { id: string }) {
             <Button onClick={() => void approveAndExecute()} disabled={busy || !order}>
               Approve & sign
             </Button>
-            <Button variant="ghost" render={<Link href={`/disclosures/${disclosure.id}`} />}>
+            <Button
+              nativeButton={false}
+              variant="ghost"
+              render={<Link href={`/disclosures/${disclosure.id}`} />}
+            >
               Back to inspect
             </Button>
           </div>

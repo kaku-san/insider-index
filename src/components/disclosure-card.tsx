@@ -52,7 +52,7 @@ export function DisclosureCard({ disclosure }: { disclosure: Disclosure }) {
       </CardContent>
       <CardFooter className="flex items-center justify-between border-t border-white/10">
         <p className="text-xs text-zinc-500">Filed {formatDate(disclosure.filedAt)}</p>
-        <Button render={<Link href={`/disclosures/${disclosure.id}`} />}>
+        <Button nativeButton={false} render={<Link href={`/disclosures/${disclosure.id}`} />}>
           Inspect
           <ArrowUpRight />
         </Button>

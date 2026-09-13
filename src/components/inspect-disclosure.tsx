@@ -103,11 +103,15 @@ export function InspectDisclosure({ id }: { id: string }) {
       </Card>
 
       <div className="flex gap-3">
-        <Button variant="outline" render={<Link href="/" />}>
+        <Button
+          nativeButton={false}
+          variant="outline"
+          render={<Link href="/" />}
+        >
           Back to feed
         </Button>
         {disclosure.tradeEligible ? (
-          <Button render={<Link href={`/trade/${disclosure.id}`} />}>
+          <Button nativeButton={false} render={<Link href={`/trade/${disclosure.id}`} />}>
             Continue to amount
           </Button>
         ) : (
