@@ -1,103 +1,16 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { usePrivySolana } from "@/components/providers/privy-provider";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { formatDate, formatShares, formatUsd, shortenAddress } from "@/lib/format";
-import type { TrackedPosition } from "@/lib/positions";
-
-export function PositionsTable() {
-  const wallet = usePrivySolana();
-  const [positions, setPositions] = useState<TrackedPosition[]>([]);
-  const [persistence, setPersistence] = useState("memory");
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const params = new URLSearchParams();
-      if (wallet.solanaAddress) {
-        params.set("wallet", wallet.solanaAddress);
-      }
-      const response = await fetch(`/api/positions?${params.toString()}`);
-      const payload = (await response.json()) as {
-        persistence: string;
-        positions: TrackedPosition[];
-      };
-      if (!cancelled) {
-        setPersistence(payload.persistence);
-        setPositions(payload.positions ?? []);
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [wallet.solanaAddress]);
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="mb-2">
-          <Badge variant="outline">Persistence {persistence}</Badge>
-        </div>
-        <h1 className="text-3xl font-semibold text-white">Tracked positions</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          User-signed xStock buys only. Connect your wallet to filter to your
-          session, or leave it disconnected to see the in-memory book.
-        </p>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-white/10">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>xStock</TableHead>
-              <TableHead>USDC in</TableHead>
-              <TableHead>Tokens</TableHead>
-              <TableHead>Wallet</TableHead>
-              <TableHead>Signature</TableHead>
-              <TableHead>When</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {positions.map((position) => (
-              <TableRow key={position.id}>
-                <TableCell className="font-medium text-white">
-                  {position.xstockSymbol}
-                  <div className="text-xs text-zinc-500">{position.ticker}</div>
-                </TableCell>
-                <TableCell>{formatUsd(position.usdcIn)}</TableCell>
-                <TableCell>{formatShares(position.tokensOut)}</TableCell>
-                <TableCell className="font-mono text-xs">
-                  {shortenAddress(position.wallet)}
-                </TableCell>
-                <TableCell className="font-mono text-xs">
-                  {shortenAddress(position.signature, 6)}
-                  {position.stub ? (
-                    <span className="ml-2 text-amber-300">stub</span>
-                  ) : null}
-                </TableCell>
-                <TableCell>{formatDate(position.createdAt)}</TableCell>
-              </TableRow>
-            ))}
-            {positions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-zinc-500">
-                  No positions yet. Inspect a Form 4 and complete a signed trade.
-                </TableCell>
-              </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
+import {useMemo,useState} from "react";
+import Link from "next/link";
+import {usePrivySolana} from "./providers/privy-provider";
+import {useResource} from "@/lib/frontend/use-resource";
+import {PREVIEW_MODE} from "@/lib/frontend/api";
+import type {TrackedPosition} from "@/lib/frontend/contracts";
+import {Icon} from "./social/icon";
+import {PageError,Skeleton,StockIcon} from "./social/shared";
+import {WalletButton} from "./wallet-button";
+import {formatDate,formatShares,formatUsd,shortenAddress} from "@/lib/format";
+export function PositionsTable(){const wallet=usePrivySolana(),[query,setQuery]=useState(""),resource=useResource<{positions:TrackedPosition[];persistence:string}>(wallet.solanaAddress?`/api/positions?wallet=${encodeURIComponent(wallet.solanaAddress)}`:null);
+ const positions=resource.data?.positions??[],visible=positions.filter(p=>`${p.ticker} ${p.xstockSymbol}`.toLowerCase().includes(query.toLowerCase())),total=positions.reduce((s,p)=>s+(Number.isFinite(p.usdcIn)?p.usdcIn:0),0),assets=useMemo(()=>new Set(positions.map(p=>p.xstockSymbol)).size,[positions]);
+ return <div className="positions-page"><div className="page-intro"><div><span className="eyebrow">THE MOVES YOU MADE.</span><h1>Your book. Your calls<span className="accent-dot">.</span></h1><p>Signed fills, without the spreadsheet energy.</p></div><Link className="button primary" href="/">Find your next print<Icon name="arrow" size={16}/></Link></div><div className="positions-summary"><div><span>Historical filled notional</span><strong>{wallet.solanaAddress?formatUsd(total):"—"}</strong><small>Not current portfolio value</small></div><div><span>Tracked assets</span><strong>{wallet.solanaAddress?assets:"—"}</strong><small>Distinct xStocks in your fills</small></div><div><span>Signed fills</span><strong>{wallet.solanaAddress?positions.length:"—"}</strong><small>{PREVIEW_MODE?"Read-only preview":"Connected wallet only"}</small></div></div>
+ <section className="panel positions-panel"><div className="panel-heading"><h2>Your receipts</h2>{positions.length>0?<div className="inline-search"><Icon name="search" size={15}/><input aria-label="Search fills" placeholder="Filter assets…" value={query} onChange={e=>setQuery(e.target.value)}/></div>:<span className="outlined-pill"><Icon name="shield" size={13}/>User-signed</span>}</div>{!wallet.solanaAddress?<div className="position-empty"><div className="empty-wallet-art"><Icon name="wallet" size={52}/><span>✳</span></div><h2>A portfolio with a paper trail.</h2><p>{wallet.mode==="live"?"Connect your Solana wallet to see fills scoped to that address.":"Connect the included stub wallet to explore this screen. Real fills stay scoped to your address when Privy is live."}</p><WalletButton/><small>{wallet.mode==="live"?"You sign every fill. Nothing trades unattended.":"The included wallet is a stub until NEXT_PUBLIC_PRIVY_APP_ID is set."}</small></div>:resource.loading?<Skeleton cards={2}/>:resource.error?<PageError error={resource.error} retry={resource.reload}/>:!positions.length?<div className="position-empty"><div className="empty-wallet-art"><Icon name="file" size={48}/><span>↗</span></div><h2>No moves. No made-up gains.</h2><p>{PREVIEW_MODE?"This preview does not fabricate executions. Explore a print or a basket to try the review flow.":"Your approved fills will appear here after execution. Nothing trades without your signature."}</p><Link className="button primary" href="/">Explore the paper trail<Icon name="arrow" size={16}/></Link></div>:<div className="position-list">{visible.map(p=><article className="position-row" key={p.id}><StockIcon ticker={p.ticker}/><div><strong>{p.xstockSymbol}</strong><small>{formatShares(p.tokensOut)} tokens</small></div><div className="position-notional"><strong>{formatUsd(p.usdcIn)}</strong><small>USDC filled notional</small></div><div className="position-details"><span>{formatDate(p.createdAt)}</span><code title={p.signature}>{shortenAddress(p.signature,6)}</code>{p.stub?<span className="preview-tag">Stub</span>:null}</div></article>)}{!visible.length?<p className="empty-chart">No fills match this ticker.</p>:null}</div>}</section><div className="rail-fineprint"><Icon name="info" size={15}/><p>Fills are a transaction history, not a marked-to-market balance or profit-and-loss report. No live valuation is inferred.</p></div></div>;
 }

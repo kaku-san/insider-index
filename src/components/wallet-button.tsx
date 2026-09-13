@@ -2,31 +2,37 @@
 
 import { Button } from "@/components/ui/button";
 import { usePrivySolana } from "@/components/providers/privy-provider";
+import { useUI } from "@/components/providers/ui-provider";
+import { Icon } from "@/components/social/icon";
+import { PREVIEW_MODE } from "@/lib/frontend/api";
 import { shortenAddress } from "@/lib/format";
 
 export function WalletButton() {
   const wallet = usePrivySolana();
-
-  if (wallet.authenticated && wallet.solanaAddress) {
-    return (
-      <div className="flex items-center gap-2">
-        <span className="hidden font-mono text-xs text-zinc-400 sm:inline">
-          {shortenAddress(wallet.solanaAddress, 4)}
-        </span>
-        <Button variant="outline" size="sm" onClick={() => void wallet.disconnect()}>
-          <span className="hidden sm:inline">Disconnect</span>
-          <span className="sm:hidden">Exit</span>
-        </Button>
-      </div>
-    );
-  }
+  const ui = useUI();
+  const label =
+    wallet.authenticated && wallet.solanaAddress
+      ? shortenAddress(wallet.solanaAddress)
+      : PREVIEW_MODE
+        ? "Preview wallet"
+        : "Connect wallet";
 
   return (
-    <Button size="sm" onClick={() => void wallet.connect()}>
-      <span className="sm:hidden">Connect</span>
-      <span className="hidden sm:inline">
-        {wallet.configured ? "Connect wallet" : "Connect stub wallet"}
-      </span>
+    <Button
+      className="button primary wallet-button"
+      onClick={() =>
+        void (wallet.authenticated ? wallet.disconnect() : wallet.connect()).catch(
+          () => ui.toast("Wallet connection failed. Please retry."),
+        )
+      }
+      title={
+        wallet.mode === "live"
+          ? "Connect a Privy Solana wallet. You sign every trade."
+          : "The included wallet is a stub until NEXT_PUBLIC_PRIVY_APP_ID is set."
+      }
+    >
+      <Icon name={wallet.authenticated ? "logout" : "wallet"} size={17} />
+      <span>{label}</span>
     </Button>
   );
 }

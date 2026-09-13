@@ -1,123 +1,17 @@
 "use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { formatDate, formatShares, formatUsd, shortenAddress } from "@/lib/format";
-import type { Disclosure } from "@/lib/disclosures/types";
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid grid-cols-3 gap-3 py-2 text-sm">
-      <dt className="text-zinc-500">{label}</dt>
-      <dd className="col-span-2 font-medium text-zinc-100">{value}</dd>
-    </div>
-  );
-}
-
-export function InspectDisclosure({ id }: { id: string }) {
-  const [disclosure, setDisclosure] = useState<Disclosure | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const response = await fetch(`/api/disclosures/${id}`);
-      if (!response.ok) {
-        if (!cancelled) setError("Disclosure not found.");
-        return;
-      }
-      const payload = (await response.json()) as { disclosure: Disclosure };
-      if (!cancelled) setDisclosure(payload.disclosure);
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  if (error) {
-    return <p className="text-sm text-red-400">{error}</p>;
-  }
-
-  if (!disclosure) {
-    return <p className="text-sm text-zinc-500">Loading filing…</p>;
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Inspect</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">
-          {disclosure.ticker} insider buy
-        </h1>
-        <p className="mt-1 text-zinc-400">
-          {disclosure.insiderName} filed a Form 4 for {disclosure.issuerName}.
-        </p>
-      </div>
-
-      <Card className="border-white/10 bg-white/[0.03]">
-        <CardHeader>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-white">{disclosure.issuerName}</CardTitle>
-              <CardDescription>Accession {disclosure.accessionNumber}</CardDescription>
-            </div>
-            <Badge variant={disclosure.tradeEligible ? "default" : "secondary"}>
-              {disclosure.tradeEligible ? `${disclosure.xstockSymbol} allowlisted` : "Blocked"}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <dl>
-            <Row label="Insider" value={`${disclosure.insiderName} · CIK ${disclosure.insiderCik}`} />
-            <Row label="Title" value={disclosure.insiderTitle ?? "—"} />
-            <Row label="Code" value={`${disclosure.transactionCode} (${disclosure.side})`} />
-            <Row label="Trade date" value={formatDate(disclosure.transactionDate)} />
-            <Row label="Filed" value={formatDate(disclosure.filedAt)} />
-            <Row label="Shares" value={formatShares(disclosure.sharesAmount)} />
-            <Row label="Price" value={formatUsd(disclosure.pricePerShare)} />
-            <Row label="Value" value={formatUsd(disclosure.transactionValue)} />
-            <Row label="Owned after" value={formatShares(disclosure.sharesOwnedAfter)} />
-            <Row label="10b5-1" value={disclosure.is10b51 ? "Yes" : "No"} />
-          </dl>
-          <Separator className="my-4 bg-white/10" />
-          <dl>
-            <Row label="xStock" value={disclosure.xstockSymbol ?? "Not allowlisted"} />
-            <Row
-              label="Mint"
-              value={disclosure.xstockMint ? shortenAddress(disclosure.xstockMint, 6) : "—"}
-            />
-            <Row label="Source" value={disclosure.source} />
-          </dl>
-        </CardContent>
-      </Card>
-
-      <div className="flex gap-3">
-        <Button
-          nativeButton={false}
-          variant="outline"
-          render={<Link href="/" />}
-        >
-          Back to feed
-        </Button>
-        {disclosure.tradeEligible ? (
-          <Button nativeButton={false} render={<Link href={`/trade/${disclosure.id}`} />}>
-            Continue to amount
-          </Button>
-        ) : (
-          <Button disabled>Buy not eligible</Button>
-        )}
-      </div>
-    </div>
-  );
+import {useResource} from "@/lib/frontend/use-resource";
+import {useUI} from "./providers/ui-provider";
+import {PageError,Skeleton,Breadcrumb,StockIcon,PartyBadge,EmptyState} from "./social/shared";
+import {PersonAvatar} from "./person-avatar";
+import {CopyButton} from "./copy-button";
+import {Icon} from "./social/icon";
+import type {Disclosure} from "@/lib/disclosures/types";
+import {formatDate,formatShares,formatUsd,formatUsdRange,shortenAddress} from "@/lib/format";
+import {portraitFor} from "@/lib/frontend/portraits";
+export function InspectDisclosure({id}:{id:string}){const ui=useUI(),resource=useResource<{disclosure:Disclosure}>(`/api/disclosures/${encodeURIComponent(id)}`),d=resource.data?.disclosure;
+ if(resource.loading)return <Skeleton/>;if(resource.error)return <PageError error={resource.error} retry={resource.reload}/>;if(!d)return <EmptyState title="Filing unavailable." description="This record could not be found."/>;
+ const lag=Math.max(0,Math.round((Date.parse(d.filedAt)-Date.parse(d.transactionDate))/86400000)),mock=d.source.startsWith("mock"),buy=d.side==="buy",sell=d.side==="sell";
+ const rows:[string,string][]=[["Reported transaction",`${d.transactionCode} · ${d.side}`],["Transaction date",formatDate(d.transactionDate)],["Filed",formatDate(d.filedAt)],["Reported amount",formatUsdRange(d.amountLow,d.amountHigh)],["Shares",formatShares(d.sharesAmount)],["Price per share",formatUsd(d.pricePerShare)],["Transaction value",formatUsd(d.transactionValue)],["Shares owned after",formatShares(d.sharesOwnedAfter)],["10b5-1 plan",d.is10b51?"Yes":"No"],["Source",d.source],["xStock",d.xstockSymbol??"Not on allowlist"],["Token mint",d.xstockMint?shortenAddress(d.xstockMint,8):"—"]];
+ return <div className="disclosure-page"><Breadcrumb label="Inspect a filing"/><div className="page-intro"><div><span className="eyebrow">LESS SPECULATION. MORE RECEIPTS.</span><h1>Read the fine print<span className="accent-dot">.</span></h1><p>A public record, not a real-time trade alert.</p></div><span className="outlined-pill"><Icon name="file" size={14}/>{mock?"Synthetic example":d.kind==="politician"?"Congress PTR":"SEC Form 4"}</span></div><div className="inspect-layout"><section className="panel filing-document"><div className="filing-document-top"><Link href={`/p/${encodeURIComponent(d.profileId)}`} className="signal-person"><PersonAvatar name={d.insiderName} imageUrl={portraitFor(d.profileId)}/><div><strong>{d.insiderName}</strong><PartyBadge party={d.party} kind={d.kind}/></div></Link><span className={`side-label ${buy?"buy":sell?"sell":""}`}>{d.side.toUpperCase()}</span></div><div className="filing-asset"><StockIcon ticker={d.ticker} size="lg"/><div><h2>{d.issuerName}</h2><p>{d.ticker} · {d.xstockSymbol??"No eligible xStock"}</p></div></div>{mock?<div className="notice">This is a fictional design fixture, not an actual trade by {d.insiderName}.</div>:null}<dl className="filing-rows">{rows.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><div className="accession-box"><span className="mini-label">SOURCE RECORD IDENTIFIER</span><code>{d.accessionNumber}</code><button className="icon-button" aria-label="Copy filing identifier" onClick={()=>void navigator.clipboard.writeText(d.accessionNumber).then(()=>ui.toast("Record identifier copied.")).catch(()=>ui.toast("Select and copy the identifier shown here."))}><Icon name="copy" size={16}/></button></div></section><aside><section className="panel filing-timeline"><h3>A little context goes a long way.</h3><div><i/><p><small>THE ORIGINAL TRADE</small><strong>{formatDate(d.transactionDate)}</strong><span>The transaction date in the record.</span></p></div><div><i/><p><small>THE DISCLOSURE</small><strong>{formatDate(d.filedAt)}</strong><span>{Number.isFinite(lag)?`${lag} days after the reported trade.`:"Reporting delay is unavailable."}</span></p></div><div><i/><p><small>YOUR DECISION</small><strong>Now, not then.</strong><span>You trade at a new quote, not their original price.</span></p></div></section><section className="panel filing-action"><h3>Receipt read. Your move?</h3><p>Copy just this eligible print, or explore the person’s index separately.</p><CopyButton signalId={d.id} enabled={d.tradeEligible&&d.side!=="other"}/><Link className="button secondary full-width" href={`/indexes/idx-${encodeURIComponent(d.profileId)}`}>Explore their index<Icon name="arrow" size={15}/></Link><div className="order-safety"><Icon name="shield" size={16}/><span>You review and sign every order.</span></div></section></aside></div></div>;
 }

@@ -1,39 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { AppProviders } from "@/components/providers/app-providers";
-import { EligibilityBanner } from "@/components/eligibility-banner";
-import { SiteHeader } from "@/components/site-header";
+import {Suspense,type ReactNode} from "react";
+import {AppProviders} from "@/components/providers/app-providers";
+import {EligibilityBanner} from "@/components/eligibility-banner";
+import {SiteHeader} from "@/components/site-header";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Stocklana",
-  description:
-    "Form 4 insider disclosures to user-signed xStock trades on Solana.",
-};
-
-export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
-    <html
-      lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-[#070b12] text-zinc-100">
-        <AppProviders>
-          <EligibilityBanner />
-          <SiteHeader />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-        </AppProviders>
-      </body>
-    </html>
-  );
-}
+export const metadata:Metadata={title:{default:"Stocklana — Follow the filings. Make your move.",template:"%s · Stocklana"},description:"A social-first way to explore public politician and executive disclosures. Copy one eligible print or review a person index. Every trade is user-signed."};
+const themeScript=`try{var t=localStorage.getItem('stocklana:theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}`;
+export default function RootLayout({children}: {children:ReactNode}) {return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html:themeScript}}/></head><body><a className="skip-link" href="#main-content">Skip to content</a><Suspense fallback={<div className="app-loading">Loading Stocklana…</div>}><AppProviders><SiteHeader/><div className="app-frame"><EligibilityBanner/><main id="main-content" className="main-content">{children}</main><footer className="app-footer"><span>Less noise. More receipts.</span><span>Public disclosures ≠ live trades. Not investment advice.</span><strong>stocklana.</strong></footer></div></AppProviders></Suspense></body></html>;}

@@ -1,205 +1,35 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import {useState} from "react";
 import Link from "next/link";
-import { CopyButton } from "@/components/copy-button";
-import { EquityCurve, PortfolioDonut } from "@/components/portfolio-charts";
-import { PersonAvatar } from "@/components/person-avatar";
-import { SignalCard } from "@/components/signal-card";
-import { usePrivySolana } from "@/components/providers/privy-provider";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
-import type { Follow } from "@/lib/fomo/follows";
-import { formatPct, formatUsd } from "@/lib/format";
-import { partyChip } from "@/lib/fomo/party";
-
-export function ProfileView({ id }: { id: string }) {
-  const wallet = usePrivySolana();
-  const [profile, setProfile] = useState<FomoProfile | null>(null);
-  const [trades, setTrades] = useState<CopySignal[]>([]);
-  const [follow, setFollow] = useState<Follow | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const [profileRes, followRes] = await Promise.all([
-        fetch(`/api/profiles/${id}`),
-        wallet.solanaAddress
-          ? fetch(`/api/follows?wallet=${wallet.solanaAddress}`)
-          : Promise.resolve(null),
-      ]);
-      if (!profileRes.ok) return;
-      const payload = (await profileRes.json()) as {
-        profile: FomoProfile;
-        trades: CopySignal[];
-      };
-      const follows = followRes
-        ? ((await followRes.json()) as { follows: Follow[] }).follows
-        : [];
-      if (!cancelled) {
-        setProfile(payload.profile);
-        setTrades(payload.trades);
-        setFollow(follows.find((row) => row.profileId === id) ?? null);
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, wallet.solanaAddress]);
-
-  async function setFollowState(next: { unfollow?: boolean; autoCopy?: boolean }) {
-    if (!wallet.solanaAddress) {
-      await wallet.connect();
-    }
-    const address = wallet.solanaAddress;
-    if (!address) return;
-    setBusy(true);
-    const response = await fetch("/api/follows", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wallet: address,
-        profileId: id,
-        autoCopy: next.autoCopy ?? follow?.autoCopy ?? false,
-        unfollow: next.unfollow ?? false,
-      }),
-    });
-    const payload = (await response.json()) as { follows?: Follow[] };
-    setFollow(payload.follows?.find((row) => row.profileId === id) ?? null);
-    setBusy(false);
-  }
-
-  if (!profile) {
-    return <p className="text-sm text-zinc-500">Loading FOMO profile…</p>;
-  }
-
-  return (
-    <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.06] via-white/[0.025] to-transparent p-5 sm:p-7">
-        <div className="absolute -right-16 -top-16 size-64 rounded-full bg-emerald-300/[0.07] blur-3xl" aria-hidden="true" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4 sm:gap-5">
-            <PersonAvatar name={profile.name} imageUrl={profile.imageUrl} size="xl" />
-            <div className="min-w-0 pt-1">
-              <p className="eyebrow">{profile.kind === "politician" ? "Congress profile" : "Insider profile"}</p>
-              <h1 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">{profile.name}</h1>
-              <p className="mt-2 text-sm text-zinc-300 sm:text-base">
-                {profile.title} <span className="text-zinc-600">·</span> {profile.handle}
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {profile.party ? (
-                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${partyChip(profile.party)}`}>
-                    {profile.party}
-                  </span>
-                ) : (
-                  <Badge variant="secondary">Executive</Badge>
-                )}
-                <span className="text-xs text-zinc-500">{profile.followers.toLocaleString()} following this tape</span>
-              </div>
-            </div>
-          </div>
-          <div className="grid gap-2 sm:flex sm:flex-wrap">
-            <CopyButton
-              signalId={profile.latestEligibleSignalId}
-              enabled={Boolean(profile.latestEligibleSignalId)}
-              label="Copy latest trade"
-            />
-            <Button nativeButton={false} variant="outline" render={<Link href={`/indexes/${profile.index.id}`} />}>
-              Buy {profile.index.name}
-            </Button>
-            {follow ? (
-              <>
-                <Button
-                  variant={follow.autoCopy ? "default" : "outline"}
-                  disabled={busy}
-                  onClick={() => void setFollowState({ autoCopy: !follow.autoCopy })}
-                >
-                  {follow.autoCopy ? "Copy queue on" : "Queue next copy"}
-                </Button>
-                <Button variant="ghost" disabled={busy} onClick={() => void setFollowState({ unfollow: true })}>
-                  Unfollow
-                </Button>
-              </>
-            ) : (
-              <Button disabled={busy} onClick={() => void setFollowState({ autoCopy: false })}>
-                Follow
-              </Button>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <p className="eyebrow">How this tape performed</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">Copy stats</h2>
-          </div>
-          <span className="text-xs text-zinc-500">Historical</span>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {profile.insights.map((insight) => (
-            <Card key={insight.horizon} className="surface">
-              <CardHeader className="pt-0">
-                <CardTitle className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                  {insight.horizon} backtest
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className={`text-3xl font-semibold tracking-tight ${insight.returnPct >= 0 ? "metric-positive" : "metric-negative"}`}>
-                  {formatPct(insight.returnPct)}
-                </p>
-                <p className="mt-1 text-xs text-zinc-500">
-                  {insight.trades} trades · {formatUsd(insight.volumeUsd)}
-                  {insight.hitRate != null ? ` · ${(insight.hitRate * 100).toFixed(0)}% hit` : ""}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="surface">
-          <CardHeader className="pt-0">
-            <p className="eyebrow">Tracked basket</p>
-            <CardTitle className="mt-1 text-xl text-white">{profile.index.name}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <PortfolioDonut holdings={profile.portfolio} title="Book" />
-            <p className="text-xs leading-5 text-zinc-500">
-              Weights come from disclosed buys minus sells. The index only holds allowlisted xStocks
-              and rebalances when a new Form 4 / PTR posts — you still sign.
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="surface">
-          <CardHeader className="pt-0">
-            <p className="eyebrow">Paper performance</p>
-            <CardTitle className="mt-1 text-xl text-white">If you copied the book</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EquityCurve points={profile.curve} label="90d copy path" />
-            <p className="mt-3 text-sm text-zinc-400">
-              90d copy PnL {formatPct(profile.copiedPnl90d)}. Historical, not a promise.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <section>
-        <p className="eyebrow">Every print</p>
-        <h2 className="mb-4 mt-1 text-2xl font-semibold tracking-tight text-white">Disclosure history</h2>
-        <div className="grid gap-3">
-          {trades.map((trade) => (
-            <SignalCard key={trade.id} signal={trade} />
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+import {useResource} from "@/lib/frontend/use-resource";
+import {PREVIEW_MODE,writeApi,errorText} from "@/lib/frontend/api";
+import {usePrivySolana} from "./providers/privy-provider";
+import {useUI} from "./providers/ui-provider";
+import {PersonAvatar} from "./person-avatar";
+import {CopyButton} from "./copy-button";
+import {SignalCard} from "./signal-card";
+import {EquityCurve,PortfolioDonut} from "./portfolio-charts";
+import {PageError,Skeleton,PartyBadge,Breadcrumb,EmptyState} from "./social/shared";
+import {Icon} from "./social/icon";
+import type {FomoProfile,CopySignal,HorizonKey} from "@/lib/disclosures/types";
+import type {Follow} from "@/lib/frontend/contracts";
+import {formatPct,formatUsd} from "@/lib/format";
+export function ProfileView({id}: {id:string}) {
+ const wallet=usePrivySolana(),ui=useUI(),resource=useResource<{profile:FomoProfile;trades:CopySignal[]}>(`/api/profiles/${encodeURIComponent(id)}`),followsRes=useResource<{follows:Follow[]}>(wallet.solanaAddress?`/api/follows?wallet=${encodeURIComponent(wallet.solanaAddress)}`:null);
+ const [busy,setBusy]=useState(false),[horizon,setHorizon]=useState<HorizonKey>("90d"),[tab,setTab]=useState("activity"),[followError,setFollowError]=useState<string|null>(null);
+ const profile=resource.data?.profile,trades=resource.data?.trades??[],follow=followsRes.data?.follows.find(f=>f.profileId===id),isFollowing=PREVIEW_MODE?ui.previewFollows.includes(id):Boolean(follow);
+ async function setFollowState(next:{unfollow?:boolean;autoCopy?:boolean}) {
+  if(PREVIEW_MODE){ui.togglePreviewFollow(id);ui.toast(isFollowing?"Removed from your preview circle.":"Added to your preview circle. Saved on this device.");return;}
+  if(!wallet.solanaAddress){try{await wallet.connect();ui.toast("Wallet ready. Tap Follow to save this profile.");}catch{ui.toast("Wallet connection failed.");}return;}
+  setBusy(true);setFollowError(null);
+  try{await writeApi("/api/follows",{wallet:wallet.solanaAddress,profileId:id,autoCopy:next.autoCopy??follow?.autoCopy??false,unfollow:next.unfollow??false});followsRes.reload();ui.toast(next.unfollow?"Unfollowed.":next.autoCopy?"New copies will queue for your review. Nothing auto-executes.":"Your circle just got more interesting.");}catch(e){setFollowError(errorText(e));}finally{setBusy(false);}
+ }
+ async function share(){try{await navigator.clipboard.writeText(location.href);ui.toast("Profile link copied.");}catch{ui.toast("Copy this profile’s URL from the address bar.");}}
+ if(resource.loading)return <Skeleton/>;if(resource.error)return <PageError error={resource.error} retry={resource.reload}/>;if(!profile)return <EmptyState title="Profile not found." description="This public profile is unavailable."/>;
+ const insight=profile.insights.find(i=>i.horizon===horizon);
+ return <div className="profile-page"><Breadcrumb label="Public profile"/><section className="profile-hero"><div className={`profile-cover ${profile.party==="Republican"?"cover-red":profile.party===null?"cover-violet":""}`}><span className="cover-word">FOLLOW THE FILINGS.</span><span className="cover-star">✳</span><span className="cover-label"><Icon name="file" size={13}/>{PREVIEW_MODE?"ILLUSTRATIVE PROFILE":"PUBLIC DISCLOSURE PROFILE"}</span></div><div className="profile-identity"><PersonAvatar name={profile.name} imageUrl={profile.imageUrl} size="xl"/><div className="profile-identity-main"><div className="profile-title-row"><h1>{profile.name}</h1><PartyBadge party={profile.party} kind={profile.kind}/></div><p>{profile.handle}<span>·</span>{profile.title}</p><span className="follow-count"><Icon name="people" size={14}/>{profile.followers.toLocaleString()} followers{PREVIEW_MODE?" · example count":""}</span></div><button className="icon-button" aria-label="Share profile" onClick={()=>void share()}><Icon name="share" size={19}/></button></div><div className="profile-bottom"><p>Watch the paper trail. Make the decision yours.</p><div className="profile-buttons"><button className={`button ${isFollowing?"secondary":"ink-theme"}`} disabled={busy} onClick={()=>void setFollowState({unfollow:isFollowing})}><Icon name={isFollowing?"check":"people"} size={15}/>{busy?"Saving…":isFollowing?"Following":!wallet.solanaAddress&&!PREVIEW_MODE?"Connect to follow":"Follow"}</button><CopyButton signalId={profile.latestEligibleSignalId} enabled={Boolean(profile.latestEligibleSignalId)} label="Copy latest print"/><Link className="button secondary" href={`/indexes/${encodeURIComponent(profile.index.id)}`}><Icon name="grid" size={15}/>Buy index</Link></div></div></section>
+ {followError||followsRes.error?<div className="notice error" role="alert">{followError??followsRes.error}</div>:null}
+ {follow&&!PREVIEW_MODE?<div className="queue-setting"><div><Icon name="bell" size={16}/><span>Queue their next eligible print <small>Review and sign, never autopilot.</small></span></div><button className={`toggle ${follow.autoCopy?"on":""}`} role="switch" aria-checked={follow.autoCopy} aria-label="Queue next copy for review" disabled={busy} onClick={()=>void setFollowState({autoCopy:!follow.autoCopy})}><span/></button></div>:null}
+ <section className="profile-performance"><div className="section-heading"><h2>The numbers, not the narrative.</h2><div className="segmented-control" aria-label="Performance horizon">{(["24h","30d","90d"] as HorizonKey[]).map(h=><button key={h} className={horizon===h?"selected":""} aria-pressed={horizon===h} onClick={()=>setHorizon(h)}>{h}</button>)}</div></div><div className="stat-grid"><div className="stat-card"><span>{PREVIEW_MODE?"Illustrative":"Historical"} return · {horizon}</span><strong className={(insight?.returnPct??0)>=0?"positive":"negative"}>{formatPct(insight?.returnPct)}</strong><small>Not a forecast</small></div><div className="stat-card"><span>Tracked disclosures</span><strong>{insight?.trades??"—"}</strong><small>Over selected period</small></div><div className="stat-card"><span>Disclosed volume</span><strong>{formatUsd(insight?.volumeUsd)}</strong><small>Reported, not live volume</small></div><div className="stat-card"><span>Historical hit rate</span><strong>{insight?.hitRate!=null?`${(insight.hitRate*100).toFixed(0)}%`:"—"}</strong><small>Methodology from source API</small></div></div></section>
+ <div className="profile-content-grid"><div><section className="panel chart-panel"><div className="panel-heading"><h3>The copy path</h3><span className="outlined-pill">{PREVIEW_MODE?"Synthetic example":"Historical"}</span></div><EquityCurve points={profile.curve} label="90d curve · rebased portfolio value"/><p className="chart-disclaimer">The curve remains the supplied 90d series. Horizon buttons change the stats above, not the underlying chart. Historical performance is not a promise.</p></section><div className="section-heading activity-heading"><div className="text-tabs" role="group" aria-label="Profile content"><button aria-pressed={tab==="activity"} className={tab==="activity"?"selected":""} onClick={()=>setTab("activity")}>The paper trail <span>{trades.length}</span></button><button aria-pressed={tab==="book"} className={tab==="book"?"selected":""} onClick={()=>setTab("book")}>Disclosed book</button></div></div>{tab==="activity"?<div className="signal-list">{trades.length?trades.map(t=><SignalCard key={t.id} signal={t}/>):<EmptyState title="No prints yet." description="Public disclosures will appear here when available."/>}</div>:<section className="panel"><h3>Disclosed holdings</h3><PortfolioDonut holdings={profile.portfolio} title="Disclosed book"/><p className="muted small-text">Estimated from supplied disclosures, not a verified brokerage balance. Index eligibility can differ from the full disclosed book.</p></section>}</div><aside><section className="panel profile-index-panel"><span className="mini-label">THE WHOLE BOOK, REMIXED.</span><h3>{profile.index.name}</h3><PortfolioDonut holdings={profile.index.constituents.map(h=>({...h,xstockMint:h.mint,copyEligible:true}))} title="Eligible basket"/><p>The allowlisted part of this book, in one user-signed basket.</p><Link href={`/indexes/${encodeURIComponent(profile.index.id)}`} className="button primary full-width">Explore the index<Icon name="arrow" size={16}/></Link><span className="index-card-caption"><Icon name="shield" size={13}/>You approve every rebalance</span></section><div className="rail-fineprint"><Icon name="info" size={16}/><p>{PREVIEW_MODE?"Fictional figures for UI review. This page makes no claim about actual trading or returns.":"Tracking does not imply affiliation, endorsement, or that the named person placed every household transaction."}</p></div></aside></div></div>;
 }

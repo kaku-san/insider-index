@@ -15,6 +15,7 @@ In V1:
 - Buys (and copy-sells) are allowed only against the verified xStock mint allowlist
 - One-trade copy **or** a person index (Pelosi Index, Huang Index) that rebalances on the next disclosure
 - The user signs every swap and every rebalance. There are no vaults and no unattended trading
+- Social frontend: lime editorial discover, party-tinted profiles, person-index tickets, light/dark theme (`src/app` pages + `src/components` + `src/lib/frontend`)
 
 Out of V1:
 

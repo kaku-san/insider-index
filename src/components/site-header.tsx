@@ -1,56 +1,15 @@
 "use client";
-
+import {useEffect,useRef} from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { WalletButton } from "@/components/wallet-button";
-import { cn } from "@/lib/utils";
-
-const LINKS = [
-  { href: "/", label: "Discover" },
-  { href: "/positions", label: "Positions" },
-];
-
-export function SiteHeader() {
-  const pathname = usePathname();
-
-  return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#070b12]/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:gap-4">
-        <Link href="/" className="flex min-w-0 items-center gap-2">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-emerald-300 to-teal-400 text-xs font-black text-[#06231f] shadow-[0_0_22px_rgb(52_211_153_/_0.35)]">
-            S/
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-tight text-white">Stocklana</p>
-            <p className="hidden text-[11px] text-zinc-400 sm:block">Follow the people moving markets.</p>
-          </div>
-        </Link>
-        <nav aria-label="Primary navigation" className="flex shrink-0 items-center gap-0.5">
-          {LINKS.map((link) => {
-            const active =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "rounded-lg px-2 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm",
-                  active
-                    ? "bg-white/10 text-white"
-                    : "text-zinc-400 hover:bg-white/5 hover:text-white",
-                )}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="shrink-0">
-          <WalletButton />
-        </div>
-      </div>
-    </header>
-  );
+import {usePathname,useRouter} from "next/navigation";
+import {useUI,type Lane,type Theme} from "@/components/providers/ui-provider";
+import {WalletButton} from "@/components/wallet-button";
+import {Icon,BrandMark} from "@/components/social/icon";
+const nav: {label:string;icon:string;view:Lane|null;href:string}[]=[{label:"Discover",icon:"compass",view:"live",href:"/"},{label:"Following",icon:"people",view:"following",href:"/?view=following"},{label:"Person indexes",icon:"grid",view:"indexes",href:"/?view=indexes"},{label:"My positions",icon:"wallet",view:null,href:"/positions"}];
+export function SiteHeader(){const ui=useUI(),path=usePathname(),router=useRouter(),input=useRef<HTMLInputElement>(null);
+ useEffect(()=>{const onKey=(e:KeyboardEvent)=>{const target=e.target as HTMLElement;if(e.key==="/"&&!/input|textarea|select/i.test(target.tagName)&&!target.isContentEditable){e.preventDefault();input.current?.focus();}if(e.key==="Escape")input.current?.blur();};document.addEventListener("keydown",onKey);return()=>document.removeEventListener("keydown",onKey);},[]);
+ const active=(v:typeof nav[number])=>v.view===null?path.startsWith("/positions"):path==="/"&&(v.view==="live"?!["indexes","following"].includes(ui.lane):ui.lane===v.view);
+ return <><aside className="sidebar"><Link href="/" className="brand" onClick={()=>ui.setLane("live")}><BrandMark/><span>stocklana<span className="brand-dot">.</span></span></Link><div className="sidebar-heading">THE PUBLIC ALPHA CLUB</div><nav className="desktop-nav" aria-label="Primary navigation">{nav.map(n=><Link key={n.label} href={n.href} onClick={()=>{if(n.view)ui.setLane(n.view);ui.setQuery("");}} className={`nav-item ${active(n)?"active":""}`} aria-current={active(n)?"page":undefined}><Icon name={n.icon}/>{n.label}{n.view==="live"?<span className="nav-dot"/>:null}</Link>)}</nav><div className="sidebar-bottom"><div className="sidebar-sticker"><Icon name="landmark" size={28}/><p>No seat in Congress?<br/><strong>Still a seat at the table.</strong></p><span>Public records. Your own moves.</span></div><div className="theme-switch" role="group" aria-label="Color theme">{([['light','sun'],['dark','moon'],['system','monitor']] as [Theme,string][]).map(([t,i])=><button key={t} onClick={()=>ui.setTheme(t)} aria-pressed={ui.theme===t} aria-label={`Use ${t} theme`} className={ui.theme===t?"selected":""}><Icon name={i} size={16}/><span>{t}</span></button>)}</div><div className="sidebar-foot"><span className="solana-bars">≋</span> Built for Solana<span>v0.2</span></div></div></aside>
+ <header className="site-header"><div className="header-left"><Link href="/" className="brand mobile-brand" onClick={()=>ui.setLane("live")}><BrandMark/><span>stocklana.</span></Link><span className="header-breadcrumb">{path==="/"?"Discover":path.startsWith("/p/")?"The main characters":path.startsWith("/indexes/")?"Person index":path.startsWith("/positions")?"My positions":"The paper trail"}</span><span className="network-pill"><i/>Solana</span></div><form className="header-search" role="search" onSubmit={e=>{e.preventDefault();if(path!=="/")router.push("/");}}><Icon name="search" size={17}/><input ref={input} value={ui.query} onChange={e=>ui.setQuery(e.target.value)} placeholder="People, tickers, paper trails…" aria-label="Search people and tickers"/><kbd>/</kbd></form><div className="header-actions"><button className="icon-button theme-quick" aria-label={ui.theme==="dark"?"Switch to light mode":"Switch to dark mode"} onClick={()=>ui.setTheme(document.documentElement.classList.contains("dark")?"light":"dark")}><Icon name={ui.theme==="dark"?"sun":"moon"}/></button><WalletButton/></div></header>
+ <nav className="mobile-nav" aria-label="Mobile navigation">{nav.map(n=><Link key={n.label} href={n.href} onClick={()=>{if(n.view)ui.setLane(n.view);ui.setQuery("");}} className={active(n)?"active":""} aria-current={active(n)?"page":undefined}><Icon name={n.icon} size={21}/><span>{n.label.replace("Person ","").replace("My ","")}</span></Link>)}</nav></>;
 }

@@ -1,69 +1,21 @@
+"use client";
+import {useState} from "react";
 import Link from "next/link";
-import { CopyButton } from "@/components/copy-button";
-import { PersonAvatar } from "@/components/person-avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import type { CopySignal } from "@/lib/disclosures/types";
-import { formatDate, formatUsd, formatUsdRange } from "@/lib/format";
-import { partyChip } from "@/lib/fomo/party";
-
-export function SignalCard({ signal }: { signal: CopySignal }) {
-  const sideIsBuy = signal.side !== "sell";
-  const partyBorder =
-    signal.party === "Democratic"
-      ? "before:bg-sky-400"
-      : signal.party === "Republican"
-        ? "before:bg-rose-400"
-        : "before:bg-emerald-400";
-
-  return (
-    <Card className={`surface-interactive relative before:absolute before:inset-y-0 before:left-0 before:w-1 ${partyBorder}`}>
-      <CardContent className="flex flex-col gap-4 pt-1 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3.5">
-          <Link href={`/p/${signal.profileId}`} aria-label={`View ${signal.insiderName}'s profile`}>
-            <PersonAvatar name={signal.insiderName} imageUrl={signal.imageUrl} size="lg" />
-          </Link>
-          <div className="min-w-0">
-            <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-200">
-                <span className="size-1.5 animate-pulse rounded-full bg-amber-300 motion-reduce:animate-none" aria-hidden="true" />
-                Just disclosed
-              </span>
-              <Badge variant={signal.side === "sell" ? "destructive" : "default"}>
-                {signal.side === "sell" ? "SELL" : "BUY"}
-              </Badge>
-              <Badge variant="outline">{signal.kind === "politician" ? "Congress" : "Insider"}</Badge>
-              {signal.party ? (
-                <span className={`rounded-full px-2 py-0.5 text-[11px] ring-1 ${partyChip(signal.party)}`}>
-                  {signal.party}
-                </span>
-              ) : null}
-              <span className="text-[11px] text-zinc-500">{signal.fomoLabel}</span>
-            </div>
-            <Link href={`/p/${signal.profileId}`} className="text-base font-semibold text-white transition-colors hover:text-emerald-200">
-              {signal.headline}
-            </Link>
-            <p className="mt-1.5 text-sm text-zinc-400">
-              <span className="font-medium text-zinc-200">{formatUsdRange(signal.amountLow, signal.amountHigh)}</span>
-              {signal.xstockSymbol ? ` into ${signal.xstockSymbol}` : " · Not on allowlist"} · {formatDate(signal.filedAt)}
-              {signal.transactionValue ? ` · ${formatUsd(signal.transactionValue)}` : ""}
-            </p>
-          </div>
-        </div>
-        <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">
-          <CopyButton
-            signalId={signal.id}
-            enabled={signal.tradeEligible}
-            label={sideIsBuy ? "Copy this buy" : "Copy this sell"}
-          />
-          <Link
-            href={`/indexes/idx-${signal.profileId}`}
-            className="inline-flex h-7 items-center justify-center rounded-lg border border-white/10 px-2.5 text-xs font-medium text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/10"
-          >
-            Buy index
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
-  );
+import {CopyButton} from "@/components/copy-button";
+import {PersonAvatar} from "@/components/person-avatar";
+import {Icon} from "@/components/social/icon";
+import {PartyBadge,StockIcon} from "@/components/social/shared";
+import {useUI} from "@/components/providers/ui-provider";
+import type {CopySignal} from "@/lib/disclosures/types";
+import {formatDate,formatUsd,formatUsdRange} from "@/lib/format";
+export function SignalCard({signal}: {signal:CopySignal}) {
+ const ui=useUI(),[reaction,setReaction]=useState<string|null>(null),isBuy=signal.side==="buy",isSell=signal.side==="sell",mock=signal.source.startsWith("mock"),saved=ui.saved.includes(signal.id);
+ const range=signal.amountLow!==null||signal.amountHigh!==null?formatUsdRange(signal.amountLow,signal.amountHigh):formatUsd(signal.transactionValue);
+ const days=Math.max(0,Math.round((Date.parse(signal.filedAt)-Date.parse(signal.transactionDate))/86400000));
+ async function share(){try{await navigator.clipboard.writeText(`${location.origin}/disclosures/${encodeURIComponent(signal.id)}`);ui.toast("Filing link copied. Bring receipts.");}catch{ui.toast("Open the filing and copy the URL from your browser.");}}
+ return <article className="signal-card"><div className="signal-header"><Link href={`/p/${encodeURIComponent(signal.profileId)}`} className="signal-person"><PersonAvatar name={signal.insiderName} imageUrl={signal.imageUrl}/><div><strong>{signal.insiderName}</strong><div className="signal-person-meta"><PartyBadge party={signal.party} kind={signal.kind}/><span>{mock?"Example filing":formatDate(signal.filedAt)}</span></div></div></Link><button className={`icon-button save-button ${saved?"is-saved":""}`} aria-label={saved?`Unsave ${signal.ticker} filing`:`Save ${signal.ticker} filing`} aria-pressed={saved} onClick={()=>{ui.toggleSave(signal.id);ui.toast(saved?"Print removed from saved.":"Print saved on this device.");}}><Icon name="bookmark" size={18}/></button></div>
+ <p className="signal-sentence">{mock?<span className="example-prefix">Example:</span>:null} Disclosed a <strong className={isBuy?"positive":isSell?"negative":""}>{isBuy?"buy":isSell?"sell":"transaction"}</strong> in <Link href={`/disclosures/${encodeURIComponent(signal.id)}`}>{signal.ticker}<Icon name="up" size={13}/></Link></p>
+ <Link href={`/disclosures/${encodeURIComponent(signal.id)}`} className="trade-receipt"><StockIcon ticker={signal.ticker}/><div className="receipt-asset"><strong>{signal.ticker}<span>{signal.xstockSymbol??"Not allowlisted"}</span></strong><small>{signal.issuerName}</small></div><div className="receipt-amount"><strong>{range}</strong><span className={`side-label ${isBuy?"buy":isSell?"sell":""}`}><Icon name={isBuy?"up":isSell?"down":"file"} size={12}/>{isBuy?"BUY":isSell?"SELL":"OTHER"}</span></div></Link>
+ <div className="signal-footnote"><span><Icon name="clock" size={13}/>{Number.isFinite(days)?`${days}d reporting lag`:"Reporting lag unavailable"}</span><span>{signal.kind==="politician"?"Congress PTR":"SEC Form 4"}{signal.is10b51?" · 10b5-1":""}{mock?" · synthetic":""}</span></div>
+ <div className="signal-actions"><div className="reactions" aria-label="Your private reaction">{[["eyes","👀"],["spicy","🌶️"]].map(([key,emoji])=><button key={key} className={reaction===key?"reacted":""} aria-pressed={reaction===key} aria-label={`${key} reaction (local only)`} onClick={()=>setReaction(reaction===key?null:key)}>{emoji}<span>{reaction===key?"You":""}</span></button>)}<button onClick={()=>void share()} className="share-button" aria-label={`Share ${signal.ticker} filing`}><Icon name="share" size={16}/></button></div><div className="trade-ctas"><Link className="button secondary" href={`/indexes/idx-${encodeURIComponent(signal.profileId)}`}>Buy index</Link><CopyButton signalId={signal.id} enabled={signal.tradeEligible&&signal.side!=="other"} label="Copy print"/></div></div></article>;
 }

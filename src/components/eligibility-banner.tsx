@@ -1,13 +1,29 @@
-import { ShieldAlert } from "lucide-react";
+"use client";
+
+import { Icon } from "@/components/social/icon";
+import { usePrivySolana } from "@/components/providers/privy-provider";
+import { PREVIEW_MODE } from "@/lib/frontend/api";
 import { ELIGIBILITY_BANNER } from "@/lib/compliance";
 
 export function EligibilityBanner() {
+  const wallet = usePrivySolana();
+  const tag = PREVIEW_MODE
+    ? "UI preview · synthetic data"
+    : wallet.mode === "live"
+      ? "User-signed"
+      : "Wallet stub";
+
   return (
-    <div className="border-b border-amber-500/30 bg-amber-500/10">
-      <div className="mx-auto flex max-w-6xl items-start gap-3 px-4 py-3 text-sm text-amber-100 sm:items-center">
-        <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-400 sm:mt-0" />
-        <p>{ELIGIBILITY_BANNER}</p>
-      </div>
+    <div className="eligibility-banner">
+      <Icon name="shield" size={13} />
+      <p>
+        {ELIGIBILITY_BANNER}
+        <span className="eligibility-extra">
+          {" "}
+          Every trade needs your signature. Public filings are delayed.
+        </span>
+      </p>
+      <span className="preview-tag">{tag}</span>
     </div>
   );
 }

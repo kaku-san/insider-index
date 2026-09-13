@@ -1,145 +1,20 @@
-import type { BacktestPoint, PortfolioHolding } from "@/lib/disclosures/types";
-import { formatPct, formatUsd } from "@/lib/format";
-
-const COLORS = [
-  "#34d399",
-  "#38bdf8",
-  "#f472b6",
-  "#fbbf24",
-  "#a78bfa",
-  "#fb7185",
-  "#2dd4bf",
-];
-
-function donutPath(start: number, slice: number, radius = 42, cx = 56, cy = 56): string {
-  const toXY = (t: number) => {
-    const angle = (t - 0.25) * Math.PI * 2;
-    return [cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius];
-  };
-  const [x1, y1] = toXY(start);
-  const [x2, y2] = toXY(start + slice);
-  const large = slice > 0.5 ? 1 : 0;
-  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`;
+"use client";
+import {useId,useState} from "react";
+import type {BacktestPoint,PortfolioHolding} from "@/lib/disclosures/types";
+import {formatPct,formatUsd} from "@/lib/format";
+export const CHART_COLORS=["#93bb36","#8980eb","#66abd8","#e89f65","#cd7394","#5caaa0"];
+export function Sparkline({points,negative=false}: {points:BacktestPoint[];negative?:boolean}) {const valid=points.filter(p=>Number.isFinite(p.equity));if(valid.length<2)return <span className="muted">—</span>;const min=Math.min(...valid.map(p=>p.equity)),max=Math.max(...valid.map(p=>p.equity)),span=max-min||1;return <svg viewBox="0 0 100 34" className={`sparkline ${negative?"negative":""}`} role="img" aria-label="Historical example curve"><polyline points={valid.map((p,i)=>`${i/(valid.length-1)*100},${30-(p.equity-min)/span*26}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/></svg>;}
+export function PortfolioDonut({holdings,title="Index"}: {holdings:Pick<PortfolioHolding,"ticker"|"weightPct"|"xstockSymbol"|"valueUsd">[];title?:string}) {
+ const valid=holdings.filter(h=>Number.isFinite(h.weightPct)&&h.weightPct>0),total=valid.reduce((s,h)=>s+h.weightPct,0);let offset=0;
+ if(!valid.length)return <p className="empty-chart">No allocation data yet.</p>;
+ return <div className="portfolio-donut"><svg viewBox="0 0 160 160" role="img" aria-label={`${title} allocation: ${valid.map(h=>`${h.ticker} ${(h.weightPct*100).toFixed(1)} percent`).join(", ")}`}><circle cx="80" cy="80" r="61" fill="none" stroke="var(--surface-alt)" strokeWidth="18"/>{valid.map((h,i)=>{const fraction=h.weightPct/total,start=offset;offset+=fraction;return <circle key={`${h.ticker}-${i}`} cx="80" cy="80" r="61" fill="none" stroke={CHART_COLORS[i%CHART_COLORS.length]} strokeWidth="18" pathLength="100" strokeDasharray={`${fraction*100} ${100-fraction*100}`} strokeDashoffset={-start*100} transform="rotate(-90 80 80)"/>;})}<text x="80" y="78" textAnchor="middle" className="donut-number">{valid.length}</text><text x="80" y="96" textAnchor="middle" className="donut-label">xStocks</text></svg><div className="donut-legend">{valid.map((h,i)=><div key={`${h.ticker}-${i}`}><span><i style={{background:CHART_COLORS[i%CHART_COLORS.length]}}/>{h.xstockSymbol??h.ticker}</span><strong>{(h.weightPct*100).toFixed(1)}%</strong></div>)}</div></div>;
 }
-
-export function PortfolioDonut({
-  holdings,
-  title,
-}: {
-  holdings: Pick<PortfolioHolding, "ticker" | "weightPct" | "xstockSymbol" | "valueUsd">[];
-  title?: string;
-}) {
-  const slices = holdings.map((row, index) => {
-    const start = holdings
-      .slice(0, index)
-      .reduce((total, holding) => total + holding.weightPct, 0);
-    return { ...row, start, color: COLORS[index % COLORS.length] };
-  });
-
-  return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row">
-      <svg viewBox="0 0 112 112" className="size-36 shrink-0" role="img" aria-label={`${title ?? "Book"} allocation`}>
-        <circle cx="56" cy="56" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="14" />
-        {slices.map((slice) =>
-          slice.weightPct <= 0 ? null : (
-            <path
-              key={slice.ticker}
-              d={donutPath(slice.start, Math.max(slice.weightPct, 0.01))}
-              fill="none"
-              stroke={slice.color}
-              strokeWidth="14"
-              strokeLinecap="butt"
-            />
-          ),
-        )}
-        <text x="56" y="54" textAnchor="middle" className="fill-zinc-400" fontSize="8">
-          {title ?? "Book"}
-        </text>
-        <text x="56" y="66" textAnchor="middle" className="fill-white" fontSize="10">
-          {holdings.length} names
-        </text>
-      </svg>
-      <div className="w-full space-y-2">
-        {slices.map((slice) => (
-          <div key={slice.ticker} className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-300">
-                <span className="mr-2 inline-block size-2 rounded-full" style={{ background: slice.color }} />
-                {slice.xstockSymbol ?? slice.ticker}
-              </span>
-              <span className="text-zinc-400">
-                {(slice.weightPct * 100).toFixed(0)}% · {formatUsd(slice.valueUsd)}
-              </span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${Math.max(slice.weightPct * 100, 2)}%`, background: slice.color }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function EquityCurve({
-  points,
-  label,
-}: {
-  points: BacktestPoint[];
-  label?: string;
-}) {
-  const width = 320;
-  const height = 96;
-  const min = Math.min(...points.map((point) => point.equity));
-  const max = Math.max(...points.map((point) => point.equity));
-  const span = Math.max(max - min, 1);
-  const coords = points.map((point, index) => {
-    const x = (index / Math.max(points.length - 1, 1)) * width;
-    const y = height - ((point.equity - min) / span) * (height - 8) - 4;
-    return `${x},${y}`;
-  });
-  const last = points[points.length - 1];
-  const first = points[0];
-  const change = first ? (last.equity - first.equity) / first.equity : 0;
-  const fillPoints = `0,${height} ${coords.join(" ")} ${width},${height}`;
-
-  return (
-    <div>
-      <div className="mb-2 flex items-end justify-between text-sm">
-        <div>
-          <p className="text-zinc-400">{label ?? "Copy backtest"}</p>
-          <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-zinc-600">Historical return</p>
-        </div>
-        <span className={`text-base font-semibold ${change >= 0 ? "metric-positive" : "metric-negative"}`}>
-          {formatPct(change)}
-        </span>
-      </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-28 w-full" role="img" aria-label={`${label ?? "Copy backtest"} ${formatPct(change)}`}>
-        <defs>
-          <linearGradient id="equity-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#34d399" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <line x1="0" x2={width} y1={height - 4} y2={height - 4} stroke="rgba(255,255,255,0.08)" strokeDasharray="3 4" />
-        <polygon fill="url(#equity-fill)" points={fillPoints} />
-        <polyline
-          fill="none"
-          stroke="#34d399"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          points={coords.join(" ")}
-        />
-      </svg>
-      <div className="mt-1 flex justify-between text-[10px] text-zinc-500">
-        {points.map((point) => (
-          <span key={point.label}>{point.label}</span>
-        ))}
-      </div>
-    </div>
-  );
+export function EquityCurve({points,label="90d historical copy path"}: {points:BacktestPoint[];label?:string}) {
+ const id=useId().replaceAll(":",""),[hover,setHover]=useState<number|null>(null),valid=points.filter(p=>Number.isFinite(p.equity));
+ if(valid.length<2)return <p className="empty-chart">A little more history is needed for this chart.</p>;
+ const width=620,height=180,min=Math.min(...valid.map(p=>p.equity)),max=Math.max(...valid.map(p=>p.equity)),span=max-min||1;
+ const coords=valid.map((p,i)=>({x:i/(valid.length-1)*width,y:height-16-(p.equity-min)/span*(height-32)}));
+ const change=valid[0].equity?(valid.at(-1)!.equity-valid[0].equity)/Math.abs(valid[0].equity):0;
+ const line=coords.map(c=>`${c.x},${c.y}`).join(" "),selected=hover===null?null:Math.min(hover,valid.length-1),color=change>=0?"var(--positive)":"var(--negative)";
+ return <div className="equity-curve"><div className="chart-topline"><span>{label}</span><strong style={{color}}>{selected===null?formatPct(change):`${valid[selected].label} · ${formatUsd(valid[selected].equity)}`}</strong></div><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${label}: ${formatPct(change)}. Use arrow keys to explore data.`} tabIndex={0} onKeyDown={e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();setHover(Math.max(0,Math.min(valid.length-1,(hover??0)+(e.key==="ArrowRight"?1:-1))));}}} onMouseLeave={()=>setHover(null)} onMouseMove={e=>{const r=e.currentTarget.getBoundingClientRect();setHover(Math.round(Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*(valid.length-1)));}}><defs><linearGradient id={`fill-${id}`} x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity=".2"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs>{[30,90,150].map(y=><line key={y} x1="0" x2={width} y1={y} y2={y} stroke="var(--border)" strokeDasharray="3 6"/>)}<polygon points={`0,${height} ${line} ${width},${height}`} fill={`url(#fill-${id})`}/><polyline fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" points={line}/>{selected!==null?<g><line x1={coords[selected].x} x2={coords[selected].x} y1="0" y2={height} stroke="var(--muted-foreground)" strokeDasharray="4 4"/><circle cx={coords[selected].x} cy={coords[selected].y} r="5" fill={color} stroke="var(--card)" strokeWidth="3"/></g>:null}</svg><div className="chart-labels"><span>{valid[0].label}</span><span>{valid[Math.floor(valid.length/2)].label}</span><span>{valid.at(-1)!.label}</span></div></div>;
 }

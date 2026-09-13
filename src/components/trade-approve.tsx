@@ -1,212 +1,29 @@
 "use client";
-
+import {useEffect,useRef,useState} from "react";
+import {useRouter} from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { usePrivySolana } from "@/components/providers/privy-provider";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { formatShares, formatUsd } from "@/lib/format";
-import type { Disclosure } from "@/lib/disclosures/types";
-import type { JupiterOrder } from "@/lib/jupiter";
-import { fromAtomicAmount, getXStockByMint } from "@/lib/allowlist";
-
-type QuoteResponse = { order: JupiterOrder; error?: string };
-
-export function TradeApprove({ id }: { id: string }) {
-  const router = useRouter();
-  const wallet = usePrivySolana();
-  const [disclosure, setDisclosure] = useState<Disclosure | null>(null);
-  const [amount, setAmount] = useState("250");
-  const [attested, setAttested] = useState(false);
-  const [order, setOrder] = useState<JupiterOrder | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const response = await fetch(`/api/disclosures/${id}`);
-      if (!response.ok) return;
-      const payload = (await response.json()) as { disclosure: Disclosure };
-      if (!cancelled) setDisclosure(payload.disclosure);
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  async function requestQuote() {
-    if (!disclosure?.xstockMint) return;
-    setBusy(true);
-    setStatus(null);
-    try {
-      const response = await fetch("/api/quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          outputMint: disclosure.xstockMint,
-          usdcAmount: Number(amount),
-          taker: wallet.solanaAddress ?? undefined,
-          side: disclosure.side === "sell" ? "sell" : "buy",
-        }),
-      });
-      const payload = (await response.json()) as QuoteResponse & { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Quote failed");
-      }
-      setOrder(payload.order);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Quote failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function approveAndExecute() {
-    if (!disclosure?.xstockMint || !order) return;
-    if (!wallet.authenticated || !wallet.solanaAddress) {
-      setStatus(
-        wallet.mode === "live"
-          ? "Connect a Privy Solana wallet first."
-          : "Connect the Privy Solana stub wallet first.",
-      );
-      return;
-    }
-    if (!attested) {
-      setStatus("Confirm you are outside US / UK / CA / AU before signing.");
-      return;
-    }
-
-    setBusy(true);
-    setStatus("Waiting for user signature…");
-    try {
-      const signedTransaction = await wallet.signTransaction(order.transaction);
-      setStatus(
-        order.mode === "live"
-          ? "Submitting Jupiter /execute…"
-          : "Submitting Jupiter /execute stub…",
-      );
-      const response = await fetch("/api/execute", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          signedTransaction,
-          requestId: order.requestId,
-          wallet: wallet.solanaAddress,
-          disclosureId: disclosure.id,
-          ticker: disclosure.ticker,
-          outputMint: disclosure.xstockMint,
-          inAmount: order.inAmount,
-          outAmount: order.outAmount,
-        }),
-      });
-      const payload = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Execute failed");
-      }
-      router.push("/positions");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Execute failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!disclosure) {
-    return <p className="text-sm text-zinc-500">Loading trade ticket…</p>;
-  }
-
-  const xstock = disclosure.xstockMint ? getXStockByMint(disclosure.xstockMint) : undefined;
-  const estimatedOut =
-    order && xstock ? fromAtomicAmount(order.outAmount, xstock.decimals) : null;
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
-          Copy {disclosure.kind === "politician" ? "Congress" : "insider"} print
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">
-          {disclosure.side === "sell" ? "Copy sell" : "Copy buy"} {disclosure.xstockSymbol} from {disclosure.insiderName}
-        </h1>
-        <p className="mt-1 text-zinc-400">
-          USDC in, allowlisted xStock out. Jupiter Swap V2 /order → you sign →
-          /execute. Nothing is signed without you.
-        </p>
-      </div>
-
-      <Card className="border-white/10 bg-white/[0.03]">
-        <CardHeader>
-          <CardTitle className="text-white">Trade ticket</CardTitle>
-          <CardDescription>
-            {disclosure.insiderName} bought {formatShares(disclosure.sharesAmount)} {disclosure.ticker}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="usdc-amount">USDC amount</Label>
-            <Input
-              id="usdc-amount"
-              type="number"
-              min="1"
-              step="1"
-              value={amount}
-              onChange={(event) => {
-                setAmount(event.target.value);
-                setOrder(null);
-              }}
-            />
-          </div>
-          <label className="flex items-start gap-2 text-sm text-zinc-300">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={attested}
-              onChange={(event) => setAttested(event.target.checked)}
-            />
-            I am not located in the United States, United Kingdom, Canada, or Australia,
-            and I understand this is a user-signed trade, not unattended trading.
-          </label>
-          {order ? (
-            <div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-3 text-sm text-emerald-100">
-              <p>Quote {order.mode}: {formatUsd(Number(amount))} USDC</p>
-              <p>
-                Est. receive {estimatedOut != null ? formatShares(estimatedOut) : "—"}{" "}
-                {disclosure.xstockSymbol}
-              </p>
-              <p className="font-mono text-xs text-emerald-200/80">
-                requestId {order.requestId}
-              </p>
-            </div>
-          ) : null}
-          {status ? <p className="text-sm text-amber-200">{status}</p> : null}
-          <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={() => void requestQuote()} disabled={busy}>
-              Get Jupiter order
-            </Button>
-            <Button onClick={() => void approveAndExecute()} disabled={busy || !order}>
-              Approve & sign
-            </Button>
-            <Button
-              nativeButton={false}
-              variant="ghost"
-              render={<Link href={`/disclosures/${disclosure.id}`} />}
-            >
-              Back to inspect
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+import {useResource} from "@/lib/frontend/use-resource";
+import {PREVIEW_MODE,writeApi,errorText} from "@/lib/frontend/api";
+import {usePrivySolana} from "./providers/privy-provider";
+import {PageError,Skeleton,Breadcrumb,StockIcon,EmptyState} from "./social/shared";
+import {PersonAvatar} from "./person-avatar";
+import {AmountField,EligibilityCheck,OrderSafety} from "./social/order-fields";
+import {Icon} from "./social/icon";
+import {Button} from "./ui/button";
+import {portraitFor} from "@/lib/frontend/portraits";
+import type {Disclosure} from "@/lib/disclosures/types";
+import type {JupiterOrder} from "@/lib/frontend/contracts";
+import {formatUsd,formatDate} from "@/lib/format";
+export function TradeApprove({id}:{id:string}) {
+ const router=useRouter(),wallet=usePrivySolana(),resource=useResource<{disclosure:Disclosure}>(`/api/disclosures/${encodeURIComponent(id)}`),d=resource.data?.disclosure;
+ const [amount,setAmount]=useState("250"),[attested,setAttested]=useState(false),[order,setOrder]=useState<JupiterOrder|null>(null),[status,setStatus]=useState<string|null>(null),[busy,setBusy]=useState(false),[preview,setPreview]=useState(false),[expiry,setExpiry]=useState(0),[now,setNow]=useState(0);
+ const key=`${id}:${amount}:${wallet.solanaAddress??""}`,latest=useRef(key);latest.current=key;
+ useEffect(()=>{setOrder(null);setPreview(false);setAttested(false);},[id,wallet.solanaAddress]);
+ useEffect(()=>{if(!order)return;const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer);},[order]);
+ const valid=amount!==""&&Number.isFinite(Number(amount))&&Number(amount)>=1,eligible=Boolean(d?.tradeEligible&&d?.xstockMint&&d?.side!=="other"),stale=Boolean(order)&&now>=expiry;
+ function changeAmount(v:string){setAmount(v);setOrder(null);setPreview(false);setStatus(null);}
+ async function requestQuote(){if(!d?.xstockMint||!valid||!eligible)return;setOrder(null);setStatus(null);if(PREVIEW_MODE){setPreview(true);setStatus("Order preview only. Pricing, signing, and execution require the original backend.");return;}setBusy(true);const requestKey=key;try{const payload=await writeApi<{order:JupiterOrder}>("/api/quote",{outputMint:d.xstockMint,usdcAmount:Number(amount),taker:wallet.solanaAddress??undefined,side:d.side==="sell"?"sell":"buy"});if(requestKey!==latest.current)return;const quote=payload.order;if(!quote?.requestId||!quote.transaction||!quote.inAmount||!quote.outAmount)throw new Error("Incomplete order response. Refresh your quote.");setOrder(quote);setNow(Date.now());setExpiry(Date.now()+60000);}catch(e){setStatus(errorText(e));}finally{setBusy(false);}}
+ async function approveAndExecute(){if(PREVIEW_MODE||!d?.xstockMint||!eligible||!order||!valid||stale||Date.now()>=expiry||!attested||!wallet.authenticated||!wallet.solanaAddress)return;setBusy(true);setStatus("Waiting for your signature…");const requestKey=key;try{const signedTransaction=await wallet.signTransaction(order.transaction);if(requestKey!==latest.current)throw new Error("Wallet or amount changed. Request a fresh quote.");setStatus("Submitting your signed order…");await writeApi("/api/execute",{signedTransaction,requestId:order.requestId,wallet:wallet.solanaAddress,disclosureId:d.id,ticker:d.ticker,outputMint:d.xstockMint,inAmount:order.inAmount,outAmount:order.outAmount});setOrder(null);router.push("/positions");}catch(e){setStatus(errorText(e));}finally{setBusy(false);}}
+ if(resource.loading)return <Skeleton/>;if(resource.error)return <PageError error={resource.error} retry={resource.reload}/>;if(!d)return <EmptyState title="Print unavailable." description="This record could not be found."/>;
+ return <div className="trade-page"><Breadcrumb label="Copy one print"/><div className="page-intro"><div><span className="eyebrow">ONE FILING. ONE DECISION.</span><h1>Make your own move<span className="accent-dot">.</span></h1><p>Same ticker. New price. Always your call.</p></div></div><div className="trade-page-layout"><section className="trade-context"><div className="copy-visual"><span className="mini-label">THE PUBLIC PRINT</span><div className="copy-visual-path"><PersonAvatar name={d.insiderName} imageUrl={portraitFor(d.profileId)} size="xl"/><span className="copy-path-arrow"><Icon name="arrow" size={29}/></span><StockIcon ticker={d.ticker} size="lg"/></div><h2>{d.insiderName}</h2><p>Disclosed a <strong className={d.side==="sell"?"negative":"positive"}>{d.side}</strong> in {d.ticker}</p><span className="outlined-pill">Filed {formatDate(d.filedAt)}</span></div><div className="trade-context-note"><Icon name="clock" size={20}/><div><h3>You’re copying the idea, not the timestamp.</h3><p>This filing describes a past trade. Your execution price and result can differ. Check the record first.</p><Link href={`/disclosures/${encodeURIComponent(id)}`} className="text-button">Inspect the original record<Icon name="up" size={13}/></Link></div></div><div className="trade-context-note"><Icon name="grid" size={20}/><div><h3>Looking for the whole basket?</h3><p>Copy print follows this single disclosure. A person index is a separate allocation.</p><Link href={`/indexes/idx-${encodeURIComponent(d.profileId)}`} className="text-button">Explore their index<Icon name="up" size={13}/></Link></div></div></section><aside className="order-panel"><div className="order-panel-heading"><StockIcon ticker={d.ticker}/><div><span className="mini-label">USER-SIGNED ORDER</span><h2>Copy {d.side} · {d.xstockSymbol??d.ticker}</h2></div></div><AmountField id="usdc-amount" value={amount} onChange={changeAmount} disabled={busy}/><div className="order-summary"><div><span>Mode</span><strong>One print</strong></div><div><span>Direction</span><strong className={d.side==="sell"?"negative":"positive"}>{d.side.toUpperCase()}</strong></div><div><span>Notional</span><strong>{valid?formatUsd(Number(amount)):"—"}</strong></div><div><span>Fees & slippage</span><strong>Review in wallet</strong></div></div>{d.side==="sell"?<p className="ticket-disclaimer">Sell sizing uses the existing API’s USDC-notional field. Review which token is debited and the proceeds in your wallet before approving.</p>:null}<EligibilityCheck checked={attested} onChange={setAttested} disabled={busy}/>{!eligible?<p className="notice error" role="alert">This print is not eligible for copying. No order can be requested.</p>:null}{order?<div className="basket-preview"><span className="mini-label">QUOTE RECEIVED · {order.mode??"REVIEW"}</span><div><span>Input · base units</span><code>{order.inAmount}</code></div><div><span>Output · base units</span><code>{order.outAmount}</code></div><small>Exact token quantities and decimals must be verified in your wallet. No mint decimals are invented by this frontend.</small></div>:null}{preview?<div className="basket-preview"><span className="mini-label">PREVIEW · NOT AN EXECUTABLE QUOTE</span><div><span>{d.xstockSymbol}</span><strong>{formatUsd(Number(amount))} notional</strong></div><small>Actual token quantity will come from your production quote.</small></div>:null}{status?<p className="order-status" role="status">{status}</p>:null}{stale?<p className="field-error" role="alert">Quote expired. Request a fresh quote.</p>:null}<Button className="button secondary full-width" disabled={busy||!valid||!eligible} onClick={()=>void requestQuote()}>{busy?"Working…":PREVIEW_MODE?"Preview order":order?"Refresh quote":"Get quote"}<Icon name="arrow" size={15}/></Button><Button className="button primary full-width" disabled={PREVIEW_MODE||busy||!order||stale||!attested||!wallet.solanaAddress||!valid||!eligible} onClick={()=>void approveAndExecute()}><Icon name="shield" size={16}/>Approve & sign</Button>{!PREVIEW_MODE&&!wallet.solanaAddress?<button className="text-button" onClick={()=>void wallet.connect().catch(e=>setStatus(errorText(e)))}>Connect a Solana wallet to continue</button>:null}<p className="ticket-disclaimer">{PREVIEW_MODE?"Read-only preview. No wallet transaction will be created.":wallet.mode==="live"?"You review and sign every order. Quotes expire locally after 60 seconds.":"The included wallet is a stub until NEXT_PUBLIC_PRIVY_APP_ID is set."}</p><OrderSafety/></aside></div></div>;
 }
