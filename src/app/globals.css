@@ -84,9 +84,9 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.12 0.018 264);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.17 0.018 264);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -123,8 +123,39 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at 12% -8%, rgb(45 212 191 / 12%), transparent 26rem),
+      radial-gradient(circle at 88% 5%, rgb(59 130 246 / 10%), transparent 22rem),
+      linear-gradient(180deg, #080d16 0%, #070b12 42rem, #090d15 100%);
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
+  }
+
+  ::selection {
+    @apply bg-emerald-300/30 text-white;
+  }
+}
+
+@layer utilities {
+  .surface {
+    @apply border border-white/10 bg-white/[0.035] shadow-[0_18px_55px_-28px_rgb(0_0_0_/_0.9)];
+  }
+
+  .surface-interactive {
+    @apply border border-white/10 bg-white/[0.035] shadow-[0_18px_55px_-28px_rgb(0_0_0_/_0.9)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.055] hover:shadow-[0_22px_65px_-28px_rgb(0_0_0_/_0.95)] active:translate-y-0;
+  }
+
+  .eyebrow {
+    @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300;
+  }
+
+  .metric-positive {
+    @apply text-emerald-300;
+  }
+
+  .metric-negative {
+    @apply text-rose-300;
   }
 }

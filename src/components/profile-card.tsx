@@ -11,20 +11,28 @@ import { partyChip } from "@/lib/fomo/party";
 export function ProfileCard({ profile }: { profile: FomoProfile }) {
   const insight = (horizon: "24h" | "30d" | "90d") =>
     profile.insights.find((row) => row.horizon === horizon);
+  const partyBorder =
+    profile.party === "Democratic"
+      ? "before:bg-sky-400"
+      : profile.party === "Republican"
+        ? "before:bg-rose-400"
+        : "before:bg-emerald-400";
 
   return (
-    <Card className="border-white/10 bg-white/[0.03]">
-      <CardHeader>
+    <Card className={`surface-interactive relative before:absolute before:inset-y-0 before:left-0 before:w-1 ${partyBorder}`}>
+      <CardHeader className="pt-1">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <PersonAvatar name={profile.name} imageUrl={profile.imageUrl} />
+            <Link href={`/p/${profile.id}`} aria-label={`View ${profile.name}'s profile`}>
+              <PersonAvatar name={profile.name} imageUrl={profile.imageUrl} size="lg" />
+            </Link>
             <div>
-              <CardTitle className="text-white">
-                <Link href={`/p/${profile.id}`} className="hover:underline">
+              <CardTitle className="text-lg text-white">
+                <Link href={`/p/${profile.id}`} className="transition-colors hover:text-emerald-200">
                   {profile.name}
                 </Link>
               </CardTitle>
-              <p className="text-xs text-zinc-500">
+              <p className="mt-0.5 text-xs text-zinc-400">
                 {profile.handle} · {profile.title}
               </p>
             </div>
@@ -38,25 +46,25 @@ export function ProfileCard({ profile }: { profile: FomoProfile }) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-3 gap-2 text-center">
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-3 gap-1.5 text-center">
           {(["24h", "30d", "90d"] as const).map((horizon) => {
             const row = insight(horizon);
             return (
-              <div key={horizon} className="rounded-lg bg-black/30 p-2">
+              <div key={horizon} className="rounded-lg bg-black/25 px-1.5 py-2">
                 <p className="text-[10px] uppercase tracking-wide text-zinc-500">{horizon}</p>
-                <p className={row && row.returnPct >= 0 ? "text-emerald-300" : "text-rose-300"}>
+                <p className={`mt-0.5 text-sm font-semibold ${row && row.returnPct >= 0 ? "metric-positive" : "metric-negative"}`}>
                   {formatPct(row?.returnPct)}
                 </p>
               </div>
             );
           })}
         </div>
-        <p className="text-xs text-zinc-500">
-          {profile.index.name} · {profile.index.constituents.length} names · 90d hit{" "}
-          {(profile.hitRate90d * 100).toFixed(0)}%
-        </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center justify-between gap-2 text-xs text-zinc-400">
+          <span className="truncate">{profile.index.name}</span>
+          <span className="shrink-0">{profile.index.constituents.length} xStocks</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
           <CopyButton
             signalId={profile.latestEligibleSignalId}
             enabled={Boolean(profile.latestEligibleSignalId)}

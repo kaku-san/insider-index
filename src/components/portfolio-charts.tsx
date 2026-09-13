@@ -29,16 +29,16 @@ export function PortfolioDonut({
   holdings: Pick<PortfolioHolding, "ticker" | "weightPct" | "xstockSymbol" | "valueUsd">[];
   title?: string;
 }) {
-  let cursor = 0;
   const slices = holdings.map((row, index) => {
-    const start = cursor;
-    cursor += row.weightPct;
+    const start = holdings
+      .slice(0, index)
+      .reduce((total, holding) => total + holding.weightPct, 0);
     return { ...row, start, color: COLORS[index % COLORS.length] };
   });
 
   return (
     <div className="flex flex-col items-center gap-4 sm:flex-row">
-      <svg viewBox="0 0 112 112" className="size-36 shrink-0">
+      <svg viewBox="0 0 112 112" className="size-36 shrink-0" role="img" aria-label={`${title ?? "Book"} allocation`}>
         <circle cx="56" cy="56" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="14" />
         {slices.map((slice) =>
           slice.weightPct <= 0 ? null : (
@@ -104,18 +104,34 @@ export function EquityCurve({
   const last = points[points.length - 1];
   const first = points[0];
   const change = first ? (last.equity - first.equity) / first.equity : 0;
+  const fillPoints = `0,${height} ${coords.join(" ")} ${width},${height}`;
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between text-sm">
-        <span className="text-zinc-400">{label ?? "Copy backtest"}</span>
-        <span className={change >= 0 ? "text-emerald-300" : "text-rose-300"}>{formatPct(change)}</span>
+      <div className="mb-2 flex items-end justify-between text-sm">
+        <div>
+          <p className="text-zinc-400">{label ?? "Copy backtest"}</p>
+          <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-zinc-600">Historical return</p>
+        </div>
+        <span className={`text-base font-semibold ${change >= 0 ? "metric-positive" : "metric-negative"}`}>
+          {formatPct(change)}
+        </span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-24 w-full">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-28 w-full" role="img" aria-label={`${label ?? "Copy backtest"} ${formatPct(change)}`}>
+        <defs>
+          <linearGradient id="equity-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#34d399" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <line x1="0" x2={width} y1={height - 4} y2={height - 4} stroke="rgba(255,255,255,0.08)" strokeDasharray="3 4" />
+        <polygon fill="url(#equity-fill)" points={fillPoints} />
         <polyline
           fill="none"
           stroke="#34d399"
           strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           points={coords.join(" ")}
         />
       </svg>

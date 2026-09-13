@@ -78,94 +78,109 @@ export function ProfileView({ id }: { id: string }) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-4">
-          <PersonAvatar name={profile.name} imageUrl={profile.imageUrl} size="lg" />
-          <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
-            {profile.kind === "politician" ? "Congress profile" : "Insider profile"}
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">{profile.name}</h1>
-          <p className="mt-1 text-zinc-400">
-            {profile.title} · {profile.handle} · {profile.followers.toLocaleString()} followers
-          </p>
-          {profile.party ? (
-            <span className={`mt-3 inline-flex rounded-full px-2 py-0.5 text-xs ring-1 ${partyChip(profile.party)}`}>
-              {profile.party}
-            </span>
-          ) : (
-            <Badge className="mt-3" variant="secondary">
-              Executive
-            </Badge>
-          )}
+    <div className="space-y-8">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.06] via-white/[0.025] to-transparent p-5 sm:p-7">
+        <div className="absolute -right-16 -top-16 size-64 rounded-full bg-emerald-300/[0.07] blur-3xl" aria-hidden="true" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4 sm:gap-5">
+            <PersonAvatar name={profile.name} imageUrl={profile.imageUrl} size="xl" />
+            <div className="min-w-0 pt-1">
+              <p className="eyebrow">{profile.kind === "politician" ? "Congress profile" : "Insider profile"}</p>
+              <h1 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">{profile.name}</h1>
+              <p className="mt-2 text-sm text-zinc-300 sm:text-base">
+                {profile.title} <span className="text-zinc-600">·</span> {profile.handle}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {profile.party ? (
+                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${partyChip(profile.party)}`}>
+                    {profile.party}
+                  </span>
+                ) : (
+                  <Badge variant="secondary">Executive</Badge>
+                )}
+                <span className="text-xs text-zinc-500">{profile.followers.toLocaleString()} following this tape</span>
+              </div>
+            </div>
+          </div>
+          <div className="grid gap-2 sm:flex sm:flex-wrap">
+            <CopyButton
+              signalId={profile.latestEligibleSignalId}
+              enabled={Boolean(profile.latestEligibleSignalId)}
+              label="Copy latest trade"
+            />
+            <Button nativeButton={false} variant="outline" render={<Link href={`/indexes/${profile.index.id}`} />}>
+              Buy {profile.index.name}
+            </Button>
+            {follow ? (
+              <>
+                <Button
+                  variant={follow.autoCopy ? "default" : "outline"}
+                  disabled={busy}
+                  onClick={() => void setFollowState({ autoCopy: !follow.autoCopy })}
+                >
+                  {follow.autoCopy ? "Copy queue on" : "Queue next copy"}
+                </Button>
+                <Button variant="ghost" disabled={busy} onClick={() => void setFollowState({ unfollow: true })}>
+                  Unfollow
+                </Button>
+              </>
+            ) : (
+              <Button disabled={busy} onClick={() => void setFollowState({ autoCopy: false })}>
+                Follow
+              </Button>
+            )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <CopyButton
-            signalId={profile.latestEligibleSignalId}
-            enabled={Boolean(profile.latestEligibleSignalId)}
-            label="Copy latest trade"
-          />
-          <Button nativeButton={false} variant="outline" render={<Link href={`/indexes/${profile.index.id}`} />}>
-            {profile.index.name}
-          </Button>
-          {follow ? (
-            <>
-              <Button
-                variant={follow.autoCopy ? "default" : "outline"}
-                disabled={busy}
-                onClick={() => void setFollowState({ autoCopy: !follow.autoCopy })}
-              >
-                {follow.autoCopy ? "Auto-copy on" : "Auto-copy next"}
-              </Button>
-              <Button variant="ghost" disabled={busy} onClick={() => void setFollowState({ unfollow: true })}>
-                Unfollow
-              </Button>
-            </>
-          ) : (
-            <Button disabled={busy} onClick={() => void setFollowState({ autoCopy: false })}>
-              Follow
-            </Button>
-          )}
-        </div>
-      </div>
+      </section>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        {profile.insights.map((insight) => (
-          <Card key={insight.horizon} className="border-white/10 bg-white/[0.03]">
-            <CardHeader>
-              <CardTitle className="text-sm text-zinc-400">{insight.horizon} backtest</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className={`text-2xl font-semibold ${insight.returnPct >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                {formatPct(insight.returnPct)}
-              </p>
-              <p className="mt-1 text-xs text-zinc-500">
-                {insight.trades} trades · {formatUsd(insight.volumeUsd)}
-                {insight.hitRate != null ? ` · ${(insight.hitRate * 100).toFixed(0)}% hit` : ""}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <section>
+        <div className="mb-3 flex items-end justify-between">
+          <div>
+            <p className="eyebrow">How this tape performed</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">Copy stats</h2>
+          </div>
+          <span className="text-xs text-zinc-500">Historical</span>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {profile.insights.map((insight) => (
+            <Card key={insight.horizon} className="surface">
+              <CardHeader className="pt-0">
+                <CardTitle className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
+                  {insight.horizon} backtest
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className={`text-3xl font-semibold tracking-tight ${insight.returnPct >= 0 ? "metric-positive" : "metric-negative"}`}>
+                  {formatPct(insight.returnPct)}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  {insight.trades} trades · {formatUsd(insight.volumeUsd)}
+                  {insight.hitRate != null ? ` · ${(insight.hitRate * 100).toFixed(0)}% hit` : ""}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border-white/10 bg-white/[0.03]">
-          <CardHeader>
-            <CardTitle className="text-white">{profile.index.name}</CardTitle>
+        <Card className="surface">
+          <CardHeader className="pt-0">
+            <p className="eyebrow">Tracked basket</p>
+            <CardTitle className="mt-1 text-xl text-white">{profile.index.name}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <PortfolioDonut holdings={profile.portfolio} title="Book" />
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs leading-5 text-zinc-500">
               Weights come from disclosed buys minus sells. The index only holds allowlisted xStocks
               and rebalances when a new Form 4 / PTR posts — you still sign.
             </p>
           </CardContent>
         </Card>
-        <Card className="border-white/10 bg-white/[0.03]">
-          <CardHeader>
-            <CardTitle className="text-white">If you copied the book</CardTitle>
+        <Card className="surface">
+          <CardHeader className="pt-0">
+            <p className="eyebrow">Paper performance</p>
+            <CardTitle className="mt-1 text-xl text-white">If you copied the book</CardTitle>
           </CardHeader>
           <CardContent>
             <EquityCurve points={profile.curve} label="90d copy path" />
@@ -176,14 +191,15 @@ export function ProfileView({ id }: { id: string }) {
         </Card>
       </div>
 
-      <div>
-        <h2 className="mb-3 text-lg font-medium text-white">Disclosure history</h2>
+      <section>
+        <p className="eyebrow">Every print</p>
+        <h2 className="mb-4 mt-1 text-2xl font-semibold tracking-tight text-white">Disclosure history</h2>
         <div className="grid gap-3">
           {trades.map((trade) => (
             <SignalCard key={trade.id} signal={trade} />
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

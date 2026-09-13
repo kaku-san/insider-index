@@ -14,7 +14,8 @@ export function WalletButton() {
           {shortenAddress(wallet.solanaAddress, 4)}
         </span>
         <Button variant="outline" size="sm" onClick={() => void wallet.disconnect()}>
-          Disconnect
+          <span className="hidden sm:inline">Disconnect</span>
+          <span className="sm:hidden">Exit</span>
         </Button>
       </div>
     );
@@ -22,7 +23,10 @@ export function WalletButton() {
 
   return (
     <Button size="sm" onClick={() => void wallet.connect()}>
-      {wallet.configured ? "Connect wallet" : "Connect stub wallet"}
+      <span className="sm:hidden">Connect</span>
+      <span className="hidden sm:inline">
+        {wallet.configured ? "Connect wallet" : "Connect stub wallet"}
+      </span>
     </Button>
   );
 }
