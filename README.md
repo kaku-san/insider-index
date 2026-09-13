@@ -2,7 +2,7 @@
 
 Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
 
-**Form 4 insider disclosure → inspect → amount → user-signed xStock swap on Solana → track position.**
+**Form 4 / Congress disclosure → FOMO profile → copy one print or buy that person's index → user-signed xStock basket on Solana → rebalance on the next filing.**
 
 This repository is a Vercel-ready Next.js App Router app. Live Form4API, Privy, Jupiter, Helius, and Supabase clients are stubbed behind env keys so `npm run build` works without secrets.
 
@@ -10,9 +10,11 @@ This repository is a Vercel-ready Next.js App Router app. Live Form4API, Privy, 
 
 In V1:
 
-- Form4API is the primary disclosure source (mock Form 4 data when `FORM4API_KEY` is unset)
-- Buys are allowed only against the verified xStock mint allowlist
-- The user signs every swap. There are no vaults and no unattended trading
+- Form4API is the primary disclosure source (mock Form 4 + House PTRs when `FORM4API_KEY` is unset)
+- Congress is a first-class lane: Democrats / Republicans, politician profiles, and person indexes
+- Buys (and copy-sells) are allowed only against the verified xStock mint allowlist
+- One-trade copy **or** a person index (Pelosi Index, Huang Index) that rebalances on the next disclosure
+- The user signs every swap and every rebalance. There are no vaults and no unattended trading
 
 Out of V1:
 
@@ -42,17 +44,21 @@ Form 4 feed  →  inspect filing  →  USDC amount  →  Jupiter /order
 
 API routes:
 
-- `GET /api/disclosures` — Form4 adapter, allowlisted tickers only
+- `GET /api/disclosures` — Form4 + Congress tape
 - `GET /api/disclosures/[id]` — inspect payload
+- `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
+- `GET /api/indexes` · `POST /api/indexes/quote` · `POST /api/indexes/execute` (basket + rebalance)
 - `POST /api/quote` — Jupiter `/order` stub, allowlist-enforced
 - `POST /api/execute` — Jupiter `/execute` stub, then record a position
 - `GET /api/positions` — tracked user-signed fills
 
 UI routes:
 
-- `/` feed
+- `/` discover (live tape, executives, D/R, indexes)
+- `/p/[id]` FOMO profile with portrait, portfolio chart, 24h/30d/90d
+- `/indexes/[id]` person index ticket + rebalance
 - `/disclosures/[id]` inspect
-- `/trade/[id]` amount + approve/sign stub
+- `/trade/[id]` one-print copy + approve/sign stub
 - `/positions` tracked book
 
 ## Allowlist rule

@@ -6,7 +6,7 @@ import { WalletButton } from "@/components/wallet-button";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { href: "/", label: "Feed" },
+  { href: "/", label: "Discover" },
   { href: "/positions", label: "Positions" },
 ];
 
@@ -22,7 +22,7 @@ export function SiteHeader() {
           </span>
           <div>
             <p className="text-sm font-semibold tracking-tight text-white">Stocklana</p>
-            <p className="text-[11px] text-zinc-400">Form 4 → xStock on Solana</p>
+            <p className="text-[11px] text-zinc-400">Copy people. Or copy their index.</p>
           </div>
         </Link>
         <nav className="flex items-center gap-1">

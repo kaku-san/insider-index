@@ -27,7 +27,14 @@ export function enrichDisclosure(
     side,
     xstockSymbol: xstock?.symbol ?? null,
     xstockMint: xstock?.mint ?? null,
-    tradeEligible: Boolean(xstock) && side === "buy",
+    tradeEligible: Boolean(xstock) && (side === "buy" || side === "sell"),
+    kind: "insider",
+    profileId: `insider-${tx.insiderCik || tx.insiderName.toLowerCase().replace(/\s+/g, "-")}`,
+    party: null,
+    chamber: null,
+    state: null,
+    amountLow: tx.transactionValue,
+    amountHigh: tx.transactionValue,
   };
 }
 
@@ -172,5 +179,10 @@ export async function getDisclosureById(id: string): Promise<Disclosure | null> 
   const adapter = createForm4Adapter();
   const source = process.env.FORM4API_KEY ? "form4" : "mock-form4";
   const row = await adapter.getTransaction(id);
-  return row ? enrichDisclosure(row, source) : null;
+  if (row) {
+    return enrichDisclosure(row, source);
+  }
+  const { listCongressDisclosures } = await import("@/lib/disclosures/congress");
+  const congress = await listCongressDisclosures();
+  return congress.find((item) => item.id === id) ?? null;
 }

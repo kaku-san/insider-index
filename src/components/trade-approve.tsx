@@ -57,6 +57,7 @@ export function TradeApprove({ id }: { id: string }) {
           outputMint: disclosure.xstockMint,
           usdcAmount: Number(amount),
           taker: wallet.solanaAddress ?? undefined,
+          side: disclosure.side === "sell" ? "sell" : "buy",
         }),
       });
       const payload = (await response.json()) as QuoteResponse & { error?: string };
@@ -124,9 +125,11 @@ export function TradeApprove({ id }: { id: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Amount → sign</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
+          Copy {disclosure.kind === "politician" ? "Congress" : "insider"} print
+        </p>
         <h1 className="mt-2 text-3xl font-semibold text-white">
-          Buy {disclosure.xstockSymbol} from {disclosure.ticker}
+          {disclosure.side === "sell" ? "Copy sell" : "Copy buy"} {disclosure.xstockSymbol} from {disclosure.insiderName}
         </h1>
         <p className="mt-1 text-zinc-400">
           USDC in, allowlisted xStock out. Jupiter Swap V2 is stubbed as /order →

@@ -28,3 +28,17 @@ export function shortenAddress(value: string, size = 4): string {
   if (value.length <= size * 2 + 3) return value;
   return `${value.slice(0, size)}…${value.slice(-size)}`;
 }
+
+export function formatPct(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  const signed = value > 0 ? "+" : "";
+  return `${signed}${(value * 100).toFixed(1)}%`;
+}
+
+export function formatUsdRange(low: number | null, high: number | null): string {
+  if (low == null && high == null) return "—";
+  if (low != null && high != null && low !== high) {
+    return `${formatUsd(low)}–${formatUsd(high)}`;
+  }
+  return formatUsd(low ?? high);
+}

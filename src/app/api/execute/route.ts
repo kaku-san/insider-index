@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   if (!body.outputMint || !canBuyMint(body.outputMint)) {
     return NextResponse.json(
-      { error: "Buy blocked: output mint is not on the V1 xStock allowlist." },
+      { error: "Copy blocked: mint is not on the V1 xStock allowlist." },
       { status: 403 },
     );
   }

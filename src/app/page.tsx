@@ -1,5 +1,5 @@
-import { DisclosureFeed } from "@/components/disclosure-feed";
+import { DiscoverHome } from "@/components/discover-home";
 
 export default function HomePage() {
-  return <DisclosureFeed />;
+  return <DiscoverHome />;
 }

@@ -1,7 +1,10 @@
 import {
+  USDC_DECIMALS,
   USDC_MINT,
   assertCanBuyMint,
   fromAtomicAmount,
+  getXStockByMint,
+  isAllowlistedMint,
   toAtomicAmount,
 } from "@/lib/allowlist";
 
@@ -56,14 +59,18 @@ function stubTransactionPayload(order: Omit<JupiterOrder, "transaction">): strin
 }
 
 export function buildStubOrder(request: JupiterOrderRequest): JupiterOrder {
-  if (request.inputMint !== USDC_MINT) {
-    throw new Error("V1 quotes buy xStocks with USDC only.");
-  }
+  const buying = request.inputMint === USDC_MINT;
+  const xstockMint = buying ? request.outputMint : request.inputMint;
+  const xstock = assertCanBuyMint(xstockMint);
 
-  const xstock = assertCanBuyMint(request.outputMint);
-  const usdcAmount = fromAtomicAmount(request.amount, 6);
-  const outUi = usdcAmount / xstock.stubUsdPrice;
-  const outAmount = toAtomicAmount(outUi, xstock.decimals);
+  let outAmount: string;
+  if (buying) {
+    const usdcAmount = fromAtomicAmount(request.amount, USDC_DECIMALS);
+    outAmount = toAtomicAmount(usdcAmount / xstock.stubUsdPrice, xstock.decimals);
+  } else {
+    const tokens = fromAtomicAmount(request.amount, xstock.decimals);
+    outAmount = toAtomicAmount(tokens * xstock.stubUsdPrice, USDC_DECIMALS);
+  }
   const requestId = stubRequestId();
 
   const order: Omit<JupiterOrder, "transaction"> = {
@@ -88,7 +95,12 @@ export function buildStubOrder(request: JupiterOrderRequest): JupiterOrder {
 export async function fetchJupiterOrder(
   request: JupiterOrderRequest,
 ): Promise<JupiterOrder> {
-  assertCanBuyMint(request.outputMint);
+  const xstockMint =
+    request.inputMint === USDC_MINT ? request.outputMint : request.inputMint;
+  if (!isAllowlistedMint(xstockMint)) {
+    throw new Error("Copy blocked: xStock mint is not on the V1 allowlist.");
+  }
+  getXStockByMint(xstockMint);
 
   const apiKey = process.env.JUPITER_API_KEY;
   if (!apiKey) {
