@@ -45,6 +45,7 @@ Form 4 feed  →  inspect filing  →  USDC amount  →  Jupiter /order
 
 API routes:
 
+- `GET /api/health` — boolean adapter flags only (`form4` / `jupiter` / `helius` / `privy` / `supabase`); never echoes secret values
 - `GET /api/disclosures` — Form4 + Congress tape
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
@@ -157,18 +158,22 @@ Form4 / Jupiter fall back to mock/stub if the live provider errors. Privy never 
 | --- | --- |
 | Local | `cp .env.example .env.local`, fill keys, `npm run dev` |
 | Server | gitignored `.env` at `/srv/projects/stocklana` — the deploy script never rsyncs `.env` / `.env.local` |
-| Traefik | Compose router rule is locked in `docker-compose.yml` |
+| Traefik | Compose router rule is locked in `docker-compose.yml`. Barely Stable’s network is `edge` (default). Override with `TRAEFIK_NETWORK=edge` if you need to set it explicitly; do not switch the host. |
+| Health | `GET https://stocklana.barelystable.dev/api/health` reports which adapters are configured (`true`/`false` only) |
 
 ```
 Host(`stocklana.barelystable.dev`)
 ```
 
 ```bash
+# Barely Stable Traefik network (default in docker-compose.yml):
+# TRAEFIK_NETWORK=edge
+# TRAEFIK_CERTRESOLVER=letsencrypt
 ./scripts/deploy.sh
 ```
 
-rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. Wildcard DNS already points at the Barely Stable / Hetzner host.
+rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.*`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. Wildcard DNS already points at the Barely Stable / Hetzner host. The image build never `COPY`s `.env*` — `NEXT_PUBLIC_*` is injected only as Docker build args.
 
 `NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present in the server `.env` at image **build** time so the client bundle is live, not stub.
 
-Allow `https://stocklana.barelystable.dev` in the Privy dashboard allowed origins. Do not commit real keys.
+**Privy dashboard:** allow `https://stocklana.barelystable.dev` (and `http://localhost:3000` for local) in allowed origins. Without that origin, the live wallet client will not finish loading. Do not commit real keys.

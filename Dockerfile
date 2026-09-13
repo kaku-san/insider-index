@@ -8,7 +8,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Public client keys only. Never COPY a .env file into the image.
+# Public client keys only, via build args. Never COPY a .env* file into the image.
+RUN if find . -maxdepth 1 \( -name '.env' -o -name '.env.*' \) | grep -q .; then \
+      echo "Refusing to bake env files into the image" >&2; \
+      exit 1; \
+    fi
+
 ARG NEXT_PUBLIC_PRIVY_APP_ID
 ARG NEXT_PUBLIC_PRIVY_APPID
 ARG NEXT_PUBLIC_SUPABASE_URL

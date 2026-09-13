@@ -34,13 +34,22 @@ export function readPublicPrivyAppId(): string | null {
   return appId || null;
 }
 
-/** Fixture wallet. Mounted only when NEXT_PUBLIC_PRIVY_APP_ID is missing. */
-export function PrivySolanaProvider({ children }: { children: ReactNode }) {
+/** Fixture wallet. Always mounted so SSR and the tape render before live Privy loads. */
+export function PrivySolanaProvider({
+  children,
+  pendingLive = false,
+}: {
+  children: ReactNode;
+  pendingLive?: boolean;
+}) {
   const [authenticated, setAuthenticated] = useState(false);
 
   const connect = useCallback(async () => {
+    if (pendingLive) {
+      throw new Error("Wallet is still connecting.");
+    }
     setAuthenticated(true);
-  }, []);
+  }, [pendingLive]);
 
   const disconnect = useCallback(async () => {
     setAuthenticated(false);
@@ -61,9 +70,9 @@ export function PrivySolanaProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<PrivySolanaWallet>(
     () => ({
-      ready: true,
-      configured: false,
-      mode: "stub",
+      ready: !pendingLive,
+      configured: pendingLive,
+      mode: pendingLive ? "live" : "stub",
       authenticated,
       solanaAddress: authenticated ? STUB_WALLET : null,
       appId: null,
@@ -71,7 +80,7 @@ export function PrivySolanaProvider({ children }: { children: ReactNode }) {
       disconnect,
       signTransaction,
     }),
-    [authenticated, connect, disconnect, signTransaction],
+    [authenticated, connect, disconnect, pendingLive, signTransaction],
   );
 
   return (

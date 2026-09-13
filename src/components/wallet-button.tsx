@@ -11,15 +11,18 @@ export function WalletButton() {
   const wallet = usePrivySolana();
   const ui = useUI();
   const label =
-    wallet.authenticated && wallet.solanaAddress
-      ? shortenAddress(wallet.solanaAddress)
-      : PREVIEW_MODE
-        ? "Preview wallet"
-        : "Connect wallet";
+    !wallet.ready
+      ? "Connecting…"
+      : wallet.authenticated && wallet.solanaAddress
+        ? shortenAddress(wallet.solanaAddress)
+        : PREVIEW_MODE
+          ? "Preview wallet"
+          : "Connect wallet";
 
   return (
     <Button
       className="button primary wallet-button"
+      disabled={!wallet.ready}
       onClick={() =>
         void (wallet.authenticated ? wallet.disconnect() : wallet.connect()).catch(
           () => ui.toast("Wallet connection failed. Please retry."),

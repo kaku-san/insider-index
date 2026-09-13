@@ -1,8 +1,13 @@
 # Barely Stable / Hetzner + Traefik. Public host is locked.
 # Router rule must stay Host(`stocklana.barelystable.dev`).
 #
+# Traefik attaches to the external Docker network named `edge`
+# (not `proxy`). Override only if your host uses a different name:
+#   TRAEFIK_NETWORK=edge
+#   TRAEFIK_CERTRESOLVER=letsencrypt
+#
 # Runtime secrets: /srv/projects/stocklana/.env (gitignored, never rsynced).
-# NEXT_PUBLIC_* from that file are also passed as build args.
+# NEXT_PUBLIC_* from that file are also passed as build args — never COPY .env*.
 
 services:
   stocklana:
@@ -26,9 +31,9 @@ services:
       - traefik.http.routers.stocklana.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
       - traefik.http.services.stocklana.loadbalancer.server.port=3000
     networks:
-      - proxy
+      - edge
 
 networks:
-  proxy:
+  edge:
     external: true
-    name: ${TRAEFIK_NETWORK:-proxy}
+    name: ${TRAEFIK_NETWORK:-edge}

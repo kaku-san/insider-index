@@ -24,7 +24,8 @@ export function formatDate(value: string): string {
   }).format(date);
 }
 
-export function shortenAddress(value: string, size = 4): string {
+export function shortenAddress(value: string | null | undefined, size = 4): string {
+  if (!value) return "—";
   if (value.length <= size * 2 + 3) return value;
   return `${value.slice(0, size)}…${value.slice(-size)}`;
 }
