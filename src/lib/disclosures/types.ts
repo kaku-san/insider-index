@@ -21,7 +21,8 @@ export type Form4Transaction = {
   transactionCode: string;
   transactionDate: string;
   filedAt: string;
-  sharesAmount: number;
+  /** Null when the source only discloses a dollar range (Congress PTRs). */
+  sharesAmount: number | null;
   pricePerShare: number | null;
   transactionValue: number | null;
   sharesOwnedAfter: number | null;

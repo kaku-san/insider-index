@@ -9,6 +9,7 @@ DEST="${DEPLOY_PATH:-/srv/projects/stocklana}"
 rsync -az --delete \
   --exclude '.git/' \
   --exclude '.env' \
+  --exclude '.env.*' \
   --exclude '.env.local' \
   --exclude '.env*.local' \
   --exclude 'node_modules/' \

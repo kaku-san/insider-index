@@ -36,9 +36,9 @@ export async function listAllDisclosures(): Promise<Disclosure[]> {
     listAllowlistedDisclosures({ perPage: 100 }),
     listCongressDisclosures(),
   ]);
-  return [...form4, ...congress].sort(
-    (a, b) => +new Date(b.filedAt) - +new Date(a.filedAt),
-  );
+  return [...form4, ...congress]
+    .filter((row) => Boolean(row.ticker?.trim()))
+    .sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
 }
 
 export async function listSignals(filters?: {

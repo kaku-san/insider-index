@@ -1,20 +1,53 @@
 "use client";
+
 import { useCallback, useEffect, useState } from "react";
-import { readApi, errorText } from "./api";
-export function useResource<T>(url: string | null) {
-  const [data, setData] = useState<T | null>(null);
+import { errorText, readApi } from "./api";
+
+export function useResource<T>(url: string | null, initialData?: T | null) {
+  const [data, setData] = useState<T | null>(initialData ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(Boolean(url));
+  const [loading, setLoading] = useState(Boolean(url) && initialData == null);
   const [version, setVersion] = useState(0);
-  const reload = useCallback(() => setVersion(v => v + 1), []);
+  const reload = useCallback(() => setVersion((value) => value + 1), []);
+
   useEffect(() => {
+    if (!url) {
+      return;
+    }
+
     const controller = new AbortController();
-    if (!url) { setData(null); setLoading(false); setError(null); return; }
-    setLoading(true); setError(null); setData(null);
-    readApi<T>(url, controller.signal).then(value => { if (!controller.signal.aborted) setData(value); }).catch(err => {
-      if (!controller.signal.aborted) setError(errorText(err));
-    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
+    let cancelled = false;
+    // Keep existing rows on screen while a refresh is in flight.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch lifecycle
+    setLoading(true);
+    setError(null);
+
+    void readApi<T>(url, controller.signal)
+      .then((value) => {
+        if (!cancelled) {
+          setData(value);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled && !controller.signal.aborted) {
+          setError(errorText(err));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [url, version]);
+
+  if (!url) {
+    return { data: null, error: null, loading: false, reload };
+  }
+
   return { data, error, loading, reload };
 }
