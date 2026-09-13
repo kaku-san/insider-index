@@ -8,7 +8,8 @@ export function formatUsd(value: number | null | undefined): string {
 }
 
 export function formatShares(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return "—";
+  // Congress PTRs often have no share count; treat missing/zero as unavailable.
+  if (value == null || Number.isNaN(value) || value === 0) return "—";
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: value >= 100 ? 0 : 4,
   }).format(value);

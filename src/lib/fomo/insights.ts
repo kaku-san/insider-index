@@ -53,9 +53,11 @@ function horizonInsight(trades: Disclosure[], horizon: HorizonInsight["horizon"]
 export function buildPortfolio(trades: Disclosure[]): PortfolioHolding[] {
   const byTicker = new Map<string, number>();
   for (const trade of trades) {
+    const ticker = trade.ticker?.trim().toUpperCase();
+    if (!ticker) continue;
     const signed = trade.side === "sell" ? -1 : 1;
-    const next = (byTicker.get(trade.ticker) ?? 0) + signed * (trade.transactionValue ?? 0);
-    byTicker.set(trade.ticker, next);
+    const next = (byTicker.get(ticker) ?? 0) + signed * (trade.transactionValue ?? 0);
+    byTicker.set(ticker, next);
   }
 
   const holdings = [...byTicker.entries()]
