@@ -1,12 +1,7 @@
--- Add trade-derived model publication without changing any saved FMP disclosure.
--- Existing annual publication and its complete-snapshot policy remain intact.
+-- Repair already-applied trade publication functions without touching saved books.
+-- The former SQL alias `c` collided with the PL/pgSQL constituent variable.
 begin;
-alter table public.index_versions alter column snapshot_id drop not null;
-alter table public.index_versions add constraint index_versions_source_basis check (
-  snapshot_id is not null or (definition->>'basis' is not distinct from 'disclosed-trade-activity')
-);
-
-create function public.publish_fmp_trade_index(p_hash text, p_document text) returns void
+create or replace function public.publish_fmp_trade_index(p_hash text, p_document text) returns void
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   d jsonb := p_document::jsonb;
