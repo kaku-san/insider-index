@@ -13,6 +13,7 @@
 
 import { ALLOWLISTED_TICKERS } from "@/lib/allowlist";
 import { globalState, mapLimit, memo } from "@/lib/cache";
+import { parseTickerList } from "@/lib/disclosures/universe";
 import {
   buildTickerCikMap,
   edgarDocumentUrl,
@@ -46,6 +47,17 @@ export const PINNED_CIKS: Record<string, string> = {
 };
 
 const FILINGS_PER_TICKER = Math.max(1, Number(process.env.EDGAR_FILINGS_PER_TICKER ?? 20) || 20);
+
+/**
+ * Issuers crawled for Form 4s. EDGAR is paced at ≤10 req/s, so the default
+ * stays at the xStock underlyings (~30 s cold crawl). EDGAR_TICKERS widens it
+ * (always unioned with the allowlist); non-tradable issuers still show up in
+ * an insider's book, tagged with their venue.
+ */
+export function edgarUniverse(): string[] {
+  const explicit = parseTickerList(process.env.EDGAR_TICKERS);
+  return [...new Set([...explicit, ...ALLOWLISTED_TICKERS])].sort();
+}
 const DOC_CONCURRENCY = 4;
 const TICKER_CONCURRENCY = 3;
 const REFRESH_TTL_MS = 10 * 60_000;
@@ -163,7 +175,7 @@ export type EdgarTape = {
 };
 
 /** Merged, memoised P/S tape across every allowlisted underlying. */
-export async function fetchEdgarTape(tickers: readonly string[] = ALLOWLISTED_TICKERS): Promise<EdgarTape> {
+export async function fetchEdgarTape(tickers: readonly string[] = edgarUniverse()): Promise<EdgarTape> {
   const symbols = [...new Set(tickers.map((ticker) => ticker.trim().toUpperCase()))].sort();
   const key = `edgar:tape:${symbols.join(",")}`;
   return memo(key, { ttlMs: REFRESH_TTL_MS }, async () => {

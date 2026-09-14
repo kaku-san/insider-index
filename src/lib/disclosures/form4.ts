@@ -6,11 +6,12 @@
  *  2. Form4API (`form4`) — fallback only when FORM4API_KEY is set
  *  3. Mock fixtures (`mock-form4`) — dev only (STOCKLANA_ALLOW_MOCKS)
  *
- * Only open-market P/S rows are kept; rows without a ticker are dropped.
+ * Only open-market P/S rows are kept; rows without a ticker are dropped. The
+ * issuer set is `edgarUniverse()`; nothing is filtered by tradability — venue
+ * is a per-row tag so an insider's book shows every issuer we crawled.
  */
 
-import { ALLOWLISTED_TICKERS, getXStockByTicker } from "@/lib/allowlist";
-import { fetchEdgarTape } from "@/lib/disclosures/edgar";
+import { edgarUniverse, fetchEdgarTape } from "@/lib/disclosures/edgar";
 import { MOCK_FORM4_TRANSACTIONS } from "@/lib/disclosures/mock-form4";
 import type {
   Disclosure,
@@ -20,6 +21,7 @@ import type {
   LaneStatus,
 } from "@/lib/disclosures/types";
 import { mocksAllowed } from "@/lib/runtime";
+import { baseVenueFields } from "@/lib/venues/resolve";
 
 const FORM4_API_BASE = "https://api.form4api.com";
 
@@ -33,15 +35,12 @@ export function enrichDisclosure(
   tx: Form4Transaction,
   source: Disclosure["source"],
 ): Disclosure {
-  const xstock = getXStockByTicker(tx.ticker);
   const side = toSide(tx.transactionCode);
   return {
     ...tx,
     source,
     side,
-    xstockSymbol: xstock?.symbol ?? null,
-    xstockMint: xstock?.mint ?? null,
-    tradeEligible: Boolean(xstock) && (side === "buy" || side === "sell"),
+    ...baseVenueFields(tx.ticker, side),
     kind: "insider",
     profileId: `insider-${tx.insiderCik || tx.insiderName.toLowerCase().replace(/\s+/g, "-")}`,
     party: null,
@@ -66,7 +65,6 @@ export function filterTransactions(
     if (!item.ticker?.trim()) return false;
     if (ticker && item.ticker.toUpperCase() !== ticker) return false;
     if (!allowedCodes.has(item.transactionCode.toUpperCase())) return false;
-    if (!ALLOWLISTED_TICKERS.includes(item.ticker.toUpperCase())) return false;
     return true;
   });
 
@@ -190,7 +188,7 @@ export function dedupeTransactions(rows: Form4Transaction[]): Form4Transaction[]
 }
 
 async function fetchForm4ApiTape(apiKey: string, params: Form4ListParams): Promise<Form4Transaction[]> {
-  const tickers = params.ticker ? [params.ticker.trim().toUpperCase()] : ALLOWLISTED_TICKERS;
+  const tickers = params.ticker ? [params.ticker.trim().toUpperCase()] : edgarUniverse();
   const batches = await Promise.all(
     tickers.map(async (ticker) => {
       try {
@@ -230,7 +228,7 @@ export async function listInsiderTape(params: Form4ListParams = {}): Promise<Ins
   } else {
     try {
       const tape = await fetchEdgarTape(
-        params.ticker ? [params.ticker.trim().toUpperCase()] : ALLOWLISTED_TICKERS,
+        params.ticker ? [params.ticker.trim().toUpperCase()] : edgarUniverse(),
       );
       const rows = filterTransactions(tape.transactions, query);
       const failing = Object.entries(tape.perTicker)

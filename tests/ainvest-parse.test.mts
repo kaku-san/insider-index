@@ -105,3 +105,15 @@ test("normalizeAInvestCongressRow drops nameless rows", () => {
   assert.equal(normalizeAInvestCongressRow({ trade_type: "buy" }, "NVDA"), null);
   assert.equal(normalizeAInvestCongressRow({ name: "X" }, ""), null);
 });
+
+test("normalizeAInvestCongressRow honours a ticker and size alias carried on the row", () => {
+  const row = normalizeAInvestCongressRow(
+    { name: "Nancy Pelosi", party: "Democrat", state: "CA", trade_date: "2026-08-28", filing_date: "2026-09-11", trade_type: "buy", ticker: "avgo", amount: "$15K-$50K" },
+    "NVDA",
+  );
+  assert.ok(row);
+  assert.equal(row.ticker, "AVGO");
+  assert.equal(row.amountLow, 15_000);
+  assert.equal(row.amountHigh, 50_000);
+  assert.equal(row.sizeLabel, "$15K-$50K");
+});

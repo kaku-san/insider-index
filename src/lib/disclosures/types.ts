@@ -31,6 +31,25 @@ export type ActorKind = "insider" | "politician";
 
 export type PoliticalParty = "Democratic" | "Republican" | "Independent";
 
+/**
+ * Where a disclosed name can actually be bought.
+ *  - xstock    verified xStock mint on Solana; in-app user-signed Jupiter swap
+ *  - backpack  listed US-equity market on Backpack Exchange (spot or perp); external
+ *  - none      disclosed, shown in the book, not tradable anywhere we wire yet
+ */
+export type Venue = "xstock" | "backpack" | "none";
+
+export type VenueMarket = "swap" | "spot" | "perp";
+
+export type VenueListing = {
+  venue: Exclude<Venue, "none">;
+  /** Venue-side symbol, e.g. `NVDAx` or `NVDA.US_USDC_PERP`. */
+  symbol: string;
+  market: VenueMarket;
+  /** External trade link for venues we do not execute in-app. Null for xStocks. */
+  href: string | null;
+};
+
 export type Form4Transaction = {
   id: string;
   accessionNumber: string;
@@ -55,6 +74,12 @@ export type Disclosure = Form4Transaction & {
   side: DisclosureSide;
   xstockSymbol: string | null;
   xstockMint: string | null;
+  /** Best venue for copying this name (xStock first, then Backpack, else none). */
+  venue: Venue;
+  venueSymbol: string | null;
+  venueMarket: VenueMarket | null;
+  venueHref: string | null;
+  /** Buy/sell on a name we can route somewhere (any venue). */
   tradeEligible: boolean;
   kind: ActorKind;
   profileId: string;
@@ -79,27 +104,67 @@ export interface Form4Adapter {
 
 export type HorizonKey = "24h" | "30d" | "90d";
 
+/**
+ * Per-horizon activity. Returns and hit rate are null until we can compute
+ * them from dated trades and a real price series; never a synthetic number.
+ */
 export type HorizonInsight = {
   horizon: HorizonKey;
-  returnPct: number;
+  returnPct: number | null;
   trades: number;
-  volumeUsd: number;
+  /** Sum of reported midpoints; null when nothing in the window carried a size. */
+  volumeUsd: number | null;
+  /** Sum of the low / high bounds of the reported ranges (PTR size bands). */
+  volumeLow: number | null;
+  volumeHigh: number | null;
   hitRate: number | null;
 };
 
+/**
+ * Current disclosed position status reconstructed from the filing history.
+ *  - holding  net buys, no evidence of a full exit
+ *  - reduced  buys and later sells, net still positive
+ *  - exited   sells wiped out every disclosed buy
+ *  - sold     only sells on record: they held it, size unknown
+ */
+export type HoldingStatus = "holding" | "reduced" | "exited" | "sold";
+
 export type PortfolioHolding = {
   ticker: string;
+  issuerName: string;
   xstockSymbol: string | null;
   xstockMint: string | null;
+  venue: Venue;
+  venueSymbol: string | null;
+  venueMarket: VenueMarket | null;
+  venueHref: string | null;
+  /** Share of the estimated book (midpoint). 0 when the size is unknown. */
   weightPct: number;
+  /** Estimated current value (midpoint of the net range). 0 when unknown. */
   valueUsd: number;
+  valueLow: number | null;
+  valueHigh: number | null;
+  status: HoldingStatus;
+  buys: number;
+  sells: number;
+  lastSide: DisclosureSide;
+  firstTradeAt: string;
+  lastTradeAt: string;
+  /** Latest disclosure for this name (the print a copy would mirror). */
+  latestDisclosureId: string;
+  latestBuyDisclosureId: string | null;
   copyEligible: boolean;
 };
 
 export type IndexConstituent = {
   ticker: string;
-  xstockSymbol: string;
-  mint: string;
+  xstockSymbol: string | null;
+  /** xStock mint for in-app swaps; null for legs routed to an external venue. */
+  mint: string | null;
+  venue: Exclude<Venue, "none">;
+  venueSymbol: string;
+  venueMarket: VenueMarket;
+  venueHref: string | null;
   weightPct: number;
   valueUsd: number;
 };
@@ -123,9 +188,11 @@ export type FomoProfile = {
   followers: number;
   lastSignalAt: string;
   insights: HorizonInsight[];
-  hitRate90d: number;
-  copiedPnl90d: number;
+  hitRate90d: number | null;
+  copiedPnl90d: number | null;
+  /** Full disclosed book: every ticker on the PTRs / Form 4s, tradable or not. */
   portfolio: PortfolioHolding[];
+  /** Real equity series only. Empty until one exists; never synthetic. */
   curve: BacktestPoint[];
   latestSignalId: string | null;
   latestEligibleSignalId: string | null;

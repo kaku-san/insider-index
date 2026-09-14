@@ -1,6 +1,5 @@
 import { getXStockByTicker } from "@/lib/allowlist";
 import type {
-  BacktestPoint,
   Disclosure,
   FomoProfile,
   HorizonInsight,
@@ -8,111 +7,65 @@ import type {
   PersonIndex,
   PortfolioHolding,
 } from "@/lib/disclosures/types";
+import { buildBook, summarizeWindow } from "@/lib/fomo/book";
 import { portraitFor } from "@/lib/fomo/portraits";
 
-const MS_DAY = 86_400_000;
-
-function daysAgo(iso: string): number {
-  return (Date.now() - new Date(iso).getTime()) / MS_DAY;
-}
-
-function hashUnit(seed: string): number {
-  let hash = 0;
-  for (const char of seed) {
-    hash = (hash * 31 + char.charCodeAt(0)) % 1000;
-  }
-  return hash / 1000;
-}
-
-function tradeReturn(trade: Disclosure, horizonDays: number): number {
-  const age = daysAgo(trade.filedAt || trade.transactionDate);
-  if (age < horizonDays * 0.15) {
-    return hashUnit(`${trade.id}-${horizonDays}`) * 0.04 - 0.01;
-  }
-  const base = hashUnit(`${trade.profileId}-${trade.ticker}-${horizonDays}`);
-  const direction = trade.side === "sell" ? -1 : 1;
-  return (0.02 + base * 0.16) * direction;
-}
-
-function horizonInsight(trades: Disclosure[], horizon: HorizonInsight["horizon"], days: number): HorizonInsight {
-  const windowed = trades.filter((trade) => daysAgo(trade.filedAt || trade.transactionDate) <= days);
-  const volumeUsd = windowed.reduce((sum, trade) => sum + (trade.transactionValue ?? 0), 0);
-  const weighted = windowed.reduce((sum, trade) => {
-    return sum + (trade.transactionValue ?? 0) * tradeReturn(trade, days);
-  }, 0);
-  const hits = windowed.filter((trade) => tradeReturn(trade, days) > 0).length;
+/**
+ * Per-horizon activity roll-up. Counts and reported sizes only: a return or
+ * hit rate needs dated trades *and* a price series, and we do not have the
+ * latter yet, so both stay null rather than being invented.
+ */
+function horizonInsight(trades: Disclosure[], horizon: HorizonInsight["horizon"], days: number, now: number): HorizonInsight {
+  const summary = summarizeWindow(trades, days, now);
   return {
     horizon,
-    returnPct: volumeUsd ? weighted / volumeUsd : 0,
-    trades: windowed.length,
-    volumeUsd,
-    hitRate: windowed.length ? hits / windowed.length : null,
+    returnPct: null,
+    trades: summary.trades,
+    volumeUsd: summary.volumeUsd,
+    volumeLow: summary.volumeLow,
+    volumeHigh: summary.volumeHigh,
+    hitRate: null,
   };
 }
 
 /**
- * Disclosed book per ticker.
- *
- * Insiders: Form 4 reports "shares owned following the transaction", so the
- * holding is the latest post-trade position × the price on that print. This
- * keeps a CEO who only ever sells (most of them) in the index at their real
- * remaining stake instead of netting to zero.
- *
- * Politicians: PTRs disclose ranges, not holdings, so we net buy/sell midpoints.
+ * Full disclosed book: every ticker on the filer's record, with the venue tag
+ * carried over from the newest print for that name. Nothing is dropped for
+ * being untradable; `copyEligible` is the only thing the venue changes.
  */
 export function buildPortfolio(trades: Disclosure[]): PortfolioHolding[] {
-  const byTicker = new Map<string, number>();
-  const settled = new Set<string>();
-  const newestFirst = [...trades].sort(
-    (a, b) => +new Date(b.filedAt || b.transactionDate) - +new Date(a.filedAt || a.transactionDate),
-  );
-
-  for (const trade of newestFirst) {
-    const ticker = trade.ticker?.trim().toUpperCase();
-    if (!ticker) continue;
-    if (trade.kind === "insider" && trade.sharesOwnedAfter != null && !settled.has(ticker)) {
-      const price = trade.pricePerShare ?? getXStockByTicker(ticker)?.stubUsdPrice ?? null;
-      if (price != null && price > 0) {
-        // Newest filing wins, including a reported 0 (fully exited).
-        byTicker.set(ticker, trade.sharesOwnedAfter * price);
-        settled.add(ticker);
-        continue;
-      }
-    }
-    if (settled.has(ticker)) continue;
-    const signed = trade.side === "sell" ? -1 : 1;
-    const next = (byTicker.get(ticker) ?? 0) + signed * (trade.transactionValue ?? 0);
-    byTicker.set(ticker, next);
+  const entries = buildBook(trades, {
+    priceFor: (ticker) => getXStockByTicker(ticker)?.stubUsdPrice ?? null,
+  });
+  const newestByTicker = new Map<string, Disclosure>();
+  for (const trade of trades) {
+    const key = trade.ticker.trim().toUpperCase();
+    const current = newestByTicker.get(key);
+    if (!current || Date.parse(trade.filedAt) > Date.parse(current.filedAt)) newestByTicker.set(key, trade);
   }
-
-  const holdings = [...byTicker.entries()]
-    .map(([ticker, valueUsd]) => {
-      const xstock = getXStockByTicker(ticker);
-      return {
-        ticker,
-        xstockSymbol: xstock?.symbol ?? null,
-        xstockMint: xstock?.mint ?? null,
-        valueUsd: Math.max(valueUsd, 0),
-        weightPct: 0,
-        copyEligible: Boolean(xstock),
-      };
-    })
-    .filter((row) => row.valueUsd > 0)
-    .sort((a, b) => b.valueUsd - a.valueUsd);
-
-  const total = holdings.reduce((sum, row) => sum + row.valueUsd, 0) || 1;
-  return holdings.map((row) => ({ ...row, weightPct: row.valueUsd / total }));
-}
-
-export function buildCurve(profileId: string): BacktestPoint[] {
-  const labels = ["12w", "10w", "8w", "6w", "4w", "2w", "Now"];
-  let equity = 100;
-  return labels.map((label, index) => {
-    equity *= 1 + (hashUnit(`${profileId}-curve-${index}`) * 0.08 - 0.015);
-    return { label, equity: Number(equity.toFixed(2)) };
+  const total = entries.reduce((sum, row) => sum + row.valueUsd, 0) || 1;
+  return entries.map((entry) => {
+    const tag = newestByTicker.get(entry.ticker);
+    const venue = tag?.venue ?? "none";
+    return {
+      ...entry,
+      xstockSymbol: tag?.xstockSymbol ?? null,
+      xstockMint: tag?.xstockMint ?? null,
+      venue,
+      venueSymbol: tag?.venueSymbol ?? null,
+      venueMarket: tag?.venueMarket ?? null,
+      venueHref: tag?.venueHref ?? null,
+      weightPct: entry.valueUsd / total,
+      copyEligible: venue !== "none",
+    };
   });
 }
 
+/**
+ * A person's basket: the tradable names in their disclosed book with a
+ * positive estimated position, weighted by that estimate. xStock legs execute
+ * in-app; other venues are carried as labelled external legs.
+ */
 export function buildPersonIndex(
   profileId: string,
   name: string,
@@ -121,15 +74,19 @@ export function buildPersonIndex(
   portfolio: PortfolioHolding[],
   latest: Disclosure | undefined,
 ): PersonIndex {
-  const copyable = portfolio.filter(
-    (row): row is PortfolioHolding & { xstockSymbol: string; xstockMint: string } =>
-      Boolean(row.copyEligible && row.xstockSymbol && row.xstockMint),
+  const tradable = portfolio.filter(
+    (row): row is PortfolioHolding & { venue: "xstock" | "backpack"; venueSymbol: string; venueMarket: NonNullable<PortfolioHolding["venueMarket"]> } =>
+      row.venue !== "none" && Boolean(row.venueSymbol && row.venueMarket) && row.valueUsd > 0,
   );
-  const total = copyable.reduce((sum, row) => sum + row.valueUsd, 0) || 1;
-  const constituents: IndexConstituent[] = copyable.map((row) => ({
+  const total = tradable.reduce((sum, row) => sum + row.valueUsd, 0) || 1;
+  const constituents: IndexConstituent[] = tradable.map((row) => ({
     ticker: row.ticker,
     xstockSymbol: row.xstockSymbol,
     mint: row.xstockMint,
+    venue: row.venue,
+    venueSymbol: row.venueSymbol,
+    venueMarket: row.venueMarket,
+    venueHref: row.venueHref,
     valueUsd: row.valueUsd,
     weightPct: row.valueUsd / total,
   }));
@@ -151,27 +108,28 @@ export function buildProfile(
   id: string,
   trades: Disclosure[],
   extras: Pick<FomoProfile, "kind" | "name" | "handle" | "title" | "party" | "chamber" | "state" | "cikOrBioguide" | "followers">,
+  now = Date.now(),
 ): FomoProfile {
   const sorted = [...trades].sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
   const insights = [
-    horizonInsight(sorted, "24h", 1),
-    horizonInsight(sorted, "30d", 30),
-    horizonInsight(sorted, "90d", 90),
+    horizonInsight(sorted, "24h", 1, now),
+    horizonInsight(sorted, "30d", 30, now),
+    horizonInsight(sorted, "90d", 90, now),
   ];
   const eligible = sorted.filter((trade) => trade.tradeEligible);
-  const copiedPnl90d = insights[2]?.returnPct ?? 0;
   const portfolio = buildPortfolio(sorted);
 
   return {
     id,
     ...extras,
     imageUrl: portraitFor(id),
-    lastSignalAt: sorted[0]?.filedAt ?? new Date().toISOString(),
+    lastSignalAt: sorted[0]?.filedAt ?? new Date(now).toISOString(),
     insights,
-    hitRate90d: insights[2]?.hitRate ?? 0,
-    copiedPnl90d,
+    hitRate90d: insights[2]?.hitRate ?? null,
+    copiedPnl90d: insights[2]?.returnPct ?? null,
     portfolio,
-    curve: buildCurve(id),
+    // No price series yet → no curve. The UI says so instead of drawing one.
+    curve: [],
     latestSignalId: sorted[0]?.id ?? null,
     latestEligibleSignalId: eligible[0]?.id ?? null,
     index: buildPersonIndex(id, extras.name, extras.kind, extras.party, portfolio, sorted[0]),
@@ -180,7 +138,7 @@ export function buildProfile(
 
 export function signalHeadline(trade: Disclosure): string {
   const verb = trade.side === "sell" ? "dumped" : "just disclosed a buy in";
-  const token = trade.xstockSymbol ?? trade.ticker;
+  const token = trade.venueSymbol ?? trade.ticker;
   return `${trade.insiderName} ${verb} ${token}`;
 }
 

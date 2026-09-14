@@ -14,11 +14,17 @@ export type AInvestCongressRow = {
   name?: string;
   party?: string;
   state?: string;
+  /** Not documented, but honoured when present so a row can never be mis-filed. */
+  ticker?: string;
+  symbol?: string;
   trade_date?: string;
   filing_date?: string;
   reporting_gap?: string;
   trade_type?: string;
+  /** Documented field is `size`; the aliases guard against envelope drift. */
   size?: string;
+  amount?: string;
+  trade_size?: string;
 };
 
 export type AInvestEnvelope<T> = {
@@ -135,10 +141,11 @@ export function normalizeAInvestCongressRow(
   ticker: string,
 ): NormalizedCongressTrade | null {
   const name = (row.name ?? "").trim();
-  const symbol = ticker.trim().toUpperCase();
+  const symbol = (row.ticker ?? row.symbol ?? ticker).trim().toUpperCase();
   if (!name || !symbol) return null;
   const side = congressSideFromType(row.trade_type);
-  const { low, high } = parseTradeSize(row.size);
+  const sizeText = row.size ?? row.amount ?? row.trade_size;
+  const { low, high } = parseTradeSize(sizeText);
   const tradeDate = isoDate(row.trade_date);
   const filingDate = isoDate(row.filing_date) || tradeDate;
   const slug = slugifyName(name);
@@ -155,6 +162,6 @@ export function normalizeAInvestCongressRow(
     reportingGap: row.reporting_gap?.trim() || null,
     amountLow: low,
     amountHigh: high,
-    sizeLabel: row.size?.trim() || null,
+    sizeLabel: sizeText?.trim() || null,
   };
 }

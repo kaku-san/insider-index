@@ -8,6 +8,7 @@
 
 import { ALLOWLISTED_TICKERS } from "@/lib/allowlist";
 import { mapLimit, memo } from "@/lib/cache";
+import { WIDE_CONGRESS_UNIVERSE, parseTickerList } from "@/lib/disclosures/universe";
 import {
   AInvestError,
   normalizeAInvestCongressRow,
@@ -18,8 +19,25 @@ import {
 } from "@/lib/disclosures/ainvest-parse";
 
 export const AINVEST_BASE = "https://openapi.ainvest.com/open";
-const PAGE_SIZE = Number(process.env.AINVEST_PAGE_SIZE ?? 50) || 50;
-const TAPE_TTL_MS = 15 * 60_000;
+const PAGE_SIZE = Math.max(1, Number(process.env.AINVEST_PAGE_SIZE ?? 50) || 50);
+/** Pages pulled per ticker; deeper = longer per-person history, more requests. */
+const PAGES_PER_TICKER = Math.max(1, Number(process.env.AINVEST_PAGES_PER_TICKER ?? 1) || 1);
+const TICKER_CONCURRENCY = 3;
+const TAPE_TTL_MS = 30 * 60_000;
+
+/**
+ * Which tickers to ask AInvest about. The endpoint is ticker-scoped, so the
+ * full disclosed book of a filer is only as wide as this list.
+ *  - AINVEST_TICKERS="NVDA,AAPL,…"  explicit list (always unioned with the xStock allowlist)
+ *  - AINVEST_UNIVERSE=allowlist     xStock underlyings only (cheap, copy-only tape)
+ *  - default                        wide S&P + frequent-PTR universe
+ */
+export function ainvestUniverse(): string[] {
+  const explicit = parseTickerList(process.env.AINVEST_TICKERS);
+  if (explicit.length) return [...new Set([...explicit, ...ALLOWLISTED_TICKERS])].sort();
+  if (process.env.AINVEST_UNIVERSE?.trim().toLowerCase() === "allowlist") return [...ALLOWLISTED_TICKERS];
+  return [...new Set([...WIDE_CONGRESS_UNIVERSE, ...ALLOWLISTED_TICKERS])].sort();
+}
 
 export function ainvestApiKey(): string | null {
   return process.env.AINVEST_API_KEY?.trim() || null;
@@ -49,16 +67,25 @@ export async function fetchAInvestCongressTicker(
   ticker: string,
   apiKey: string,
   size = PAGE_SIZE,
+  pages = PAGES_PER_TICKER,
 ): Promise<NormalizedCongressTrade[]> {
   const symbol = ticker.trim().toUpperCase();
-  const rows = await ainvestGet<AInvestCongressRow>(
-    "/ownership/congress",
-    { ticker: symbol, page: "1", size: String(size) },
-    apiKey,
-  );
-  return rows
-    .map((row) => normalizeAInvestCongressRow(row, symbol))
-    .filter((row): row is NormalizedCongressTrade => row != null);
+  const out: NormalizedCongressTrade[] = [];
+  for (let page = 1; page <= pages; page += 1) {
+    const rows = await ainvestGet<AInvestCongressRow>(
+      "/ownership/congress",
+      { ticker: symbol, page: String(page), size: String(size) },
+      apiKey,
+    );
+    out.push(
+      ...rows
+        .map((row) => normalizeAInvestCongressRow(row, symbol))
+        .filter((row): row is NormalizedCongressTrade => row != null),
+    );
+    // Short page = no more history for this ticker.
+    if (rows.length < size) break;
+  }
+  return out;
 }
 
 export type AInvestTape = {
@@ -67,9 +94,13 @@ export type AInvestTape = {
   fetchedAt: string;
 };
 
-/** Merged, memoised congressional tape for the allowlisted underlyings. */
+/**
+ * Merged, memoised congressional tape across the ticker universe. Every row is
+ * kept — tradability is decided downstream — so a filer's book shows every
+ * name they disclosed, not only the ones we can route.
+ */
 export async function fetchAInvestCongressTape(
-  tickers: readonly string[] = ALLOWLISTED_TICKERS,
+  tickers: readonly string[] = ainvestUniverse(),
 ): Promise<AInvestTape> {
   const apiKey = ainvestApiKey();
   if (!apiKey) {
@@ -79,7 +110,7 @@ export async function fetchAInvestCongressTape(
   return memo(key, { ttlMs: TAPE_TTL_MS }, async () => {
     const perTicker: AInvestTape["perTicker"] = {};
     let authFailure: AInvestError | null = null;
-    const batches = await mapLimit(tickers, 3, async (ticker) => {
+    const batches = await mapLimit(tickers, TICKER_CONCURRENCY, async (ticker) => {
       try {
         const trades = await fetchAInvestCongressTicker(ticker, apiKey);
         perTicker[ticker] = { count: trades.length, error: null };

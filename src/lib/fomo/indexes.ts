@@ -1,9 +1,19 @@
-import type { IndexConstituent, PersonIndex } from "@/lib/disclosures/types";
+import type { IndexConstituent, PersonIndex, Venue, VenueMarket } from "@/lib/disclosures/types";
 
+/**
+ * One leg of a basket. `execution: "swap"` legs are xStocks bought in-app via
+ * a user-signed Jupiter order; `"external"` legs are names only available on
+ * another venue (Backpack) and are surfaced as links, never executed for you.
+ */
 export type IndexAllocation = {
   ticker: string;
-  xstockSymbol: string;
-  mint: string;
+  xstockSymbol: string | null;
+  mint: string | null;
+  venue: Exclude<Venue, "none">;
+  venueSymbol: string;
+  venueMarket: VenueMarket;
+  venueHref: string | null;
+  execution: "swap" | "external";
   weightPct: number;
   usdc: number;
   tokens: number;
@@ -39,6 +49,11 @@ export function allocateIndex(index: PersonIndex, usdcAmount: number): IndexAllo
     ticker: row.ticker,
     xstockSymbol: row.xstockSymbol,
     mint: row.mint,
+    venue: row.venue,
+    venueSymbol: row.venueSymbol,
+    venueMarket: row.venueMarket,
+    venueHref: row.venueHref,
+    execution: row.venue === "xstock" && row.mint ? "swap" : "external",
     weightPct: row.weightPct,
     usdc: Number((usdcAmount * row.weightPct).toFixed(2)),
     tokens: 0,
@@ -51,7 +66,7 @@ export function withTokenEstimates(
 ): IndexAllocation[] {
   return allocations.map((row) => ({
     ...row,
-    tokens: prices[row.mint] ? Number((row.usdc / prices[row.mint]).toFixed(4)) : 0,
+    tokens: row.mint && prices[row.mint] ? Number((row.usdc / prices[row.mint]).toFixed(4)) : 0,
   }));
 }
 
@@ -101,5 +116,5 @@ export function applyRebalance(
 }
 
 export function constituentLabel(row: IndexConstituent): string {
-  return `${row.xstockSymbol} ${(row.weightPct * 100).toFixed(0)}%`;
+  return `${row.venueSymbol} ${(row.weightPct * 100).toFixed(0)}%`;
 }

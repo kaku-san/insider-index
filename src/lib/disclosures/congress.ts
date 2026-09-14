@@ -6,19 +6,21 @@
  *  2. Form4API House PTRs (`congress`) — fallback only when FORM4API_KEY is set
  *  3. Mock fixtures (`mock-congress`) — dev only (STOCKLANA_ALLOW_MOCKS)
  *
- * Only allowlisted xStock underlyings are queried, so every row is a real
- * politician trading a copyable name. PTRs disclose dollar ranges, not share
- * counts or prices: sharesAmount / pricePerShare stay null and the UI renders
- * null as "—", never 0. transactionValue is the range midpoint.
+ * The whole ticker universe is queried (`ainvestUniverse()`), and every row is
+ * kept whether or not we can route it: a filer's disclosed book must show
+ * every name on their PTRs. Tradability is a per-row venue tag, not a filter.
+ * PTRs disclose dollar ranges, not share counts or prices: sharesAmount /
+ * pricePerShare stay null and the UI renders null as "—", never 0.
+ * transactionValue is the range midpoint.
  */
 
-import { ALLOWLISTED_TICKERS, getXStockByTicker } from "@/lib/allowlist";
-import { fetchAInvestCongressTape } from "@/lib/disclosures/ainvest";
+import { ainvestUniverse, fetchAInvestCongressTape } from "@/lib/disclosures/ainvest";
 import type { NormalizedCongressTrade } from "@/lib/disclosures/ainvest-parse";
 import { MOCK_CONGRESS_TRADES, type MockCongressTrade } from "@/lib/disclosures/mock-congress";
 import type { Disclosure, DisclosureSide, LaneStatus } from "@/lib/disclosures/types";
 import { normalizeParty } from "@/lib/fomo/party";
 import { mocksAllowed } from "@/lib/runtime";
+import { baseVenueFields } from "@/lib/venues/resolve";
 
 const FORM4_API_BASE = "https://api.form4api.com";
 
@@ -70,10 +72,10 @@ export function congressTradeToDisclosure(
         }
       : (trade.politician ?? {});
   const ticker = (trade.ticker ?? "").toUpperCase().trim();
-  const xstock = getXStockByTicker(ticker);
   const side = congressSide(
     "transactionType" in trade ? String(trade.transactionType) : "Purchase",
   );
+  const venue = baseVenueFields(ticker, side);
   const amountLow = trade.amountLow ?? null;
   const amountHigh = trade.amountHigh ?? null;
   const value =
@@ -105,9 +107,7 @@ export function congressTradeToDisclosure(
     is10b51: false,
     source,
     side,
-    xstockSymbol: xstock?.symbol ?? null,
-    xstockMint: xstock?.mint ?? null,
-    tradeEligible: Boolean(xstock) && (side === "buy" || side === "sell"),
+    ...venue,
     kind: "politician",
     profileId: `pol-${politician.slug ?? bioguide}`,
     party,
@@ -120,7 +120,7 @@ export function congressTradeToDisclosure(
 
 /** AInvest rows carry no bioguide id or chamber; we key profiles by name slug. */
 export function ainvestTradeToDisclosure(trade: NormalizedCongressTrade): Disclosure {
-  const xstock = getXStockByTicker(trade.ticker);
+  const venue = baseVenueFields(trade.ticker, trade.side);
   const party = normalizeParty(trade.party);
   const value =
     trade.amountLow != null && trade.amountHigh != null
@@ -132,7 +132,7 @@ export function ainvestTradeToDisclosure(trade: NormalizedCongressTrade): Disclo
     id: trade.id,
     accessionNumber: `PTR-${trade.slug}`,
     ticker: trade.ticker,
-    issuerName: xstock?.name.replace(/ xStock$/, "") ?? trade.ticker,
+    issuerName: trade.ticker,
     insiderName: trade.name,
     insiderTitle: [trade.state, party, trade.sizeLabel].filter(Boolean).join(" · "),
     insiderCik: trade.slug,
@@ -146,9 +146,7 @@ export function ainvestTradeToDisclosure(trade: NormalizedCongressTrade): Disclo
     is10b51: false,
     source: "ainvest-congress",
     side: trade.side,
-    xstockSymbol: xstock?.symbol ?? null,
-    xstockMint: xstock?.mint ?? null,
-    tradeEligible: Boolean(xstock) && (trade.side === "buy" || trade.side === "sell"),
+    ...venue,
     kind: "politician",
     profileId: `pol-${trade.slug}`,
     party,
@@ -198,7 +196,7 @@ function sortNewest(rows: Disclosure[]): Disclosure[] {
 
 async function fetchForm4ApiCongress(apiKey: string): Promise<Disclosure[]> {
   const perTicker = await Promise.all(
-    ALLOWLISTED_TICKERS.map(async (ticker) => {
+    ainvestUniverse().map(async (ticker) => {
       try {
         return await fetchCongressPage(apiKey, { ticker, per_page: "25", page: "1" });
       } catch {
@@ -212,7 +210,7 @@ async function fetchForm4ApiCongress(apiKey: string): Promise<Disclosure[]> {
         .flat()
         .filter((row) => Boolean(row.ticker?.trim()))
         .map((row) => congressTradeToDisclosure(row, "congress")),
-    ).filter((row) => Boolean(getXStockByTicker(row.ticker))),
+    ),
   );
 }
 
@@ -226,11 +224,10 @@ export async function listCongressTape(): Promise<CongressTape> {
 
   if (process.env.AINVEST_API_KEY?.trim()) {
     try {
-      const tape = await fetchAInvestCongressTape(ALLOWLISTED_TICKERS);
+      const universe = ainvestUniverse();
+      const tape = await fetchAInvestCongressTape(universe);
       const rows = sortNewest(
-        dedupeCongress(tape.trades.map(ainvestTradeToDisclosure)).filter((row) =>
-          Boolean(row.ticker && getXStockByTicker(row.ticker)),
-        ),
+        dedupeCongress(tape.trades.map(ainvestTradeToDisclosure)).filter((row) => Boolean(row.ticker)),
       );
       const failing = Object.entries(tape.perTicker)
         .filter(([, entry]) => entry.error)
@@ -242,11 +239,13 @@ export async function listCongressTape(): Promise<CongressTape> {
             source: "ainvest-congress",
             live: true,
             count: rows.length,
-            note: failing.length ? `AInvest errors for ${failing.join(", ")}` : null,
+            note: failing.length
+              ? `AInvest errors for ${failing.length} of ${universe.length} tickers (${failing.slice(0, 8).join(", ")}${failing.length > 8 ? ", …" : ""})`
+              : `${universe.length} tickers queried`,
           },
         };
       }
-      notes.push("AInvest returned no rows for allowlisted tickers");
+      notes.push(`AInvest returned no rows for ${universe.length} tickers`);
     } catch (error) {
       notes.push(`AInvest: ${error instanceof Error ? error.message : String(error)}`);
     }

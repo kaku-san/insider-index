@@ -11,6 +11,7 @@ import type {
 import { buildCrowdIndexes } from "@/lib/fomo/crowd-indexes";
 import { buildProfile, signalFomo, signalHeadline } from "@/lib/fomo/insights";
 import { portraitFor } from "@/lib/fomo/portraits";
+import { loadVenueMap, tagVenues } from "@/lib/venues/resolve";
 
 const FOLLOWERS: Record<string, number> = {
   "insider-0001199036": 18420,
@@ -38,16 +39,29 @@ export type DisclosureTape = {
   lanes: { insiders: LaneStatus; congress: LaneStatus };
 };
 
-/** Both lanes with provenance. Rows without a ticker never reach the tape. */
+/**
+ * Both lanes with provenance, every row tagged with the venue it can be copied
+ * on (xStock swap, Backpack market, or none). Rows without a ticker never
+ * reach the tape; rows without a venue stay on it — they are still the book.
+ */
 export async function listDisclosureTape(): Promise<DisclosureTape> {
-  const [insiders, congress] = await Promise.all([
-    listInsiderTape({ perPage: 500 }),
+  const [insiders, congress, venues] = await Promise.all([
+    listInsiderTape({ perPage: 5000 }),
     listCongressTape(),
+    loadVenueMap(),
   ]);
-  const disclosures = [...insiders.rows, ...congress.rows]
-    .filter((row) => Boolean(row.ticker?.trim()))
-    .sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
+  const disclosures = tagVenues(
+    [...insiders.rows, ...congress.rows].filter((row) => Boolean(row.ticker?.trim())),
+    venues,
+  ).sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
   return { disclosures, lanes: { insiders: insiders.status, congress: congress.status } };
+}
+
+/** One disclosure by id, venue-tagged like the tape. */
+export async function getDisclosure(id: string): Promise<Disclosure | null> {
+  const { getDisclosureById } = await import("@/lib/disclosures/form4");
+  const [row, venues] = await Promise.all([getDisclosureById(id), loadVenueMap()]);
+  return row ? tagVenues([row], venues)[0] : null;
 }
 
 export async function listAllDisclosures(): Promise<Disclosure[]> {
@@ -81,6 +95,7 @@ export async function listProfiles(rows?: Disclosure[]): Promise<FomoProfile[]> 
     grouped.set(trade.profileId, bucket);
   }
 
+  const now = Date.now();
   return [...grouped.entries()]
     .map(([id, rows]) => {
       const head = rows[0];
@@ -94,9 +109,10 @@ export async function listProfiles(rows?: Disclosure[]): Promise<FomoProfile[]> 
         state: head.state,
         cikOrBioguide: head.insiderCik,
         followers: FOLLOWERS[id] ?? 1200 + rows.length * 180,
-      });
+      }, now);
     })
-    .sort((a, b) => b.copiedPnl90d - a.copiedPnl90d);
+    // Most recently active first, then the deepest book. No synthetic PnL ordering.
+    .sort((a, b) => +new Date(b.lastSignalAt) - +new Date(a.lastSignalAt) || b.portfolio.length - a.portfolio.length);
 }
 
 export async function getProfile(id: string): Promise<FomoProfile | null> {
