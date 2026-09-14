@@ -1,13 +1,14 @@
 # FMP backend contract
 
-No UI, contract execution, index publication, security-name guessing or mock fallback is implemented here. Existing SEC/AInvest adapters remain intact. Tests: `npm test` (`tests/fmp.test.mts`); recordings: `tests/fixtures/fmp`.
+Saved FMP books and separate trade-symbol model indexes. No security-name guessing, annual-row rewriting, contract execution or mock fallback. Existing SEC/AInvest tape adapters remain intact. Tests: `npm test` (`tests/fmp*.test.mts`, `tests/trade-index.test.mts`); recordings: `tests/fixtures/fmp`.
 
 ## Layers
 
 - `client.ts`: Node-only stable endpoint client and private filesystem archive; header authorization. Runtime entry is protected by `server.ts`'s `server-only` boundary.
 - `types.ts`, `fmp-parse.ts`: pure source/normalized records, instrument classification, document versions and catalog mapping.
 - `service.ts`: injectable person directory and annual book + activity service.
-- `server.ts`: shared `globalState()` TTL and in-flight request deduplication; cached source batches are shared by all visitors, not fetched on each view. Daily directory/annual/aggregate refresh, hourly histories, 60-second partial/failure retry window. Normalized directory/portfolio results are shared for one minute via the existing memo cache, then recomputed from cached sources and the current catalog without re-fetching history.
+- `store.ts` / `server.ts`: public reads use saved Supabase `people` / `fmp_store_state` / `index_versions` / `constituents`, never FMP network calls or filesystem archives. REST pages are exhausted explicitly. Saved annual completeness and unresolved names survive unchanged; people not downloaded yet return `not-ingested`. Server service-role credentials are required; missing configuration returns 503, storage failure a safe 502.
+- `trade-index.ts` / `publish.ts`: pure trade-symbol target builder and atomic owner-RPC publication, independent of annual completeness. No public write endpoint.
 - `http.ts`: executable HTTP handlers used by the Next routes and tests. HTTP responses are `private, no-store`; server source caches retain original fetch timestamps. No arbitrary URL forwarding or public refresh/publish operation.
 
 ## Transport and provenance
@@ -24,7 +25,7 @@ Archive: `.data/fmp/<sha256>-<observation-uuid>.json`, with endpoint, key-free p
 
 ### `GET /api/people?q=...`
 
-Returns `{ source, people, count, total, complete, partial, unnormalizedCount, ingestion, coverage }`. Query searches name, ID, state and party; case-insensitive, maximum 200 characters. The full provider directory is fetched before filtering. `id` equals the provider's stable ID (`L000397`), not a name slug; name/chamber/active are mutable metadata. No artificial 15-name/ticker cap or active-member-only filter.
+Returns `{ source, storage, savedAt, people, count, total, complete, partial, unnormalizedCount, ingestion, coverage }`. Each person includes `bookState` and `publishedIndexHash`. Query searches name, ID, state and party; case-insensitive, maximum 200 characters. The full saved directory is read before filtering. `id` equals the provider's stable ID (`L000397`), not a name slug; name/chamber/active are mutable metadata. No artificial 15-name/ticker cap or active-member-only filter.
 
 `ingestion` reports actual provider pagination independently from normalized coverage. Invalid profiles count toward `unnormalizedCount`, force partial coverage, and remain in the raw archive. Directory membership does not mean book availability or permission to invest.
 
@@ -40,7 +41,9 @@ Returns:
 - `ingestion.{profile,annual,aggregates,houseActivity,senateActivity}`: status (`complete`, `partial`, `failed`), flags, retained count, source pages and safe machine-readable issues. `activityComplete` also checks normalized date/event metadata.
 - `catalog`: live/snapshot feed observation metadata. `items` and activity have independent `token`, `disclosureOnly`, `mappingReason` tags.
 
-An initial profile/directory failure returns 502 (503 without configuration); an invalid person ID returns 400; a verified complete empty person lookup returns 404. Once a real profile exists, a failed annual/activity/aggregate source returns available records with partial flags and per-source errors, not an invented empty complete portfolio. Unexpected failures return a generic safe 502. `state: annual-source-unavailable` distinguishes an annual fetch failure from an actual empty annual response.
+`publishedIndex` adds the latest atomically published trade target and persisted constituent weights; it does not replace `indexInput`, snapshots or activity. `storage: supabase` and `savedAt` identify the saved observation. `GET /api/published-indexes/[hash]` reads an immutable target by hash. Home links to `/p/[stable FMP ID]` and `/indexes/fmp-[hash]`; these show saved books, ranges, activity and published targets without NAV/performance claims.
+
+A storage failure returns 502 (503 without configuration); an invalid person ID returns 400; a person absent from the saved directory returns 404. Once a real profile exists, a failed annual/activity/aggregate source returns available records with partial flags and per-source errors, not an invented empty complete portfolio. Unexpected failures return a generic safe 502. `state: annual-source-unavailable` distinguishes an annual fetch failure from an actual empty annual response.
 
 ## Completeness and identity limitations
 
@@ -52,4 +55,19 @@ Document versions with missing dates/links/sections, unknown report types, ident
 
 Annual live records have **no dedicated ticker**. House `[ST]` and `[EF]` instrument markers classify stock/ETF sections, not verified security identity; apparent tickers in names stay unresolved. A future reviewed security mapping must preserve its evidence rather than treating search-name candidates as permission to buy. Dedicated source symbols can use the existing pure `preferredToken()` resolver (xStock first, Backpack next), but only equity/ETF instruments receive a token tag. Options are never replaced with underlying stock; unmapped and ambiguous rows remain disclosed-only. No new mint addresses are hand-added.
 
-Unknown/open-ended value bounds remain null; scalar FMP `value`/`total` is labelled a provider estimate. This module does not compute point net worth, weights, returns, remaining PTR balances, share quantities or token-to-stock conversion. It cannot enable an Invest action merely by matching a mint.
+Unknown/open-ended value bounds remain null; scalar FMP `value`/`total` is labelled a provider estimate. The annual parser does not compute point net worth, weights, returns, remaining PTR balances, share quantities or token-to-stock conversion. A published trade model does not enable an Invest action merely by matching a mint.
+
+## Publishing saved trade indexes
+
+Apply `supabase/migrations/202609140001_fmp_store.sql` on a new database, then `202609140002_trade_indexes.sql` as the database owner. Existing populated stores need **only** the second migration. The additive migration permits a null annual snapshot reference for explicitly trade-based definitions and adds service-only `publish_fmp_trade_index`. The existing annual RPC and annual foreign key remain intact. Service-role direct writes remain revoked; definition, source-evidence validation, positive constituent weights (sum 10,000 bps), version allocation and publication are one transaction. Persisted status `CANDIDATE` means **published model**, not policy/execution approval.
+
+With gitignored `.env.local` containing Supabase server credentials:
+
+```sh
+npm run indexes:publish                 # dry run, reads only
+npm run indexes:publish -- --publish    # publish all saved people with mapped trades
+```
+
+The builder uses dedicated symbols on that person's stock/ETF trades, resolves the catalog (xStock first, Backpack second), and groups by mint. It weights summed closed-band midpoints across **all saved buys and sales**; this is gross observed activity, not a holdings balance or a recommendation based only on buys. If any mapped trade has an unknown, open, invalid or zero size band, the whole target uses labelled equal weights across mapped names. Largest-remainder rounding totals exactly 10,000 bps with at least one bp per name. No recent-window or annual-pagination-complete gate is imposed. Trade dates determine the target's period; original dates, IDs, bands, source metadata and exclusion reasons are retained in the hashed definition.
+
+Unknown symbols, non-equity instruments, wrong-person and undated records cannot supply constituents. Exclusions stay in the target evidence; annual names stay on the original book, unresolved. The RPC requires matching saved transaction and catalog-tag evidence; a changed issuer mint requires refreshed ingestion/review, never a hand-added address. Identical evidence and mapping produce the same document/hash and idempotent publication. This operation never writes `people.portfolio`, `disclosed_items`, snapshots or transactions.

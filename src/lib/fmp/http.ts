@@ -1,4 +1,5 @@
 import { PeopleError, type PeopleService } from "./service.ts";
+import type { StoredPeopleService } from "./store.ts";
 
 const headers = { "Cache-Control": "private, no-store" };
 function failure(error: unknown): Response {
@@ -7,7 +8,7 @@ function failure(error: unknown): Response {
   const code = error instanceof PeopleError ? error.code : "fmp-unavailable";
   return Response.json({ source: "fmp", error: code, complete: false, partial: true }, { status, headers });
 }
-export function createPeopleHandlers(service: PeopleService) {
+export function createPeopleHandlers(service: PeopleService | StoredPeopleService) {
   return {
     async directory(request: Request): Promise<Response> {
       const q = new URL(request.url).searchParams.get("q")?.trim().toLocaleLowerCase() ?? "";

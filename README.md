@@ -11,10 +11,10 @@ This repository is a Next.js App Router app. **Demo / production host:** [https:
 In V1:
 
 - **SEC EDGAR** is the primary Form 4 source (ticker → CIK → recent `4` filings → XML → open-market P/S). No key.
-- **FMP** supplies the person-first backend directory, annual source books and separate PTR activity (`FMP_API_KEY`); see [FMP person backend](#fmp-person-backend). This backend does not redesign or replace the existing frontend.
+- **FMP** supplies saved person-first books and separate PTR activity. Home and stable-ID person pages read Supabase; published trade-symbol indexes show target weights even when annual pages are partial. See [FMP person backend](#fmp-person-backend).
 - **AInvest Congressional Trades** remains the primary House/Senate **legacy tape** source (`AINVEST_API_KEY`, free tier)
 - Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
-- Home is **indexes first**: crowd baskets and person indexes, shown only when enough real filings back them (`src/lib/fomo/index-readiness.ts`); the raw tape is `/feed`
+- Home is **indexes first**: published FMP trade models, then the saved person directory. The raw SEC/AInvest tape remains `/feed`; legacy copy/index routes retain their own readiness gates.
 - Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. The "too thin" gate applies only to **Buy this index**; a profile renders with one holding
 - Fallback when a basket is too thin: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
@@ -52,14 +52,15 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | Swaps | Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` (live keyless or keyed; stub in dev) |
 | RPC | Helius URL helper + `@solana/kit` `createSolanaRpc`; browser reaches Helius via `POST /api/rpc` without seeing the key |
 | Cache | `src/lib/cache.ts` in-process memo (TTL, stale-while-revalidate); `src/instrumentation.ts` warms the tape at boot |
-| Persistence | Supabase client stub; in-memory positions when keys are absent |
+| Persistence | Supabase saved FMP books + immutable trade targets; in-memory legacy positions when keys are absent |
 | Buy gate | `src/lib/allowlist.ts` — `resolveBuyableMint()` against the catalog; no hand list |
 
 API routes:
 
 - `GET /api/health` — boolean adapter flags (`edgar` / `ainvest` / `form4` / `jupiter` / `helius` / `privy` / `supabase`) plus derived `modes` (which path each lane takes) and `catalog` (mint / ticker counts, per-issuer `live` vs `snapshot`); never echoes secret values
 - `GET /api/people?q=...` — searchable full FMP directory; source pagination/partial status, no featured-person allowlist
-- `GET /api/people/[id]/portfolio` — stable FMP `senateID` (both chambers), all annual document versions, separate activity, aggregate history, catalog tags and completeness flags
+- `GET /api/people/[id]/portfolio` — saved stable FMP `senateID` (both chambers), annual document versions, activity, aggregate history, completeness flags and `publishedIndex`
+- `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
 - `GET /api/disclosures` — insider + congress tape with per-lane provenance in `lanes.{insiders,congress}` (`source`, `live`, `count`, `note`) and `catalog` feed status; every row carries `venue` / `venueSymbol` / `mint` / `mintDecimals` / `tradeEligible`
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
 - `GET /api/disclosures/[id]` — inspect payload
@@ -71,7 +72,7 @@ API routes:
 
 UI routes:
 
-- `/` indexes first: ready baskets, honest "not an index yet" states, follow & copy fallback, latest filings
+- `/` indexes first: published trade targets, searchable saved people, links to original disclosed books
 - `/feed` the raw disclosure tape (Everything / Following, search, buy/sell filter)
 - `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges
 - `/indexes/[id]` person index ticket + rebalance
@@ -81,7 +82,7 @@ UI routes:
 
 ## FMP person backend
 
-The backend contract is documented in [`src/lib/fmp/README.md`](src/lib/fmp/README.md). It is independent of the legacy `/api/profiles` and PTR-netted `src/lib/fomo/book.ts`; the frontend and existing swap routes are unchanged. Do **not** feed FMP activity into that legacy book calculator.
+The contract and publication procedure are documented in [`src/lib/fmp/README.md`](src/lib/fmp/README.md). `/api/people` and `/api/people/[id]/portfolio` read Supabase only, not FMP or its disk archive. Home, `/p/[stable FMP ID]`, and `/indexes/fmp-[hash]` show saved annual books, activity and published model targets. Existing legacy `/api/profiles`, copy and swap routes remain independent. Do **not** feed FMP activity into the PTR-netted `src/lib/fomo/book.ts` calculator.
 
 Set server-only `FMP_API_KEY`, or use `$HOME/.config/fmp-api-key` for local development. Requests use the `apikey` **header**, never a browser secret or query credential. Raw observations (including errors) are redacted and archived under `.data/fmp` with fetch time, request parameters, SHA-256 and page metadata (directory `0700`, files `0600`). `.data` is excluded from git, image builds and deployment rsync; Compose uses a private named volume so observations survive container replacement. No raw archive is web-served. Ensure that directory/volume is writable and back it up privately; storage failure is an ingestion failure.
 
@@ -89,7 +90,7 @@ Live integration verification on 2026-09-14 returned **540 real directory entrie
 
 Only a complete, unambiguous annual document version can supply `indexInput` (stocks and ETFs, no size/tradability cap). Separate years are never summed; multiple documents for one year remain unreconciled versions. Later PTRs never rewrite that input. Annual names in the live schema have **no dedicated ticker**: apparent symbols inside free-text names are not automatically approved identity mappings. Such rows remain visible and unresolved. Explicit symbols can be mapped by the pure catalog function (xStock then Backpack); options/bonds/income/liabilities cannot become stock exposures just because their symbol matches. A mint tag is availability, **not execution approval**.
 
-A profile does not guarantee an annual book. Failed sources remain failed, partial sources remain partial, and there is no mock/famous-person fallback. This lane supplies data and a candidate annual **input**, not published weights, a funded vault, historical performance, or an executable index.
+A profile does not guarantee an annual book. Failed sources remain failed, partial sources remain partial, and there is no mock/famous-person fallback. Separately, `npm run indexes:publish -- --publish` publishes saved **trade-symbol** models via an atomic service-only Supabase RPC. Annual completeness is not a publication gate. Targets use gross trade-band midpoints (buys and sales), otherwise labelled equal weights, xStock first then Backpack. Unmapped names remain disclosed-only. Models are not current holdings, funded vaults, historical performance or execution-approved indexes. Apply the additive trade migration as described in the FMP contract before publishing; never rewrite a disclosed row to make an index.
 
 ## Buy catalog
 

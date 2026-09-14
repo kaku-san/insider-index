@@ -16,8 +16,8 @@
  * are out of scope by design.
  */
 
-import { memo, memoPeek } from "@/lib/cache";
-import snapshot from "@/lib/venues/catalog-snapshot.json";
+import { memo, memoPeek } from "../cache.ts";
+import snapshot from "./catalog-snapshot.json" with { type: "json" };
 import {
   extractXStocksProducts,
   indexCatalog,
@@ -27,7 +27,7 @@ import {
   type CatalogIndex,
   type CatalogIssuer,
   type CatalogToken,
-} from "@/lib/venues/catalog-parse";
+} from "./catalog-parse.ts";
 
 export const XSTOCKS_PRODUCTS_URL = "https://xstocks.com/us/products";
 export const BACKPACK_ASSETS_URL = "https://api.backpack.exchange/api/v1/assets";

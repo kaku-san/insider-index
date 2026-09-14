@@ -1,30 +1,14 @@
-import { Suspense } from "react";
-import { IndexHome } from "@/components/index-home";
-import { Skeleton } from "@/components/social/shared";
-import type { Disclosure, PersonIndex } from "@/lib/disclosures/types";
-import { listAllDisclosures, listIndexes } from "@/lib/fomo/catalog";
+import { IndexHome, type SavedDirectory } from "@/components/index-home";
+import { peopleService } from "@/lib/fmp/server";
 
 export const dynamic = "force-dynamic";
-
-// Home is indexes first. The disclosure feed lives at /feed.
 export default async function HomePage() {
-  let initialIndexes: PersonIndex[] = [];
-  let initialDisclosures: Disclosure[] = [];
+  let initialData: SavedDirectory | undefined;
   try {
-    [initialIndexes, initialDisclosures] = await Promise.all([
-      listIndexes(),
-      listAllDisclosures(),
-    ]);
+    const saved = await peopleService.directory();
+    initialData = { ...saved, total: saved.people.length };
   } catch {
-    // Client hook retries /api/indexes and /api/disclosures.
+    // The client retries the saved-data API and renders a safe error if unavailable.
   }
-
-  return (
-    <Suspense fallback={<Skeleton cards={4} />}>
-      <IndexHome
-        initialIndexes={initialIndexes}
-        initialDisclosures={initialDisclosures}
-      />
-    </Suspense>
-  );
+  return <IndexHome initialData={initialData} />;
 }

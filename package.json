@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.mts",
+    "indexes:publish": "node --env-file=.env.local --experimental-strip-types scripts/publish-trade-indexes.mts",
     "catalog:snapshot": "node --experimental-strip-types scripts/snapshot-catalog.mts"
   },
   "dependencies": {

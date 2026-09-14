@@ -1,4 +1,6 @@
 import { IndexTicket } from "@/components/index-ticket";
+import { FmpIndex } from "@/components/fmp-person";
+import { peopleService } from "@/lib/fmp/server";
 
 export default async function IndexPage({
   params,
@@ -6,5 +8,8 @@ export default async function IndexPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <IndexTicket id={id} />;
+  if (!id.startsWith("fmp-")) return <IndexTicket id={id} />;
+  const hash = id.slice(4);
+  const index = await peopleService.publishedIndex(hash).catch(() => null);
+  return <FmpIndex key={id} hash={hash} initialData={index ? { index } : undefined} />;
 }

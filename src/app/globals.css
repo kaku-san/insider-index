@@ -203,3 +203,18 @@
 .external-legs{display:block;font-size:8px;color:var(--muted-foreground);margin-top:8px;line-height:1.7}
 .external-legs a{margin-left:5px;text-decoration:underline}
 .external-legs span{margin-left:5px}
+
+/* Saved disclosure books: wide evidence tables scroll without clipping mobile pages. */
+.fmp-panel{padding:24px;margin:16px 0;line-height:1.7}
+.fmp-panel h2,.fmp-panel h3{margin-bottom:12px}
+.fmp-panel p{margin:10px 0}
+.fmp-panel summary{cursor:pointer}
+.fmp-search{display:flex;flex-direction:column;gap:8px;max-width:480px;margin-top:18px;font-weight:600}
+.fmp-search input{padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--background);color:var(--foreground);font:inherit}
+.fmp-table-wrap{overflow-x:auto;max-width:100%;margin:18px 0}
+.fmp-table{border-collapse:collapse;width:100%;font-size:13px;text-align:left}
+.fmp-table th,.fmp-table td{padding:12px;border-bottom:1px solid var(--border);vertical-align:top;min-width:130px}
+.fmp-table th{font-weight:700}
+.fmp-mint{font-family:monospace;overflow-wrap:anywhere;font-size:12px}
+.fmp-table .fmp-mint{min-width:220px}
+@media(max-width:640px){.fmp-panel{padding:16px}.fmp-table th,.fmp-table td{padding:9px}}
