@@ -119,3 +119,56 @@
 @media (max-width: 370px) {
   .profile-carousel, .lane-tabs { width: calc(100% + 13px); margin-right: -13px; }
 }
+/* INDEX-FIRST HOME (v0.3). Reuses the existing Stocklana tokens; only adds IA blocks. */
+.index-home .hero{margin-bottom:26px}
+.home-section{margin:0 0 30px}
+.home-section .section-heading{align-items:flex-start}
+.home-section .section-heading .button{margin-top:0;white-space:nowrap}
+.intro-sub{font-size:11px;color:var(--muted-foreground);margin-top:8px}
+.intro-sub a{color:var(--foreground);font-weight:650;text-decoration:underline;text-decoration-color:var(--primary);text-underline-offset:3px}
+.index-kind{display:inline-flex;align-items:center;margin-top:5px;padding:3px 6px;border-radius:5px;font-size:8px;font-weight:650;background:var(--surface-alt);color:var(--muted-foreground);white-space:nowrap}
+.readiness-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;font-size:9px;font-weight:600;line-height:1.35;border:1px solid var(--border);color:var(--muted-foreground);background:var(--surface-alt);max-width:100%}
+.readiness-pill.ready{color:var(--positive);border-color:color-mix(in srgb,var(--positive) 35%,transparent);background:color-mix(in srgb,var(--primary) 26%,var(--card))}
+.readiness-pill.building{color:var(--note-foreground);background:var(--note);border-color:transparent}
+.index-card .readiness-pill{margin:-8px 0 12px;display:inline-flex}
+.index-card.is-building{border-style:dashed;background:color-mix(in srgb,var(--card) 88%,var(--surface-alt))}
+.index-card.is-building .weight-bar{opacity:.55}
+.inline-meta .readiness-pill{margin-left:2px}
+.building-list{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.building-row{display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px dashed var(--border);border-radius:12px;background:var(--card)}
+.building-row>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.building-row strong{font-size:12px}
+.building-row span{font-size:10px;color:var(--muted-foreground);line-height:1.6}
+.building-row .text-button{white-space:nowrap}
+.building-notice{align-items:flex-start;gap:12px;padding:16px 18px;background:var(--note);color:var(--note-foreground);border-color:transparent;margin:18px 0 22px}
+.building-notice strong{display:block;font-size:12px;color:var(--foreground);margin-bottom:3px}
+.building-notice p{font-size:11px;line-height:1.7}
+.explainer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:0 0 32px}
+.explainer{margin-bottom:0;display:flex;flex-direction:column;gap:9px}
+.explainer h3{display:flex;align-items:center;gap:8px;font-size:16px}
+.explainer p{font-size:12px;line-height:1.75;color:var(--muted-foreground)}
+.explainer .explainer-when{font-size:10px;font-weight:650;color:var(--foreground);padding-top:6px;border-top:1px dashed var(--border);margin-top:auto}
+.filer-list{display:flex;flex-direction:column;gap:9px}
+.filer-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"who stock actions" "note note note";align-items:center;gap:8px 12px;padding:13px 15px;border:1px solid var(--border);border-radius:13px;background:var(--card);box-shadow:var(--shadow)}
+.filer-row>.filer-identity{grid-area:who;display:flex;align-items:center;gap:10px;min-width:0}
+.filer-row>.stock-icon{grid-area:stock}
+.filer-row>.filer-actions{grid-area:actions}
+.filer-row>.filer-note{grid-area:note}
+.filer-identity div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.filer-identity strong{font-size:12.5px;line-height:1.3}
+.filer-identity span{font-size:10px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filer-identity span b{color:var(--foreground);font-weight:650}
+.filer-actions{display:flex;align-items:center;gap:6px}
+.filer-actions .button{margin-top:0;white-space:nowrap}
+.filer-note{font-size:9px;color:var(--soft-text);line-height:1.5}
+.filer-note a{display:inline-flex;align-items:center;gap:3px;color:var(--positive);font-weight:650}
+.filer-list.compact .filer-row{padding:10px 12px;box-shadow:none;grid-template-areas:"who stock actions"}
+.filer-list.compact .filer-note{display:none}
+.radar-list a{display:flex;align-items:center;gap:9px;width:100%;color:var(--foreground);padding:12px 0;border-bottom:1px solid var(--border);text-align:left}
+.radar-list a:last-child{border-bottom:0}
+.radar-list a>strong{flex:1}
+.radar-list a>span:not(.radar-rank):not(.stock-icon){font-size:9px;color:var(--muted-foreground)}
+.rail-note a{color:inherit;font-weight:650;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:1080px){.explainer-grid{gap:12px}}
+@media(max-width:850px){.explainer-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.filer-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who stock" "actions actions" "note note"}.filer-actions{width:100%}.filer-actions .button{flex:1}.filer-identity span{white-space:normal}.home-section .section-heading{flex-direction:column;align-items:stretch}.home-section .section-heading .button{align-self:flex-start}.building-row{flex-wrap:wrap}.building-row .text-button{width:100%}}

@@ -7,6 +7,7 @@ import type {
   PersonIndex,
   PoliticalParty,
 } from "@/lib/disclosures/types";
+import { buildCrowdIndexes } from "@/lib/fomo/crowd-indexes";
 import { buildProfile, signalFomo, signalHeadline } from "@/lib/fomo/insights";
 import { portraitFor } from "@/lib/fomo/portraits";
 
@@ -59,8 +60,8 @@ export async function listSignals(filters?: {
     }));
 }
 
-export async function listProfiles(): Promise<FomoProfile[]> {
-  const trades = await listAllDisclosures();
+export async function listProfiles(rows?: Disclosure[]): Promise<FomoProfile[]> {
+  const trades = rows ?? (await listAllDisclosures());
   const grouped = new Map<string, Disclosure[]>();
   for (const trade of trades) {
     const bucket = grouped.get(trade.profileId) ?? [];
@@ -96,9 +97,12 @@ export async function getProfileTrades(id: string): Promise<CopySignal[]> {
 }
 
 export async function listIndexes(): Promise<PersonIndex[]> {
-  return (await listProfiles())
+  const disclosures = await listAllDisclosures();
+  const personIndexes = (await listProfiles(disclosures))
     .map((profile) => profile.index)
     .filter((index) => index.constituents.length > 0);
+  // Crowd baskets (many filers, one basket) lead; person baskets follow.
+  return [...buildCrowdIndexes(disclosures), ...personIndexes];
 }
 
 export async function getIndex(id: string): Promise<PersonIndex | null> {

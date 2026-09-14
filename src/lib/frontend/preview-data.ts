@@ -22,6 +22,7 @@ export function previewRead(path:string):unknown {
  const url=new URL(path,"https://preview.invalid"),p=url.pathname;
  if(p==="/api/profiles")return {profiles:previewProfiles};
  if(p==="/api/signals"||p==="/api/disclosures")return {signals:previewSignals,disclosures:previewSignals};
+ if(p==="/api/indexes")return {count:previewProfiles.length,indexes:previewProfiles.map(x=>x.index),holdings:[]};
  if(p==="/api/follows")return {follows:[]};
  if(p==="/api/positions")return {persistence:"preview",positions:[]};
  if(p.startsWith("/api/profiles/")){const profile=previewProfiles.find(x=>x.id===decodeURIComponent(p.split("/").at(-1)!));if(!profile)throw new Error("No preview profile matches this link.");return {profile,trades:previewSignals.filter(x=>x.profileId===profile.id)};}
