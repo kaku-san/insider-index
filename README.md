@@ -12,8 +12,9 @@ In V1:
 
 - **SEC EDGAR** is the primary Form 4 source (ticker → CIK → recent `4` filings → XML → open-market P/S). No key.
 - **AInvest Congressional Trades** is the primary House/Senate source (`AINVEST_API_KEY`, free tier)
-- Form4API is a fallback only (`FORM4API_KEY`); labelled mocks are served only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
-- Congress is a first-class lane: Democrats / Republicans, politician profiles, and person indexes
+- Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
+- Home is **indexes first**: crowd baskets and person indexes, shown only when enough real filings back them (`src/lib/fomo/index-readiness.ts`); the raw tape is `/feed`
+- Fallback when a basket is too thin: follow the filer and copy one trade (same allowlisted xStock, user-signed)
 - Buys (and copy-sells) are allowed only against the verified xStock mint allowlist
 - One-trade copy **or** a person index (Pelosi Index, Huang Index) that rebalances on the next disclosure
 - The user signs every swap and every rebalance. There are no vaults and no unattended trading
@@ -52,14 +53,15 @@ API routes:
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
-- `GET /api/indexes` · `POST /api/indexes/quote` · `POST /api/indexes/execute` (basket + rebalance)
+- `GET /api/indexes` · `POST /api/indexes/quote` · `POST /api/indexes/execute` (basket + rebalance). Crowd indexes (`idx-crowd-*`, built in `src/lib/fomo/crowd-indexes.ts`) lead the list; person indexes follow
 - `POST /api/quote` — Jupiter `/order` stub, allowlist-enforced
 - `POST /api/execute` — Jupiter `/execute` stub, then record a position
 - `GET /api/positions` — tracked user-signed fills
 
 UI routes:
 
-- `/` discover (live tape, executives, D/R, indexes)
+- `/` indexes first: ready baskets, honest "not an index yet" states, follow & copy fallback, latest filings
+- `/feed` the raw disclosure tape (Everything / Following, search, buy/sell filter)
 - `/p/[id]` FOMO profile with portrait, portfolio chart, 24h/30d/90d
 - `/indexes/[id]` person index ticket + rebalance
 - `/disclosures/[id]` inspect

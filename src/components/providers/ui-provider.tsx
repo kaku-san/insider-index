@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 export type Theme = "light" | "dark" | "system";
-export type Lane = "live" | "insiders" | "democrats" | "republicans" | "indexes" | "following";
+/** Feed views. Party and executive lanes were removed on purpose: the home is indexes first. */
+export type Lane = "live" | "following";
 type UI = {theme:Theme; setTheme:(v:Theme)=>void; query:string; setQuery:(v:string)=>void; lane:Lane;setLane:(v:Lane)=>void; toast:(v:string)=>void; saved:string[];toggleSave:(id:string)=>void;previewFollows:string[];togglePreviewFollow:(id:string)=>void;};
 const Context = createContext<UI | null>(null);
 export function UIProvider({children}: {children:ReactNode}) {

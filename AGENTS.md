@@ -12,24 +12,25 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Disclosure-to-copy-trade app: real insider/politician prints → user-signed xStock swaps on Solana. Product scope, env matrix, and API routes live in `README.md`; empty env template in `.env.example`.
 
+- Product shape: **indexes first, feed second, follow & copy one trade as the fallback.** Home (`/`) is `src/components/index-home.tsx`; the raw disclosure tape is `/feed`. Do not reintroduce party/executive lanes as top-level navigation.
+- Index readiness is `src/lib/fomo/index-readiness.ts`. Crowd indexes are `src/lib/fomo/crowd-indexes.ts`.
+
 ## Commands
 
 - `npm run dev` / `npm run build` / `npm run typecheck`
-- `npm test` — `node --test` suites in `tests/*.test.mts`; they import pure parser modules directly, so keep `*-parse.ts` files free of `@/` aliases, env, and fetch.
-- `npm run lint` has pre-existing `react-hooks` errors in `src/components/*`; do not treat a red lint as caused by data-layer work.
+- `npm test` — `tests/*.test.mts`; keep `*-parse.ts` free of `@/` aliases, env, and fetch.
 
-## Data sources (authoritative: `src/lib/disclosures/`)
+## Data sources (`src/lib/disclosures/`)
 
-- Insiders: SEC EDGAR primary (`edgar.ts`, no key, paced ≤10 req/s, `SEC_EDGAR_USER_AGENT`), Form4API fallback, mocks dev-only. Orchestration and `source` labelling in `form4.ts`.
-- Congress: AInvest primary (`ainvest.ts`, `AINVEST_API_KEY`), Form4API fallback, mocks dev-only. AInvest rows have no ticker/bioguide/chamber in the payload; envelope errors are HTTP 200 with non-zero `status_code`.
-- `STOCKLANA_ALLOW_MOCKS` (default dev on / prod off) is the only switch that lets fixture rows into a lane. `GET /api/disclosures` → `lanes` tells you what actually served.
+- Insiders: SEC EDGAR primary (`edgar.ts`), Form4API fallback, mocks dev-only.
+- Congress: AInvest primary (`ainvest.ts`, `AINVEST_API_KEY`), Form4API fallback, mocks dev-only.
+- `GET /api/disclosures` → `lanes` tells you what actually served.
 
 ## Sharp edges
 
-- Next bundles route handlers, SSR, and `instrumentation.ts` as separate module graphs; anything that must be shared per-process (caches, rate pacers) goes through `globalState()` in `src/lib/cache.ts`, never a bare module-level variable.
-- The EDGAR cold crawl takes ~30 s; `src/instrumentation.ts` warms it at boot and `memo()` serves stale-while-revalidate afterwards. Verify with two timed `curl /api/disclosures`.
-- `next start` ignores `output: "standalone"`; test prod with `node .next/standalone/server.js`. The server process renames itself to `next-server`, so `pkill -f server.js` misses it — kill by port.
-- Jupiter Swap V2 works keyless; `jupiterMode()` in `src/lib/runtime.ts` decides live vs stub. In live mode a stub-wallet signature or stub requestId is rejected by `/api/execute` on purpose.
+- Shared caches go through `globalState()` in `src/lib/cache.ts`.
+- EDGAR cold crawl ~30 s; warmed at boot via `src/instrumentation.ts`.
+- Jupiter live vs stub is `jupiterMode()` in `src/lib/runtime.ts`; live mode rejects stub signatures.
 
 ## Maintaining this file
 
