@@ -143,8 +143,13 @@ export function PrivyLiveRoot({
   appId: string;
   children: ReactNode;
 }) {
-  const http = "https://api.mainnet-beta.solana.com";
-  const ws = "wss://api.mainnet-beta.solana.com";
+  // Reads/sends go through our /api/rpc proxy so Helius (when configured)
+  // serves the wallet without exposing HELIUS_API_KEY to the browser.
+  // Subscriptions cannot be proxied through a Next route; use the public
+  // websocket unless NEXT_PUBLIC_SOLANA_WS_URL overrides it.
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const http = origin ? `${origin}/api/rpc` : "https://api.mainnet-beta.solana.com";
+  const ws = process.env.NEXT_PUBLIC_SOLANA_WS_URL?.trim() || "wss://api.mainnet-beta.solana.com";
 
   return (
     <PrivyProvider

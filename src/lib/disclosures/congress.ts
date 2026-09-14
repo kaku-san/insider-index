@@ -1,22 +1,24 @@
 /**
- * Form4API Congress adapter (STOCK Act PTRs).
+ * Congress (STOCK Act PTR) lane — House and Senate.
  *
- * Live path: GET https://api.form4api.com/v1/congress/trades
- * Fields we rely on: politician.{bioguideId,slug,fullName,party,chamber,state},
- * ticker, assetName, transactionType, amountLow, amountHigh, transactionDate,
- * disclosureDate. Coverage is House-first. Party is free-text (D / Democratic).
+ * Order of preference:
+ *  1. AInvest Congressional Trades (`ainvest-congress`) — primary, AINVEST_API_KEY
+ *  2. Form4API House PTRs (`congress`) — fallback only when FORM4API_KEY is set
+ *  3. Mock fixtures (`mock-congress`) — dev only (STOCKLANA_ALLOW_MOCKS)
  *
- * Without FORM4API_KEY, or on 402/plan errors, we serve mock House trades.
- *
- * V1 queries allowlisted xStock underlyings first so Discover shows complete,
- * copy-eligible PTRs (Pelosi/NVDA etc.) instead of a flood of empty-ticker /
- * non-allowlisted rows with null shares and prices.
+ * Only allowlisted xStock underlyings are queried, so every row is a real
+ * politician trading a copyable name. PTRs disclose dollar ranges, not share
+ * counts or prices: sharesAmount / pricePerShare stay null and the UI renders
+ * null as "—", never 0. transactionValue is the range midpoint.
  */
 
 import { ALLOWLISTED_TICKERS, getXStockByTicker } from "@/lib/allowlist";
+import { fetchAInvestCongressTape } from "@/lib/disclosures/ainvest";
+import type { NormalizedCongressTrade } from "@/lib/disclosures/ainvest-parse";
 import { MOCK_CONGRESS_TRADES, type MockCongressTrade } from "@/lib/disclosures/mock-congress";
-import type { Disclosure, DisclosureSide } from "@/lib/disclosures/types";
+import type { Disclosure, DisclosureSide, LaneStatus } from "@/lib/disclosures/types";
 import { normalizeParty } from "@/lib/fomo/party";
+import { mocksAllowed } from "@/lib/runtime";
 
 const FORM4_API_BASE = "https://api.form4api.com";
 
@@ -75,14 +77,10 @@ export function congressTradeToDisclosure(
   const amountLow = trade.amountLow ?? null;
   const amountHigh = trade.amountHigh ?? null;
   const value =
-    amountLow != null && amountHigh != null ? midpoint(amountLow, amountHigh) : (amountLow ?? 0);
+    amountLow != null && amountHigh != null ? midpoint(amountLow, amountHigh) : (amountLow ?? null);
   const bioguide = politician.bioguideId ?? "unknown";
   const name = politician.fullName ?? "Unknown member";
   const party = normalizeParty(politician.party ?? null);
-  const price = xstock?.stubUsdPrice ?? null;
-  // Congress PTRs disclose dollar ranges, not share counts. Only estimate when
-  // we have an allowlisted stub price; otherwise leave shares/price null.
-  const shares = price && value > 0 ? Math.max(1, Math.round(value / price)) : null;
   const disclosed = "disclosureDate" in trade ? trade.disclosureDate : undefined;
   const transacted = "transactionDate" in trade ? trade.transactionDate : "";
 
@@ -99,9 +97,10 @@ export function congressTradeToDisclosure(
     transactionCode: side === "sell" ? "S" : "P",
     transactionDate: String(transacted ?? ""),
     filedAt: String(disclosed ?? transacted ?? ""),
-    sharesAmount: shares,
-    pricePerShare: price,
-    transactionValue: value || null,
+    // PTRs disclose a dollar range only. No share count, no price — never 0.
+    sharesAmount: null,
+    pricePerShare: null,
+    transactionValue: value && value > 0 ? value : null,
     sharesOwnedAfter: null,
     is10b51: false,
     source,
@@ -119,6 +118,47 @@ export function congressTradeToDisclosure(
   };
 }
 
+/** AInvest rows carry no bioguide id or chamber; we key profiles by name slug. */
+export function ainvestTradeToDisclosure(trade: NormalizedCongressTrade): Disclosure {
+  const xstock = getXStockByTicker(trade.ticker);
+  const party = normalizeParty(trade.party);
+  const value =
+    trade.amountLow != null && trade.amountHigh != null
+      ? midpoint(trade.amountLow, trade.amountHigh)
+      : trade.amountLow;
+  const filedAt = trade.filingDate ? `${trade.filingDate}T00:00:00.000Z` : "";
+
+  return {
+    id: trade.id,
+    accessionNumber: `PTR-${trade.slug}`,
+    ticker: trade.ticker,
+    issuerName: xstock?.name.replace(/ xStock$/, "") ?? trade.ticker,
+    insiderName: trade.name,
+    insiderTitle: [trade.state, party, trade.sizeLabel].filter(Boolean).join(" · "),
+    insiderCik: trade.slug,
+    transactionCode: trade.side === "sell" ? "S" : "P",
+    transactionDate: trade.tradeDate,
+    filedAt,
+    sharesAmount: null,
+    pricePerShare: null,
+    transactionValue: value != null && value > 0 ? value : null,
+    sharesOwnedAfter: null,
+    is10b51: false,
+    source: "ainvest-congress",
+    side: trade.side,
+    xstockSymbol: xstock?.symbol ?? null,
+    xstockMint: xstock?.mint ?? null,
+    tradeEligible: Boolean(xstock) && (trade.side === "buy" || trade.side === "sell"),
+    kind: "politician",
+    profileId: `pol-${trade.slug}`,
+    party,
+    chamber: null,
+    state: trade.state,
+    amountLow: trade.amountLow,
+    amountHigh: trade.amountHigh,
+  };
+}
+
 export function listMockCongressDisclosures(): Disclosure[] {
   return MOCK_CONGRESS_TRADES.map((trade) =>
     congressTradeToDisclosure(trade, "mock-congress"),
@@ -132,7 +172,7 @@ async function fetchCongressPage(
   const search = new URLSearchParams(query);
   const response = await fetch(`${FORM4_API_BASE}/v1/congress/trades?${search.toString()}`, {
     headers: { "X-Api-Key": apiKey },
-    next: { revalidate: 60 },
+    next: { revalidate: 300 },
   });
   if (!response.ok) {
     throw new Error(`Congress API ${response.status}`);
@@ -152,58 +192,105 @@ function dedupeCongress(rows: Disclosure[]): Disclosure[] {
   return out;
 }
 
-export async function listCongressDisclosures(): Promise<Disclosure[]> {
-  const apiKey = process.env.FORM4API_KEY;
-  if (!apiKey) {
-    return listMockCongressDisclosures();
-  }
+function sortNewest(rows: Disclosure[]): Disclosure[] {
+  return [...rows].sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
+}
 
-  try {
-    const perTicker = await Promise.all(
-      ALLOWLISTED_TICKERS.map(async (ticker) => {
-        try {
-          return await fetchCongressPage(apiKey, {
-            ticker,
-            per_page: "25",
-            page: "1",
-          });
-        } catch {
-          return [] as CongressApiTrade[];
-        }
-      }),
-    );
-
-    let recent: CongressApiTrade[] = [];
-    try {
-      recent = await fetchCongressPage(apiKey, { per_page: "50", page: "1" });
-    } catch {
-      recent = [];
-    }
-
-    const mapped = dedupeCongress(
-      [...perTicker.flat(), ...recent]
+async function fetchForm4ApiCongress(apiKey: string): Promise<Disclosure[]> {
+  const perTicker = await Promise.all(
+    ALLOWLISTED_TICKERS.map(async (ticker) => {
+      try {
+        return await fetchCongressPage(apiKey, { ticker, per_page: "25", page: "1" });
+      } catch {
+        return [] as CongressApiTrade[];
+      }
+    }),
+  );
+  return sortNewest(
+    dedupeCongress(
+      perTicker
+        .flat()
         .filter((row) => Boolean(row.ticker?.trim()))
         .map((row) => congressTradeToDisclosure(row, "congress")),
-    ).filter((row) => Boolean(row.ticker));
+    ).filter((row) => Boolean(getXStockByTicker(row.ticker))),
+  );
+}
 
-    const allowlisted = mapped.filter((row) => Boolean(getXStockByTicker(row.ticker)));
-    // Keep a small non-allowlisted slice for tape breadth, but never let it
-    // drown out complete / copy-eligible prints.
-    const others = mapped
-      .filter((row) => !getXStockByTicker(row.ticker))
-      .slice(0, 15);
+export type CongressTape = {
+  rows: Disclosure[];
+  status: LaneStatus;
+};
 
-    const combined = dedupeCongress([...allowlisted, ...others]).sort(
-      (a, b) => +new Date(b.filedAt) - +new Date(a.filedAt),
-    );
+export async function listCongressTape(): Promise<CongressTape> {
+  const notes: string[] = [];
 
-    if (combined.length === 0) {
-      return listMockCongressDisclosures();
+  if (process.env.AINVEST_API_KEY?.trim()) {
+    try {
+      const tape = await fetchAInvestCongressTape(ALLOWLISTED_TICKERS);
+      const rows = sortNewest(
+        dedupeCongress(tape.trades.map(ainvestTradeToDisclosure)).filter((row) =>
+          Boolean(row.ticker && getXStockByTicker(row.ticker)),
+        ),
+      );
+      const failing = Object.entries(tape.perTicker)
+        .filter(([, entry]) => entry.error)
+        .map(([ticker]) => ticker);
+      if (rows.length > 0) {
+        return {
+          rows,
+          status: {
+            source: "ainvest-congress",
+            live: true,
+            count: rows.length,
+            note: failing.length ? `AInvest errors for ${failing.join(", ")}` : null,
+          },
+        };
+      }
+      notes.push("AInvest returned no rows for allowlisted tickers");
+    } catch (error) {
+      notes.push(`AInvest: ${error instanceof Error ? error.message : String(error)}`);
     }
-    return combined;
-  } catch {
-    return listMockCongressDisclosures();
+  } else {
+    notes.push("AINVEST_API_KEY not set");
   }
+
+  const form4ApiKey = process.env.FORM4API_KEY?.trim();
+  if (form4ApiKey) {
+    try {
+      const rows = await fetchForm4ApiCongress(form4ApiKey);
+      if (rows.length > 0) {
+        return {
+          rows,
+          status: { source: "congress", live: true, count: rows.length, note: notes.join("; ") || null },
+        };
+      }
+      notes.push("Form4API congress returned no allowlisted rows");
+    } catch (error) {
+      notes.push(`Form4API: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  if (mocksAllowed()) {
+    const rows = sortNewest(listMockCongressDisclosures());
+    return {
+      rows,
+      status: {
+        source: "mock-congress",
+        live: false,
+        count: rows.length,
+        note: [...notes, "serving labelled fixtures (STOCKLANA_ALLOW_MOCKS)"].join("; "),
+      },
+    };
+  }
+
+  return {
+    rows: [],
+    status: { source: "off", live: false, count: 0, note: notes.join("; ") || "no congress source available" },
+  };
+}
+
+export async function listCongressDisclosures(): Promise<Disclosure[]> {
+  return (await listCongressTape()).rows;
 }
 
 export async function fetchCongressTrades(): Promise<Disclosure[]> {

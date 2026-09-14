@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { canBuyMint, fromAtomicAmount, getXStockByMint } from "@/lib/allowlist";
-import { executeJupiterOrder } from "@/lib/jupiter";
+import { JupiterError, executeJupiterOrder } from "@/lib/jupiter";
 import { recordPosition } from "@/lib/positions";
+
+export const dynamic = "force-dynamic";
 
 type ExecuteBody = {
   signedTransaction?: string;
@@ -43,13 +45,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unknown allowlisted mint." }, { status: 400 });
   }
 
-  const result = await executeJupiterOrder({
-    signedTransaction: body.signedTransaction,
-    requestId: body.requestId,
-  });
+  let result;
+  try {
+    result = await executeJupiterOrder({
+      signedTransaction: body.signedTransaction,
+      requestId: body.requestId,
+    });
+  } catch (error) {
+    const status = error instanceof JupiterError ? error.status : 502;
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Jupiter execute failed." },
+      { status },
+    );
+  }
 
   if (result.status !== "Success") {
-    return NextResponse.json({ error: "Jupiter execute failed.", result }, { status: 502 });
+    return NextResponse.json(
+      { error: result.error ? `Jupiter execute failed: ${result.error}` : "Jupiter execute failed.", result },
+      { status: 502 },
+    );
   }
 
   const position = await recordPosition({
@@ -58,8 +72,8 @@ export async function POST(request: Request) {
     ticker: body.ticker ?? xstock.underlyingTickers[0],
     xstockSymbol: xstock.symbol,
     mint: xstock.mint,
-    usdcIn: fromAtomicAmount(body.inAmount ?? "0", 6),
-    tokensOut: fromAtomicAmount(body.outAmount ?? "0", xstock.decimals),
+    usdcIn: fromAtomicAmount(result.inputAmountResult ?? body.inAmount ?? "0", 6),
+    tokensOut: fromAtomicAmount(result.outputAmountResult ?? body.outAmount ?? "0", xstock.decimals),
     requestId: body.requestId,
     signature: result.signature,
     stub: result.stub,

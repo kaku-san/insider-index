@@ -50,11 +50,36 @@ function horizonInsight(trades: Disclosure[], horizon: HorizonInsight["horizon"]
   };
 }
 
+/**
+ * Disclosed book per ticker.
+ *
+ * Insiders: Form 4 reports "shares owned following the transaction", so the
+ * holding is the latest post-trade position × the price on that print. This
+ * keeps a CEO who only ever sells (most of them) in the index at their real
+ * remaining stake instead of netting to zero.
+ *
+ * Politicians: PTRs disclose ranges, not holdings, so we net buy/sell midpoints.
+ */
 export function buildPortfolio(trades: Disclosure[]): PortfolioHolding[] {
   const byTicker = new Map<string, number>();
-  for (const trade of trades) {
+  const settled = new Set<string>();
+  const newestFirst = [...trades].sort(
+    (a, b) => +new Date(b.filedAt || b.transactionDate) - +new Date(a.filedAt || a.transactionDate),
+  );
+
+  for (const trade of newestFirst) {
     const ticker = trade.ticker?.trim().toUpperCase();
     if (!ticker) continue;
+    if (trade.kind === "insider" && trade.sharesOwnedAfter != null && !settled.has(ticker)) {
+      const price = trade.pricePerShare ?? getXStockByTicker(ticker)?.stubUsdPrice ?? null;
+      if (price != null && price > 0) {
+        // Newest filing wins, including a reported 0 (fully exited).
+        byTicker.set(ticker, trade.sharesOwnedAfter * price);
+        settled.add(ticker);
+        continue;
+      }
+    }
+    if (settled.has(ticker)) continue;
     const signed = trade.side === "sell" ? -1 : 1;
     const next = (byTicker.get(ticker) ?? 0) + signed * (trade.transactionValue ?? 0);
     byTicker.set(ticker, next);

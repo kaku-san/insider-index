@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-const STUB_WALLET = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU";
+import { STUB_WALLET_ADDRESS as STUB_WALLET } from "@/lib/wallet";
 
 export type PrivySolanaWallet = {
   ready: boolean;

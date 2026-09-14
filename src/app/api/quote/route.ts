@@ -3,16 +3,23 @@ import {
   USDC_DECIMALS,
   USDC_MINT,
   canBuyMint,
+  getXStockByMint,
   toAtomicAmount,
 } from "@/lib/allowlist";
-import { createHeliusRpc, heliusConfigured } from "@/lib/helius";
-import { fetchJupiterOrder } from "@/lib/jupiter";
+import { heliusConfigured } from "@/lib/helius";
+import { JupiterError, fetchJupiterOrder } from "@/lib/jupiter";
+import { jupiterMode } from "@/lib/runtime";
+import { isStubWallet } from "@/lib/wallet";
+
+export const dynamic = "force-dynamic";
 
 type QuoteBody = {
   outputMint?: string;
   usdcAmount?: number;
   taker?: string;
   side?: "buy" | "sell";
+  /** Token quantity for sells (UI units). When absent we cannot size a live sell. */
+  tokenAmount?: number;
 };
 
 export async function POST(request: Request) {
@@ -35,33 +42,56 @@ export async function POST(request: Request) {
     );
   }
 
-  createHeliusRpc();
-
-  const { getXStockByMint } = await import("@/lib/allowlist");
   const xstock = getXStockByMint(outputMint);
   if (!xstock) {
     return NextResponse.json({ error: "Unknown allowlisted mint." }, { status: 400 });
   }
 
-  const order = await fetchJupiterOrder(
-    side === "sell"
-      ? {
-          inputMint: outputMint,
-          outputMint: USDC_MINT,
-          amount: toAtomicAmount(usdcAmount / xstock.stubUsdPrice, xstock.decimals),
-          taker: body.taker,
-        }
-      : {
-          inputMint: USDC_MINT,
-          outputMint,
-          amount: toAtomicAmount(usdcAmount, USDC_DECIMALS),
-          taker: body.taker,
-        },
-  );
+  // The stub wallet cannot sign a real Jupiter transaction. In live mode we
+  // quote without a taker so the user still sees live pricing but never gets a
+  // signable order they cannot settle.
+  const requestedTaker = body.taker?.trim() || undefined;
+  const taker =
+    jupiterMode() === "stub" || !isStubWallet(requestedTaker) ? requestedTaker : undefined;
 
-  return NextResponse.json({
-    flow: "jupiter-swap-v2-order",
-    heliusConfigured: heliusConfigured(),
-    order,
-  });
+  try {
+    let order;
+    if (side === "sell") {
+      // Sells are sized in tokens. Prefer an explicit token quantity; otherwise
+      // convert the USDC notional at the fixture price and label it as such.
+      const tokens = Number.isFinite(Number(body.tokenAmount)) && Number(body.tokenAmount) > 0
+        ? Number(body.tokenAmount)
+        : usdcAmount / xstock.stubUsdPrice;
+      order = await fetchJupiterOrder({
+        inputMint: outputMint,
+        outputMint: USDC_MINT,
+        amount: toAtomicAmount(tokens, xstock.decimals),
+        taker,
+      });
+    } else {
+      order = await fetchJupiterOrder({
+        inputMint: USDC_MINT,
+        outputMint,
+        amount: toAtomicAmount(usdcAmount, USDC_DECIMALS),
+        taker,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        flow: "jupiter-swap-v2-order",
+        mode: order.mode,
+        heliusConfigured: heliusConfigured(),
+        signable: Boolean(order.transaction),
+        order,
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    const status = error instanceof JupiterError ? error.status : 502;
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Jupiter quote failed." },
+      { status },
+    );
+  }
 }

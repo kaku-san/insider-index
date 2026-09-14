@@ -1,9 +1,10 @@
-import { listCongressDisclosures } from "@/lib/disclosures/congress";
-import { listAllowlistedDisclosures } from "@/lib/disclosures/form4";
+import { listCongressTape } from "@/lib/disclosures/congress";
+import { listInsiderTape } from "@/lib/disclosures/form4";
 import type {
   CopySignal,
   Disclosure,
   FomoProfile,
+  LaneStatus,
   PersonIndex,
   PoliticalParty,
 } from "@/lib/disclosures/types";
@@ -31,14 +32,25 @@ const FOLLOWERS: Record<string, number> = {
   "pol-austin-scott": 2980,
 };
 
-export async function listAllDisclosures(): Promise<Disclosure[]> {
-  const [form4, congress] = await Promise.all([
-    listAllowlistedDisclosures({ perPage: 100 }),
-    listCongressDisclosures(),
+export type DisclosureTape = {
+  disclosures: Disclosure[];
+  lanes: { insiders: LaneStatus; congress: LaneStatus };
+};
+
+/** Both lanes with provenance. Rows without a ticker never reach the tape. */
+export async function listDisclosureTape(): Promise<DisclosureTape> {
+  const [insiders, congress] = await Promise.all([
+    listInsiderTape({ perPage: 500 }),
+    listCongressTape(),
   ]);
-  return [...form4, ...congress]
+  const disclosures = [...insiders.rows, ...congress.rows]
     .filter((row) => Boolean(row.ticker?.trim()))
     .sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
+  return { disclosures, lanes: { insiders: insiders.status, congress: congress.status } };
+}
+
+export async function listAllDisclosures(): Promise<Disclosure[]> {
+  return (await listDisclosureTape()).disclosures;
 }
 
 export async function listSignals(filters?: {
@@ -106,4 +118,9 @@ export async function getIndex(id: string): Promise<PersonIndex | null> {
   return (
     indexes.find((index) => index.id === id || index.profileId === id) ?? null
   );
+}
+
+/** Kick off both lanes without awaiting (server warm-up). */
+export function warmDisclosureTape(): void {
+  void listDisclosureTape().catch(() => undefined);
 }

@@ -4,13 +4,15 @@ Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
 
 **Form 4 / Congress disclosure → FOMO profile → copy one print or buy that person's index → user-signed xStock basket on Solana → rebalance on the next filing.**
 
-This repository is a Next.js App Router app. **Demo / production host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev) (Barely Stable on Hetzner + Traefik). Do not use a Vercel URL as the public demo. Live Form4API, Privy, Jupiter, Helius, and Supabase clients are stubbed behind env keys so `npm run build` works without secrets.
+This repository is a Next.js App Router app. **Demo / production host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev) (Barely Stable on Hetzner + Traefik). Do not use a Vercel URL as the public demo. SEC EDGAR needs no key and is always live; AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 
 ## Product scope
 
 In V1:
 
-- Form4API is the primary disclosure source (mock Form 4 + House PTRs when `FORM4API_KEY` is unset)
+- **SEC EDGAR** is the primary Form 4 source (ticker → CIK → recent `4` filings → XML → open-market P/S). No key.
+- **AInvest Congressional Trades** is the primary House/Senate source (`AINVEST_API_KEY`, free tier)
+- Form4API is a fallback only (`FORM4API_KEY`); labelled mocks are served only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
 - Congress is a first-class lane: Democrats / Republicans, politician profiles, and person indexes
 - Buys (and copy-sells) are allowed only against the verified xStock mint allowlist
 - One-trade copy **or** a person index (Pelosi Index, Huang Index) that rebalances on the next disclosure
@@ -19,34 +21,35 @@ In V1:
 
 Out of V1:
 
-- Congress trading (adapter file exists, not wired)
 - Quiver
 - Meteora / Symmetry / a custom on-chain program
 
 ## Architecture
 
 ```
-Form 4 feed  →  inspect filing  →  USDC amount  →  Jupiter /order
-                                                  user signs in Privy
-                                                  Jupiter /execute
-                                                  position store
+EDGAR Form 4 + AInvest PTRs  →  inspect filing  →  USDC amount  →  Jupiter /order
+                                                                 user signs in Privy
+                                                                 Jupiter /execute
+                                                                 position store
 ```
 
 | Layer | Implementation |
 | --- | --- |
 | App | Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui |
 | Auth / wallet | Real `@privy-io/react-auth` Solana when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet otherwise |
-| Disclosures | `src/lib/disclosures/form4.ts` adapter + mock allowlisted Form 4s |
-| Congress | `src/lib/disclosures/congress.ts` empty stub, skipped |
-| Swaps | Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` |
-| RPC | Helius URL helper + `@solana/kit` `createSolanaRpc` |
+| Insiders | `src/lib/disclosures/edgar.ts` (+ pure `edgar-parse.ts`) primary; `form4.ts` orchestrates EDGAR → Form4API → mock |
+| Congress | `src/lib/disclosures/ainvest.ts` (+ pure `ainvest-parse.ts`) primary; `congress.ts` orchestrates AInvest → Form4API → mock |
+| Swaps | Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` (live keyless or keyed; stub in dev) |
+| RPC | Helius URL helper + `@solana/kit` `createSolanaRpc`; browser reaches Helius via `POST /api/rpc` without seeing the key |
+| Cache | `src/lib/cache.ts` in-process memo (TTL, stale-while-revalidate); `src/instrumentation.ts` warms the tape at boot |
 | Persistence | Supabase client stub; in-memory positions when keys are absent |
 | Allowlist | `src/lib/allowlist.ts` |
 
 API routes:
 
-- `GET /api/health` — boolean adapter flags only (`form4` / `jupiter` / `helius` / `privy` / `supabase`); never echoes secret values
-- `GET /api/disclosures` — Form4 + Congress tape
+- `GET /api/health` — boolean adapter flags (`edgar` / `ainvest` / `form4` / `jupiter` / `helius` / `privy` / `supabase`) plus derived `modes` (which path each lane takes); never echoes secret values
+- `GET /api/disclosures` — insider + congress tape with per-lane provenance in `lanes.{insiders,congress}` (`source`, `live`, `count`, `note`)
+- `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
 - `GET /api/indexes` · `POST /api/indexes/quote` · `POST /api/indexes/execute` (basket + rebalance)
@@ -108,13 +111,14 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-- **Form4 is live** when `FORM4API_KEY` is set (mock Form 4 + House PTRs when empty)
-- **Jupiter + Helius** power live quotes when `JUPITER_API_KEY` and `HELIUS_API_KEY` are set
-- **Privy** is the real `@privy-io/react-auth` Solana provider when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet only if that id is missing. Every trade still requires an explicit user signature.
+- **Insiders are live from SEC EDGAR with no key.** The first crawl after boot takes ~30 s (paced to the SEC's 10 req/s rule); it is warmed at startup and refreshed every 10 min in the background.
+- **Congress is live** when `AINVEST_API_KEY` is set. Without it: labelled `mock-congress` fixtures in development, an empty lane in production.
+- **Jupiter** quotes live (keyless) in production or when `JUPITER_API_KEY` / `JUPITER_MODE=live` is set; stub in development. **Helius** is used when `HELIUS_API_KEY` is set.
+- **Privy** is the real `@privy-io/react-auth` Solana provider when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet only if that id is missing. Every trade still requires an explicit user signature. A live Jupiter order can never be "signed" by the stub wallet.
 
-Without API keys the app stays fixtures-only:
+Without API keys in development the copy flow stays fixtures-only:
 
-1. The feed loads mock Form 4 buys for allowlisted tickers
+1. The feed loads real EDGAR Form 4 prints plus mock congress rows (labelled)
 2. Inspect a filing
 3. Enter a USDC amount and request a Jupiter stub order
 4. Connect the Privy stub wallet, attest eligibility, approve & sign
@@ -126,11 +130,20 @@ npm run build
 
 must succeed with the example env (no real secrets in the repo).
 
+```bash
+npm test        # node --test parser suites (EDGAR Form 4 XML, AInvest envelope/size ranges)
+npm run typecheck
+```
+
 ## Environment
 
 Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.env*.local`. See `.env.example` for empty placeholders:
 
-- `FORM4API_KEY` — live Form4 + Congress tape when set
+- `SEC_EDGAR_USER_AGENT` — contact string sent to SEC EDGAR (sane default); `EDGAR_FILINGS_PER_TICKER`, `EDGAR_DISABLED`
+- `AINVEST_API_KEY` — AInvest Congressional Trades (primary congress source)
+- `FORM4API_KEY` — Form4API fallback (insiders + House PTRs)
+- `STOCKLANA_ALLOW_MOCKS` — `1`/`0` to force labelled fixtures on/off (default: dev on, prod off)
+- `JUPITER_MODE` — `live`/`stub` override
 - `NEXT_PUBLIC_PRIVY_APP_ID` — Privy wallet (`NEXT_PUBLIC_PRIVY_APPID` alias also accepted)
 - `PRIVY_APP_ID` / `PRIVY_APP_SECRET` — Privy server SDK
 - `HELIUS_API_KEY` — builds `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` (public Solana RPC when empty)
@@ -141,14 +154,17 @@ Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.e
 
 Do not commit real keys. Live vs fixture:
 
-| Adapter | On (key set) | Off (key missing) |
+| Adapter | On | Off |
 | --- | --- | --- |
-| Form4 / Congress | Live Form4API (`FORM4API_KEY`) | mock-form4 + mock House PTRs |
-| Jupiter `/order` + `/execute` | Live Swap V2 (`JUPITER_API_KEY`) | stub quote/fill |
-| Helius RPC | `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` | public Solana RPC |
+| Insiders | SEC EDGAR (`edgar-form4`, always) → Form4API (`form4`, `FORM4API_KEY`) | `mock-form4` in dev only; empty lane in prod |
+| Congress | AInvest (`ainvest-congress`, `AINVEST_API_KEY`) → Form4API (`congress`, `FORM4API_KEY`) | `mock-congress` in dev only; empty lane in prod |
+| Jupiter `/order` + `/execute` | Live Swap V2 (prod default, or `JUPITER_API_KEY` / `JUPITER_MODE=live`) | stub quote/fill (dev default) |
+| Helius RPC | `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` (server + `/api/rpc` proxy) | public Solana RPC |
 | Privy | Real `@privy-io/react-auth` Solana provider (`NEXT_PUBLIC_PRIVY_APP_ID`) | stub wallet |
 
-Form4 / Jupiter fall back to mock/stub if the live provider errors. Privy never auto-signs.
+Every row carries its `source` label. In live Jupiter mode a failed quote is an error, never a stub fill. Privy never auto-signs.
+
+Congress rows are STOCK Act PTRs: they disclose a dollar range (`amountLow`/`amountHigh`), not a share count or price, so `sharesAmount`/`pricePerShare` are `null` and render as `—`. AInvest rows carry no bioguide id or chamber; profiles are keyed by name slug (`pol-nancy-pelosi`).
 
 ## Deploy
 
@@ -159,7 +175,8 @@ Form4 / Jupiter fall back to mock/stub if the live provider errors. Privy never 
 | Local | `cp .env.example .env.local`, fill keys, `npm run dev` |
 | Server | gitignored `.env` at `/srv/projects/stocklana` — the deploy script never rsyncs `.env` / `.env.local` |
 | Traefik | Compose router rule is locked in `docker-compose.yml`. Barely Stable’s network is `edge` (default). Override with `TRAEFIK_NETWORK=edge` if you need to set it explicitly; do not switch the host. |
-| Health | `GET https://stocklana.barelystable.dev/api/health` reports which adapters are configured (`true`/`false` only) |
+| Health | `GET https://stocklana.barelystable.dev/api/health` reports which adapters are configured (`true`/`false`) and the derived `modes` |
+| Congress | Set `AINVEST_API_KEY` in the server `.env` or the congress lane stays empty in production (no invented politicians) |
 
 ```
 Host(`stocklana.barelystable.dev`)

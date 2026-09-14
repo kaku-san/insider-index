@@ -1,8 +1,29 @@
+/**
+ * Where a row came from. Labelled honestly so the UI can badge live vs mock.
+ *  - edgar-form4      SEC EDGAR Form 4 XML (primary insiders, no key)
+ *  - form4            Form4API insiders (fallback, FORM4API_KEY)
+ *  - ainvest-congress AInvest Congressional Trades (primary politicians, AINVEST_API_KEY)
+ *  - congress         Form4API House PTRs (fallback, FORM4API_KEY)
+ *  - mock-*           labelled fixtures; never served in production by default
+ */
 export type DisclosureSource =
+  | "edgar-form4"
   | "form4"
+  | "ainvest-congress"
   | "congress"
   | "mock-form4"
   | "mock-congress";
+
+export type LaneSource = DisclosureSource | "off";
+
+/** Per-lane provenance reported by GET /api/disclosures. */
+export type LaneStatus = {
+  source: LaneSource;
+  live: boolean;
+  count: number;
+  /** Human-readable reason when the lane is degraded or off. */
+  note: string | null;
+};
 
 export type DisclosureSide = "buy" | "sell" | "other";
 

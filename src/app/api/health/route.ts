@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdapterStatus } from "@/lib/health";
+import { getAdapterStatus, getRuntimeModes } from "@/lib/health";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +8,7 @@ export async function GET() {
     {
       ok: true,
       adapters: getAdapterStatus(),
+      modes: getRuntimeModes(),
     },
     {
       headers: {
