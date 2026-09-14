@@ -1,0 +1,26 @@
+{
+  "ticket": "STOCKLANA-FMP-0",
+  "phase": 0,
+  "verdict": "BLOCKED_NO_KEY",
+  "audited_at": "2026-09-14T11:10:05Z",
+  "fmp_key_present": false,
+  "fmp_probe": {
+    "request_count": 0
+  },
+  "gates": {
+    "Access": "FAIL"
+  },
+  "Public_display_rights": "OWNER_PENDING",
+  "key_inventory": {
+    "stocklana_dev_cards": false,
+    "env_example": false,
+    "committed_repo": false
+  },
+  "adjacent": {
+    "form4api_congress_calls": 2,
+    "note": "Adjacent Form4API /v1/congress/trades only. Not an FMP request."
+  },
+  "recommendation": "DO_NOT_BUY_FMP_YET",
+  "design_note": "Given BLOCKED_NO_KEY, keep an honest Pelosi-Tracker-close: show the full disclosed book we actually have (PTR bands, gaps, non-tradable names) and never invent holdings, last prices, or weights from FMP.",
+  "secrets": false
+}
