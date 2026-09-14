@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
-import {
-  USDC_DECIMALS,
-  USDC_MINT,
-  canBuyMint,
-  getXStockByMint,
-  toAtomicAmount,
-} from "@/lib/allowlist";
+import { USDC_DECIMALS, USDC_MINT, resolveBuyableMint, toAtomicAmount } from "@/lib/allowlist";
 import { heliusConfigured } from "@/lib/helius";
-import { JupiterError, fetchJupiterOrder } from "@/lib/jupiter";
+import { JupiterError, STUB_TOKEN_USD_PRICE, fetchJupiterOrder } from "@/lib/jupiter";
 import { jupiterMode } from "@/lib/runtime";
+import { fetchMintPrices } from "@/lib/venues/prices";
 import { isStubWallet } from "@/lib/wallet";
 
 export const dynamic = "force-dynamic";
@@ -35,16 +30,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!canBuyMint(outputMint)) {
+  const token = await resolveBuyableMint(outputMint);
+  if (!token) {
     return NextResponse.json(
-      { error: "Copy blocked: mint is not on the V1 xStock allowlist." },
+      { error: "Copy blocked: mint is not an xStock or Backpack tokenised stock in the Solana catalog." },
       { status: 403 },
     );
-  }
-
-  const xstock = getXStockByMint(outputMint);
-  if (!xstock) {
-    return NextResponse.json({ error: "Unknown allowlisted mint." }, { status: 400 });
   }
 
   // The stub wallet cannot sign a real Jupiter transaction. In live mode we
@@ -58,14 +49,22 @@ export async function POST(request: Request) {
     let order;
     if (side === "sell") {
       // Sells are sized in tokens. Prefer an explicit token quantity; otherwise
-      // convert the USDC notional at the fixture price and label it as such.
-      const tokens = Number.isFinite(Number(body.tokenAmount)) && Number(body.tokenAmount) > 0
-        ? Number(body.tokenAmount)
-        : usdcAmount / xstock.stubUsdPrice;
+      // convert the USDC notional at the last on-chain price (stub price in stub mode).
+      let tokens = Number(body.tokenAmount);
+      if (!Number.isFinite(tokens) || tokens <= 0) {
+        const price = jupiterMode() === "stub" ? STUB_TOKEN_USD_PRICE : (await fetchMintPrices([token.mint]))[token.mint];
+        if (!price) {
+          return NextResponse.json(
+            { error: `No live price for ${token.symbol}; pass tokenAmount to size this sell.` },
+            { status: 409 },
+          );
+        }
+        tokens = usdcAmount / price;
+      }
       order = await fetchJupiterOrder({
         inputMint: outputMint,
         outputMint: USDC_MINT,
-        amount: toAtomicAmount(tokens, xstock.decimals),
+        amount: toAtomicAmount(tokens, token.decimals),
         taker,
       });
     } else {
@@ -81,6 +80,7 @@ export async function POST(request: Request) {
       {
         flow: "jupiter-swap-v2-order",
         mode: order.mode,
+        token: { symbol: token.symbol, issuer: token.issuer, mint: token.mint, decimals: token.decimals },
         heliusConfigured: heliusConfigured(),
         signable: Boolean(order.transaction),
         order,

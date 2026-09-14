@@ -1,8 +1,8 @@
 /**
  * SEC EDGAR Form 4 adapter — primary insider source. No API key.
  *
- * ticker → CIK (company_tickers.json, with a pinned fallback for the xStock
- * allowlist) → data.sec.gov/submissions → recent `4` filings → ownershipDocument
+ * ticker → CIK (company_tickers.json, with a pinned fallback for the default
+ * issuer set) → data.sec.gov/submissions → recent `4` filings → ownershipDocument
  * XML → open-market P/S rows.
  *
  * SEC fair-access rules: descriptive User-Agent, ≤10 req/s. Every network call
@@ -11,9 +11,8 @@
  * with stale-while-revalidate so a warm server never blocks a render.
  */
 
-import { ALLOWLISTED_TICKERS } from "@/lib/allowlist";
 import { globalState, mapLimit, memo } from "@/lib/cache";
-import { parseTickerList } from "@/lib/disclosures/universe";
+import { MEGA_CAP_TICKERS, WIDE_CONGRESS_UNIVERSE, parseTickerList } from "@/lib/disclosures/universe";
 import {
   buildTickerCikMap,
   edgarDocumentUrl,
@@ -30,7 +29,7 @@ import { edgarUserAgent } from "@/lib/runtime";
 const COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const SUBMISSIONS_BASE = "https://data.sec.gov/submissions";
 
-/** Pinned CIKs for the allowlist so a company_tickers.json outage cannot blank the tape. */
+/** Pinned CIKs for the default issuers so a company_tickers.json outage cannot blank the tape. */
 export const PINNED_CIKS: Record<string, string> = {
   NVDA: "0001045810",
   AAPL: "0000320193",
@@ -50,13 +49,15 @@ const FILINGS_PER_TICKER = Math.max(1, Number(process.env.EDGAR_FILINGS_PER_TICK
 
 /**
  * Issuers crawled for Form 4s. EDGAR is paced at ≤10 req/s, so the default
- * stays at the xStock underlyings (~30 s cold crawl). EDGAR_TICKERS widens it
- * (always unioned with the allowlist); non-tradable issuers still show up in
- * an insider's book, tagged with their venue.
+ * stays at the mega-cap set (~30 s cold crawl). EDGAR_UNIVERSE=wide crawls the
+ * S&P core + frequent-PTR list (several minutes cold; fine on a warm server),
+ * and EDGAR_TICKERS adds explicit issuers. Nothing is filtered by tradability:
+ * an issuer without a Solana mint still shows up in an insider's book.
  */
 export function edgarUniverse(): string[] {
   const explicit = parseTickerList(process.env.EDGAR_TICKERS);
-  return [...new Set([...explicit, ...ALLOWLISTED_TICKERS])].sort();
+  const base = process.env.EDGAR_UNIVERSE?.trim().toLowerCase() === "wide" ? WIDE_CONGRESS_UNIVERSE : MEGA_CAP_TICKERS;
+  return [...new Set([...explicit, ...base])].sort();
 }
 const DOC_CONCURRENCY = 4;
 const TICKER_CONCURRENCY = 3;
@@ -132,7 +133,7 @@ export type EdgarIssuerResult = {
 
 /**
  * Crawl the most recent Form 4 filings for one issuer (CIK) and return P/S
- * rows. `tickers` are the allowlisted symbols sharing that CIK (GOOG/GOOGL);
+ * rows. `tickers` are the crawled symbols sharing that CIK (GOOG/GOOGL);
  * the filing's own trading symbol wins when it is one of them.
  */
 export async function fetchEdgarIssuer(
@@ -174,7 +175,7 @@ export type EdgarTape = {
   fetchedAt: string;
 };
 
-/** Merged, memoised P/S tape across every allowlisted underlying. */
+/** Merged, memoised P/S tape across the crawled issuer set. */
 export async function fetchEdgarTape(tickers: readonly string[] = edgarUniverse()): Promise<EdgarTape> {
   const symbols = [...new Set(tickers.map((ticker) => ticker.trim().toUpperCase()))].sort();
   const key = `edgar:tape:${symbols.join(",")}`;

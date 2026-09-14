@@ -13,7 +13,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Disclosure-to-copy-trade app: real insider/politician prints → user-signed xStock swaps on Solana. Product scope, env matrix, and API routes live in `README.md`; empty env template in `.env.example`.
 
 - Product shape: **indexes first, feed second, follow & copy one trade as the fallback.** Home (`/`) is `src/components/index-home.tsx`; the raw disclosure tape is `/feed`. Do not reintroduce party/executive lanes as top-level navigation.
-- Index readiness is `src/lib/fomo/index-readiness.ts`. Crowd indexes are `src/lib/fomo/crowd-indexes.ts`.
+- Every filer's **full disclosed book** (every ticker, tradable or not) is `src/lib/fomo/book.ts` → `/p/[id]`. Readiness (`src/lib/fomo/index-readiness.ts`) gates only "Buy this index"; never filter a book by tradability. Crowd indexes are `src/lib/fomo/crowd-indexes.ts`.
+- **Buy catalog, not an allowlist.** Copyable ⇔ the ticker has a Solana mint in `src/lib/venues/solana-catalog.ts` (live xStocks + Backpack `.US`, xStock preferred; snapshot fallback via `npm run catalog:snapshot`). Ondo/Superstate/PreStocks are excluded on purpose (README "Out of V1"). Never hand-add a mint.
+- PTRs are dollar bands: keep `amountLow`/`amountHigh` nullable, render ranges, never `$0`. Return / hit rate stay null until a real price series exists.
 
 ## Commands
 
@@ -23,8 +25,8 @@ Disclosure-to-copy-trade app: real insider/politician prints → user-signed xSt
 ## Data sources (`src/lib/disclosures/`)
 
 - Insiders: SEC EDGAR primary (`edgar.ts`), Form4API fallback, mocks dev-only.
-- Congress: AInvest primary (`ainvest.ts`, `AINVEST_API_KEY`), Form4API fallback, mocks dev-only.
-- `GET /api/disclosures` → `lanes` tells you what actually served.
+- Congress: AInvest primary (`ainvest.ts`, `AINVEST_API_KEY`), Form4API fallback, mocks dev-only. AInvest is ticker-scoped (no per-member pull): the crawl universe is `buildCongressUniverse()` in `universe.ts` (`AINVEST_UNIVERSE`).
+- `GET /api/disclosures` → `lanes` tells you what actually served; `catalog` says whether venue tags came from the live catalog or the snapshot.
 
 ## Sharp edges
 

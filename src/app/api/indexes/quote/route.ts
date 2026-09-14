@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { getXStockByMint } from "@/lib/allowlist";
 import { getIndex } from "@/lib/fomo/catalog";
 import { allocateIndex, withTokenEstimates } from "@/lib/fomo/indexes";
+import { STUB_TOKEN_USD_PRICE } from "@/lib/jupiter";
+import { jupiterMode } from "@/lib/runtime";
+import { fetchMintPrices } from "@/lib/venues/prices";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { indexId?: string; usdcAmount?: number };
@@ -21,26 +23,27 @@ export async function POST(request: Request) {
     );
   }
 
-  // Only xStock legs get a token estimate; external legs are links, not swaps.
-  const prices = Object.fromEntries(
-    index.constituents
-      .filter((row): row is typeof row & { mint: string } => Boolean(row.mint))
-      .map((row) => [row.mint, getXStockByMint(row.mint)?.stubUsdPrice ?? 0]),
-  );
+  // Token estimates come from the last on-chain price; a leg Jupiter cannot
+  // price (thin Backpack pool) stays null rather than guessed.
+  const mints = index.constituents.map((row) => row.mint);
+  const prices =
+    jupiterMode() === "stub"
+      ? Object.fromEntries(mints.map((mint) => [mint, STUB_TOKEN_USD_PRICE]))
+      : await fetchMintPrices(mints);
   const allocations = withTokenEstimates(allocateIndex(index, usdcAmount), prices);
-  const swapLegs = allocations.filter((row) => row.execution === "swap");
-  const externalLegs = allocations.filter((row) => row.execution === "external");
+  const unpriced = allocations.filter((row) => row.tokens == null);
 
   return NextResponse.json({
     flow: "person-index-basket",
+    mode: jupiterMode(),
     index,
     requestId: `idx-${crypto.randomUUID()}`,
     transaction: Buffer.from(
-      JSON.stringify({ kind: "stocklana-index-stub", indexId: index.id, allocations: swapLegs }),
+      JSON.stringify({ kind: "stocklana-index-stub", indexId: index.id, allocations }),
     ).toString("base64"),
     allocations,
-    swapLegs: swapLegs.length,
-    externalLegs: externalLegs.length,
+    swapLegs: allocations.length,
+    unpricedLegs: unpriced.map((row) => row.venueSymbol),
     rebalanceOn: "new-disclosure",
   });
 }

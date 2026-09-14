@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { canBuyMint, fromAtomicAmount, getXStockByMint } from "@/lib/allowlist";
+import { fromAtomicAmount, resolveBuyableMint } from "@/lib/allowlist";
 import { JupiterError, executeJupiterOrder } from "@/lib/jupiter";
 import { recordPosition } from "@/lib/positions";
 
@@ -33,16 +33,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!body.outputMint || !canBuyMint(body.outputMint)) {
+  const token = body.outputMint ? await resolveBuyableMint(body.outputMint) : null;
+  if (!token) {
     return NextResponse.json(
-      { error: "Copy blocked: mint is not on the V1 xStock allowlist." },
+      { error: "Copy blocked: mint is not an xStock or Backpack tokenised stock in the Solana catalog." },
       { status: 403 },
     );
-  }
-
-  const xstock = getXStockByMint(body.outputMint);
-  if (!xstock) {
-    return NextResponse.json({ error: "Unknown allowlisted mint." }, { status: 400 });
   }
 
   let result;
@@ -69,11 +65,12 @@ export async function POST(request: Request) {
   const position = await recordPosition({
     wallet: body.wallet,
     disclosureId: body.disclosureId ?? null,
-    ticker: body.ticker ?? xstock.underlyingTickers[0],
-    xstockSymbol: xstock.symbol,
-    mint: xstock.mint,
+    ticker: body.ticker ?? token.ticker,
+    tokenSymbol: token.symbol,
+    venue: token.issuer,
+    mint: token.mint,
     usdcIn: fromAtomicAmount(result.inputAmountResult ?? body.inAmount ?? "0", 6),
-    tokensOut: fromAtomicAmount(result.outputAmountResult ?? body.outAmount ?? "0", xstock.decimals),
+    tokensOut: fromAtomicAmount(result.outputAmountResult ?? body.outAmount ?? "0", token.decimals),
     requestId: body.requestId,
     signature: result.signature,
     stub: result.stub,

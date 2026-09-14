@@ -10,8 +10,8 @@
  * Pure data, no env, no aliases — unit-tested directly with `node --test`.
  */
 
-/** xStock underlyings. Kept in sync with src/lib/allowlist.ts by the test suite. */
-export const XSTOCK_UNDERLYINGS = [
+/** Names every US-equity catalog carries; listed so the wide set never depends on a live fetch. */
+export const MEGA_CAP_TICKERS = [
   "AAPL", "AMZN", "COIN", "GOOG", "GOOGL", "META", "MSFT", "MSTR", "NFLX", "NVDA", "QQQ", "SPY", "TSLA",
 ] as const;
 
@@ -43,8 +43,50 @@ export const FREQUENT_PTR_TICKERS = [
 ] as const;
 
 export const WIDE_CONGRESS_UNIVERSE: readonly string[] = [
-  ...new Set<string>([...XSTOCK_UNDERLYINGS, ...SP_CORE_TICKERS, ...FREQUENT_PTR_TICKERS]),
+  ...new Set<string>([...MEGA_CAP_TICKERS, ...SP_CORE_TICKERS, ...FREQUENT_PTR_TICKERS]),
 ].sort();
+
+/**
+ * How wide the AInvest crawl goes (AINVEST_UNIVERSE):
+ *  - wide      the hand-kept S&P + frequent-PTR list only (cheapest)
+ *  - catalog   wide ∪ every US-looking xStock underlying (default)
+ *  - full      catalog ∪ every Backpack `.US` token (~1,300 tickers; heavy on the free tier)
+ */
+export type UniverseMode = "wide" | "catalog" | "full";
+
+export function parseUniverseMode(value: string | null | undefined): UniverseMode {
+  const mode = value?.trim().toLowerCase();
+  if (mode === "wide" || mode === "full") return mode;
+  return "catalog";
+}
+
+/**
+ * xStocks also tokenises Hong Kong / European names under invented 5+ letter
+ * symbols (BOCHK, CITIC). US tickers are ≤ 4 letters, optionally with a class
+ * suffix (BRK.B). Anything else would only earn an AInvest "Invalid param".
+ */
+export function looksLikeUsTicker(ticker: string): boolean {
+  return /^[A-Z]{1,4}(\.[A-Z])?$/.test(ticker);
+}
+
+export function buildCongressUniverse(
+  mode: UniverseMode,
+  catalog: { xstocks: readonly string[]; backpack: readonly string[] },
+  explicit: readonly string[] = [],
+): string[] {
+  if (explicit.length) return [...new Set(explicit)].sort();
+  const set = new Set<string>(WIDE_CONGRESS_UNIVERSE);
+  if (mode !== "wide") {
+    const backpack = new Set(catalog.backpack);
+    for (const ticker of catalog.xstocks) {
+      if (backpack.has(ticker) || looksLikeUsTicker(ticker)) set.add(ticker);
+    }
+  }
+  if (mode === "full") {
+    for (const ticker of catalog.backpack) set.add(ticker);
+  }
+  return [...set].sort();
+}
 
 /** Parse a comma/space separated env override into upper-case tickers. */
 export function parseTickerList(value: string | null | undefined): string[] {

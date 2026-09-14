@@ -46,8 +46,8 @@ export function DisclosureCard({ disclosure }: { disclosure: Disclosure }) {
           <p className="font-medium text-white">{formatUsd(disclosure.transactionValue)}</p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-zinc-500">xStock</p>
-          <p className="font-medium text-emerald-300">{disclosure.xstockSymbol ?? "—"}</p>
+          <p className="text-xs uppercase tracking-wide text-zinc-500">Solana token</p>
+          <p className="font-medium text-emerald-300">{disclosure.venueSymbol ?? "—"}</p>
         </div>
       </CardContent>
       <CardFooter className="flex items-center justify-between border-t border-white/10">

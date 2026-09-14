@@ -44,7 +44,7 @@ export function DisclosureFeed() {
     const needle = query.trim().toUpperCase();
     if (!needle) return disclosures;
     return disclosures.filter((item) =>
-      [item.ticker, item.issuerName, item.insiderName, item.xstockSymbol ?? ""]
+      [item.ticker, item.issuerName, item.insiderName, item.venueSymbol ?? ""]
         .join(" ")
         .toUpperCase()
         .includes(needle),
@@ -82,7 +82,7 @@ export function DisclosureFeed() {
           <DisclosureCard key={disclosure.id} disclosure={disclosure} />
         ))}
         {filtered.length === 0 ? (
-          <p className="text-sm text-zinc-500">No allowlisted disclosures match.</p>
+          <p className="text-sm text-zinc-500">No disclosures match.</p>
         ) : null}
       </div>
     </div>

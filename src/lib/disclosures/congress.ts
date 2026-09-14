@@ -195,8 +195,9 @@ function sortNewest(rows: Disclosure[]): Disclosure[] {
 }
 
 async function fetchForm4ApiCongress(apiKey: string): Promise<Disclosure[]> {
+  const universe = await ainvestUniverse();
   const perTicker = await Promise.all(
-    ainvestUniverse().map(async (ticker) => {
+    universe.map(async (ticker) => {
       try {
         return await fetchCongressPage(apiKey, { ticker, per_page: "25", page: "1" });
       } catch {
@@ -224,7 +225,7 @@ export async function listCongressTape(): Promise<CongressTape> {
 
   if (process.env.AINVEST_API_KEY?.trim()) {
     try {
-      const universe = ainvestUniverse();
+      const universe = await ainvestUniverse();
       const tape = await fetchAInvestCongressTape(universe);
       const rows = sortNewest(
         dedupeCongress(tape.trades.map(ainvestTradeToDisclosure)).filter((row) => Boolean(row.ticker)),
@@ -233,16 +234,14 @@ export async function listCongressTape(): Promise<CongressTape> {
         .filter(([, entry]) => entry.error)
         .map(([ticker]) => ticker);
       if (rows.length > 0) {
+        const parts = [`${universe.length} tickers queried`];
+        if (tape.rateLimited) parts.push("crawl stopped early on AInvest rate limits — partial tape");
+        if (failing.length) {
+          parts.push(`errors for ${failing.length} tickers (${failing.slice(0, 8).join(", ")}${failing.length > 8 ? ", …" : ""})`);
+        }
         return {
           rows,
-          status: {
-            source: "ainvest-congress",
-            live: true,
-            count: rows.length,
-            note: failing.length
-              ? `AInvest errors for ${failing.length} of ${universe.length} tickers (${failing.slice(0, 8).join(", ")}${failing.length > 8 ? ", …" : ""})`
-              : `${universe.length} tickers queried`,
-          },
+          status: { source: "ainvest-congress", live: true, count: rows.length, note: parts.join("; ") },
         };
       }
       notes.push(`AInvest returned no rows for ${universe.length} tickers`);
@@ -263,7 +262,7 @@ export async function listCongressTape(): Promise<CongressTape> {
           status: { source: "congress", live: true, count: rows.length, note: notes.join("; ") || null },
         };
       }
-      notes.push("Form4API congress returned no allowlisted rows");
+      notes.push("Form4API congress returned no rows");
     } catch (error) {
       notes.push(`Form4API: ${error instanceof Error ? error.message : String(error)}`);
     }

@@ -6,6 +6,8 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   if (process.env.STOCKLANA_SKIP_WARMUP === "1") return;
+  const { warmSolanaCatalog } = await import("@/lib/venues/solana-catalog");
+  warmSolanaCatalog();
   const { warmDisclosureTape } = await import("@/lib/fomo/catalog");
   warmDisclosureTape();
 }

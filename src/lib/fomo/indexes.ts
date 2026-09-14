@@ -1,22 +1,20 @@
-import type { IndexConstituent, PersonIndex, Venue, VenueMarket } from "@/lib/disclosures/types";
+import type { IndexConstituent, PersonIndex, Venue } from "@/lib/disclosures/types";
 
 /**
- * One leg of a basket. `execution: "swap"` legs are xStocks bought in-app via
- * a user-signed Jupiter order; `"external"` legs are names only available on
- * another venue (Backpack) and are surfaced as links, never executed for you.
+ * One leg of a basket: a user-signed Jupiter swap from USDC into the leg's
+ * Solana mint (xStock or Backpack token). `tokens` is an estimate from the
+ * last price; the wallet shows the real fill.
  */
 export type IndexAllocation = {
   ticker: string;
-  xstockSymbol: string | null;
-  mint: string | null;
   venue: Exclude<Venue, "none">;
   venueSymbol: string;
-  venueMarket: VenueMarket;
-  venueHref: string | null;
-  execution: "swap" | "external";
+  mint: string;
+  mintDecimals: number;
   weightPct: number;
   usdc: number;
-  tokens: number;
+  /** Estimated token quantity; null when no live price was available. */
+  tokens: number | null;
 };
 
 export type IndexPosition = {
@@ -47,16 +45,13 @@ function memoryStore(): IndexPosition[] {
 export function allocateIndex(index: PersonIndex, usdcAmount: number): IndexAllocation[] {
   return index.constituents.map((row) => ({
     ticker: row.ticker,
-    xstockSymbol: row.xstockSymbol,
-    mint: row.mint,
     venue: row.venue,
     venueSymbol: row.venueSymbol,
-    venueMarket: row.venueMarket,
-    venueHref: row.venueHref,
-    execution: row.venue === "xstock" && row.mint ? "swap" : "external",
+    mint: row.mint,
+    mintDecimals: row.mintDecimals,
     weightPct: row.weightPct,
     usdc: Number((usdcAmount * row.weightPct).toFixed(2)),
-    tokens: 0,
+    tokens: null,
   }));
 }
 
@@ -66,7 +61,7 @@ export function withTokenEstimates(
 ): IndexAllocation[] {
   return allocations.map((row) => ({
     ...row,
-    tokens: row.mint && prices[row.mint] ? Number((row.usdc / prices[row.mint]).toFixed(4)) : 0,
+    tokens: prices[row.mint] ? Number((row.usdc / prices[row.mint]).toFixed(4)) : null,
   }));
 }
 

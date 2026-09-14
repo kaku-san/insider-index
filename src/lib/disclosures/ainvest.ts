@@ -4,11 +4,20 @@
  *
  * Requires AINVEST_API_KEY. Without it this adapter is "unconfigured" and the
  * caller decides whether to fall back (Form4API) or leave the lane empty.
+ *
+ * The endpoint is ticker-scoped and there is no per-member or unfiltered pull
+ * (docs: `ticker` is required), so a filer's book is assembled by crawling a
+ * wide ticker universe and grouping rows by name. Each ticker is memoised on
+ * its own so a partial crawl still serves and a refresh only re-pulls what
+ * expired. Nothing is filtered by tradability here.
  */
 
-import { ALLOWLISTED_TICKERS } from "@/lib/allowlist";
 import { mapLimit, memo } from "@/lib/cache";
-import { WIDE_CONGRESS_UNIVERSE, parseTickerList } from "@/lib/disclosures/universe";
+import {
+  buildCongressUniverse,
+  parseTickerList,
+  parseUniverseMode,
+} from "@/lib/disclosures/universe";
 import {
   AInvestError,
   normalizeAInvestCongressRow,
@@ -17,26 +26,40 @@ import {
   type AInvestEnvelope,
   type NormalizedCongressTrade,
 } from "@/lib/disclosures/ainvest-parse";
+import { catalogTickers } from "@/lib/venues/catalog-parse";
+import { loadSolanaCatalog } from "@/lib/venues/solana-catalog";
 
 export const AINVEST_BASE = "https://openapi.ainvest.com/open";
-const PAGE_SIZE = Math.max(1, Number(process.env.AINVEST_PAGE_SIZE ?? 50) || 50);
+
+function envInt(name: string, fallback: number, min = 1): number {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value >= min ? Math.floor(value) : fallback;
+}
+
+/** Rows per page. AInvest defaults to 10; we ask for more to save calls. */
+const PAGE_SIZE = envInt("AINVEST_PAGE_SIZE", 100);
 /** Pages pulled per ticker; deeper = longer per-person history, more requests. */
-const PAGES_PER_TICKER = Math.max(1, Number(process.env.AINVEST_PAGES_PER_TICKER ?? 1) || 1);
-const TICKER_CONCURRENCY = 3;
+const PAGES_PER_TICKER = envInt("AINVEST_PAGES_PER_TICKER", 2);
+const TICKER_CONCURRENCY = envInt("AINVEST_CONCURRENCY", 3);
+/** Per-ticker memo. Long, with stale-while-revalidate, so the crawl is incremental. */
+const TICKER_TTL_MS = envInt("AINVEST_TICKER_TTL_MINUTES", 6 * 60) * 60_000;
 const TAPE_TTL_MS = 30 * 60_000;
+/** Stop the crawl after this many consecutive rate-limit hits; serve what we have. */
+const RATE_LIMIT_PATIENCE = 3;
 
 /**
- * Which tickers to ask AInvest about. The endpoint is ticker-scoped, so the
- * full disclosed book of a filer is only as wide as this list.
- *  - AINVEST_TICKERS="NVDA,AAPL,…"  explicit list (always unioned with the xStock allowlist)
- *  - AINVEST_UNIVERSE=allowlist     xStock underlyings only (cheap, copy-only tape)
- *  - default                        wide S&P + frequent-PTR universe
+ * Which tickers to ask AInvest about — see `buildCongressUniverse`.
+ *  - AINVEST_TICKERS="NVDA,AAPL,…"   explicit list, nothing else
+ *  - AINVEST_UNIVERSE=wide|catalog|full
  */
-export function ainvestUniverse(): string[] {
+export async function ainvestUniverse(): Promise<string[]> {
   const explicit = parseTickerList(process.env.AINVEST_TICKERS);
-  if (explicit.length) return [...new Set([...explicit, ...ALLOWLISTED_TICKERS])].sort();
-  if (process.env.AINVEST_UNIVERSE?.trim().toLowerCase() === "allowlist") return [...ALLOWLISTED_TICKERS];
-  return [...new Set([...WIDE_CONGRESS_UNIVERSE, ...ALLOWLISTED_TICKERS])].sort();
+  if (explicit.length) return buildCongressUniverse("catalog", { xstocks: [], backpack: [] }, explicit);
+  const catalog = await loadSolanaCatalog();
+  return buildCongressUniverse(parseUniverseMode(process.env.AINVEST_UNIVERSE), {
+    xstocks: catalogTickers(catalog.tokens, "xstock"),
+    backpack: catalogTickers(catalog.tokens, "backpack"),
+  });
 }
 
 export function ainvestApiKey(): string | null {
@@ -45,6 +68,16 @@ export function ainvestApiKey(): string | null {
 
 export function ainvestConfigured(): boolean {
   return Boolean(ainvestApiKey());
+}
+
+export function isAuthFailure(error: unknown): boolean {
+  // 4010 no auth / 5112 invalid key: every ticker will fail the same way.
+  return error instanceof AInvestError && (error.statusCode === 4010 || error.statusCode === 5112);
+}
+
+export function isRateLimit(error: unknown): boolean {
+  if (!(error instanceof AInvestError)) return false;
+  return error.statusCode === 429 || /rate|limit|quota|exceed|too many/i.test(error.message);
 }
 
 async function ainvestGet<T>(path: string, query: Record<string, string>, apiKey: string): Promise<T[]> {
@@ -57,6 +90,7 @@ async function ainvestGet<T>(path: string, query: Record<string, string>, apiKey
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
+  if (response.status === 429) throw new AInvestError(429, "rate limited");
   if (!response.ok) {
     throw new AInvestError(response.status, `HTTP ${response.status}`);
   }
@@ -88,9 +122,18 @@ export async function fetchAInvestCongressTicker(
   return out;
 }
 
+/** Memoised per ticker so the crawl is incremental and a refresh never blanks a name. */
+function fetchTickerMemo(ticker: string, apiKey: string): Promise<NormalizedCongressTrade[]> {
+  return memo(`ainvest:congress:ticker:${ticker}`, { ttlMs: TICKER_TTL_MS }, () =>
+    fetchAInvestCongressTicker(ticker, apiKey),
+  );
+}
+
 export type AInvestTape = {
   trades: NormalizedCongressTrade[];
   perTicker: Record<string, { count: number; error: string | null }>;
+  /** True when the crawl stopped early on rate limits; the tape is partial. */
+  rateLimited: boolean;
   fetchedAt: string;
 };
 
@@ -99,28 +142,34 @@ export type AInvestTape = {
  * kept — tradability is decided downstream — so a filer's book shows every
  * name they disclosed, not only the ones we can route.
  */
-export async function fetchAInvestCongressTape(
-  tickers: readonly string[] = ainvestUniverse(),
-): Promise<AInvestTape> {
+export async function fetchAInvestCongressTape(tickers: readonly string[]): Promise<AInvestTape> {
   const apiKey = ainvestApiKey();
   if (!apiKey) {
     throw new AInvestError(4010, "AINVEST_API_KEY is not set");
   }
-  const key = `ainvest:congress:${[...tickers].sort().join(",")}`;
+  const key = `ainvest:congress:tape:${tickers.length}:${[...tickers].sort().join(",").length}`;
   return memo(key, { ttlMs: TAPE_TTL_MS }, async () => {
     const perTicker: AInvestTape["perTicker"] = {};
     let authFailure: AInvestError | null = null;
+    let consecutiveRateLimits = 0;
+    let rateLimited = false;
     const batches = await mapLimit(tickers, TICKER_CONCURRENCY, async (ticker) => {
+      if (authFailure || rateLimited) {
+        perTicker[ticker] = { count: 0, error: "skipped" };
+        return [] as NormalizedCongressTrade[];
+      }
       try {
-        const trades = await fetchAInvestCongressTicker(ticker, apiKey);
+        const trades = await fetchTickerMemo(ticker, apiKey);
         perTicker[ticker] = { count: trades.length, error: null };
+        consecutiveRateLimits = 0;
         return trades;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         perTicker[ticker] = { count: 0, error: message };
-        // 4010 no auth / 5112 invalid key: every ticker will fail the same way.
-        if (error instanceof AInvestError && (error.statusCode === 4010 || error.statusCode === 5112)) {
-          authFailure = error;
+        if (isAuthFailure(error)) authFailure = error as AInvestError;
+        if (isRateLimit(error)) {
+          consecutiveRateLimits += 1;
+          if (consecutiveRateLimits >= RATE_LIMIT_PATIENCE) rateLimited = true;
         }
         return [] as NormalizedCongressTrade[];
       }
@@ -138,8 +187,8 @@ export async function fetchAInvestCongressTape(
       .sort((a, b) => +new Date(b.filingDate) - +new Date(a.filingDate));
 
     if (trades.length === 0 && Object.values(perTicker).every((entry) => entry.error)) {
-      throw new Error("AInvest unreachable for every ticker");
+      throw new Error(rateLimited ? "AInvest rate limited before any ticker answered" : "AInvest unreachable for every ticker");
     }
-    return { trades, perTicker, fetchedAt: new Date().toISOString() };
+    return { trades, perTicker, rateLimited, fetchedAt: new Date().toISOString() };
   });
 }

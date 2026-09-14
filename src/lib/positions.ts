@@ -5,7 +5,9 @@ export type TrackedPosition = {
   wallet: string;
   disclosureId: string | null;
   ticker: string;
-  xstockSymbol: string;
+  /** Token symbol bought: `NVDAx` or `NVDA.US`. */
+  tokenSymbol: string;
+  venue: "xstock" | "backpack";
   mint: string;
   usdcIn: number;
   tokensOut: number;
@@ -63,7 +65,8 @@ export async function recordPosition(
       wallet: row.wallet,
       disclosure_id: row.disclosureId,
       ticker: row.ticker,
-      xstock_symbol: row.xstockSymbol,
+      token_symbol: row.tokenSymbol,
+      venue: row.venue,
       mint: row.mint,
       usdc_in: row.usdcIn,
       tokens_out: row.tokensOut,

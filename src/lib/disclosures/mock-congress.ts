@@ -325,8 +325,8 @@ export const MOCK_CONGRESS_TRADES: MockCongressTrade[] = [
     disclosureDate: "2026-07-09T20:33:00.000Z",
     ownerType: "Self",
   },
-  // Non-xStock names so the dev book shows every venue state: Backpack-listed
-  // (MU spot, AVGO none), and a name nothing routes yet (PANW). Fixtures only.
+  // Names beyond the mega-caps so the dev book exercises the live catalog
+  // (AVGO/MU/PANW each resolve to an xStock or Backpack mint). Fixtures only.
   {
     id: "cng-P000197-AVGO-2026-08-05",
     bioguideId: "P000197",

@@ -1,4 +1,3 @@
-import { getXStockByTicker } from "@/lib/allowlist";
 import type {
   Disclosure,
   FomoProfile,
@@ -33,10 +32,8 @@ function horizonInsight(trades: Disclosure[], horizon: HorizonInsight["horizon"]
  * carried over from the newest print for that name. Nothing is dropped for
  * being untradable; `copyEligible` is the only thing the venue changes.
  */
-export function buildPortfolio(trades: Disclosure[]): PortfolioHolding[] {
-  const entries = buildBook(trades, {
-    priceFor: (ticker) => getXStockByTicker(ticker)?.stubUsdPrice ?? null,
-  });
+export function buildPortfolio(trades: Disclosure[], priceFor?: (ticker: string) => number | null): PortfolioHolding[] {
+  const entries = buildBook(trades, { priceFor });
   const newestByTicker = new Map<string, Disclosure>();
   for (const trade of trades) {
     const key = trade.ticker.trim().toUpperCase();
@@ -47,24 +44,23 @@ export function buildPortfolio(trades: Disclosure[]): PortfolioHolding[] {
   return entries.map((entry) => {
     const tag = newestByTicker.get(entry.ticker);
     const venue = tag?.venue ?? "none";
+    const mint = tag?.mint ?? null;
     return {
       ...entry,
-      xstockSymbol: tag?.xstockSymbol ?? null,
-      xstockMint: tag?.xstockMint ?? null,
       venue,
       venueSymbol: tag?.venueSymbol ?? null,
-      venueMarket: tag?.venueMarket ?? null,
-      venueHref: tag?.venueHref ?? null,
+      mint,
+      mintDecimals: tag?.mintDecimals ?? null,
       weightPct: entry.valueUsd / total,
-      copyEligible: venue !== "none",
+      copyEligible: venue !== "none" && Boolean(mint),
     };
   });
 }
 
 /**
- * A person's basket: the tradable names in their disclosed book with a
- * positive estimated position, weighted by that estimate. xStock legs execute
- * in-app; other venues are carried as labelled external legs.
+ * A person's basket: the names in their disclosed book that have a Solana
+ * mint and a positive estimated position, weighted by that estimate. Every
+ * leg is a user-signed Jupiter swap (xStock mint first, then Backpack).
  */
 export function buildPersonIndex(
   profileId: string,
@@ -75,18 +71,16 @@ export function buildPersonIndex(
   latest: Disclosure | undefined,
 ): PersonIndex {
   const tradable = portfolio.filter(
-    (row): row is PortfolioHolding & { venue: "xstock" | "backpack"; venueSymbol: string; venueMarket: NonNullable<PortfolioHolding["venueMarket"]> } =>
-      row.venue !== "none" && Boolean(row.venueSymbol && row.venueMarket) && row.valueUsd > 0,
+    (row): row is PortfolioHolding & { venue: "xstock" | "backpack"; venueSymbol: string; mint: string; mintDecimals: number } =>
+      row.venue !== "none" && Boolean(row.venueSymbol && row.mint && row.mintDecimals != null) && row.valueUsd > 0,
   );
   const total = tradable.reduce((sum, row) => sum + row.valueUsd, 0) || 1;
   const constituents: IndexConstituent[] = tradable.map((row) => ({
     ticker: row.ticker,
-    xstockSymbol: row.xstockSymbol,
-    mint: row.xstockMint,
     venue: row.venue,
     venueSymbol: row.venueSymbol,
-    venueMarket: row.venueMarket,
-    venueHref: row.venueHref,
+    mint: row.mint,
+    mintDecimals: row.mintDecimals,
     valueUsd: row.valueUsd,
     weightPct: row.valueUsd / total,
   }));
@@ -109,6 +103,7 @@ export function buildProfile(
   trades: Disclosure[],
   extras: Pick<FomoProfile, "kind" | "name" | "handle" | "title" | "party" | "chamber" | "state" | "cikOrBioguide" | "followers">,
   now = Date.now(),
+  priceFor?: (ticker: string) => number | null,
 ): FomoProfile {
   const sorted = [...trades].sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
   const insights = [
@@ -117,7 +112,7 @@ export function buildProfile(
     horizonInsight(sorted, "90d", 90, now),
   ];
   const eligible = sorted.filter((trade) => trade.tradeEligible);
-  const portfolio = buildPortfolio(sorted);
+  const portfolio = buildPortfolio(sorted, priceFor);
 
   return {
     id,

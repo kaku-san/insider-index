@@ -1,18 +1,17 @@
 // Pure venue labels. Safe to import from client components.
-import type { Venue, VenueMarket } from "@/lib/disclosures/types";
+import type { Venue } from "@/lib/disclosures/types";
 
-export type VenueTag = { venue: Venue; venueSymbol: string | null; venueMarket: VenueMarket | null };
+export type VenueTag = { venue: Venue; venueSymbol: string | null };
 
-/** "NVDAx · xStock", "Backpack perp", "Not tradable yet". */
+/** "NVDAx · xStock", "NVDA.US · Backpack", "No Solana mint yet". */
 export function venueLabel(row: VenueTag): string {
   if (row.venue === "xstock") return `${row.venueSymbol ?? "xStock"} · xStock`;
-  if (row.venue === "backpack") return `Backpack ${row.venueMarket === "perp" ? "perp" : "spot"}`;
-  return "Not tradable yet";
+  if (row.venue === "backpack") return `${row.venueSymbol ?? "Backpack"} · Backpack`;
+  return "No Solana mint yet";
 }
 
-/** Short copy-action label per venue. */
-export function venueActionLabel(venue: Venue): string {
-  if (venue === "xstock") return "Copy trade";
-  if (venue === "backpack") return "Trade on Backpack";
-  return "Not tradable yet";
+export function venueIssuerName(venue: Venue): string {
+  if (venue === "xstock") return "xStocks";
+  if (venue === "backpack") return "Backpack";
+  return "not on Solana";
 }

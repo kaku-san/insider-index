@@ -9,10 +9,10 @@
 import {
   USDC_DECIMALS,
   USDC_MINT,
-  assertCanBuyMint,
   fromAtomicAmount,
-  isAllowlistedMint,
+  resolveBuyableMint,
   toAtomicAmount,
+  type BuyableToken,
 } from "@/lib/allowlist";
 import { jupiterMode } from "@/lib/runtime";
 
@@ -96,19 +96,20 @@ function stubTransactionPayload(order: Omit<JupiterOrder, "transaction">): strin
   ).toString("base64");
 }
 
-export function buildStubOrder(request: JupiterOrderRequest): JupiterOrder {
+/** Fixture price for stub mode only. Labelled `stub`; never shown as a market price. */
+export const STUB_TOKEN_USD_PRICE = 100;
+
+export function buildStubOrder(request: JupiterOrderRequest, token: BuyableToken): JupiterOrder {
   const buying = request.inputMint === USDC_MINT;
-  const xstockMint = buying ? request.outputMint : request.inputMint;
-  const xstock = assertCanBuyMint(xstockMint);
 
   let outAmount: string;
   let usd: number;
   if (buying) {
     usd = fromAtomicAmount(request.amount, USDC_DECIMALS);
-    outAmount = toAtomicAmount(usd / xstock.stubUsdPrice, xstock.decimals);
+    outAmount = toAtomicAmount(usd / STUB_TOKEN_USD_PRICE, token.decimals);
   } else {
-    const tokens = fromAtomicAmount(request.amount, xstock.decimals);
-    usd = tokens * xstock.stubUsdPrice;
+    const tokens = fromAtomicAmount(request.amount, token.decimals);
+    usd = tokens * STUB_TOKEN_USD_PRICE;
     outAmount = toAtomicAmount(usd, USDC_DECIMALS);
   }
   const requestId = stubRequestId();
@@ -205,14 +206,15 @@ export function normalizeJupiterOrder(
 export async function fetchJupiterOrder(
   request: JupiterOrderRequest,
 ): Promise<JupiterOrder> {
-  const xstockMint =
+  const tokenMint =
     request.inputMint === USDC_MINT ? request.outputMint : request.inputMint;
-  if (!isAllowlistedMint(xstockMint)) {
-    throw new JupiterError(403, "Copy blocked: xStock mint is not on the V1 allowlist.");
+  const token = await resolveBuyableMint(tokenMint);
+  if (!token) {
+    throw new JupiterError(403, "Copy blocked: mint is not an xStock or Backpack tokenised stock in the Solana catalog.");
   }
 
   if (jupiterMode() === "stub") {
-    return buildStubOrder(request);
+    return buildStubOrder(request, token);
   }
 
   const params = new URLSearchParams({

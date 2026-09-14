@@ -27,16 +27,14 @@ export function buildCrowdIndex(slug: string, name: string, kind: ActorKind, dis
   type Bucket = Omit<IndexConstituent, "weightPct"> & { filers: Set<string> };
   const byTicker = new Map<string, Bucket>();
   for (const row of rows) {
-    if (row.venue === "none" || !row.venueSymbol || !row.venueMarket) continue;
+    if (row.venue === "none" || !row.venueSymbol || !row.mint || row.mintDecimals == null) continue;
     const ticker = row.ticker.toUpperCase();
     const bucket = byTicker.get(ticker) ?? {
       ticker,
-      xstockSymbol: row.xstockSymbol,
-      mint: row.xstockMint,
       venue: row.venue,
       venueSymbol: row.venueSymbol,
-      venueMarket: row.venueMarket,
-      venueHref: row.venueHref,
+      mint: row.mint,
+      mintDecimals: row.mintDecimals,
       filers: new Set<string>(),
       valueUsd: 0,
     };

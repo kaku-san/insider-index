@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.mts"
+    "test": "node --experimental-strip-types --test tests/*.test.mts",
+    "catalog:snapshot": "node --experimental-strip-types scripts/snapshot-catalog.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

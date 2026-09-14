@@ -11,7 +11,8 @@ import type {
 import { buildCrowdIndexes } from "@/lib/fomo/crowd-indexes";
 import { buildProfile, signalFomo, signalHeadline } from "@/lib/fomo/insights";
 import { portraitFor } from "@/lib/fomo/portraits";
-import { loadVenueMap, tagVenues } from "@/lib/venues/resolve";
+import { fetchMintPrices } from "@/lib/venues/prices";
+import { loadVenueCatalog, tagVenues } from "@/lib/venues/resolve";
 
 const FOLLOWERS: Record<string, number> = {
   "insider-0001199036": 18420,
@@ -40,19 +41,19 @@ export type DisclosureTape = {
 };
 
 /**
- * Both lanes with provenance, every row tagged with the venue it can be copied
- * on (xStock swap, Backpack market, or none). Rows without a ticker never
- * reach the tape; rows without a venue stay on it — they are still the book.
+ * Both lanes with provenance, every row tagged with the Solana mint it can be
+ * copied into (xStock, Backpack, or none). Rows without a ticker never reach
+ * the tape; rows without a mint stay on it — they are still the book.
  */
 export async function listDisclosureTape(): Promise<DisclosureTape> {
-  const [insiders, congress, venues] = await Promise.all([
+  const [insiders, congress, catalog] = await Promise.all([
     listInsiderTape({ perPage: 5000 }),
     listCongressTape(),
-    loadVenueMap(),
+    loadVenueCatalog(),
   ]);
   const disclosures = tagVenues(
     [...insiders.rows, ...congress.rows].filter((row) => Boolean(row.ticker?.trim())),
-    venues,
+    catalog,
   ).sort((a, b) => +new Date(b.filedAt) - +new Date(a.filedAt));
   return { disclosures, lanes: { insiders: insiders.status, congress: congress.status } };
 }
@@ -60,8 +61,8 @@ export async function listDisclosureTape(): Promise<DisclosureTape> {
 /** One disclosure by id, venue-tagged like the tape. */
 export async function getDisclosure(id: string): Promise<Disclosure | null> {
   const { getDisclosureById } = await import("@/lib/disclosures/form4");
-  const [row, venues] = await Promise.all([getDisclosureById(id), loadVenueMap()]);
-  return row ? tagVenues([row], venues)[0] : null;
+  const [row, catalog] = await Promise.all([getDisclosureById(id), loadVenueCatalog()]);
+  return row ? tagVenues([row], catalog)[0] : null;
 }
 
 export async function listAllDisclosures(): Promise<Disclosure[]> {
@@ -86,6 +87,26 @@ export async function listSignals(filters?: {
     }));
 }
 
+/**
+ * Insider prints normally carry their own price. When one does not, the
+ * reported share count is valued at the mint's last on-chain price; names
+ * without a mint (or a pool) stay unsized instead of being guessed.
+ */
+async function insiderFallbackPricer(trades: Disclosure[]): Promise<(ticker: string) => number | null> {
+  const byTicker = new Map<string, string>();
+  for (const trade of trades) {
+    if (trade.kind === "insider" && trade.sharesOwnedAfter != null && trade.pricePerShare == null && trade.mint) {
+      byTicker.set(trade.ticker.toUpperCase(), trade.mint);
+    }
+  }
+  if (byTicker.size === 0) return () => null;
+  const prices = await fetchMintPrices([...byTicker.values()]);
+  return (ticker) => {
+    const mint = byTicker.get(ticker.toUpperCase());
+    return mint ? (prices[mint] ?? null) : null;
+  };
+}
+
 export async function listProfiles(rows?: Disclosure[]): Promise<FomoProfile[]> {
   const trades = rows ?? (await listAllDisclosures());
   const grouped = new Map<string, Disclosure[]>();
@@ -94,6 +115,7 @@ export async function listProfiles(rows?: Disclosure[]): Promise<FomoProfile[]> 
     bucket.push(trade);
     grouped.set(trade.profileId, bucket);
   }
+  const priceFor = await insiderFallbackPricer(trades);
 
   const now = Date.now();
   return [...grouped.entries()]
@@ -109,7 +131,7 @@ export async function listProfiles(rows?: Disclosure[]): Promise<FomoProfile[]> 
         state: head.state,
         cikOrBioguide: head.insiderCik,
         followers: FOLLOWERS[id] ?? 1200 + rows.length * 180,
-      }, now);
+      }, now, priceFor);
     })
     // Most recently active first, then the deepest book. No synthetic PnL ordering.
     .sort((a, b) => +new Date(b.lastSignalAt) - +new Date(a.lastSignalAt) || b.portfolio.length - a.portfolio.length);

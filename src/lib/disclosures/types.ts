@@ -32,22 +32,21 @@ export type ActorKind = "insider" | "politician";
 export type PoliticalParty = "Democratic" | "Republican" | "Independent";
 
 /**
- * Where a disclosed name can actually be bought.
- *  - xstock    verified xStock mint on Solana; in-app user-signed Jupiter swap
- *  - backpack  listed US-equity market on Backpack Exchange (spot or perp); external
- *  - none      disclosed, shown in the book, not tradable anywhere we wire yet
+ * Which Solana mint a disclosed name routes to. Both routable venues are the
+ * same user-signed Jupiter swap; the tag only says who issued the token.
+ *  - xstock    xStock mint (Backed Finance), preferred when both exist
+ *  - backpack  Backpack tokenised stock (`NVDA.US`) with a Solana mint
+ *  - none      disclosed, shown in the book, no Solana mint we can route yet
  */
 export type Venue = "xstock" | "backpack" | "none";
 
-export type VenueMarket = "swap" | "spot" | "perp";
-
-export type VenueListing = {
-  venue: Exclude<Venue, "none">;
-  /** Venue-side symbol, e.g. `NVDAx` or `NVDA.US_USDC_PERP`. */
-  symbol: string;
-  market: VenueMarket;
-  /** External trade link for venues we do not execute in-app. Null for xStocks. */
-  href: string | null;
+export type VenueFields = {
+  venue: Venue;
+  /** Token symbol on the venue: `NVDAx`, `NVDA.US`. Null when unroutable. */
+  venueSymbol: string | null;
+  /** Solana mint the copy swaps into. Null when unroutable. */
+  mint: string | null;
+  mintDecimals: number | null;
 };
 
 export type Form4Transaction = {
@@ -69,26 +68,20 @@ export type Form4Transaction = {
   is10b51: boolean;
 };
 
-export type Disclosure = Form4Transaction & {
-  source: DisclosureSource;
-  side: DisclosureSide;
-  xstockSymbol: string | null;
-  xstockMint: string | null;
-  /** Best venue for copying this name (xStock first, then Backpack, else none). */
-  venue: Venue;
-  venueSymbol: string | null;
-  venueMarket: VenueMarket | null;
-  venueHref: string | null;
-  /** Buy/sell on a name we can route somewhere (any venue). */
-  tradeEligible: boolean;
-  kind: ActorKind;
-  profileId: string;
-  party: PoliticalParty | null;
-  chamber: string | null;
-  state: string | null;
-  amountLow: number | null;
-  amountHigh: number | null;
-};
+export type Disclosure = Form4Transaction &
+  VenueFields & {
+    source: DisclosureSource;
+    side: DisclosureSide;
+    /** Buy/sell on a name with a Solana mint we can route. */
+    tradeEligible: boolean;
+    kind: ActorKind;
+    profileId: string;
+    party: PoliticalParty | null;
+    chamber: string | null;
+    state: string | null;
+    amountLow: number | null;
+    amountHigh: number | null;
+  };
 
 export type Form4ListParams = {
   ticker?: string;
@@ -129,15 +122,9 @@ export type HorizonInsight = {
  */
 export type HoldingStatus = "holding" | "reduced" | "exited" | "sold";
 
-export type PortfolioHolding = {
+export type PortfolioHolding = VenueFields & {
   ticker: string;
   issuerName: string;
-  xstockSymbol: string | null;
-  xstockMint: string | null;
-  venue: Venue;
-  venueSymbol: string | null;
-  venueMarket: VenueMarket | null;
-  venueHref: string | null;
   /** Share of the estimated book (midpoint). 0 when the size is unknown. */
   weightPct: number;
   /** Estimated current value (midpoint of the net range). 0 when unknown. */
@@ -158,13 +145,10 @@ export type PortfolioHolding = {
 
 export type IndexConstituent = {
   ticker: string;
-  xstockSymbol: string | null;
-  /** xStock mint for in-app swaps; null for legs routed to an external venue. */
-  mint: string | null;
   venue: Exclude<Venue, "none">;
   venueSymbol: string;
-  venueMarket: VenueMarket;
-  venueHref: string | null;
+  mint: string;
+  mintDecimals: number;
   weightPct: number;
   valueUsd: number;
 };

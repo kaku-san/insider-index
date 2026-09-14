@@ -2,7 +2,7 @@
  * Insider (Form 4) lane.
  *
  * Order of preference:
- *  1. SEC EDGAR (`edgar-form4`) — primary, no key, every allowlisted ticker
+ *  1. SEC EDGAR (`edgar-form4`) — primary, no key, every ticker in `edgarUniverse()`
  *  2. Form4API (`form4`) — fallback only when FORM4API_KEY is set
  *  3. Mock fixtures (`mock-form4`) — dev only (STOCKLANA_ALLOW_MOCKS)
  *
@@ -261,7 +261,7 @@ export async function listInsiderTape(params: Form4ListParams = {}): Promise<Ins
           status: { source: "form4", live: true, count: rows.length, note: notes.join("; ") || null },
         };
       }
-      notes.push("Form4API returned no allowlisted rows");
+      notes.push("Form4API returned no rows");
     } catch (error) {
       notes.push(`Form4API: ${error instanceof Error ? error.message : String(error)}`);
     }
