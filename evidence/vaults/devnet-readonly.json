@@ -1,0 +1,28 @@
+{
+  "observedAt": "2026-09-14T14:37:21.718Z",
+  "network": "devnet",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "sdkVersion": "1.0.22",
+  "programId": "BASKT7aKd8n7ibpUbwLP3Wiyxyi3yoiXsxBk4Hpumate",
+  "programSlot": 498287040,
+  "executable": true,
+  "programDataAddress": "5U2UnJKWK8woHwzud2soiJoD7nXxitNRLXBCAojeaETc",
+  "programDataHash": "12e844fa868f275554137d5cb67cf62bb54bc500a00f8d08e15dcfc7dc6bd463",
+  "upgradeAuthority": "DEVePdJBmogeJkAmaWRpdV7KaynaQJHt9zowCisSQkAf",
+  "configSlot": 498287040,
+  "globalConfigHash": "86d889109c4665fa4b41150b645f6a1d2f1f0c4782821c14bc951c4a3245741c",
+  "configOwnerVerified": true,
+  "sdkUsdcMint": "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT",
+  "sdkTypesHash": "934834275f018fd2be3483213cdf6f4b32984160cbb6a6e855f5529f87481068",
+  "sdkLayoutHash": "ca5bd374e90845dfece52ce608aa6b0655e821b0e40f84c5d05a2cbb556b3e4b",
+  "standaloneIdl": "NOT_DISTRIBUTED",
+  "publicFundsEnabled": false,
+  "nativeUsdcExitVerified": false,
+  "readiness": "UNTESTED",
+  "candidates": [],
+  "roundtrip": "NOT_RUN",
+  "notes": [
+    "No mint/feed/route/transfer evidence collected",
+    "Read-only account observations are not contract security or settlement tests"
+  ]
+}

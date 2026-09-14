@@ -2,7 +2,7 @@
 
 Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
 
-**Form 4 / Congress disclosure → full disclosed book per filer → copy one print or buy that person's index → user-signed swap into the name's Solana mint (xStock, else Backpack token) → rebalance on the next filing.**
+**Disclosures → full disclosed books → model indexes → one native Symmetry V3 vault/share mint per index (not yet open).** Individual user-signed copy trades remain a separate fallback.
 
 This repository is a Next.js App Router app. **Demo / production host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev) (Barely Stable on Hetzner + Traefik). Do not use a Vercel URL as the public demo. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 
@@ -18,9 +18,9 @@ In V1:
 - Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. The "too thin" gate applies only to **Buy this index**; a profile renders with one holding
 - Fallback when a basket is too thin: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
-- One-trade copy **or** a person index (Pelosi Index, Huang Index) that rebalances on the next disclosure
+- One-trade copying remains available separately. Native index entry is disabled until deployer setup, settlement and claim-recovery evidence pass
 - Performance is never invented: return / hit rate stay `—` until a real dated-trade price series exists
-- The user signs every swap and every rebalance. There are no vaults and no unattended trading
+- Native vaults are deployer-created/named; holders authorize entry/redemption, never fund rebalances. Policy-valid strategy/keeper automation is planned but currently read-only; see [native integration status](src/lib/index-vaults/README.md)
 - Social frontend: lime editorial discover, party-tinted profiles, person-index tickets, light/dark theme (`src/app` pages + `src/components` + `src/lib/frontend`)
 
 Out of V1:
@@ -28,13 +28,13 @@ Out of V1:
 - Quiver, EODHD, Bloomberg
 - Ondo Global Markets as a third venue (its mint list needs a key we do not hold; Jupiter search caps at 20 — we do not invent mints)
 - Superstate Opening Bell (KYC-allowlisted wallets), PreStocks (pre-IPO SPVs), Forge / Nasdaq Private
-- Meteora / Symmetry / a custom on-chain program
+- AMMs, second receipt tokens, custom custody programs and off-chain index ownership ledgers
 
 ## Architecture
 
 ```
 EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana catalog)
-                             →  inspect filing / pick basket  →  USDC amount  →  Jupiter /order
+                             →  inspect one filing  →  USDC amount  →  Jupiter /order
                                                                               user signs in Privy
                                                                               Jupiter /execute
                                                                               position store
@@ -49,7 +49,8 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | Congress tape | `src/lib/disclosures/ainvest.ts` (+ pure `ainvest-parse.ts`) primary; `congress.ts` orchestrates AInvest → Form4API → mock. AInvest is ticker-scoped (no per-member pull), so the crawl walks `buildCongressUniverse()` (`src/lib/disclosures/universe.ts`) and groups rows by filer |
 | Book | `src/lib/fomo/book.ts` (pure): running net of PTR bands per ticker, Form 4 shares-after × price; `insights.ts` tags venue + copy eligibility |
 | Buy catalog | `src/lib/venues/solana-catalog.ts` — live xStocks + Backpack mints, `catalog-snapshot.json` fallback; `resolve.ts` picks xStock → Backpack → none; `prices.ts` Jupiter Price v3 |
-| Swaps | Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` (live keyless or keyed; stub in dev) |
+| Swaps | Individual trades: Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` (live keyless or keyed; stub in dev) |
+| Native indexes | `src/lib/index-vaults/adapter-contract.ts`; SDK `1.0.22`, read-only builders, durable local journals, public funds and USDC exits disabled. No second share mint. |
 | RPC | Helius URL helper + `@solana/kit` `createSolanaRpc`; browser reaches Helius via `POST /api/rpc` without seeing the key |
 | Cache | `src/lib/cache.ts` in-process memo (TTL, stale-while-revalidate); `src/instrumentation.ts` warms the tape at boot |
 | Persistence | Supabase client stub; in-memory positions when keys are absent |
@@ -64,7 +65,7 @@ API routes:
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
-- `GET /api/indexes` · `POST /api/indexes/quote` · `POST /api/indexes/execute` (basket + rebalance). Crowd indexes (`idx-crowd-*`, built in `src/lib/fomo/crowd-indexes.ts`) lead the list; person indexes follow
+- `GET /api/indexes` lists model indexes (crowd first) and explicit unavailable native-position status. Legacy `POST /api/indexes/quote` and `/execute` now return `503` with native release blockers; no fabricated transaction or receipt
 - `POST /api/quote` — Jupiter `/order`, catalog-enforced (`403` for a mint outside the catalog)
 - `POST /api/execute` — Jupiter `/execute`, then record a position
 - `GET /api/positions` — tracked user-signed fills
@@ -74,7 +75,7 @@ UI routes:
 - `/` indexes first: ready baskets, honest "not an index yet" states, follow & copy fallback, latest filings
 - `/feed` the raw disclosure tape (Everything / Following, search, buy/sell filter)
 - `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges
-- `/indexes/[id]` person index ticket + rebalance
+- `/indexes/[id]` model allocation, native lifecycle/fee disclosure and disabled investment panel; no holder rebalance button
 - `/disclosures/[id]` inspect
 - `/trade/[id]` one-print copy + approve/sign stub
 - `/positions` tracked book
@@ -110,7 +111,7 @@ Refresh the offline snapshot with `npm run catalog:snapshot` (writes `src/lib/ve
 
 Stocklana is **not available to persons in the United States, United Kingdom, Canada, or Australia**. The eligibility banner is rendered on every page. The trade ticket also requires an explicit self-attestation before the stub signature is accepted.
 
-xStocks and Backpack `.US` tokens are tokenized stock exposures, not listed equity. V1 never places a trade without a user signature.
+xStocks and Backpack `.US` tokens are tokenized stock exposures, not listed equity. Individual trades and native investor actions require user authorization. Future native fund rebalances use eligible keeper tasks, not holder signatures; unattended execution remains disabled.
 
 ## Local run
 
