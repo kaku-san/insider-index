@@ -22,21 +22,9 @@ export async function resolveBuyableMint(mint: string): Promise<BuyableToken | n
   return catalog.byMint.get(mint.trim()) ?? null;
 }
 
-/** Synchronous check against whatever catalog is already in memory. */
+/** Synchronous check against whatever catalog is already in memory (snapshot on a cold start). */
 export function peekBuyableMint(mint: string): BuyableToken | null {
   return snapshotCatalog().byMint.get(mint.trim()) ?? null;
-}
-
-export async function canBuyMint(mint: string): Promise<boolean> {
-  return (await resolveBuyableMint(mint)) != null;
-}
-
-export async function assertCanBuyMint(mint: string): Promise<BuyableToken> {
-  const token = await resolveBuyableMint(mint);
-  if (!token) {
-    throw new Error(`Mint ${mint} is not an xStock or Backpack tokenised stock we can route. Buy is blocked.`);
-  }
-  return token;
 }
 
 export function toAtomicAmount(uiAmount: number, decimals: number): string {
