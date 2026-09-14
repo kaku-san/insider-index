@@ -8,7 +8,7 @@ import type { Batch, FmpEndpoint, FmpParams, FmpRow, IngestionIssue, SourcePage 
 const BASE = "https://financialmodelingprep.com/stable/";
 const ENDPOINTS = new Set<FmpEndpoint>([
   "senate-profile", "senate-net-worth", "senate-net-worth-aggregated",
-  "house-trades-by-id", "senate-trades-by-id", "house-latest", "senate-latest",
+  "house-trades-by-id", "senate-trades-by-id", "house-latest", "senate-latest", "search-name",
 ]);
 export class FmpError extends Error {
   readonly issue: IngestionIssue;
@@ -88,6 +88,10 @@ export function createFmpClient(options: FmpClientOptions = {}) {
         safe[name] = value;
       }
     }
+    if (params.query !== undefined) {
+      if (endpoint !== "search-name" || !params.query.trim() || params.query.length > 200) throw fail("payload");
+      safe.query = params.query.trim();
+    }
     const key = await (options.key ?? readFmpKey)();
     if (!key) throw fail("unconfigured");
     const url = new URL(endpoint, BASE);
@@ -162,6 +166,12 @@ export function createFmpClient(options: FmpClientOptions = {}) {
   }
 
   return {
+    searchNames: async (query: string): Promise<Batch> => {
+      const batch = await collect("search-name", { query, limit: 100 }, false);
+      // A full bounded result may hide another exact-name symbol beyond the cap.
+      return batch.rows.length < 100 ? batch : { ...batch, status: "partial", complete: false,
+        issues: [...batch.issues, { code: "page-limit", endpoint: "search-name", page: 0 }] };
+    },
     profiles: (senateID?: string) => collect("senate-profile", senateID ? { senateID } : {}),
     annual: (senateID: string) => collect("senate-net-worth", { senateID, limit: 250 }),
     // Documented as one complete series, not a paginated endpoint.

@@ -92,12 +92,12 @@ test("annual evidence keeps unmapped assets and missing bands, with unsafe sourc
   assert.doesNotMatch(html, /href="javascript:|\$0/);
 });
 
-test("published target renders actual weights and labels them as activity rather than ownership", () => {
-  const index = { hash: "b".repeat(64), person_id: person.id, period: "2025", version: 1, status: "CANDIDATE", published_at: "2026-01-01T00:00:00Z", definition: { label: "Example activity index", excluded: [] }, constituents: [{ ticker: "TEST", mint: "example-mint", issuer: "Example issuer", weight_bps: 10000 }] } as unknown as ComponentProps<typeof PublishedTarget>["index"];
+test("published target renders actual weights and labels them as mapped annual holdings rather than live ownership", () => {
+  const index = { hash: "b".repeat(64), person_id: person.id, period: "2025", version: 1, status: "CANDIDATE", published_at: "2026-01-01T00:00:00Z", definition: { basis: "disclosed-holdings", label: "Example holdings index", snapshotComplete: false, excluded: [] }, constituents: [{ ticker: "TEST", mint: "example-mint", issuer: "Example issuer", weight_bps: 10000 }] } as unknown as ComponentProps<typeof PublishedTarget>["index"];
   const html = renderToStaticMarkup(createElement(PublishedTarget, { index }));
   assert.match(html, /100.00%/);
   assert.match(html, /example-mint/);
-  assert.match(html, /including buys and sales—not current ownership/);
+  assert.match(html, /mapped annual holdings only—not a live brokerage balance/);
 });
 
 test("production fallback cannot authenticate, expose a fixture address, or sign when Privy is missing", async () => {

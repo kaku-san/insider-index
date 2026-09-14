@@ -11,10 +11,10 @@ This repository is a Next.js App Router app. **Live product:** [https://stocklan
 In V1:
 
 - **SEC EDGAR** is the primary Form 4 source (ticker → CIK → recent `4` filings → XML → open-market P/S). No key.
-- **FMP** supplies saved person-first books and separate PTR activity. Home and stable-ID person pages read Supabase; published trade-symbol indexes show target weights even when annual pages are partial. See [FMP person backend](#fmp-person-backend).
+- **FMP** supplies saved person-first books and separate PTR activity. Home and stable-ID person pages read Supabase; published holdings-based indexes show target weights from the latest saved annual snapshot, with partial coverage labelled and no trade-history prerequisite. See [FMP person backend](#fmp-person-backend).
 - **AInvest Congressional Trades** remains the primary House/Senate **legacy tape** source (`AINVEST_API_KEY`, free tier)
 - Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
-- Home is **indexes first**: published FMP trade models, then the saved person directory. The raw SEC/AInvest tape remains `/feed`; legacy copy/index routes retain their own readiness gates.
+- Home is **indexes first**: published FMP holdings models, then the saved person directory. The raw SEC/AInvest tape remains `/feed`; legacy copy/index routes retain their own readiness gates.
 - Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. The "too thin" gate applies only to **Buy this index**; a profile renders with one holding
 - Fallback when a basket is too thin: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
@@ -52,7 +52,7 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | Swaps | Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` (live keyless or keyed; stub in dev) |
 | RPC | Helius URL helper + `@solana/kit` `createSolanaRpc`; browser reaches Helius via `POST /api/rpc` without seeing the key |
 | Cache | `src/lib/cache.ts` in-process memo (TTL, stale-while-revalidate); `src/instrumentation.ts` warms the tape at boot |
-| Persistence | Supabase saved FMP books + immutable trade targets; in-memory legacy positions when keys are absent |
+| Persistence | Supabase saved FMP books + immutable holdings targets; in-memory legacy positions when keys are absent |
 | Buy gate | `src/lib/allowlist.ts` — `resolveBuyableMint()` against the catalog; no hand list |
 
 API routes:
@@ -72,7 +72,7 @@ API routes:
 
 UI routes:
 
-- `/` indexes first: published trade targets, searchable saved people, links to original disclosed books
+- `/` indexes first: published holdings targets, searchable saved people, links to original disclosed books
 - `/feed` the raw disclosure tape (Everything / Following, search, buy/sell filter)
 - `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges
 - `/indexes/[id]` person index ticket + rebalance
@@ -90,7 +90,7 @@ Live integration verification on 2026-09-14 returned **540 real directory entrie
 
 Only a complete, unambiguous annual document version can supply `indexInput` (stocks and ETFs, no size/tradability cap). Separate years are never summed; multiple documents for one year remain unreconciled versions. Later PTRs never rewrite that input. Annual names in the live schema have **no dedicated ticker**: apparent symbols inside free-text names are not automatically approved identity mappings. Such rows remain visible and unresolved. Explicit symbols can be mapped by the pure catalog function (xStock then Backpack); options/bonds/income/liabilities cannot become stock exposures just because their symbol matches. A mint tag is availability, **not execution approval**.
 
-A profile does not guarantee an annual book. Failed sources remain failed, partial sources remain partial, and there is no mock/famous-person fallback. Separately, `npm run indexes:publish -- --publish` publishes saved **trade-symbol** models via an atomic service-only Supabase RPC. Annual completeness is not a publication gate. Targets use gross trade-band midpoints (buys and sales), otherwise labelled equal weights, xStock first then Backpack. Unmapped names remain disclosed-only. Models are not current holdings, funded vaults, historical performance or execution-approved indexes. Apply the additive trade migration as described in the FMP contract before publishing; never rewrite a disclosed row to make an index.
+A profile does not guarantee an annual book. `npm run holdings:ingest -- --save` ingests missing annual snapshots, including Pelosi (`P000197`), without requesting trades. Failed/partial sources stay labelled. `npm run indexes:publish -- --publish` builds **holdings-based** models from the latest saved annual document, resolving names with archived FMP candidates or that person’s saved symbol evidence. Target weights use holding value-band midpoints, otherwise labelled equal weights, xStock first then Backpack. Unresolved and nontradable names stay on the full book. Trades may supply identity evidence later, never remaining balances. Models are not funded vaults, historical performance or execution-approved baskets. Owner migration `202609140004_holdings_indexes.sql` adds atomic holdings publication and retires trade-only versions without deleting evidence; apply it before publishing. See the FMP contract for dry-run behavior and limitations.
 
 ## Buy catalog
 

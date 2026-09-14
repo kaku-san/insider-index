@@ -48,7 +48,7 @@ export function createPeopleService(client: FmpClient, loadCatalog: () => Promis
         coverage: "provider-directory; a profile does not imply an annual book or investable index",
       };
     },
-    async portfolio(id: string) {
+    async portfolio(id: string, options: { holdingsOnly?: boolean } = {}) {
       if (!personId(id)) throw new PeopleError(400, "invalid-person-id");
       const profileBatch = scoped(await client.profiles(id), id);
       requireSource(profileBatch);
@@ -57,9 +57,13 @@ export function createPeopleService(client: FmpClient, loadCatalog: () => Promis
         const notFound = profileBatch.complete && profileBatch.rows.length === 0;
         throw new PeopleError(notFound ? 404 : 502, notFound ? "person-not-found" : "fmp-incomplete-profile");
       }
-      // Fetch both chambers: current position does not erase history in another chamber.
+      // Holdings ingestion must not wait for (or request) optional trade histories.
+      const skipped = (endpoint: Batch["endpoint"]): Batch => ({ endpoint, status: "not-requested", complete: false, rows: [], pages: [], issues: [] });
       const [annualRaw, aggregateRaw, houseRaw, senateRaw, catalog] = await Promise.all([
-        client.annual(id), client.aggregates(id), client.houseTrades(id), client.senateTrades(id), loadCatalog(),
+        client.annual(id),
+        options.holdingsOnly ? skipped("senate-net-worth-aggregated") : client.aggregates(id),
+        options.holdingsOnly ? skipped("house-trades-by-id") : client.houseTrades(id),
+        options.holdingsOnly ? skipped("senate-trades-by-id") : client.senateTrades(id), loadCatalog(),
       ]);
       const annual = scoped(annualRaw, id), aggregates = scoped(aggregateRaw, id);
       const house = scoped(houseRaw, id), senate = scoped(senateRaw, id);

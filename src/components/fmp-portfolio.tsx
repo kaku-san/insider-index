@@ -25,10 +25,12 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
   const snapshots = [...book.snapshots].sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || (b.filingDate ?? "").localeCompare(a.filingDate ?? "") || a.id.localeCompare(b.id));
   const snapshot = snapshots.find((entry) => entry.id === snapshotId) ?? snapshots[0];
   const index = book.publishedIndex;
+  // Saved publication evidence is a presentation overlay, never a rewrite of annual rows.
+  const resolutions = new Map(index?.definition.evidence?.map((entry) => [entry.holding.id, entry]) ?? []);
   const activity = [...book.activity].sort((a, b) => (b.transactionDate ?? "").localeCompare(a.transactionDate ?? "") || (b.disclosureDate ?? "").localeCompare(a.disclosureDate ?? "") || a.id.localeCompare(b.id));
 
   return <PortfolioLayout id={id} name={book.person.name} indexName={index ? book.indexName : undefined} image={book.person.image} context={personContext(book.person)}
-    strategy="Follow the disclosed book and explore an index built from publicly reported trade activity."
+    strategy="Follow the disclosed book and explore an index built from mapped annual holdings. No trade history is required."
     count={snapshot ? snapshot.items.length : null}
     countNote={snapshot ? `${snapshot.year ?? "Undated"} filing · all asset types, not live holdings` : "Annual book not available"}
     notice={resource.error ? <div className={styles.notice} role="alert">Could not refresh this saved book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : undefined}>
@@ -48,10 +50,15 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
         <TableRegion label="Disclosed holdings; scroll for all columns">
           <table className={styles.table}>
             <thead><tr><th scope="col">Disclosed asset / ticker</th><th scope="col" className={styles.number}>Last price</th><th scope="col" className={styles.number}>Disclosed value</th><th scope="col" className={styles.number}>Weight</th></tr></thead>
-            <tbody>{snapshot.items.map((item) => <tr key={item.id}>
-              <td><strong>{item.ticker ?? item.name ?? "Unnamed disclosure"}</strong>{item.ticker && <small>{item.name}</small>}<small>{item.kind} · {item.owner ?? "Owner not specified"}</small>
+            <tbody>{snapshot.items.map((item) => {
+              const resolution = resolutions.get(item.id);
+              const ticker = resolution?.ticker ?? item.ticker;
+              const token = resolution ? resolution.token : item.token;
+              return <tr key={item.id}>
+              <td><strong>{ticker ?? item.name ?? "Unnamed disclosure"}</strong>{ticker && <small>{item.name}</small>}<small>{item.kind} · {item.owner ?? "Owner not specified"}</small>
+                <small>{token ? `${token.issuer === "xstock" ? "xStock" : "Backpack"} · ${token.symbol}` : "Disclosed-only · no mapped Solana mint"}</small>
                 <details className={styles.rowDetails}><summary>Disclosure details</summary>
-                  <p>{item.mappingReason ?? (item.token ? `${item.token.issuer} token available; annual row is not a trade target` : "Unresolved symbol")}</p>
+                  <p>{resolution ? `${resolution.method} · ${resolution.reason ?? "Mapped in published holdings target"}` : item.mappingReason ?? (item.token ? `${item.token.issuer} token available` : "Unresolved symbol")}</p>
                   <p>Income range: {disclosedRange(item.incomeRange)}</p>
                   {item.providerValue != null && <p>Provider value estimate: {estimate(item.providerValue)}. Not a market valuation.</p>}
                   {item.providerIncome != null && <p>Provider income estimate: {estimate(item.providerIncome)}</p>}
@@ -61,7 +68,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
               <td className={styles.number}><MissingValue /></td>
               <td className={styles.number}>{disclosedRange(item.valueRange)}</td>
               <td className={styles.number}><MissingValue /></td>
-            </tr>)}</tbody>
+            </tr>; })}</tbody>
           </table>
         </TableRegion>
         <p className={styles.caption}>Last prices are unavailable. Disclosed dollar bands are not exact portfolio weights; published index weights, when available, are shown separately below.</p>
@@ -76,7 +83,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
     <AllocationPanel allocations={index?.constituents.map((item) => ({ ticker: item.ticker, weightBps: item.weight_bps }))}>
       {index && <>
         <div className={styles.sectionHead}><h3>{book.indexName ?? "Published index"} constituents</h3><span className={styles.badge}>Version {index.version}</span></div>
-        <p className={styles.caption}>{index.definition.label} Activity through {index.period}; published {savedDate(index.published_at)}.</p>
+        <p className={styles.caption}>{index.definition.label} Holdings reference {index.period}; published {savedDate(index.published_at)}. {index.definition.snapshotComplete ? "Complete annual source version." : "Partial annual source: mapped observed holdings only, not a verified complete portfolio."}</p>
         <TableRegion label="Published index weights">
           <table className={styles.table}><thead><tr><th scope="col">Ticker</th><th scope="col" className={styles.number}>Last price</th><th scope="col" className={styles.number}>Target weight</th></tr></thead><tbody>
             {index.constituents.map((item) => <tr key={item.mint}><td><strong>{item.ticker}</strong><small>{item.issuer}</small></td><td className={styles.number}><MissingValue /></td><td className={styles.number}>{(item.weight_bps / 100).toFixed(2)}%</td></tr>)}

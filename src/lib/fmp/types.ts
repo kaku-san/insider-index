@@ -1,8 +1,8 @@
 export type FmpRow = Record<string, unknown>;
 export type FmpEndpoint =
   | "senate-profile" | "senate-net-worth" | "senate-net-worth-aggregated"
-  | "house-trades-by-id" | "senate-trades-by-id" | "house-latest" | "senate-latest";
-export type FmpParams = { senateID?: string; page?: number; limit?: number };
+  | "house-trades-by-id" | "senate-trades-by-id" | "house-latest" | "senate-latest" | "search-name";
+export type FmpParams = { senateID?: string; page?: number; limit?: number; query?: string };
 export type IngestionIssue = {
   code: "http" | "payload" | "network" | "storage" | "unconfigured" | "repeated-page" | "page-limit" | "identity" | "schema";
   endpoint: FmpEndpoint;
@@ -19,7 +19,7 @@ export type SourcePage = {
 export type SourceRow = { row: FmpRow; source: SourcePage; ordinal: number };
 export type Batch = {
   endpoint: FmpEndpoint;
-  status: "complete" | "partial" | "failed";
+  status: "complete" | "partial" | "failed" | "not-requested";
   complete: boolean;
   rows: SourceRow[];
   pages: SourcePage[];
