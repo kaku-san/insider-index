@@ -13,7 +13,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Disclosure-to-copy-trade app: real insider/politician prints → user-signed xStock swaps on Solana. Product scope, env matrix, and API routes live in `README.md`; empty env template in `.env.example`.
 
 - Product shape: **indexes first, feed second, follow & copy one trade as the fallback.** Home (`/`) is `src/components/index-home.tsx`; the raw disclosure tape is `/feed`. Do not reintroduce party/executive lanes as top-level navigation.
-- Every filer's **full disclosed book** (every ticker, tradable or not) is `src/lib/fomo/book.ts` → `/p/[id]`. Readiness (`src/lib/fomo/index-readiness.ts`) gates only "Buy this index"; never filter a book by tradability. Crowd indexes are `src/lib/fomo/crowd-indexes.ts`.
+- FMP person-first backend: `src/lib/fmp/README.md` → `/api/people` and `/api/people/[id]/portfolio`. Annual snapshots are index inputs; PTRs stay activity. Repeated pages mean partial, never a complete book. Do not route FMP through the legacy PTR-netted calculator.
+- The legacy frontend's **full disclosed book** (every ticker, tradable or not) is `src/lib/fomo/book.ts` → `/p/[id]`. Readiness (`src/lib/fomo/index-readiness.ts`) gates only "Buy this index"; never filter a book by tradability. Crowd indexes are `src/lib/fomo/crowd-indexes.ts`.
 - **Buy catalog, not an allowlist.** Copyable ⇔ the ticker has a Solana mint in `src/lib/venues/solana-catalog.ts` (live xStocks + Backpack `.US`, xStock preferred; snapshot fallback via `npm run catalog:snapshot`). Ondo/Superstate/PreStocks are excluded on purpose (README "Out of V1"). Never hand-add a mint.
 - PTRs are dollar bands: keep `amountLow`/`amountHigh` nullable, render ranges, never `$0`. Return / hit rate stay null until a real price series exists.
 

@@ -1,0 +1,27 @@
+{
+  "endpoint": "senate-latest",
+  "params": {
+    "page": 0,
+    "limit": 1
+  },
+  "fetchedAt": "2026-09-14T13:07:26.606182+00:00",
+  "payload": [
+    {
+      "symbol": "OTIS",
+      "senateID": "B001236",
+      "disclosureDate": "2026-09-11",
+      "transactionDate": "2026-08-27",
+      "firstName": "John",
+      "lastName": "Boozman",
+      "office": "John Boozman",
+      "district": "AR",
+      "owner": "Joint",
+      "assetDescription": "Otis Worldwide Corp",
+      "assetType": "Stock",
+      "type": "Purchase",
+      "amount": "$1,001 - $15,000",
+      "comment": "",
+      "link": "https://efdsearch.senate.gov/search/view/ptr/0632f542-7ac2-46e4-bd9c-603e3673f0cd/"
+    }
+  ]
+}

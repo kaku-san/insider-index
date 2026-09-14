@@ -1,0 +1,34 @@
+{
+  "endpoint": "senate-profile",
+  "params": {
+    "page": 0,
+    "limit": 2
+  },
+  "fetchedAt": "2026-09-14T13:07:22.268738+00:00",
+  "payload": [
+    {
+      "senateID": "L000397",
+      "firstName": "Zoe",
+      "lastName": "Lofgren",
+      "birthDate": "1947-12-20",
+      "latestParty": "Democrat",
+      "latestState": "CA",
+      "latestPosition": "Representative",
+      "image": "https://images.financialmodelingprep.com/senate/L000397.jpg",
+      "active": true,
+      "yearsActive": 31.7
+    },
+    {
+      "senateID": "N000193",
+      "firstName": "Zach",
+      "lastName": "Nunn",
+      "birthDate": "1979-05-03",
+      "latestParty": "Republican",
+      "latestState": "IA",
+      "latestPosition": "Representative",
+      "image": "https://images.financialmodelingprep.com/senate/N000193.jpg",
+      "active": true,
+      "yearsActive": 3.7
+    }
+  ]
+}

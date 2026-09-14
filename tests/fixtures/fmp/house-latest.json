@@ -1,0 +1,28 @@
+{
+  "endpoint": "house-latest",
+  "params": {
+    "page": 0,
+    "limit": 1
+  },
+  "fetchedAt": "2026-09-14T13:07:25.570044+00:00",
+  "payload": [
+    {
+      "symbol": "AMD",
+      "senateID": null,
+      "disclosureDate": "2026-09-11",
+      "transactionDate": "2026-08-18",
+      "firstName": "Gilbert",
+      "lastName": "Cisneros",
+      "office": "Gilbert Cisneros",
+      "district": "CA31",
+      "owner": "",
+      "assetDescription": "Advanced Micro Devices Inc",
+      "assetType": "Stock",
+      "type": "Sale",
+      "amount": "$1,001 - $15,000",
+      "capitalGainsOver200USD": "False",
+      "comment": "",
+      "link": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035390.pdf"
+    }
+  ]
+}

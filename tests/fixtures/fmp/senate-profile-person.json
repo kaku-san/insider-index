@@ -1,0 +1,23 @@
+{
+  "endpoint": "senate-profile",
+  "params": {
+    "senateID": "L000397",
+    "page": 0,
+    "limit": 100
+  },
+  "fetchedAt": "2026-09-14T13:07:21.198625+00:00",
+  "payload": [
+    {
+      "senateID": "L000397",
+      "firstName": "Zoe",
+      "lastName": "Lofgren",
+      "birthDate": "1947-12-20",
+      "latestParty": "Democrat",
+      "latestState": "CA",
+      "latestPosition": "Representative",
+      "image": "https://images.financialmodelingprep.com/senate/L000397.jpg",
+      "active": true,
+      "yearsActive": 31.7
+    }
+  ]
+}

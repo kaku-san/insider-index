@@ -1,0 +1,47 @@
+{
+  "endpoint": "house-trades-by-id",
+  "params": {
+    "senateID": "L000397",
+    "page": 0,
+    "limit": 2
+  },
+  "fetchedAt": "2026-09-14T13:07:23.322167+00:00",
+  "payload": [
+    {
+      "symbol": "ABBV",
+      "senateID": "L000397",
+      "disclosureDate": "2023-06-06",
+      "transactionDate": "2023-05-25",
+      "firstName": "Zoe",
+      "lastName": "Lofgren",
+      "office": "Zoe Lofgren",
+      "district": "CA18",
+      "owner": "Spouse",
+      "assetDescription": "AbbVie Inc.",
+      "assetType": "Corporate Bond",
+      "type": "Sale (Full)",
+      "amount": "$1,001 - $15,000",
+      "capitalGainsOver200USD": "False",
+      "comment": "",
+      "link": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2023/20023083.pdf"
+    },
+    {
+      "symbol": "ACN",
+      "senateID": "L000397",
+      "disclosureDate": "2023-06-06",
+      "transactionDate": "2023-05-24",
+      "firstName": "Zoe",
+      "lastName": "Lofgren",
+      "office": "Zoe Lofgren",
+      "district": "CA18",
+      "owner": "Spouse",
+      "assetDescription": "Accenture Plc Class A Ordinary Shares",
+      "assetType": "Stock",
+      "type": "Sale (Full)",
+      "amount": "$1,001 - $15,000",
+      "capitalGainsOver200USD": "False",
+      "comment": "",
+      "link": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2023/20023083.pdf"
+    }
+  ]
+}

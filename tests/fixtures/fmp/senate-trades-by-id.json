@@ -1,0 +1,47 @@
+{
+  "endpoint": "senate-trades-by-id",
+  "params": {
+    "senateID": "T000278",
+    "page": 0,
+    "limit": 2
+  },
+  "fetchedAt": "2026-09-14T13:07:24.398130+00:00",
+  "payload": [
+    {
+      "symbol": "HUMA",
+      "senateID": "T000278",
+      "disclosureDate": "2026-08-05",
+      "transactionDate": "2024-03-21",
+      "firstName": "Thomas Hawley",
+      "lastName": "Tuberville",
+      "office": "Tommy Tuberville",
+      "district": "AL",
+      "owner": "Joint",
+      "assetDescription": "HUMACYTE INC (1)",
+      "assetType": "Stock",
+      "type": "Purchase",
+      "amount": "$1,001 - $15,000",
+      "capitalGainsOver200USD": "False",
+      "comment": "",
+      "link": "https://efdsearch.senate.gov/search/view/ptr/548cacbf-7cf2-42cb-9f23-71250938caae/"
+    },
+    {
+      "symbol": "XLU",
+      "senateID": "T000278",
+      "disclosureDate": "2026-08-05",
+      "transactionDate": "2025-12-17",
+      "firstName": "Thomas Hawley",
+      "lastName": "Tuberville",
+      "office": "Tommy Tuberville",
+      "district": "AL",
+      "owner": "Self",
+      "assetDescription": "The Utilities Select Sector SPDR Fund",
+      "assetType": "ETF",
+      "type": "Purchase",
+      "amount": "$15,001 - $50,000",
+      "capitalGainsOver200USD": "False",
+      "comment": "",
+      "link": "https://efdsearch.senate.gov/search/view/ptr/57cf1745-e3dd-4afd-8685-228153848631/"
+    }
+  ]
+}

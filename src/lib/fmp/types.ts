@@ -1,0 +1,105 @@
+export type FmpRow = Record<string, unknown>;
+export type FmpEndpoint =
+  | "senate-profile" | "senate-net-worth" | "senate-net-worth-aggregated"
+  | "house-trades-by-id" | "senate-trades-by-id" | "house-latest" | "senate-latest";
+export type FmpParams = { senateID?: string; page?: number; limit?: number };
+export type IngestionIssue = {
+  code: "http" | "payload" | "network" | "storage" | "unconfigured" | "repeated-page" | "page-limit" | "identity" | "schema";
+  endpoint: FmpEndpoint;
+  page: number;
+  httpStatus?: number;
+};
+export type SourcePage = {
+  endpoint: FmpEndpoint;
+  params: FmpParams;
+  fetchedAt: string;
+  payloadHash: string;
+  rowCount: number;
+};
+export type SourceRow = { row: FmpRow; source: SourcePage; ordinal: number };
+export type Batch = {
+  endpoint: FmpEndpoint;
+  status: "complete" | "partial" | "failed";
+  complete: boolean;
+  rows: SourceRow[];
+  pages: SourcePage[];
+  issues: IngestionIssue[];
+};
+export type Person = {
+  id: string;
+  provider: "fmp";
+  providerId: string;
+  name: string;
+  firstName: string | null;
+  lastName: string | null;
+  chamber: "house" | "senate" | "unknown";
+  position: string | null;
+  party: string | null;
+  state: string | null;
+  active: boolean | null;
+  image: string | null;
+};
+export type ItemKind = "stock" | "etf" | "option" | "income" | "liability" | "other";
+export type Band = { low: number | null; high: number | null };
+export type DisclosedItem = {
+  id: string;
+  personId: string;
+  year: number | null;
+  referenceDate: string | null;
+  filingDate: string | null;
+  availableAt: null;
+  name: string | null;
+  ticker: string | null;
+  kind: ItemKind;
+  section: string | null;
+  category: string | null;
+  assetType: string | null;
+  formType: string | null;
+  owner: string | null;
+  comment: string | null;
+  debtDetails: unknown;
+  valueRange: Band;
+  providerValue: number | null;
+  incomeRange: Band;
+  providerIncome: number | null;
+  incomeType: string | null;
+  sourceUrl: string | null;
+  source: SourcePage;
+  ordinal: number;
+};
+export type Activity = {
+  id: string;
+  personId: string | null;
+  name: string | null;
+  ticker: string | null;
+  kind: ItemKind;
+  owner: string | null;
+  transactionDate: string | null;
+  disclosureDate: string | null;
+  event: string | null;
+  amount: Band;
+  amountLabel: string | null;
+  assetType: string | null;
+  comment: string | null;
+  sourceUrl: string | null;
+  source: SourcePage;
+  ordinal: number;
+};
+export type Snapshot = {
+  id: string;
+  personId: string;
+  year: number | null;
+  referenceDate: string | null;
+  filingDate: string | null;
+  sourceUrl: string | null;
+  complete: boolean;
+  partial: boolean;
+  issues: string[];
+  items: DisclosedItem[];
+  stocks: DisclosedItem[];
+  etfs: DisclosedItem[];
+  options: DisclosedItem[];
+  income: DisclosedItem[];
+  liabilities: DisclosedItem[];
+  other: DisclosedItem[];
+};

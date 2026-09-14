@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# Private provider archives and local validation output (never web-served)
+/.data/
+
 # testing
 /coverage
 

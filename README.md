@@ -4,14 +4,15 @@ Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
 
 **Form 4 / Congress disclosure → full disclosed book per filer → copy one print or buy that person's index → user-signed swap into the name's Solana mint (xStock, else Backpack token) → rebalance on the next filing.**
 
-This repository is a Next.js App Router app. **Demo / production host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev) (Barely Stable on Hetzner + Traefik). Do not use a Vercel URL as the public demo. SEC EDGAR needs no key and is always live; AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
+This repository is a Next.js App Router app. **Demo / production host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev) (Barely Stable on Hetzner + Traefik). Do not use a Vercel URL as the public demo. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 
 ## Product scope
 
 In V1:
 
 - **SEC EDGAR** is the primary Form 4 source (ticker → CIK → recent `4` filings → XML → open-market P/S). No key.
-- **AInvest Congressional Trades** is the primary House/Senate source (`AINVEST_API_KEY`, free tier)
+- **FMP** supplies the person-first backend directory, annual source books and separate PTR activity (`FMP_API_KEY`); see [FMP person backend](#fmp-person-backend). This backend does not redesign or replace the existing frontend.
+- **AInvest Congressional Trades** remains the primary House/Senate **legacy tape** source (`AINVEST_API_KEY`, free tier)
 - Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
 - Home is **indexes first**: crowd baskets and person indexes, shown only when enough real filings back them (`src/lib/fomo/index-readiness.ts`); the raw tape is `/feed`
 - Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. The "too thin" gate applies only to **Buy this index**; a profile renders with one holding
@@ -24,7 +25,7 @@ In V1:
 
 Out of V1:
 
-- Quiver, FMP, EODHD, Bloomberg (paid or too small to be a primary source)
+- Quiver, EODHD, Bloomberg
 - Ondo Global Markets as a third venue (its mint list needs a key we do not hold; Jupiter search caps at 20 — we do not invent mints)
 - Superstate Opening Bell (KYC-allowlisted wallets), PreStocks (pre-IPO SPVs), Forge / Nasdaq Private
 - Meteora / Symmetry / a custom on-chain program
@@ -44,7 +45,8 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | App | Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui |
 | Auth / wallet | Real `@privy-io/react-auth` Solana when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet otherwise |
 | Insiders | `src/lib/disclosures/edgar.ts` (+ pure `edgar-parse.ts`) primary; `form4.ts` orchestrates EDGAR → Form4API → mock. Issuer set: `edgarUniverse()` (`EDGAR_UNIVERSE=wide`, `EDGAR_TICKERS`) |
-| Congress | `src/lib/disclosures/ainvest.ts` (+ pure `ainvest-parse.ts`) primary; `congress.ts` orchestrates AInvest → Form4API → mock. AInvest is ticker-scoped (no per-member pull), so the crawl walks `buildCongressUniverse()` (`src/lib/disclosures/universe.ts`) and groups rows by filer |
+| Person-first Congress | `src/lib/fmp/` — FMP stable person IDs, private raw archive, annual source snapshots and separate activity. No PTR-netted current holdings or fabricated rows. |
+| Congress tape | `src/lib/disclosures/ainvest.ts` (+ pure `ainvest-parse.ts`) primary; `congress.ts` orchestrates AInvest → Form4API → mock. AInvest is ticker-scoped (no per-member pull), so the crawl walks `buildCongressUniverse()` (`src/lib/disclosures/universe.ts`) and groups rows by filer |
 | Book | `src/lib/fomo/book.ts` (pure): running net of PTR bands per ticker, Form 4 shares-after × price; `insights.ts` tags venue + copy eligibility |
 | Buy catalog | `src/lib/venues/solana-catalog.ts` — live xStocks + Backpack mints, `catalog-snapshot.json` fallback; `resolve.ts` picks xStock → Backpack → none; `prices.ts` Jupiter Price v3 |
 | Swaps | Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` (live keyless or keyed; stub in dev) |
@@ -56,6 +58,8 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 API routes:
 
 - `GET /api/health` — boolean adapter flags (`edgar` / `ainvest` / `form4` / `jupiter` / `helius` / `privy` / `supabase`) plus derived `modes` (which path each lane takes) and `catalog` (mint / ticker counts, per-issuer `live` vs `snapshot`); never echoes secret values
+- `GET /api/people?q=...` — searchable full FMP directory; source pagination/partial status, no featured-person allowlist
+- `GET /api/people/[id]/portfolio` — stable FMP `senateID` (both chambers), all annual document versions, separate activity, aggregate history, catalog tags and completeness flags
 - `GET /api/disclosures` — insider + congress tape with per-lane provenance in `lanes.{insiders,congress}` (`source`, `live`, `count`, `note`) and `catalog` feed status; every row carries `venue` / `venueSymbol` / `mint` / `mintDecimals` / `tradeEligible`
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
 - `GET /api/disclosures/[id]` — inspect payload
@@ -74,6 +78,18 @@ UI routes:
 - `/disclosures/[id]` inspect
 - `/trade/[id]` one-print copy + approve/sign stub
 - `/positions` tracked book
+
+## FMP person backend
+
+The backend contract is documented in [`src/lib/fmp/README.md`](src/lib/fmp/README.md). It is independent of the legacy `/api/profiles` and PTR-netted `src/lib/fomo/book.ts`; the frontend and existing swap routes are unchanged. Do **not** feed FMP activity into that legacy book calculator.
+
+Set server-only `FMP_API_KEY`, or use `$HOME/.config/fmp-api-key` for local development. Requests use the `apikey` **header**, never a browser secret or query credential. Raw observations (including errors) are redacted and archived under `.data/fmp` with fetch time, request parameters, SHA-256 and page metadata (directory `0700`, files `0600`). `.data` is excluded from git, image builds and deployment rsync; Compose uses a private named volume so observations survive container replacement. No raw archive is web-served. Ensure that directory/volume is writable and back it up privately; storage failure is an ingestion failure.
+
+Live integration verification on 2026-09-14 returned **540 real directory entries** after a verified empty page, and **369 PTR activity rows** for `L000397`. These are dated observations, not hard-coded expected provider sizes. The annual endpoint repeated the **same 250 rows** on page 1, ignoring pagination in that probe. The implementation retains the rows and flags `repeated-page` / `partial`; it does **not** advertise a complete annual book or index input. The annual aggregate endpoint is a documented unpaginated yearly series and is fetched once.
+
+Only a complete, unambiguous annual document version can supply `indexInput` (stocks and ETFs, no size/tradability cap). Separate years are never summed; multiple documents for one year remain unreconciled versions. Later PTRs never rewrite that input. Annual names in the live schema have **no dedicated ticker**: apparent symbols inside free-text names are not automatically approved identity mappings. Such rows remain visible and unresolved. Explicit symbols can be mapped by the pure catalog function (xStock then Backpack); options/bonds/income/liabilities cannot become stock exposures just because their symbol matches. A mint tag is availability, **not execution approval**.
+
+A profile does not guarantee an annual book. Failed sources remain failed, partial sources remain partial, and there is no mock/famous-person fallback. This lane supplies data and a candidate annual **input**, not published weights, a funded vault, historical performance, or an executable index.
 
 ## Buy catalog
 
@@ -141,7 +157,8 @@ npm run typecheck
 Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.env*.local`. See `.env.example` for empty placeholders:
 
 - `SEC_EDGAR_USER_AGENT` — contact string sent to SEC EDGAR (sane default); `EDGAR_FILINGS_PER_TICKER`, `EDGAR_DISABLED`, `EDGAR_UNIVERSE=wide`, `EDGAR_TICKERS`
-- `AINVEST_API_KEY` — AInvest Congressional Trades (primary congress source); crawl width `AINVEST_UNIVERSE=wide|catalog|full`, `AINVEST_TICKERS`, depth `AINVEST_PAGES_PER_TICKER`, `AINVEST_PAGE_SIZE`, `AINVEST_CONCURRENCY`, `AINVEST_TICKER_TTL_MINUTES`
+- `FMP_API_KEY` — server-only FMP person directory, annual books and activity; local fallback `$HOME/.config/fmp-api-key`
+- `AINVEST_API_KEY` — AInvest Congressional Trades (primary legacy congress tape source); crawl width `AINVEST_UNIVERSE=wide|catalog|full`, `AINVEST_TICKERS`, depth `AINVEST_PAGES_PER_TICKER`, `AINVEST_PAGE_SIZE`, `AINVEST_CONCURRENCY`, `AINVEST_TICKER_TTL_MINUTES`
 - `XSTOCKS_CATALOG_DISABLED` / `BACKPACK_CATALOG_DISABLED` — `1` drops an issuer from the buy catalog
 - `FORM4API_KEY` — Form4API fallback (insiders + House PTRs)
 - `STOCKLANA_ALLOW_MOCKS` — `1`/`0` to force labelled fixtures on/off (default: dev on, prod off)
@@ -159,7 +176,8 @@ Do not commit real keys. Live vs fixture:
 | Adapter | On | Off |
 | --- | --- | --- |
 | Insiders | SEC EDGAR (`edgar-form4`, always) → Form4API (`form4`, `FORM4API_KEY`) | `mock-form4` in dev only; empty lane in prod |
-| Congress | AInvest (`ainvest-congress`, `AINVEST_API_KEY`) → Form4API (`congress`, `FORM4API_KEY`) | `mock-congress` in dev only; empty lane in prod |
+| Person-first Congress | FMP (`FMP_API_KEY` or local key file) | explicit unavailable/partial response; never fixtures |
+| Congress tape | AInvest (`ainvest-congress`, `AINVEST_API_KEY`) → Form4API (`congress`, `FORM4API_KEY`) | `mock-congress` in dev only; empty lane in prod |
 | Jupiter `/order` + `/execute` | Live Swap V2 (prod default, or `JUPITER_API_KEY` / `JUPITER_MODE=live`) | stub quote/fill (dev default) |
 | Helius RPC | `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` (server + `/api/rpc` proxy) | public Solana RPC |
 | Privy | Real `@privy-io/react-auth` Solana provider (`NEXT_PUBLIC_PRIVY_APP_ID`) | stub wallet |

@@ -1,4 +1,6 @@
 .git
+.data
+tests/fixtures/fmp
 .next
 node_modules
 .env
