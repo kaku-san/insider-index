@@ -3,9 +3,10 @@ import { PeopleError, type PeopleService } from "./service.ts";
 import { personId } from "./fmp-parse.ts";
 import type { Person } from "./types.ts";
 import type { PublishedTradeIndex } from "./trade-index.ts";
+import { indexNames } from "./index-name.ts";
 
 export type StoredPortfolio = Awaited<ReturnType<PeopleService["portfolio"]>>;
-export type StoredPerson = Person & { bookState: string; publishedIndexHash: string | null };
+export type StoredPerson = Person & { bookState: string; publishedIndexHash: string | null; indexName?: string };
 type Directory = Omit<Awaited<ReturnType<PeopleService["directory"]>>, "people"> & { people: StoredPerson[]; storage: "supabase"; savedAt: string | null };
 
 /** Exhaust REST pages rather than silently accepting Supabase's row cap. */
@@ -19,7 +20,11 @@ export async function readRows<T>(load: (from: number, to: number) => PromiseLik
   }
 }
 export function createStoredPeopleService(db: SupabaseClient) {
-  async function publishedIndex(hash: string): Promise<PublishedTradeIndex | null> {
+  async function savedIndexNames() {
+    const rows = await readRows<{ payload: Person }>((from, to) => db.from("people").select("payload").order("id").range(from, to));
+    return indexNames(rows.map((row) => row.payload));
+  }
+  async function publishedIndex(hash: string, names?: Map<string, string>): Promise<PublishedTradeIndex | null> {
     if (!/^[a-f0-9]{64}$/.test(hash)) throw new PeopleError(400, "invalid-index-id");
     const { data, error } = await db.from("index_versions").select("hash,person_id,period,version,status,published_at,definition,constituents(*)").eq("hash", hash).eq("status", "CANDIDATE").eq("definition->>basis", "disclosed-trade-activity").maybeSingle();
     if (error) throw new PeopleError(502, "saved-data-unavailable");
@@ -28,7 +33,9 @@ export function createStoredPeopleService(db: SupabaseClient) {
     // A staged/failed publication must never masquerade as a live target.
     if (!index.constituents.length || index.constituents.reduce((sum, c) => sum + c.weight_bps, 0) !== 10_000) throw new PeopleError(502, "incomplete-index-publication");
     index.constituents.sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
-    return index;
+    const indexName = (names ?? await savedIndexNames()).get(index.person_id);
+    if (!indexName) throw new PeopleError(502, "saved-data-unavailable");
+    return { ...index, indexName };
   }
   async function latestHashes() {
     const rows = await readRows<{ hash: string; person_id: string }>((from, to) => db.from("index_versions").select("hash,person_id").eq("status", "CANDIDATE").eq("definition->>basis", "disclosed-trade-activity").order("version", { ascending: false }).order("hash").range(from, to));
@@ -47,12 +54,13 @@ export function createStoredPeopleService(db: SupabaseClient) {
       if (meta.error) throw new PeopleError(502, "saved-data-unavailable");
       const saved = meta.data?.payload as Omit<Directory, "people"> | undefined;
       const complete = saved?.complete === true && saved.ingestion.count === rows.length;
+      const names = indexNames(rows.map((row) => row.payload));
       return {
         source: "fmp", storage: "supabase", savedAt: meta.data?.saved_at ?? null,
         complete, partial: !complete, unnormalizedCount: saved?.unnormalizedCount ?? 0,
         ingestion: saved?.ingestion ?? { status: "partial", complete: false, partial: true, count: rows.length, pages: [], issues: [] },
         coverage: "Saved FMP directory; book and activity coverage are reported separately for each person.",
-        people: rows.map(({ payload, book_state }) => ({ ...payload, bookState: book_state, publishedIndexHash: hashes.get(payload.id) ?? null })).sort((a, b) => a.name.localeCompare(b.name)),
+        people: rows.map(({ payload, book_state }) => ({ ...payload, bookState: book_state, publishedIndexHash: hashes.get(payload.id) ?? null, indexName: names.get(payload.id)! })).sort((a, b) => a.name.localeCompare(b.name)),
       };
     },
     async portfolio(id: string) {
@@ -62,7 +70,10 @@ export function createStoredPeopleService(db: SupabaseClient) {
       if (!data) throw new PeopleError(404, "person-not-found");
       const { data: latest, error: indexError } = await db.from("index_versions").select("hash").eq("person_id", id).eq("status", "CANDIDATE").eq("definition->>basis", "disclosed-trade-activity").order("version", { ascending: false }).order("hash").limit(1).maybeSingle();
       if (indexError) throw new PeopleError(502, "saved-data-unavailable");
-      const index = latest ? await publishedIndex(latest.hash) : null;
+      const names = await savedIndexNames();
+      const indexName = names.get(id);
+      if (!indexName) throw new PeopleError(502, "saved-data-unavailable");
+      const index = latest ? await publishedIndex(latest.hash, names) : null;
       return {
         ...(data.portfolio as StoredPortfolio | null),
         person: data.payload as Person, source: "fmp" as const, storage: "supabase" as const,
@@ -71,7 +82,7 @@ export function createStoredPeopleService(db: SupabaseClient) {
         complete: data.portfolio?.complete ?? false, partial: data.portfolio?.partial ?? true,
         snapshots: (data.portfolio?.snapshots ?? []) as StoredPortfolio["snapshots"],
         activity: (data.portfolio?.activity ?? []) as StoredPortfolio["activity"],
-        publishedIndex: index,
+        publishedIndex: index, indexName,
       };
     },
   };

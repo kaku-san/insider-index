@@ -1,37 +1,61 @@
 "use client";
-import {useState} from "react";
-import Link from "next/link";
-import {useResource} from "@/lib/frontend/use-resource";
-import {PREVIEW_MODE,writeApi,errorText} from "@/lib/frontend/api";
-import {usePrivySolana} from "./providers/privy-provider";
-import {useUI} from "./providers/ui-provider";
-import {PersonAvatar} from "./person-avatar";
-import {CopyButton} from "./copy-button";
-import {FollowButton} from "./follow-button";
-import {SignalCard} from "./signal-card";
-import {PortfolioDonut} from "./portfolio-charts";
-import {HoldingsTable} from "./holdings-table";
-import {PageError,Skeleton,PartyBadge,Breadcrumb,EmptyState} from "./social/shared";
-import {Icon} from "./social/icon";
-import type {FomoProfile,CopySignal,HorizonKey} from "@/lib/disclosures/types";
-import type {Follow} from "@/lib/frontend/contracts";
-import {formatUsdRange} from "@/lib/format";
-import {indexReadiness,readinessSummary} from "@/lib/fomo/index-readiness";
-export function ProfileView({id}: {id:string}) {
- const wallet=usePrivySolana(),ui=useUI(),resource=useResource<{profile:FomoProfile;trades:CopySignal[]}>(`/api/profiles/${encodeURIComponent(id)}`),followsRes=useResource<{follows:Follow[]}>(wallet.solanaAddress?`/api/follows?wallet=${encodeURIComponent(wallet.solanaAddress)}`:null);
- const [busy,setBusy]=useState(false),[horizon,setHorizon]=useState<HorizonKey>("90d"),[tab,setTab]=useState("book"),[followError,setFollowError]=useState<string|null>(null);
- const profile=resource.data?.profile,trades=resource.data?.trades??[],follow=followsRes.data?.follows.find(f=>f.profileId===id);
- async function setAutoCopy(autoCopy:boolean) {
-  if(PREVIEW_MODE||!wallet.solanaAddress)return;
-  setBusy(true);setFollowError(null);
-  try{await writeApi("/api/follows",{wallet:wallet.solanaAddress,profileId:id,autoCopy,unfollow:false});followsRes.reload();ui.toast(autoCopy?"Their next eligible buy will queue for your review. Nothing auto-executes.":"Queue turned off.");}catch(e){setFollowError(errorText(e));}finally{setBusy(false);}
- }
- async function share(){try{await navigator.clipboard.writeText(location.href);ui.toast("Profile link copied.");}catch{ui.toast("Copy this profile’s URL from the address bar.");}}
- if(resource.loading&&!profile)return <Skeleton/>;if(resource.error&&!profile)return <PageError error={resource.error} retry={resource.reload}/>;if(!profile)return <EmptyState title="Profile not found." description="This public profile is unavailable."/>;
- const insight=profile.insights.find(i=>i.horizon===horizon),readiness=indexReadiness(profile.index,trades),book=profile.portfolio,tradable=book.filter(h=>h.copyEligible),held=book.filter(h=>h.status!=="exited"&&h.status!=="sold"),bookLow=held.reduce((s,h)=>s+(h.valueLow??0),0),bookHigh=held.reduce((s,h)=>s+(h.valueHigh??0),0),latestEligible=trades.find(t=>t.tradeEligible&&t.side!=="other")??null;
- return <div className="profile-page"><Breadcrumb label="Public profile"/><section className="profile-hero"><div className={`profile-cover ${profile.party==="Republican"?"cover-red":profile.party===null?"cover-violet":""}`}><span className="cover-word">FOLLOW THE FILINGS.</span><span className="cover-star">✳</span><span className="cover-label"><Icon name="file" size={13}/>{PREVIEW_MODE?"ILLUSTRATIVE PROFILE":"PUBLIC DISCLOSURE PROFILE"}</span></div><div className="profile-identity"><PersonAvatar name={profile.name} imageUrl={profile.imageUrl} size="xl"/><div className="profile-identity-main"><div className="profile-title-row"><h1>{profile.name}</h1><PartyBadge party={profile.party} kind={profile.kind}/></div><p>{profile.handle}<span>·</span>{profile.title}</p><span className="follow-count"><Icon name="people" size={14}/>{profile.followers.toLocaleString()} followers{PREVIEW_MODE?" · example count":""}</span></div><button className="icon-button" aria-label="Share profile" onClick={()=>void share()}><Icon name="share" size={19}/></button></div><div className="profile-bottom"><p>Follow to see their filings first. Copy a trade only when you approve it.</p><div className="profile-buttons"><FollowButton profileId={id} follow={follow} onChanged={followsRes.reload} onError={setFollowError}/><CopyButton signalId={latestEligible?.id??profile.latestEligibleSignalId} enabled={Boolean(latestEligible??profile.latestEligibleSignalId)} venue={latestEligible?.venue??"xstock"} label="Copy latest trade"/>{readiness.ready?<Link className="button secondary" href={`/indexes/${encodeURIComponent(profile.index.id)}`}><Icon name="grid" size={15}/>Buy their index</Link>:null}</div></div></section>
- {followError||followsRes.error?<div className="notice error" role="alert">{followError??followsRes.error}</div>:null}
- {follow&&!PREVIEW_MODE?<div className="queue-setting"><div><Icon name="bell" size={16}/><span>Queue their next eligible buy <small>Review and sign, never autopilot.</small></span></div><button className={`toggle ${follow.autoCopy?"on":""}`} role="switch" aria-checked={follow.autoCopy} aria-label="Queue next copy for review" disabled={busy} onClick={()=>void setAutoCopy(!follow.autoCopy)}><span/></button></div>:null}
- <section className="profile-performance"><div className="section-heading"><h2>The numbers, not the narrative.</h2><div className="segmented-control" aria-label="Activity horizon">{(["24h","30d","90d"] as HorizonKey[]).map(h=><button key={h} className={horizon===h?"selected":""} aria-pressed={horizon===h} onClick={()=>setHorizon(h)}>{h}</button>)}</div></div><div className="stat-grid"><div className="stat-card"><span>Disclosed volume · {horizon}</span><strong>{insight&&insight.trades>0?formatUsdRange(insight.volumeLow,insight.volumeHigh):"—"}</strong><small>{insight&&insight.trades>0&&insight.volumeUsd==null?"Filed without a size band":"Sum of reported size bands, not live volume"}</small></div><div className="stat-card"><span>Filings · {horizon}</span><strong>{insight?.trades??"—"}</strong><small>Over selected period</small></div><div className="stat-card"><span>Est. disclosed book</span><strong>{bookHigh>0?formatUsdRange(bookLow,bookHigh):"—"}</strong><small>{book.length} name{book.length===1?"":"s"} · {held.length} held · {tradable.length} with a Solana mint{bookHigh>0?" · sum of filed bands, not a brokerage balance":" · no sized holding on record"}</small></div><div className="stat-card"><span>Return · hit rate</span><strong>—</strong><small>Shown only once computed from dated trades and a price series. Never estimated.</small></div></div></section>
- <div className="profile-content-grid"><div><div className="section-heading activity-heading"><div className="text-tabs" role="group" aria-label="Profile content"><button aria-pressed={tab==="book"} className={tab==="book"?"selected":""} onClick={()=>setTab("book")}>Disclosed book <span>{book.length}</span></button><button aria-pressed={tab==="activity"} className={tab==="activity"?"selected":""} onClick={()=>setTab("activity")}>The paper trail <span>{trades.length}</span></button></div></div>{tab==="book"?<section className="panel book-panel"><div className="panel-heading"><h3>Every name on their filings</h3><span className="outlined-pill">{PREVIEW_MODE?"Illustrative":profile.kind==="politician"?"STOCK Act PTRs":"SEC Form 4"}</span></div>{book.length?<HoldingsTable holdings={book}/>:<EmptyState title="No disclosed positions yet." description="Holdings appear here as soon as a filing with a ticker lands. We never guess a book."/>}<p className="muted small-text">{profile.kind==="politician"?"PTRs report dollar bands, not share counts. Each position is the running net of disclosed buys minus sells, shown as a range. Sells with no earlier buy on record are listed as “sold” with an unknown size.":"Form 4 positions are the shares owned after the newest print, valued at that print’s price."} Names we can’t route yet stay listed; only the venue tag decides whether you can copy them.</p></section>:<div className="signal-list">{trades.length?trades.map(t=><SignalCard key={t.id} signal={t}/>):<EmptyState title="No filings yet." description="Public disclosures will appear here when available."/>}</div>}<section className="panel chart-panel"><div className="panel-heading"><h3>Performance</h3><span className="outlined-pill">Not yet computed</span></div><p className="chart-disclaimer">We chart a return only when it can be computed from dated trades and a real price series. Until then there is no curve here — the book above and the paper trail are the facts.</p></section></div><aside><section className="panel profile-index-panel"><span className="mini-label">{readiness.ready?"THEIR BOOK, AS ONE BASKET.":"NOT A BASKET YET."}</span><h3>{profile.index.name}</h3>{profile.index.constituents.length?<PortfolioDonut holdings={profile.index.constituents.map(h=>({ticker:h.ticker,weightPct:h.weightPct,venueSymbol:h.venueSymbol,valueUsd:h.valueUsd}))} title="Tradable basket" unit="names"/>:null}<span className={`readiness-pill ${readiness.ready?"ready":"building"}`}><Icon name={readiness.ready?"check":"clock"} size={12}/>{readiness.ready?readinessSummary(readiness):"Too thin to buy as a basket"}</span><p>{readiness.ready?"The tradable names in their disclosed book, weighted by estimated size, in one user-signed basket. Each leg is tagged by the mint it swaps into (xStock or Backpack token).":`${readiness.need} The full book is still shown on the left — follow them and copy a single trade when they buy.`}</p>{readiness.ready?<Link href={`/indexes/${encodeURIComponent(profile.index.id)}`} className="button primary full-width">Buy the index<Icon name="arrow" size={16}/></Link>:<CopyButton signalId={latestEligible?.id??profile.latestEligibleSignalId} enabled={Boolean(latestEligible??profile.latestEligibleSignalId)} venue={latestEligible?.venue??"xstock"} label="Copy latest trade"/>}<span className="index-card-caption"><Icon name="shield" size={13}/>{readiness.ready?"You approve every rebalance":"You approve every copy"}</span></section><div className="rail-fineprint"><Icon name="info" size={16}/><p>{PREVIEW_MODE?"Fictional figures for UI review. This page makes no claim about actual trading or returns.":"Tracking does not imply affiliation, endorsement, or that the named person placed every household transaction. Ranges come from the filings; nothing is a brokerage balance."}</p></div></aside></div></div>;
+
+import { useResource } from "@/lib/frontend/use-resource";
+import { PREVIEW_MODE } from "@/lib/frontend/api";
+import type { FomoProfile, CopySignal } from "@/lib/disclosures/types";
+import { disclosedRange } from "@/lib/frontend/disclosure-labels";
+import { PageError, Skeleton, EmptyState } from "./social/shared";
+import { FmpPerson } from "./fmp-portfolio";
+import {
+  AllocationPanel, FilingLink, MissingValue, PerformancePanel, PortfolioLayout,
+  TableRegion, portfolioStyles as styles,
+} from "./person-portfolio";
+
+type ProfileData = { profile: FomoProfile; trades: CopySignal[] };
+
+/** Legacy URLs share the portfolio layout; Congress resolves to its saved FMP book. */
+export function ProfileView({ id, initialData }: { id: string; initialData?: ProfileData }) {
+  const resource = useResource<ProfileData>(`/api/profiles/${encodeURIComponent(id)}`, initialData);
+  const profile = resource.data?.profile;
+  if (resource.loading && !profile) return <Skeleton />;
+  if (resource.error && !profile) return <PageError error={resource.error} retry={resource.reload} />;
+  if (!profile) return <EmptyState title="Profile not found." description="This public profile is unavailable." />;
+  if (profile.kind === "politician" && /^[A-Z][0-9]{6}$/.test(profile.cikOrBioguide)) {
+    return <FmpPerson key={profile.cikOrBioguide} id={profile.cikOrBioguide} />;
+  }
+  const trades = [...(resource.data?.trades ?? [])].sort((a, b) => b.transactionDate.localeCompare(a.transactionDate));
+  return <PortfolioLayout id={id} name={profile.name} image={profile.imageUrl} context={profile.title}
+    strategy="Follow publicly disclosed positions and the trades behind them."
+    count={profile.portfolio.length || null} countNote="Names on the filing record · not live holdings"
+    notice={PREVIEW_MODE ? <div className={styles.notice}>Illustrative preview. These are fictional figures, not an actual portfolio.</div> : resource.error ? <div className={styles.notice} role="alert">Could not refresh this profile. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : undefined}>
+    <PerformancePanel points={profile.curve} />
+    <section className={styles.panel} aria-labelledby="holdings-title">
+      <div className={styles.sectionHead}><h2 id="holdings-title">Current holdings</h2><span className={styles.badge}>Disclosed book · not live</span></div>
+      <p className={styles.caption}>{profile.kind === "politician" ? "Reported purchase and sale ranges, not share counts or a verified current balance." : "Positions reported after the latest Form 4 print, valued at that disclosed print’s price—not a current market quote."} Every disclosed name stays visible, including sold and exited positions.</p>
+      {profile.portfolio.length ? <TableRegion label="Disclosed positions; scroll for all columns"><table className={styles.table}>
+        <thead><tr><th scope="col">Ticker / asset</th><th scope="col" className={styles.number}>Last price</th><th scope="col" className={styles.number}>Disclosed value</th><th scope="col" className={styles.number}>Weight</th></tr></thead>
+        <tbody>{profile.portfolio.map((holding) => <tr key={holding.ticker}>
+          <td><strong>{holding.ticker}</strong><small>{holding.issuerName}</small><small>{holding.status} · latest trade {holding.lastTradeAt.slice(0, 10)}</small></td>
+          <td className={styles.number}><MissingValue /></td>
+          <td className={styles.number}>{disclosedRange({ low: holding.valueLow, high: holding.valueHigh })}</td>
+          <td className={styles.number}><MissingValue /></td>
+        </tr>)}</tbody>
+      </table></TableRegion> : <div className={styles.empty}><h3>No disclosed book available</h3><p>Missing filings do not mean the person owns nothing.</p></div>}
+      <p className={styles.caption}>No current price feed or published target weights are available for this book.</p>
+    </section>
+    <AllocationPanel />
+    <section className={styles.panel} aria-labelledby="activity-title">
+      <div className={styles.sectionHead}><h2 id="activity-title">Allocation history / trades</h2><span className={styles.badge}>{trades.length} disclosures</span></div>
+      <p className={styles.caption}>Reported transactions, not executed vault rebalances.</p>
+      {trades.length ? <TableRegion label="Disclosed trade history"><table className={styles.table}>
+        <thead><tr><th scope="col">Trade date</th><th scope="col">Ticker</th><th scope="col">Activity</th><th scope="col" className={styles.number}>Amount range</th></tr></thead>
+        <tbody>{trades.map((trade) => <tr key={trade.id}>
+          <td>{trade.transactionDate.slice(0, 10)}<small>Disclosed {trade.filedAt.slice(0, 10)}</small><FilingLink url={null} /></td>
+          <td><strong>{trade.ticker}</strong><small>{trade.issuerName}</small></td>
+          <td><span className={styles.event} data-side={trade.side}>{trade.side === "buy" ? "Buy" : trade.side === "sell" ? "Sell" : "Other"}</span></td>
+          <td className={styles.number}>{disclosedRange({ low: trade.amountLow, high: trade.amountHigh })}</td>
+        </tr>)}</tbody>
+      </table></TableRegion> : <div className={styles.empty}><h3>No trade history available</h3><p>Transactions will appear when disclosure records are available.</p></div>}
+    </section>
+  </PortfolioLayout>;
 }

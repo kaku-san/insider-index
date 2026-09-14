@@ -42,6 +42,7 @@ test("partial saved books return unchanged with no FMP request or archive; absen
   const service = createStoredPeopleService(database((url) => {
     if (url.pathname.endsWith("index_versions")) return null;
     assert.ok(url.pathname.endsWith("people"));
+    if (!url.searchParams.has("id")) return [{ payload: person }];
     return { payload: person, portfolio: { person, snapshots, activity: [], complete: false, partial: true, bookComplete: false, state: "partial-disclosure-only" }, saved_at: "2026-09-14" };
   }));
   const response = await createPeopleHandlers(service).portfolio(new Request("https://app.test"), { params: Promise.resolve({ id: person.id }) });
@@ -51,7 +52,7 @@ test("partial saved books return unchanged with no FMP request or archive; absen
   assert.equal(body.bookComplete, false);
   assert.deepEqual(body.snapshots, original);
   assert.deepEqual(snapshots, original);
-  const missing = await createStoredPeopleService(database((url) => url.pathname.endsWith("index_versions") ? null : { payload: person, portfolio: null, saved_at: null })).portfolio(person.id);
+  const missing = await createStoredPeopleService(database((url) => url.pathname.endsWith("index_versions") ? null : !url.searchParams.has("id") ? [{ payload: person }] : { payload: person, portfolio: null, saved_at: null })).portfolio(person.id);
   assert.equal(missing.state, "not-ingested");
   assert.equal(missing.complete, false);
   assert.deepEqual(missing.snapshots, []);
@@ -79,14 +80,36 @@ test("a partial saved annual book can show a fully published one-mint target", a
   const hash = "b".repeat(64);
   const index = { hash, person_id: person.id, constituents: [{ ticker: "AAPL", mint: "saved-mint", weight_bps: 10000 }] };
   const db = database((url) => {
-    if (url.pathname.endsWith("people")) return { payload: person, portfolio: { snapshots: [], activity: [], bookComplete: false, partial: true, complete: false, state: "partial-disclosure-only" } };
+    if (url.pathname.endsWith("people")) return url.searchParams.has("id") ? { payload: person, portfolio: { snapshots: [], activity: [], bookComplete: false, partial: true, complete: false, state: "partial-disclosure-only" } } : [{ payload: person }];
     return url.searchParams.has("hash") ? index : { hash };
   });
   const result = await createStoredPeopleService(db).portfolio(person.id);
   assert.equal(result.bookComplete, false);
   assert.equal(result.partial, true);
   assert.equal(result.publishedIndex?.constituents[0].weight_bps, 10000);
+  assert.equal(result.indexName, "Nancy P Index");
+  assert.equal(result.publishedIndex?.indexName, result.indexName);
 });
+test("API names use the full directory for collisions and agree across directory, book and target", async () => {
+  const hash = "d".repeat(64);
+  const other = { ...person, id: "P000198", name: "Nancy Park", lastName: "Park" };
+  const index = { hash, person_id: person.id, constituents: [{ ticker: "TEST", mint: "test-mint", weight_bps: 10000 }] };
+  const service = createStoredPeopleService(database((url) => {
+    if (url.pathname.endsWith("people")) return url.searchParams.has("id") ? { payload: person, portfolio: null } : [{ payload: person, book_state: "not-ingested" }, { payload: other, book_state: "not-ingested" }];
+    if (url.pathname.endsWith("fmp_store_state")) return null;
+    if (url.searchParams.has("hash")) return index;
+    return url.searchParams.has("person_id") ? { hash } : [];
+  }));
+  const response = await createPeopleHandlers(service).directory(new Request("https://app.test/api/people?q=Pelosi"));
+  const directory = await response.json();
+  assert.equal(directory.people.length, 1);
+  assert.equal(directory.people[0].indexName, "Nancy P Index · P000197");
+  const portfolio = await service.portfolio(person.id);
+  assert.equal(portfolio.indexName, directory.people[0].indexName);
+  assert.equal(portfolio.publishedIndex?.indexName, portfolio.indexName);
+  assert.equal((await service.publishedIndex(hash))?.indexName, portfolio.indexName);
+});
+
 test("reader refuses incomplete published targets rather than showing partial weights", async () => {
   const db = database(() => ({ hash: "a".repeat(64), constituents: [{ ticker: "AAPL", weight_bps: 100 }] }));
   await assert.rejects(createStoredPeopleService(db).publishedIndex("a".repeat(64)), /incomplete-index-publication/);

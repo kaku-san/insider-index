@@ -25,7 +25,7 @@ Archive: `.data/fmp/<sha256>-<observation-uuid>.json`, with endpoint, key-free p
 
 ### `GET /api/people?q=...`
 
-Returns `{ source, storage, savedAt, people, count, total, complete, partial, unnormalizedCount, ingestion, coverage }`. Each person includes `bookState` and `publishedIndexHash`. Query searches name, ID, state and party; case-insensitive, maximum 200 characters. The full saved directory is read before filtering. `id` equals the provider's stable ID (`L000397`), not a name slug; name/chamber/active are mutable metadata. No artificial 15-name/ticker cap or active-member-only filter.
+Returns `{ source, storage, savedAt, people, count, total, complete, partial, unnormalizedCount, ingestion, coverage }`. Each person includes `bookState`, `publishedIndexHash`, and the canonical `indexName`. Query searches name, ID, state and party; case-insensitive, maximum 200 characters. The full saved directory is read before filtering. `id` equals the provider's stable ID (`L000397`), not a name slug; name/chamber/active are mutable metadata. No artificial 15-name/ticker cap or active-member-only filter.
 
 `ingestion` reports actual provider pagination independently from normalized coverage. Invalid profiles count toward `unnormalizedCount`, force partial coverage, and remain in the raw archive. Directory membership does not mean book availability or permission to invest.
 
@@ -44,6 +44,14 @@ Returns:
 `publishedIndex` adds the latest atomically published trade target and persisted constituent weights; it does not replace `indexInput`, snapshots or activity. `storage: supabase` and `savedAt` identify the saved observation. `GET /api/published-indexes/[hash]` reads an immutable target by hash. Home links to `/p/[stable FMP ID]` and `/indexes/fmp-[hash]`; these show saved books, ranges, activity and published targets without NAV/performance claims.
 
 A storage failure returns 502 (503 without configuration); an invalid person ID returns 400; a person absent from the saved directory returns 404. Once a real profile exists, a failed annual/activity/aggregate source returns available records with partial flags and per-source errors, not an invented empty complete portfolio. Unexpected failures return a generic safe 502. `state: annual-source-unavailable` distinguishes an annual fetch failure from an actual empty annual response.
+
+## Person portfolio presentation
+
+`src/components/fmp-portfolio.tsx` renders `/p/[id]`: identity, statistics, historical-performance area, disclosed holdings, published allocation, and dated trade history beside a fail-closed Invest panel. Annual rows render independently of both publication and activity; a book with 65 saved items and no published index still shows all 65 items. A filing selector keeps all years/versions accessible without adding them together. No quotes or verified simulation/benchmark series are currently supplied by this API, so those areas remain explicitly unavailable. Published weights never become weights on annual rows.
+
+Follow on this page is device-local browser storage, labelled as such, with no alerts, wallet action or automatic execution. Invest means USDC into a vault for its share token, not a basket of stock swaps; there is no vault initializer or executable deposit route connected here.
+
+`index-name.ts` owns automated names: `Firstname L Index` (for example, `Nancy P Index`). Only collisions in the **full saved directory** append ` · <FMP id>`. The directory, portfolio and published-index APIs expose the same derived `indexName`; UI surfaces use it. This is the canonical name to reuse for future vault/share metadata at initialization, not a user-editable field. It is presentation metadata, outside the immutable target hash and original annual records.
 
 ## Completeness and identity limitations
 

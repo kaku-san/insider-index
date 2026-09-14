@@ -51,7 +51,7 @@ export function IndexHome({ initialData }: { initialData?: SavedDirectory }) {
       {!directory ? resource.error ? <div className={styles.empty} role="alert"><h3>The index desk couldn’t load.</h3><p>Saved disclosures are temporarily unavailable. Try loading them again.</p><button className={styles.secondaryButton} onClick={resource.reload}>Try again</button></div> : <Skeleton cards={2} /> : published.length ? <>
         <div className={styles.indexShelf}>{published.slice(0, allIndexes ? undefined : 6).map((person) => <article key={person.id} className={styles.indexTile}>
           <div className={styles.tileTop}><PersonAvatar name={person.name} imageUrl={person.image} size="lg" /><span className={styles.modelBadge}>Model index</span></div>
-          <h3>{person.name}</h3><p className={styles.personMeta}>{personContext(person)}</p>
+          <h3>{person.indexName ?? person.name}</h3><p className={styles.personMeta}>{person.name} · {personContext(person)}</p>
           <div className={styles.tileBottom}><Link className={styles.indexLink} href={`/indexes/fmp-${person.publishedIndexHash}`}>Explore index <Icon name="arrow" size={17} /></Link><Link className={styles.bookLink} href={`/p/${person.id}`}>Disclosed book</Link></div>
         </article>)}</div>
         {published.length > 6 && <button className={styles.moreButton} aria-expanded={allIndexes} onClick={() => setAllIndexes(!allIndexes)}>{allIndexes ? "Show fewer indexes" : `See all ${published.length} indexes`} <Icon name={allIndexes ? "up" : "grid"} size={16} /></button>}

@@ -81,5 +81,7 @@ export function buildTradeIndex(personId: string, trades: readonly Activity[], c
 export type PublishedTradeIndex = {
   hash: string; person_id: string; period: string; version: number; status: string;
   published_at: string; definition: TradeIndexDefinition;
+  /** Derived from the full saved directory at read time, not part of the target hash. */
+  indexName?: string;
   constituents: { ticker: string; mint: string; issuer: string; weight_bps: number; payload: TradeConstituent }[];
 };

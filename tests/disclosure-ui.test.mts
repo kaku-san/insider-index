@@ -67,10 +67,17 @@ test("person with no saved book does not claim zero holdings or permit a deposit
   assert.match(html, /does not mean the person owns nothing/);
   assert.match(html, /USDC/);
   assert.match(html, /Index shares/);
-  assert.match(html, /disabled=""[^>]*>Invest unavailable/);
+  assert.match(html, /disabled=""[^>]*>Invest in this index/);
   assert.match(html, /No live, execution-approved share-token vault/);
   assert.doesNotMatch(html, /\$0|Deposit successful|privy-stub:/);
-  assert.ok(html.indexOf("The disclosed book") < html.indexOf("From activity to index"));
+  assert.ok(html.indexOf("Portfolio performance") < html.indexOf("Current holdings"));
+  assert.ok(html.indexOf("Current holdings") < html.indexOf("Holdings distribution"));
+  assert.ok(html.indexOf("Holdings distribution") < html.indexOf("Allocation history / trades"));
+  assert.match(html, /No published allocation yet/);
+  assert.match(html, /Historical simulation/);
+  assert.match(html, /S&amp;P 500/);
+  assert.match(html, /Saved on this device/);
+  assert.doesNotMatch(html, /Copy latest|Buy their index|Copiers|eToro/);
 });
 
 test("annual evidence keeps unmapped assets and missing bands, with unsafe source links disabled", () => {

@@ -1,0 +1,133 @@
+/* Portfolio-first hierarchy: restrained surfaces, legible filings, one investment rail.
+   Uses Stocklana's Avenir Next / Segoe UI and shared light/dark palette:
+   paper #fafbf8, ink #253128, muted #626d5d, rule #dce2d8, lime #d0f568. */
+.page { max-width: 1240px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px; color: var(--muted-foreground); font-size: 12px; }
+.hero { display: flex; align-items: center; gap: 22px; margin: 0 0 32px; }
+.hero h1 { font-size: clamp(28px, 3.1vw, 42px); font-weight: 700; letter-spacing: -.045em; margin: 5px 0 12px; overflow-wrap: anywhere; }
+.context { color: var(--muted-foreground); font-size: 12px; }
+.strategy { color: var(--muted-foreground); max-width: 70ch; font-size: 15px; line-height: 1.65; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 28px; border-block: 1px solid var(--border); padding: 22px 0; }
+.stats > div { padding: 0 24px; border-right: 1px solid var(--border); }
+.stats > div:first-child { padding-left: 0; }
+.stats > div:last-child { border: 0; }
+.stats dt { font-size: 13px; color: var(--muted-foreground); }
+.stats dd { margin: 8px 0 4px; font-size: 34px; line-height: 1.2; font-weight: 650; font-variant-numeric: tabular-nums; }
+.stats small { display: block; font-size: 11px; color: var(--muted-foreground); }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 24px; align-items: start; }
+.content { display: grid; gap: 24px; min-width: 0; }
+.panel { min-width: 0; padding: 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+.sectionHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sectionHead h2 { font-size: 20px; font-weight: 650; letter-spacing: -.025em; }
+.badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; color: var(--muted-foreground); font-size: 10px; }
+.caption { font-size: 12px; color: var(--muted-foreground); line-height: 1.7; max-width: 78ch; }
+.chartLegend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 11px; color: var(--muted-foreground); }
+.chartLegend > span { display: inline-flex; align-items: center; gap: 6px; }
+.chartLegend i { width: 14px; height: 3px; background: var(--positive); border-radius: 2px; }
+.chartLegend > span:last-child i { background: var(--soft-text); }
+.emptyChart { min-height: 254px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 13px; padding: 38px 24px; margin: 20px 0 14px; border-block: 1px solid var(--border); background: repeating-linear-gradient(to bottom, transparent 0, transparent 62px, var(--surface-alt) 63px, transparent 64px); }
+.emptyChart > svg { color: var(--muted-foreground); }
+.emptyChart h3 { font-size: 17px; letter-spacing: -.02em; }
+.emptyChart p { max-width: 47ch; font-size: 12px; line-height: 1.8; color: var(--muted-foreground); }
+.rail { position: sticky; top: 100px; min-width: 0; }
+.invest { border: 1px solid var(--border); background: var(--card); border-radius: 14px; padding: 23px; }
+.invest h2 { font-size: 25px; font-weight: 650; letter-spacing: -.035em; margin: 20px 0 9px; }
+.invest p { color: var(--muted-foreground); font-size: 12px; line-height: 1.75; }
+.flow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 19px 13px; margin: 23px 0 18px; background: var(--surface-alt); border-radius: 8px; font-size: 13px; font-weight: 650; }
+.flow > svg { color: var(--muted-foreground); }
+.investButton, .followButton { display: inline-flex; justify-content: center; align-items: center; gap: 8px; width: 100%; min-height: 46px; border-radius: 8px; font-size: 13px; font-weight: 650; }
+.investButton { margin-top: 20px; border: 1px solid var(--border); background: var(--primary); color: var(--primary-foreground); }
+.investButton:disabled { opacity: 1; cursor: not-allowed; background: color-mix(in srgb, var(--primary) 44%, var(--card)); color: var(--foreground); }
+.followButton { border: 1px solid var(--border); background: var(--card); color: var(--foreground); transition: transform 140ms cubic-bezier(.23,1,.32,1); }
+.followButton[aria-pressed="true"] { border-color: var(--positive); color: var(--positive); }
+.follow { margin-top: 10px; }
+.follow > p { font-size: 11px; text-align: center; margin-top: 10px; }
+.invest .finePrint { font-size: 11px; border-top: 1px solid var(--border); padding-top: 17px; margin-top: 20px; }
+.railNote { display: flex; gap: 9px; color: var(--muted-foreground); font-size: 11px; line-height: 1.8; padding: 20px 6px; }
+.railNote > svg { margin-top: 3px; }
+.notice { display: flex; align-items: start; gap: 10px; padding: 12px 15px; margin-bottom: 22px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted-foreground); background: var(--surface-alt); font-size: 12px; line-height: 1.7; }
+.notice button { background: none; border: 0; color: inherit; text-decoration: underline; margin-left: auto; }
+.selector { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 20px 0 10px; font-size: 12px; }
+.selector select { background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--foreground); padding: 9px 10px; max-width: 100%; min-width: 0; }
+.tableRegion { overflow-x: auto; max-width: 100%; margin-top: 18px; }
+.tableRegion:focus-visible, .page summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; font-variant-numeric: tabular-nums; }
+.table th { color: var(--muted-foreground); font-size: 11px; font-weight: 550; padding: 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table td { padding: 16px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.table th:first-child, .table td:first-child { padding-left: 0; }
+.table th:last-child, .table td:last-child { padding-right: 0; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table strong { display: block; font-weight: 650; font-size: 13px; overflow-wrap: anywhere; }
+.table small { display: block; color: var(--muted-foreground); font-size: 11px; margin-top: 5px; line-height: 1.6; }
+.table td:first-child { min-width: 150px; max-width: 300px; }
+.number { text-align: right; white-space: nowrap; }
+.rowDetails { margin-top: 7px; font-size: 11px; color: var(--muted-foreground); }
+.rowDetails summary { cursor: pointer; }
+.rowDetails p { margin-top: 6px; max-width: 42ch; }
+.sourceLink { text-decoration: underline; text-underline-offset: 3px; font-size: 11px; color: var(--muted-foreground); }
+.empty { padding: 35px 0; }
+.empty h3, .emptyAllocation h3 { font-size: 17px; font-weight: 650; letter-spacing: -.02em; margin-bottom: 10px; }
+.empty p, .emptyAllocation p { color: var(--muted-foreground); font-size: 12px; line-height: 1.8; max-width: 62ch; }
+.allocation { display: grid; gap: 14px; }
+.allocation :global(.portfolio-donut) { margin: 28px 0 12px; align-items: start; }
+.allocation :global(.portfolio-donut) > svg { width: 190px; height: 190px; }
+.allocation :global(.donut-legend) { gap: 12px; padding-top: 6px; }
+.allocation :global(.donut-legend) > div { font-size: 12px; }
+.emptyAllocation { display: flex; align-items: center; gap: 24px; padding: 25px 0; }
+.emptyRing { width: 130px; height: 130px; border-radius: 50%; border: 16px solid var(--surface-alt); flex-shrink: 0; }
+.event { display: inline-block; padding: 3px 7px; border-radius: 5px; background: var(--surface-alt); font-size: 11px; white-space: nowrap; }
+.event[data-side="buy"] { color: var(--positive); }
+.event[data-side="sell"] { color: var(--negative); }
+.coverage { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 18px; color: var(--muted-foreground); font-size: 11px; }
+.coverage summary { cursor: pointer; }
+.coverage ul { padding-left: 19px; line-height: 1.9; }
+@media (hover: hover) and (pointer: fine) {
+  .followButton:hover { background: var(--surface-alt); }
+  .followButton:active:not(:focus-visible) { transform: scale(.98); }
+  .back:hover, .sourceLink:hover { color: var(--foreground); }
+}
+@media (max-width: 1150px) {
+  .layout { grid-template-columns: minmax(0, 1fr) 255px; gap: 18px; }
+  .panel, .invest { padding: 20px; }
+  .allocation :global(.portfolio-donut) { flex-direction: column; align-items: center; }
+  .allocation :global(.donut-legend) { width: 100%; }
+}
+@media (max-width: 850px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .rail { position: static; grid-row: 1; }
+  .invest { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; }
+  .invest > .badge, .invest > h2, .invest > p, .flow { grid-column: 1; }
+  .invest h2 { margin-top: 14px; }
+  .investButton { grid-column: 2; grid-row: 2 / 4; align-self: end; margin: 0; }
+  .follow { grid-column: 2; grid-row: 4 / 6; align-self: start; margin-top: 14px; }
+  .invest .finePrint { grid-column: 1 / -1; margin-top: 15px; }
+  .railNote { display: none; }
+  .allocation :global(.portfolio-donut) { flex-direction: row; align-items: start; }
+  .allocation :global(.donut-legend) { width: auto; }
+}
+@media (max-width: 540px) {
+  .hero { gap: 14px; align-items: start; margin-bottom: 25px; }
+  .hero :global(.avatar-xl) { width: 58px; height: 58px; font-size: 20px; }
+  .hero h1 { font-size: 27px; margin-top: 4px; }
+  .strategy { font-size: 13px; }
+  .context { font-size: 11px; }
+  .stats { padding: 18px 0; gap: 0; }
+  .stats > div { padding-inline: 11px; }
+  .stats dd { font-size: 28px; }
+  .stats dt { font-size: 11px; }
+  .stats small { font-size: 10px; }
+  .panel, .invest { padding: 18px; }
+  .sectionHead h2 { font-size: 19px; }
+  .invest { display: block; }
+  .investButton { margin-top: 18px; }
+  .flow { margin: 18px 0 14px; }
+  .emptyChart { min-height: 230px; padding: 28px 12px; }
+  .emptyAllocation { flex-direction: column; align-items: start; gap: 18px; }
+  .allocation :global(.portfolio-donut) { flex-direction: column; align-items: center; }
+  .allocation :global(.donut-legend) { width: 100%; }
+  .content { gap: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .followButton { transition: none; }
+  .followButton:active:not(:focus-visible) { transform: none; }
+}
