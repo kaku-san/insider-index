@@ -11,7 +11,7 @@ export function EligibilityBanner() {
     ? "UI preview · synthetic data"
     : wallet.mode === "live"
       ? "User-signed"
-      : "Wallet stub";
+      : wallet.mode === "stub" ? "Local preview wallet" : "Wallet unavailable";
 
   return (
     <div className="eligibility-banner">

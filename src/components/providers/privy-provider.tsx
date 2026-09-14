@@ -10,11 +10,12 @@ import {
 } from "react";
 
 import { STUB_WALLET_ADDRESS as STUB_WALLET } from "@/lib/wallet";
+import { PREVIEW_MODE } from "@/lib/frontend/api";
 
 export type PrivySolanaWallet = {
   ready: boolean;
   configured: boolean;
-  mode: "live" | "stub";
+  mode: "live" | "stub" | "unavailable";
   authenticated: boolean;
   solanaAddress: string | null;
   appId: string | null;
@@ -34,7 +35,7 @@ export function readPublicPrivyAppId(): string | null {
   return appId || null;
 }
 
-/** Fixture wallet. Always mounted so SSR and the tape render before live Privy loads. */
+/** Safe fallback while Privy loads. A fixture is allowed only in an explicit local preview. */
 export function PrivySolanaProvider({
   children,
   pendingLive = false,
@@ -43,13 +44,15 @@ export function PrivySolanaProvider({
   pendingLive?: boolean;
 }) {
   const [authenticated, setAuthenticated] = useState(false);
+  const allowStub = process.env.NODE_ENV !== "production" && PREVIEW_MODE;
 
   const connect = useCallback(async () => {
     if (pendingLive) {
       throw new Error("Wallet is still connecting.");
     }
+    if (!allowStub) throw new Error("Wallet connection is unavailable. Reload to retry Privy.");
     setAuthenticated(true);
-  }, [pendingLive]);
+  }, [allowStub, pendingLive]);
 
   const disconnect = useCallback(async () => {
     setAuthenticated(false);
@@ -57,6 +60,7 @@ export function PrivySolanaProvider({
 
   const signTransaction = useCallback(
     async (transactionBase64: string) => {
+      if (pendingLive || !allowStub) throw new Error("A live wallet is required to sign.");
       if (!authenticated) {
         throw new Error("Connect a Solana wallet before signing.");
       }
@@ -65,22 +69,22 @@ export function PrivySolanaProvider({
       }
       return `privy-stub:${STUB_WALLET}:${transactionBase64}`;
     },
-    [authenticated],
+    [allowStub, authenticated, pendingLive],
   );
 
   const value = useMemo<PrivySolanaWallet>(
     () => ({
       ready: !pendingLive,
       configured: pendingLive,
-      mode: pendingLive ? "live" : "stub",
-      authenticated,
-      solanaAddress: authenticated ? STUB_WALLET : null,
+      mode: pendingLive ? "live" : allowStub ? "stub" : "unavailable",
+      authenticated: allowStub && authenticated,
+      solanaAddress: allowStub && authenticated ? STUB_WALLET : null,
       appId: null,
       connect,
       disconnect,
       signTransaction,
     }),
-    [authenticated, connect, disconnect, pendingLive, signTransaction],
+    [allowStub, authenticated, connect, disconnect, pendingLive, signTransaction],
   );
 
   return (

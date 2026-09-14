@@ -2,46 +2,74 @@
 import Link from "next/link";
 import { useResource } from "@/lib/frontend/use-resource";
 import { PageError, Skeleton } from "./social/shared";
-import type { StoredPeopleService } from "@/lib/fmp/store";
-import type { Band } from "@/lib/fmp/types";
+import { PersonAvatar } from "./person-avatar";
+import { Icon } from "./social/icon";
+import { disclosedRange, personContext } from "@/lib/frontend/disclosure-labels";
+import type { StoredPeopleService, StoredPerson } from "@/lib/fmp/store";
 import type { PublishedTradeIndex } from "@/lib/fmp/trade-index";
+import styles from "./disclosure-workspace.module.css";
 
+export { disclosedRange } from "@/lib/frontend/disclosure-labels";
 type Portfolio = Awaited<ReturnType<StoredPeopleService["portfolio"]>>;
-export function disclosedRange({ low, high }: Band) {
-  const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-  if (low === null && high === null) return "Not disclosed";
-  if (low === null) return `Up to ${usd(high!)}`;
-  if (high === null) return `${usd(low)}+`;
-  return low === high ? usd(low) : `${usd(low)}–${usd(high)}`;
-}
+const date = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+
 function SourceLink({ url }: { url: string | null }) {
-  // Source text is untrusted; only web links are navigable.
-  if (!url || !/^https?:\/\//i.test(url)) return <span>Source link unavailable</span>;
-  return <a href={url} target="_blank" rel="noreferrer" className="text-button">Source filing ↗</a>;
+  if (!url || !/^https?:\/\//i.test(url)) return <span className={styles.evidenceMeta}>Source link unavailable</span>;
+  return <a href={url} target="_blank" rel="noreferrer" className={styles.sourceLink}>Source filing <span aria-hidden="true">↗</span></a>;
 }
+
+function InvestPanel() {
+  return <aside id="invest" className={styles.investPanel} aria-labelledby="invest-title">
+    <span className={styles.count}>Not open for investment</span>
+    <h2 id="invest-title">One index. One token.</h2>
+    <p>The intended investment flow is USDC into an index vault, in exchange for its share token.</p>
+    <div className={styles.investPath}><span>USDC</span><Icon name="arrow" size={18} /><span>Index shares</span></div>
+    <p id="invest-blocker"><strong>This is a research model.</strong> No live, execution-approved share-token vault is connected to this target. Deposits and signing are unavailable.</p>
+    <button className={styles.secondaryButton} disabled aria-describedby="invest-blocker">Invest unavailable</button>
+    <p className={styles.finePrint}>Connecting a wallet does not enable this model. No USDC is sent, no shares are issued, and no individual stock swaps are submitted.</p>
+  </aside>;
+}
+
 export function PublishedTarget({ index }: { index: PublishedTradeIndex }) {
-  return <section className="panel fmp-panel"><span className="eyebrow">PUBLISHED TRADE INDEX · MODEL TARGET ONLY</span><h2>Target weights</h2><p>{index.definition.label}</p><p className="muted">Trade activity through {index.period} · Published {new Date(index.published_at).toLocaleDateString()} · Version {index.version}. Rounded to basis points, minimum one basis point per mapped name.</p><p>Annual pagination may be partial. This target does not repair or replace the annual book. No live vault NAV, return, or net-worth point is claimed. This is not an execution-approved basket.</p>
-    <div className="fmp-table-wrap"><table className="fmp-table"><thead><tr><th>Symbol</th><th>Target</th><th>Issuer</th><th>Solana mint</th></tr></thead><tbody>{index.constituents.map((c) => <tr key={c.mint}><td>{c.ticker}</td><td>{(c.weight_bps / 100).toFixed(2)}%</td><td>{c.issuer}</td><td className="fmp-mint">{c.mint}</td></tr>)}</tbody></table></div>
-    <details><summary>Excluded trade rows ({index.definition.excluded.length})</summary><ul>{index.definition.excluded.map((e) => <li key={e.tradeId}>{e.ticker ?? e.name ?? "Unnamed disclosure"}: {e.reason}</li>)}</ul></details>
-    <p className="fmp-mint muted">Immutable version: {index.hash}</p>
+  return <section className={styles.targetPanel} aria-label="Published trade target">
+    <span className={styles.modelBadge}>Published model · Not live holdings</span>
+    <h2>Inside the index</h2><p>{index.definition.label}</p>
+    <div className={styles.targetMeta}><span>Activity through {index.period}</span><span>Published {date(index.published_at)}</span><span>Version {index.version}</span></div>
+    <div className={styles.modelNote}><Icon name="info" size={17} /><p>Weights reflect disclosed trade activity, including buys and sales—not current ownership. No live NAV or return is claimed.</p></div>
+    <div className={styles.tableWrap} role="region" aria-label="Index target weights, scroll for mint addresses" tabIndex={0}>
+      <table className={styles.table}><caption>{index.constituents.length} mapped names. Targets rounded to basis points.</caption><thead><tr><th scope="col">Asset</th><th scope="col">Target weight</th><th scope="col">Token issuer</th><th scope="col">Solana mint</th></tr></thead><tbody>{index.constituents.map((constituent) => <tr key={constituent.mint}><td><strong>{constituent.ticker}</strong></td><td className={styles.weight}>{(constituent.weight_bps / 100).toFixed(2)}%</td><td>{constituent.issuer}</td><td><code className={styles.mint}>{constituent.mint}</code></td></tr>)}</tbody></table>
+    </div>
+    <details className={styles.sourceDetails}><summary>How this target was built</summary><p>Activity-weighted, with at least one basis point per mapped name. Partial annual pages do not block publication; this target never repairs or replaces the annual book.</p><p>Excluded trade rows: {index.definition.excluded.length}</p><ul>{index.definition.excluded.map((excluded) => <li key={excluded.tradeId}>{excluded.ticker ?? excluded.name ?? "Unnamed disclosure"}: {excluded.reason}</li>)}</ul><p className={styles.targetVersion}>Immutable version: <code>{index.hash}</code></p></details>
   </section>;
 }
+
 export function FmpPerson({ id, initialData }: { id: string; initialData?: Portfolio }) {
   const resource = useResource<Portfolio>(`/api/people/${encodeURIComponent(id)}/portfolio`, initialData);
-  if (resource.error) return <PageError error={resource.error} retry={resource.reload} />;
+  if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
   if (!resource.data) return <Skeleton cards={3} />;
   const book = resource.data;
-  return <div className="index-home"><Link className="text-button" href="/">← All people &amp; indexes</Link><div className="page-intro"><div><span className="eyebrow">SAVED FMP DISCLOSURES</span><h1>{book.person.name}</h1><p>{book.person.chamber} · {book.person.party ?? "Party unavailable"} · {book.person.state ?? "State unavailable"}</p></div></div>
-    <div className="panel fmp-panel"><strong>{book.state === "not-ingested" ? "Book not yet downloaded" : book.bookComplete ? "Annual source ingestion complete" : "Partial annual disclosure — not a complete book"}</strong><p>Saved {book.savedAt ? new Date(book.savedAt).toLocaleString() : "time unavailable"}. Original disclosed rows and nullable dollar bands are preserved. Years and document versions are separate; never add them into a current net-worth figure.</p>{book.ingestion && <details><summary>Source coverage</summary><ul>{Object.entries(book.ingestion).map(([name, source]) => <li key={name}>{name}: {source.status}, {source.count} retained rows{source.issues.length ? ` (${source.issues.map((i) => i.code).join(", ")})` : ""}</li>)}</ul></details>}</div>
-    {book.publishedIndex ? <><PublishedTarget index={book.publishedIndex} /><p><Link className="text-button" href={`/indexes/fmp-${book.publishedIndex.hash}`}>Permalink to this target →</Link></p></> : <section className="panel fmp-panel"><h2>No published trade target yet</h2><p>A saved book is not automatically an index. The original rows remain visible below.</p></section>}
-    <section className="home-section"><h2>Full disclosed annual book</h2>{!book.snapshots.length && <p>No annual rows have been saved for this person.</p>}{book.snapshots.map((snapshot, i) => <details className="panel fmp-panel" key={snapshot.id} open={i === 0}><summary><strong>{snapshot.year ?? "Year unknown"} · Filed {snapshot.filingDate ?? "date unknown"} · {snapshot.items.length} rows · {snapshot.complete ? "Complete source version" : "Partial / unreconciled"}</strong></summary><p><SourceLink url={snapshot.sourceUrl} /> · {snapshot.issues.join(", ")}</p><div className="fmp-table-wrap"><table className="fmp-table"><thead><tr><th>Disclosed name</th><th>Type / owner</th><th>Disclosed value range</th><th>Income range</th><th>Index mapping</th></tr></thead><tbody>{snapshot.items.map((item) => <tr key={item.id}><td>{item.name ?? "Unnamed disclosure"}{item.ticker ? ` (${item.ticker})` : ""}</td><td>{item.kind}<br />{item.owner ?? "Owner not specified"}</td><td>{disclosedRange(item.valueRange)}</td><td>{disclosedRange(item.incomeRange)}</td><td>{item.mappingReason ?? (item.token ? `${item.token.issuer} available; annual row not used in trade target` : "Unresolved symbol")}</td></tr>)}</tbody></table></div></details>)}</section>
-    <section className="home-section"><h2>Disclosed trade activity</h2><p>{book.activityComplete ? "History ingestion complete" : "History may be partial"}. Buys and sales stay activity, not remaining balances.</p>{!book.activity.length ? <p>No trade activity has been saved.</p> : <div className="fmp-table-wrap"><table className="fmp-table"><thead><tr><th>Trade / disclosed</th><th>Symbol / name</th><th>Event / owner</th><th>Amount</th><th>Mapping / source</th></tr></thead><tbody>{book.activity.map((trade) => <tr key={trade.id}><td>{trade.transactionDate ?? "Unknown"}<br />{trade.disclosureDate ?? "Unknown"}</td><td>{trade.ticker ?? "No symbol"}<br />{trade.name}</td><td>{trade.event ?? "Not disclosed"}<br />{trade.owner ?? "Owner not specified"}</td><td>{disclosedRange(trade.amount)}</td><td>{trade.mappingReason ?? trade.token?.issuer ?? "Unmapped"}<br /><SourceLink url={trade.sourceUrl} /></td></tr>)}</tbody></table></div>}</section>
+  return <div className={styles.workspace}>
+    <Link className={styles.backLink} href="/#directory"><Icon name="arrow" size={16} style={{ transform: "rotate(180deg)" }} />People &amp; indexes</Link>
+    <header className={styles.personHero}><PersonAvatar name={book.person.name} imageUrl={book.person.image} size="xl" /><div><span className={styles.kicker}>On the public record</span><h1>{book.person.name}</h1><p>{personContext(book.person)}</p><div className={styles.actions}><a className={styles.secondaryButton} href="#annual-book">Disclosed book</a>{book.publishedIndex && <a className={styles.quietButton} href="#trade-index">Published index</a>}<a className={styles.quietButton} href="#invest">Investment status</a></div></div></header>
+    <div className={styles.coverageNote}><Icon name="file" size={21} /><div><strong>{book.state === "not-ingested" ? "This book hasn’t been saved yet." : book.bookComplete ? "Annual source ingestion complete." : "Partial disclosure. Not a complete portfolio."}</strong><p>These are dated disclosures, not live holdings. Different years and filing versions stay separate; they must not be added into a net-worth figure.</p><p>{book.savedAt ? `Saved ${date(book.savedAt)}.` : "Save date unavailable."} Every source row stays visible, whether or not it maps to a Solana token.</p>{book.ingestion && <details className={styles.sourceDetails}><summary>Check source coverage</summary><ul>{Object.entries(book.ingestion).map(([name, source]) => <li key={name}>{name}: {source.status}, {source.count} retained rows{source.issues.length ? ` (${source.issues.map((issue) => issue.code).join(", ")})` : ""}</li>)}</ul></details>}</div></div>
+
+    <section id="annual-book" className={styles.section} aria-labelledby="annual-title"><div className={styles.sectionHead}><div><h2 id="annual-title">The disclosed book</h2><p>Original annual filings. All assets, not just tradable stocks.</p></div><span className={styles.count}>{book.snapshots.length} versions</span></div>
+      {!book.snapshots.length && <div className={styles.empty}><h3>No annual book saved yet.</h3><p>This does not mean the person owns nothing. Trade activity, if available, is listed separately below.</p></div>}
+      {book.snapshots.map((snapshot, i) => <details className={styles.evidenceDetails} key={snapshot.id} open={i === 0}><summary><strong>{snapshot.year ?? "Year unknown"}</strong><span>Filed {snapshot.filingDate ?? "date unknown"} · {snapshot.items.length} rows · {snapshot.complete ? "Complete source version" : "Partial / unreconciled"}</span></summary><p className={styles.evidenceMeta}><SourceLink url={snapshot.sourceUrl} />{snapshot.issues.length ? ` · ${snapshot.issues.join(", ")}` : ""}</p><div className={styles.tableWrap} role="region" aria-label={`${snapshot.year ?? "Unknown year"} disclosed book, scroll for all columns`} tabIndex={0}><table className={styles.table}><thead><tr><th scope="col">Disclosed asset</th><th scope="col">Type / owner</th><th scope="col">Value range</th><th scope="col">Income range</th><th scope="col">Index mapping</th></tr></thead><tbody>{snapshot.items.map((item) => <tr key={item.id}><td><strong>{item.name ?? "Unnamed disclosure"}</strong>{item.ticker && <small>{item.ticker}</small>}</td><td>{item.kind}<small>{item.owner ?? "Owner not specified"}</small></td><td>{disclosedRange(item.valueRange)}</td><td>{disclosedRange(item.incomeRange)}</td><td>{item.mappingReason ?? (item.token ? `${item.token.issuer} available; annual row not used in trade target` : "Unresolved symbol")}</td></tr>)}</tbody></table></div></details>)}
+    </section>
+
+    <section id="trade-index" className={styles.section} aria-labelledby="target-title"><div className={styles.sectionHead}><div><h2 id="target-title">From activity to index</h2><p>A separate model, not a reconstruction of the book above.</p></div></div><div className={styles.indexLayout}><div>{book.publishedIndex ? <><PublishedTarget index={book.publishedIndex} /><Link className={styles.sourceLink} href={`/indexes/fmp-${book.publishedIndex.hash}`}>Open this index’s permanent page</Link></> : <div className={styles.empty}><h3>No published index yet.</h3><p>A disclosed book is not automatically an index. You can still inspect the original filings and trade activity.</p></div>}</div><InvestPanel /></div></section>
+
+    <section className={styles.section} aria-labelledby="activity-title"><div className={styles.sectionHead}><div><h2 id="activity-title">The trade record</h2><p>{book.activityComplete ? "History ingestion complete" : "History may be partial"}. Buys and sales are activity, not remaining balances.</p></div><span className={styles.count}>{book.activity.length} rows</span></div>{!book.activity.length ? <div className={styles.empty}><h3>No trade activity saved.</h3><p>There are no saved trade rows to display for this person.</p></div> : <div className={styles.tableWrap} role="region" aria-label="Disclosed trade activity, scroll for all columns" tabIndex={0}><table className={styles.table}><thead><tr><th scope="col">Trade / disclosed</th><th scope="col">Asset</th><th scope="col">Event / owner</th><th scope="col">Amount range</th><th scope="col">Mapping / source</th></tr></thead><tbody>{book.activity.map((trade) => <tr key={trade.id}><td>{trade.transactionDate ?? "Unknown"}<small>Disclosed {trade.disclosureDate ?? "date unknown"}</small></td><td><strong>{trade.ticker ?? "No symbol"}</strong><small>{trade.name}</small></td><td>{trade.event ?? "Not disclosed"}<small>{trade.owner ?? "Owner not specified"}</small></td><td>{disclosedRange(trade.amount)}</td><td>{trade.mappingReason ?? trade.token?.issuer ?? "Unmapped"}<br /><SourceLink url={trade.sourceUrl} /></td></tr>)}</tbody></table></div>}</section>
   </div>;
 }
+
 export function FmpIndex({ hash, initialData }: { hash: string; initialData?: { index: PublishedTradeIndex } }) {
   const resource = useResource<{ index: PublishedTradeIndex }>(`/api/published-indexes/${encodeURIComponent(hash)}`, initialData);
-  if (resource.error) return <PageError error={resource.error} retry={resource.reload} />;
+  const directory = useResource<{ people: StoredPerson[] }>("/api/people");
+  if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
   if (!resource.data) return <Skeleton cards={2} />;
   const { index } = resource.data;
-  return <div className="index-home"><Link className="text-button" href={`/p/${index.person_id}`}>← Person’s original book &amp; activity</Link><h1>Published trade index</h1><PublishedTarget index={index} /></div>;
+  const person = directory.data?.people.find((entry) => entry.id === index.person_id);
+  return <div className={styles.workspace}><Link className={styles.backLink} href={`/p/${index.person_id}`}><Icon name="arrow" size={16} style={{ transform: "rotate(180deg)" }} />Original book &amp; activity</Link><header className={styles.indexHero}><span className={styles.kicker}>The index desk</span><h1>{person ? `${person.name} index` : "Published trade index"}</h1><p>See the weights. Check the sources. Know what you’re looking at.</p></header><div className={styles.indexLayout}><PublishedTarget index={index} /><InvestPanel /></div></div>;
 }

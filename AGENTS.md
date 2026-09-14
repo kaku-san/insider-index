@@ -33,7 +33,7 @@ Disclosure-to-copy-trade app: real insider/politician prints → user-signed xSt
 
 - Shared caches go through `globalState()` in `src/lib/cache.ts`.
 - EDGAR cold crawl ~30 s; warmed at boot via `src/instrumentation.ts`.
-- Jupiter live vs stub is `jupiterMode()` in `src/lib/runtime.ts`; live mode rejects stub signatures.
+- Jupiter live vs stub is `jupiterMode()` in `src/lib/runtime.ts`; live mode rejects stub signatures. Wallet fallback (`src/components/providers/privy-provider.tsx`) fails closed in production; a Privy load failure must never enable a fixture wallet.
 
 ## Maintaining this file
 

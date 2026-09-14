@@ -4,7 +4,7 @@ Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
 
 **Form 4 / Congress disclosure → full disclosed book per filer → copy one print or buy that person's index → user-signed swap into the name's Solana mint (xStock, else Backpack token) → rebalance on the next filing.**
 
-This repository is a Next.js App Router app. **Demo / production host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev) (Barely Stable on Hetzner + Traefik). Do not use a Vercel URL as the public demo. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
+This repository is a Next.js App Router app. **Live product:** [https://stocklana-nine.vercel.app](https://stocklana-nine.vercel.app). The existing Barely Stable / Hetzner deployment is documented below. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 
 ## Product scope
 
@@ -43,7 +43,7 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | Layer | Implementation |
 | --- | --- |
 | App | Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui |
-| Auth / wallet | Real `@privy-io/react-auth` Solana when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet otherwise |
+| Auth / wallet | Real `@privy-io/react-auth` Solana when `NEXT_PUBLIC_PRIVY_APP_ID` is set; production fails closed if unavailable |
 | Insiders | `src/lib/disclosures/edgar.ts` (+ pure `edgar-parse.ts`) primary; `form4.ts` orchestrates EDGAR → Form4API → mock. Issuer set: `edgarUniverse()` (`EDGAR_UNIVERSE=wide`, `EDGAR_TICKERS`) |
 | Person-first Congress | `src/lib/fmp/` — FMP stable person IDs, private raw archive, annual source snapshots and separate activity. No PTR-netted current holdings or fabricated rows. |
 | Congress tape | `src/lib/disclosures/ainvest.ts` (+ pure `ainvest-parse.ts`) primary; `congress.ts` orchestrates AInvest → Form4API → mock. AInvest is ticker-scoped (no per-member pull), so the crawl walks `buildCongressUniverse()` (`src/lib/disclosures/universe.ts`) and groups rows by filer |
@@ -132,15 +132,15 @@ Open [http://localhost:3000](http://localhost:3000).
 - **Congress is live** when `AINVEST_API_KEY` is set. Without it: labelled `mock-congress` fixtures in development, an empty lane in production. AInvest only answers per ticker, so the lane crawls `AINVEST_UNIVERSE` (`wide` ≈ 300 hand-kept names · `catalog` (default) adds every US-looking xStock underlying · `full` adds every Backpack `.US` token), `AINVEST_PAGES_PER_TICKER` deep, memoised per ticker for `AINVEST_TICKER_TTL_MINUTES`. The crawl stops early on rate limits and says so in `lanes.congress.note`.
 - **The buy catalog is live** from xstocks.com and api.backpack.exchange with no key; the committed snapshot covers outages.
 - **Jupiter** quotes live (keyless) in production or when `JUPITER_API_KEY` / `JUPITER_MODE=live` is set; stub in development. **Helius** is used when `HELIUS_API_KEY` is set.
-- **Privy** is the real `@privy-io/react-auth` Solana provider when `NEXT_PUBLIC_PRIVY_APP_ID` is set; stub wallet only if that id is missing. Every trade still requires an explicit user signature. A live Jupiter order can never be "signed" by the stub wallet.
+- **Privy** is the real `@privy-io/react-auth` Solana provider when `NEXT_PUBLIC_PRIVY_APP_ID` is set. Missing configuration or a failed SDK load never enables a production stub: the wallet stays unavailable and offers a reload. Every trade requires an explicit signature. A fixture wallet exists only in a non-production `NEXT_PUBLIC_STOCKLANA_PREVIEW=1` UI preview, where writes are disabled.
 
-Without API keys in development the copy flow stays fixtures-only:
+Without keys, saved-data surfaces report unavailable data rather than inventing books. Development disclosure adapters may still serve labelled fixtures, but a real wallet is required outside the explicit UI preview.
 
-1. The feed loads real EDGAR Form 4 prints plus mock congress rows (labelled)
-2. Inspect a filing
-3. Enter a USDC amount and request a Jupiter stub order
-4. Connect the Privy stub wallet, attest eligibility, approve & sign
-5. The fill appears on `/positions`
+### Live product workspace
+
+Home shows saved FMP people and published trade targets only. Search covers the entire returned directory before the display limit; the show-more controls expose the remaining rows. Profiles use provider portraits and show the full annual book before separate trade-derived targets. `/positions` is scoped to the connected wallet; opening the wallet address menu offers copy, positions and disconnect without logging out on a normal click.
+
+Investment is **USDC → index share token**, not individual stock swaps. Current published FMP models have no connected, execution-approved vault, so person and index pages show a disabled investment panel with the reason. They never request a legacy basket quote or simulate a deposit. See [UI direction and verification](docs/ui-design.md).
 
 ```bash
 npm run build
@@ -149,7 +149,7 @@ npm run build
 must succeed with the example env (no real secrets in the repo).
 
 ```bash
-npm test        # node --test parser suites (EDGAR Form 4 XML, AInvest envelope/size ranges, catalog parsers, book reconstruction, universe)
+npm test        # parser, saved-data, and semantic React-render / wallet-fallback suites
 npm run typecheck
 ```
 
@@ -181,7 +181,7 @@ Do not commit real keys. Live vs fixture:
 | Congress tape | AInvest (`ainvest-congress`, `AINVEST_API_KEY`) → Form4API (`congress`, `FORM4API_KEY`) | `mock-congress` in dev only; empty lane in prod |
 | Jupiter `/order` + `/execute` | Live Swap V2 (prod default, or `JUPITER_API_KEY` / `JUPITER_MODE=live`) | stub quote/fill (dev default) |
 | Helius RPC | `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` (server + `/api/rpc` proxy) | public Solana RPC |
-| Privy | Real `@privy-io/react-auth` Solana provider (`NEXT_PUBLIC_PRIVY_APP_ID`) | stub wallet |
+| Privy | Real `@privy-io/react-auth` Solana provider (`NEXT_PUBLIC_PRIVY_APP_ID`) | unavailable in production; fixture only in explicit local UI preview |
 
 Every row carries its `source` label. In live Jupiter mode a failed quote is an error, never a stub fill. Privy never auto-signs.
 
@@ -212,6 +212,6 @@ Host(`stocklana.barelystable.dev`)
 
 rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.*`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. Wildcard DNS already points at the Barely Stable / Hetzner host. The image build never `COPY`s `.env*` — `NEXT_PUBLIC_*` is injected only as Docker build args.
 
-`NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present in the server `.env` at image **build** time so the client bundle is live, not stub.
+`NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present in the server `.env` at image **build** time so the client bundle can initialize Privy. On Vercel, set these for the deployment environment and rebuild after changes.
 
-**Privy dashboard:** allow `https://stocklana.barelystable.dev` (and `http://localhost:3000` for local) in allowed origins. Without that origin, the live wallet client will not finish loading. Do not commit real keys.
+**Privy dashboard:** allow `https://stocklana-nine.vercel.app`, `https://stocklana.barelystable.dev`, and `http://localhost:3000` as appropriate in allowed origins. Without that origin, the live wallet client will not finish loading. Do not commit real keys.

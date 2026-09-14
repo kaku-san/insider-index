@@ -78,10 +78,11 @@ function PrivyLiveBridge({
 
   const connect = useCallback(async () => {
     if (authenticated) {
+      if (!wallet) await createWallet();
       return;
     }
     await login();
-  }, [authenticated, login]);
+  }, [authenticated, createWallet, login, wallet]);
 
   const disconnect = useCallback(async () => {
     await logout();

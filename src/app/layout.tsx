@@ -7,11 +7,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Stocklana — Buy what they file.",
+    default: "Stocklana — Everyone is an insider.",
     template: "%s · Stocklana",
   },
   description:
-    "Indexes built from public politician and executive disclosures. Buy a basket when enough filers are buying, or follow one filer and copy the trade. Every order is user-signed.",
+    "Explore published trade indexes and the public disclosures behind them. Original books, transparent target weights, and personal decisions. Everyone is an insider.",
 };
 
 const themeScript = `try{var t=localStorage.getItem('stocklana:theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}`;

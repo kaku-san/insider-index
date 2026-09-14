@@ -1,16 +1,45 @@
 "use client";
-import {useMemo,useState} from "react";
+import { useState } from "react";
 import Link from "next/link";
-import {usePrivySolana} from "./providers/privy-provider";
-import {useResource} from "@/lib/frontend/use-resource";
-import {PREVIEW_MODE} from "@/lib/frontend/api";
-import type {TrackedPosition} from "@/lib/frontend/contracts";
-import {Icon} from "./social/icon";
-import {PageError,Skeleton,StockIcon} from "./social/shared";
-import {WalletButton} from "./wallet-button";
-import {formatDate,formatShares,formatUsd,shortenAddress} from "@/lib/format";
-export function PositionsTable(){const wallet=usePrivySolana(),[query,setQuery]=useState(""),resource=useResource<{positions:TrackedPosition[];persistence:string}>(wallet.solanaAddress?`/api/positions?wallet=${encodeURIComponent(wallet.solanaAddress)}`:null);
- const positions=resource.data?.positions??[],visible=positions.filter(p=>`${p.ticker} ${p.tokenSymbol}`.toLowerCase().includes(query.toLowerCase())),total=positions.reduce((s,p)=>s+(Number.isFinite(p.usdcIn)?p.usdcIn:0),0),assets=useMemo(()=>new Set(positions.map(p=>p.tokenSymbol)).size,[positions]);
- return <div className="positions-page"><div className="page-intro"><div><span className="eyebrow">THE MOVES YOU MADE.</span><h1>Your book. Your calls<span className="accent-dot">.</span></h1><p>Signed fills, without the spreadsheet energy.</p></div><Link className="button primary" href="/">Find your next index<Icon name="arrow" size={16}/></Link></div><div className="positions-summary"><div><span>Historical filled notional</span><strong>{wallet.solanaAddress?formatUsd(total):"—"}</strong><small>Not current portfolio value</small></div><div><span>Tracked assets</span><strong>{wallet.solanaAddress?assets:"—"}</strong><small>Distinct xStocks in your fills</small></div><div><span>Signed fills</span><strong>{wallet.solanaAddress?positions.length:"—"}</strong><small>{PREVIEW_MODE?"Read-only preview":"Connected wallet only"}</small></div></div>
- <section className="panel positions-panel"><div className="panel-heading"><h2>Your receipts</h2>{positions.length>0?<div className="inline-search"><Icon name="search" size={15}/><input aria-label="Search fills" placeholder="Filter assets…" value={query} onChange={e=>setQuery(e.target.value)}/></div>:<span className="outlined-pill"><Icon name="shield" size={13}/>User-signed</span>}</div>{!wallet.solanaAddress?<div className="position-empty"><div className="empty-wallet-art"><Icon name="wallet" size={52}/><span>✳</span></div><h2>A portfolio with a paper trail.</h2><p>{wallet.mode==="live"?"Connect your Solana wallet to see fills scoped to that address.":"Connect the included stub wallet to explore this screen. Real fills stay scoped to your address when Privy is live."}</p><WalletButton/><small>{wallet.mode==="live"?"You sign every fill. Nothing trades unattended.":"The included wallet is a stub until NEXT_PUBLIC_PRIVY_APP_ID is set."}</small></div>:resource.loading&&!resource.data?<Skeleton cards={2}/>:resource.error&&!resource.data?<PageError error={resource.error} retry={resource.reload}/>:!positions.length?<div className="position-empty"><div className="empty-wallet-art"><Icon name="file" size={48}/><span>↗</span></div><h2>No moves. No made-up gains.</h2><p>{PREVIEW_MODE?"This preview does not fabricate executions. Open an index or copy a trade to try the review flow.":"Your approved fills will appear here after execution. Nothing trades without your signature."}</p><Link className="button primary" href="/">Browse the indexes<Icon name="arrow" size={16}/></Link></div>:<div className="position-list">{visible.map(p=><article className="position-row" key={p.id}><StockIcon ticker={p.ticker}/><div><strong>{p.tokenSymbol}</strong><small>{formatShares(p.tokensOut)} tokens</small></div><div className="position-notional"><strong>{formatUsd(p.usdcIn)}</strong><small>USDC filled notional</small></div><div className="position-details"><span>{formatDate(p.createdAt)}</span><code title={p.signature}>{shortenAddress(p.signature,6)}</code>{p.stub?<span className="preview-tag">Stub</span>:null}</div></article>)}{!visible.length?<p className="empty-chart">No fills match this ticker.</p>:null}</div>}</section><div className="rail-fineprint"><Icon name="info" size={15}/><p>Fills are a transaction history, not a marked-to-market balance or profit-and-loss report. No live valuation is inferred.</p></div></div>;
+import { usePrivySolana } from "./providers/privy-provider";
+import { useResource } from "@/lib/frontend/use-resource";
+import type { TrackedPosition } from "@/lib/frontend/contracts";
+import { Icon } from "./social/icon";
+import { PageError, Skeleton } from "./social/shared";
+import { WalletButton } from "./wallet-button";
+import { formatDate, formatShares, formatUsd, shortenAddress } from "@/lib/format";
+import styles from "./disclosure-workspace.module.css";
+
+export function PositionsTable() {
+  const wallet = usePrivySolana();
+  return <div className={styles.workspace}>
+    <header className={styles.indexHero}><span className={styles.kicker}>Your wallet, on the record</span><h1>My positions</h1><p>Your signed fills. No inferred profits, no pretend balances.</p></header>
+    {wallet.solanaAddress ? <WalletPositions key={wallet.solanaAddress} address={wallet.solanaAddress} live={wallet.mode === "live"} /> : <section className={styles.empty}>
+      <Icon name="wallet" size={38} /><h2 className={styles.connectTitle}>A book of your own.</h2>
+      <p>{wallet.mode === "unavailable" ? "Wallet connection is unavailable. Retry to reload Privy. We won’t substitute a demo wallet." : "Connect your Solana wallet through Privy to see the fills recorded for your address."}</p>
+      <WalletButton /><p className={styles.finePrint}>Connecting doesn’t move funds or approve a trade.</p>
+    </section>}
+    <p className={styles.finePrint}>This is recorded transaction history, not a live wallet balance or profit-and-loss report. Published model indexes cannot accept deposits until a share-token vault is connected.</p>
+  </div>;
+}
+
+function WalletPositions({ address, live }: { address: string; live: boolean }) {
+  const [query, setQuery] = useState("");
+  const resource = useResource<{ positions: TrackedPosition[]; persistence: string }>(`/api/positions?wallet=${encodeURIComponent(address)}`);
+  const positions = resource.data?.positions.filter((position) => !live || !position.stub) ?? [];
+  const visible = positions.filter((position) => `${position.ticker} ${position.tokenSymbol}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const total = positions.reduce((sum, position) => sum + (Number.isFinite(position.usdcIn) ? position.usdcIn : 0), 0);
+  const assets = new Set(positions.map((position) => position.tokenSymbol)).size;
+  return <>
+    <div className={styles.sourceStrip}><span><Icon name="wallet" size={16} />{shortenAddress(address, 6)}</span><button className={styles.refreshButton} onClick={resource.reload}>Refresh fills <Icon name="refresh" size={15} /></button></div>
+    {resource.error && <PageError error={resource.error} retry={resource.reload} />}
+    {!resource.data ? !resource.error && <Skeleton cards={2} /> : <>
+      <dl className={styles.positionMetrics}><div><dt>Historical filled notional</dt><dd>{formatUsd(total)}</dd><small>Not current portfolio value</small></div><div><dt>Tracked assets</dt><dd>{assets}</dd><small>Distinct tokens in your fills</small></div><div><dt>Signed fills</dt><dd>{positions.length}</dd><small>For this wallet address</small></div></dl>
+      {!positions.length ? <section className={styles.empty}><h2>No fills recorded yet.</h2><p>Completed, user-approved trades will appear here. An empty history is not a statement about your wallet’s balance.</p><Link className={styles.secondaryButton} href="/">Explore published indexes</Link></section> : <section className={styles.section}>
+        <div className={styles.sectionHead}><h2>Your receipts</h2></div><label className={styles.search}><Icon name="search" size={18} /><span className="sr-only">Filter recorded fills by asset</span><input type="search" placeholder="Filter assets…" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+        <div className={styles.tableWrap} role="region" aria-label="Recorded wallet fills, scroll for transaction details" tabIndex={0}><table className={styles.table}><thead><tr><th scope="col">Asset</th><th scope="col">Tokens received</th><th scope="col">USDC filled</th><th scope="col">Date</th><th scope="col">Transaction</th></tr></thead><tbody>{visible.map((position) => <tr key={position.id}><td><strong>{position.tokenSymbol}</strong><small>{position.ticker}{position.stub ? " · Local preview" : ""}</small></td><td>{formatShares(position.tokensOut)}</td><td>{formatUsd(position.usdcIn)}</td><td>{formatDate(position.createdAt)}</td><td><code className={styles.mint}>{position.signature}</code></td></tr>)}</tbody></table></div>
+        {!visible.length && <p role="status">No fills match this asset. Try another ticker.</p>}
+      </section>}
+    </>}
+  </>;
 }
