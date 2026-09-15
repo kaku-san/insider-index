@@ -1,13 +1,18 @@
 import { verify } from "node:crypto";
-import { Connection, VersionedTransaction } from "@solana/web3.js";
+import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import type { FetchFn } from "@solana/web3.js";
-import type { AddOrEditTokenInput, OracleInput, TxPayloadBatchSequence } from "@symmetry-hq/sdk";
+import type { AddOrEditTokenInput, OracleInput, TxPayloadBatchSequence, Vault } from "@symmetry-hq/sdk";
+import { OracleType } from "@symmetry-hq/sdk/dist/layouts/oracle.js";
 import { getHeliusRpcUrl } from "../helius.ts";
 import { address, sha256, weightsValid } from "./amounts.ts";
 import { HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
-import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanDeployer, type KakuSanAsset } from "./kaku-san.ts";
+import { Journal } from "./journal.ts";
+import {
+  KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS,
+  assertKakuSanDeployer, type KakuSanAsset,
+} from "./kaku-san.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "./raydium-oracles.ts";
-import { GENESIS, NativeVaultBuilders } from "./symmetry-adapter.ts";
+import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
 
 export function kakuSanOracleInput(asset: KakuSanAsset): OracleInput {
   return {
@@ -44,12 +49,82 @@ export function kakuSanTokenInput(asset: KakuSanAsset): AddOrEditTokenInput {
   return token;
 }
 
+/** Strip creation-time WSOL/USDC Pyth slots. Empty oracles so no Pyth is rewritten. Never invent a pool. */
+export function kakuSanDeactivateInput(mint: string): AddOrEditTokenInput {
+  const slot = KAKU_SAN_DEFAULT_SLOTS.find(row => row.mint === address(mint));
+  if (!slot) throw new Error("Only the creation-time WSOL/USDC slots may be deactivated");
+  const token: AddOrEditTokenInput = {
+    token_mint: slot.mint,
+    active: false,
+    min_oracles_thresh: 0,
+    min_conf_bps: 0,
+    conf_thresh_bps: 0,
+    conf_multiplier: 0,
+    oracles: [],
+  };
+  if (token.oracles.length !== 0 || token.active) throw new Error("Deactivate must clear oracles and set inactive");
+  return token;
+}
+
+function allocatedAssets(vault: Pick<Vault, "composition" | "numTokens">) {
+  return vault.composition.slice(0, vault.numTokens);
+}
+function isActiveAsset(asset: { active: number | boolean }): boolean {
+  return asset.active === true || asset.active === 1;
+}
+function installedOracles(asset: Vault["composition"][number]) {
+  const aggregator = asset.oracleAggregator;
+  return aggregator.oracles.slice(0, aggregator.numOracles);
+}
+
+/** Live basket must be the 5 xStocks with Raydium CLMM. No Pyth on any allocated slot. */
+export function assertKakuSanComposition(vault: Pick<Vault, "composition" | "numTokens" | "lutPubkeys">): { activeMints: string[]; inactiveDefaults: string[] } {
+  const allocated = allocatedAssets(vault);
+  const inactiveDefaults: string[] = [];
+  for (const slot of KAKU_SAN_DEFAULT_SLOTS) {
+    const asset = allocated.find(row => row.mint.toBase58() === slot.mint);
+    if (!asset) { inactiveDefaults.push(slot.mint); continue; }
+    if (isActiveAsset(asset)) throw new Error(`KAKU_SAN_COMPOSITION: default slot ${slot.ticker} is still active`);
+    if (installedOracles(asset).some(oracle => oracle.oracleSettings.oracleType === OracleType.Pyth)) {
+      throw new Error(`ORACLE_TYPE_FORBIDDEN: ${slot.ticker} still has a Pyth oracle`);
+    }
+    inactiveDefaults.push(slot.mint);
+  }
+  for (const asset of allocated) {
+    const mint = asset.mint.toBase58();
+    if (KAKU_SAN_DEFAULT_SLOTS.some(slot => slot.mint === mint)) continue;
+    const spec = KAKU_SAN_ASSETS.find(row => row.mint === mint);
+    if (!spec) throw new Error(`KAKU_SAN_COMPOSITION: unexpected allocated mint ${mint}`);
+    const oracles = installedOracles(asset);
+    if (oracles.some(oracle => oracle.oracleSettings.oracleType === OracleType.Pyth)) {
+      throw new Error(`ORACLE_TYPE_FORBIDDEN: ${spec.ticker} still has a Pyth oracle`);
+    }
+    if (!isActiveAsset(asset)) throw new Error(`KAKU_SAN_COMPOSITION: ${spec.ticker} is not active`);
+    if (asset.weight !== spec.targetWeightBps) throw new Error(`KAKU_SAN_COMPOSITION: ${spec.ticker} weight ${asset.weight}, expected ${spec.targetWeightBps}`);
+    if (oracles.length === 0) throw new Error(`ORACLE_REQUIRED: ${spec.ticker} has no installed oracle`);
+    for (const oracle of oracles) {
+      if (oracle.oracleSettings.oracleType !== OracleType.RaydiumClmm) {
+        throw new Error(`ORACLE_TYPE_FORBIDDEN: ${spec.ticker} installs oracle type ${oracle.oracleSettings.oracleType}; Raydium CLMM only`);
+      }
+      const table = vault.lutPubkeys?.[oracle.accountsToLoadLutIds[0]];
+      const pool = table?.state.addresses[oracle.accountsToLoadLutIndices[0]]?.toBase58();
+      if (pool && pool !== spec.pool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${spec.ticker} installs ${pool}, expected ${spec.pool}`);
+    }
+  }
+  const activeMints = allocated.filter(isActiveAsset).map(asset => asset.mint.toBase58());
+  const expected = KAKU_SAN_ASSETS.map(asset => asset.mint);
+  if (activeMints.length !== expected.length || expected.some(mint => !activeMints.includes(mint))) {
+    throw new Error(`KAKU_SAN_COMPOSITION: active basket must be the 5 xStocks, got ${activeMints.join(",") || "none"}`);
+  }
+  return { activeMints, inactiveDefaults };
+}
+
 const READ_METHODS = /^(get|simulateTransaction$|isBlockhashValid$)/;
 export const KAKU_SAN_HEADERS = { "Cache-Control": "no-store" };
 export const PREPARE_TIMEOUT_MS = 20_000;
 const headers = KAKU_SAN_HEADERS;
 
-export type KakuSanCreateStep = "create" | "add-token" | "weights";
+export type KakuSanCreateStep = "create" | "deactivate-default" | "add-token" | "weights";
 export type KakuSanKeeperStep = "prices" | "rebalance";
 export type KakuSanStep = KakuSanCreateStep | KakuSanKeeperStep;
 export interface KakuSanPreparedTx { txBase64: string; messageHash: string; payer: string }
@@ -78,6 +153,32 @@ export interface KakuSanSubmitResult {
   signatures: string[];
   slot: number | null;
 }
+export interface KakuSanObservation {
+  vault: string;
+  shareMint: string;
+  exists: boolean;
+  activeMints: string[];
+  inactiveDefaults: string[];
+  pythRemaining: boolean;
+  weightsSet: boolean;
+  verified: boolean;
+}
+
+/** Durable identity of the one create attempt. Never a second createVaultTx while this is set.
+ * `submitted` is latched true before the create transaction is ever broadcast (see submitKakuSanStep),
+ * so a lost confirmation can never be mistaken for "never broadcast" by a later discard call. */
+export interface KakuSanCreateDraft { vault: string; mint: string; transactions: KakuSanPreparedTx[]; submitted: boolean }
+interface KakuSanCreateJournalState { draft: KakuSanCreateDraft | null }
+export const KAKU_SAN_CREATE_JOURNAL_PATH = ".data/index-vaults/kaku-san-create.json";
+export function kakuSanCreateJournal(path: string = KAKU_SAN_CREATE_JOURNAL_PATH): Journal<KakuSanCreateJournalState> {
+  return new Journal<KakuSanCreateJournalState>(path, () => ({ draft: null }));
+}
+
+const KAKU_SAN_STEPS: readonly KakuSanCreateStep[] = ["create", "deactivate-default", "add-token", "weights"];
+function parseStep(value: unknown): KakuSanCreateStep {
+  if (typeof value !== "string" || !KAKU_SAN_STEPS.includes(value as KakuSanCreateStep)) throw new Error("Unknown create step");
+  return value as KakuSanCreateStep;
+}
 
 export function parseKakuSanPrepareRequest(body: unknown): { creator: string; step: KakuSanStep; vault?: string; shareMint?: string; mint?: string } {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Create request required");
@@ -85,17 +186,17 @@ export function parseKakuSanPrepareRequest(body: unknown): { creator: string; st
   if (Object.keys(input).some(key => !["creator", "step", "vault", "shareMint", "mint"].includes(key))) throw new Error("Unexpected create field");
   if (typeof input.creator !== "string") throw new Error("Creator public key required");
   const creator = assertKakuSanDeployer(address(input.creator));
-  const step = input.step === undefined ? "create" : input.step;
-  if (step === "prices" || step === "rebalance") throw new Error("Rebalance is the local keeper CLI, not a wallet-signed web action");
-  if (step !== "create" && step !== "add-token" && step !== "weights") throw new Error("Unknown create step");
+  if (input.step === "prices" || input.step === "rebalance") throw new Error("Rebalance is the local keeper CLI, not a wallet-signed web action");
+  const step = input.step === undefined ? "create" : parseStep(input.step);
   if (step === "create") return { creator, step };
   if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Existing vault and share mint required");
   const vault = address(input.vault);
   const shareMint = address(input.shareMint);
-  if (step === "add-token") {
+  if (step === "add-token" || step === "deactivate-default") {
     if (typeof input.mint !== "string") throw new Error("Token mint required");
     const mint = address(input.mint);
-    if (!KAKU_SAN_ASSETS.some(asset => asset.mint === mint)) throw new Error("Mint is not in the Kaku San basket");
+    if (step === "add-token" && !KAKU_SAN_ASSETS.some(asset => asset.mint === mint)) throw new Error("Mint is not in the Kaku San basket");
+    if (step === "deactivate-default" && !KAKU_SAN_DEFAULT_SLOTS.some(slot => slot.mint === mint)) throw new Error("Mint is not a creation-time default slot");
     return { creator, step, vault, shareMint, mint };
   }
   return { creator, step, vault, shareMint };
@@ -107,13 +208,32 @@ export function parseKakuSanSubmitRequest(body: unknown): { creator: string; ste
   if (Object.keys(input).some(key => !["creator", "step", "vault", "shareMint", "signedTransactions"].includes(key))) throw new Error("Unexpected submit field");
   if (typeof input.creator !== "string") throw new Error("Creator public key required");
   const creator = assertKakuSanDeployer(address(input.creator));
-  const step = input.step;
-  if (step === "prices" || step === "rebalance") throw new Error("Rebalance is the local keeper CLI, not a wallet-signed web action");
-  if (step !== "create" && step !== "add-token" && step !== "weights") throw new Error("Unknown create step");
+  if (input.step === "prices" || input.step === "rebalance") throw new Error("Rebalance is the local keeper CLI, not a wallet-signed web action");
+  const step = parseStep(input.step);
   if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Vault and share mint required");
   if (!Array.isArray(input.signedTransactions) || input.signedTransactions.length === 0 || input.signedTransactions.length > 16 ||
       input.signedTransactions.some(tx => typeof tx !== "string" || tx.length === 0 || tx.length > 20_000)) throw new Error("Signed transactions required");
   return { creator, step, vault: address(input.vault), shareMint: address(input.shareMint), signedTransactions: input.signedTransactions };
+}
+
+export function parseKakuSanObserveRequest(body: unknown): { creator: string; vault: string; shareMint: string } {
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Observe request required");
+  const input = body as Record<string, unknown>;
+  if (Object.keys(input).some(key => !["creator", "vault", "shareMint"].includes(key))) throw new Error("Unexpected observe field");
+  if (typeof input.creator !== "string") throw new Error("Creator public key required");
+  if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Existing vault and share mint required");
+  return { creator: assertKakuSanDeployer(address(input.creator)), vault: address(input.vault), shareMint: address(input.shareMint) };
+}
+
+/** Discard is refused once the draft has been broadcast (or its vault is a real vault on-chain): never
+ * abandon a create that may still land, and never abandon a created vault by mistake. */
+export function parseKakuSanDiscardRequest(body: unknown): { creator: string; vault: string; shareMint: string } {
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Discard request required");
+  const input = body as Record<string, unknown>;
+  if (Object.keys(input).some(key => !["creator", "vault", "shareMint"].includes(key))) throw new Error("Unexpected discard field");
+  if (typeof input.creator !== "string") throw new Error("Creator public key required");
+  if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Draft vault and share mint required");
+  return { creator: assertKakuSanDeployer(address(input.creator)), vault: address(input.vault), shareMint: address(input.shareMint) };
 }
 
 /** Mainnet RPC only. Sends are permitted solely when broadcasting a wallet-signed transaction. Never a signer. */
@@ -186,20 +306,47 @@ function prepared(step: KakuSanStep, vault: string | null, shareMint: string | n
   };
 }
 
-export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPrepareRequest>, native: NativeVaultBuilders, simulate = true): Promise<KakuSanPrepared> {
+/** Reuses the journaled draft's exact accounts/instructions; only the blockhash is refreshed so a stale
+ * cached create never fails to simulate/sign. The vault/mint identity is never re-derived on retry. */
+async function refreshedCreateTransaction(connection: Connection, tx: KakuSanPreparedTx): Promise<KakuSanPreparedTx> {
+  const parsed = VersionedTransaction.deserialize(Buffer.from(tx.txBase64, "base64"));
+  if (parsed.signatures.some(signature => signature.some(byte => byte !== 0))) throw new Error("Cached create draft is unexpectedly signed");
+  const { blockhash } = await connection.getLatestBlockhash("confirmed");
+  parsed.message.recentBlockhash = blockhash;
+  return { txBase64: Buffer.from(parsed.serialize()).toString("base64"), messageHash: sha256(parsed.message.serialize()), payer: tx.payer };
+}
+
+export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPrepareRequest>, native: NativeVaultBuilders, simulate = true, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<KakuSanPrepared> {
   assertNoPythEnvironment();
   if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
   await native.assertNetwork();
   const creator = assertKakuSanDeployer(input.creator);
   weightsValid([...KAKU_SAN_ASSETS]);
   if (input.step === "create") {
-    const draft = await native.sdk.createVaultTx({
-      creator, start_price: KAKU_SAN.startPrice, name: KAKU_SAN.name, symbol: KAKU_SAN.symbol,
-      metadata_uri: KAKU_SAN.metadataUri, host_platform_params: hostParams(creator),
+    return journal.update(async state => {
+      if (state.draft) {
+        const transactions = await Promise.all(state.draft.transactions.map(tx => refreshedCreateTransaction(native.connection, tx)));
+        if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+        return prepared("create", state.draft.vault, state.draft.mint, transactions);
+      }
+      // First and only createVaultTx call for this draft; the returned vault/mint is journaled below and
+      // never re-derived from the native counter on a retry (README: "not generation of a second vault").
+      const draft = await native.sdk.createVaultTx({
+        creator, start_price: KAKU_SAN.startPrice, name: KAKU_SAN.name, symbol: KAKU_SAN.symbol,
+        metadata_uri: KAKU_SAN.metadataUri, host_platform_params: hostParams(creator),
+      });
+      const transactions = payloadTransactions(draft, creator);
+      if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+      state.draft = { vault: draft.vault, mint: draft.mint, transactions, submitted: false };
+      return prepared("create", draft.vault, draft.mint, transactions);
     });
-    const transactions = payloadTransactions(draft, creator);
+  }
+  if (input.step === "deactivate-default") {
+    const token = kakuSanDeactivateInput(input.mint!);
+    const payload = await native.sdk.addOrEditTokenTx({ vault: input.vault!, manager: creator }, token);
+    const transactions = payloadTransactions(payload, creator);
     if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
-    return prepared("create", draft.vault, draft.mint, transactions);
+    return prepared("deactivate-default", input.vault!, input.shareMint!, transactions, token.token_mint);
   }
   if (input.step === "add-token") {
     const asset = KAKU_SAN_ASSETS.find(row => row.mint === input.mint);
@@ -216,21 +363,74 @@ export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPr
   return prepared("weights", input.vault!, input.shareMint!, transactions);
 }
 
-export async function submitKakuSanStep(input: ReturnType<typeof parseKakuSanSubmitRequest>, connection: Connection): Promise<KakuSanSubmitResult> {
+/** Signature-status confirm: never wait on a freshly fetched blockhash that outlives the signed tx. */
+export async function confirmWalletTransaction(connection: Connection, signature: string): Promise<number | null> {
+  const confirmation = await connection.confirmTransaction(signature, "confirmed");
+  if (confirmation.value.err) throw new Error(`Transaction ${signature} failed: ${JSON.stringify(confirmation.value.err)}`);
+  return confirmation.context.slot;
+}
+
+/** Latches the journaled create draft as broadcast before the first sendRawTransaction. Once set, a lost
+ * confirmation (dropped response, closed tab) can never look like "never broadcast" to discard; the
+ * transaction may still land after this call returns, so discard must refuse from this point on.
+ * Throws (never silently no-ops) if a concurrent discard already cleared or reused this draft slot, so
+ * submitKakuSanStep aborts before ever broadcasting a create transaction whose journal entry is gone. */
+export async function markKakuSanCreateBroadcast(vault: string, shareMint: string, journal: Journal<KakuSanCreateJournalState>): Promise<void> {
+  await journal.update(state => {
+    if (!state.draft || state.draft.vault !== vault || state.draft.mint !== shareMint) {
+      throw new Error("Create draft was discarded before it could be broadcast; resume or recreate it");
+    }
+    state.draft.submitted = true;
+  });
+}
+
+export async function submitKakuSanStep(input: ReturnType<typeof parseKakuSanSubmitRequest>, connection: Connection, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<KakuSanSubmitResult> {
   assertNoPythEnvironment();
   if (await connection.getGenesisHash() !== GENESIS["mainnet-beta"]) throw new Error("RPC genesis/network mismatch");
   const signatures: string[] = [];
   let slot: number | null = null;
+  let broadcastMarked = false;
   for (const signed of input.signedTransactions) {
     const tx = assertSignedByDeployer(signed, input.creator);
-    const latest = await connection.getLatestBlockhash("confirmed");
+    if (input.step === "create" && !broadcastMarked) {
+      await markKakuSanCreateBroadcast(input.vault, input.shareMint, journal);
+      broadcastMarked = true;
+    }
     const signature = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 3 });
-    const confirmation = await connection.confirmTransaction({ signature, blockhash: latest.blockhash, lastValidBlockHeight: latest.lastValidBlockHeight }, "confirmed");
-    if (confirmation.value.err) throw new Error(`Transaction ${signature} failed: ${JSON.stringify(confirmation.value.err)}`);
+    slot = await confirmWalletTransaction(connection, signature);
     signatures.push(signature);
-    slot = confirmation.context.slot;
   }
   return { step: input.step, vault: input.vault, shareMint: input.shareMint, signatures, slot };
+}
+
+function observation(vault: string, shareMint: string, exists: boolean, extra: Partial<KakuSanObservation> = {}): KakuSanObservation {
+  return { vault, shareMint, exists, activeMints: [], inactiveDefaults: [], pythRemaining: false, weightsSet: false, verified: false, ...extra };
+}
+
+export async function observeKakuSanVault(input: { vault: string; shareMint: string }, native: NativeVaultBuilders): Promise<KakuSanObservation> {
+  assertNoPythEnvironment();
+  if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
+  await native.assertNetwork();
+  const vault = address(input.vault);
+  const shareMint = address(input.shareMint);
+  const account = await native.connection.getAccountInfo(new PublicKey(vault), "confirmed");
+  if (!account) return observation(vault, shareMint, false);
+  const fetched = await native.sdk.fetchVault(vault);
+  if (fetched.ownAddress.toBase58() !== vault || fetched.mint.toBase58() !== shareMint) throw new Error("Native vault identity mismatch");
+  const allocated = allocatedAssets(fetched);
+  const activeMints = allocated.filter(isActiveAsset).map(asset => asset.mint.toBase58());
+  const inactiveDefaults = allocated.filter(asset => KAKU_SAN_DEFAULT_SLOTS.some(slot => slot.mint === asset.mint.toBase58()) && !isActiveAsset(asset)).map(asset => asset.mint.toBase58());
+  const pythRemaining = allocated.some(asset => installedOracles(asset).some(oracle => oracle.oracleSettings.oracleType === OracleType.Pyth));
+  const weightsSet = KAKU_SAN_ASSETS.every(asset => {
+    const row = allocated.find(item => item.mint.toBase58() === asset.mint);
+    return !!row && isActiveAsset(row) && row.weight === asset.targetWeightBps;
+  });
+  try {
+    const verified = assertKakuSanComposition(fetched);
+    return observation(vault, shareMint, true, { ...verified, pythRemaining: false, weightsSet: true, verified: true });
+  } catch {
+    return observation(vault, shareMint, true, { activeMints, inactiveDefaults, pythRemaining, weightsSet, verified: false });
+  }
 }
 
 export async function withKakuSanTimeout<T>(work: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
@@ -247,7 +447,7 @@ export async function withKakuSanTimeout<T>(work: (signal: AbortSignal) => Promi
   finally { if (timer) clearTimeout(timer); if (!controller.signal.aborted) controller.abort(); }
 }
 
-export async function handleKakuSanPrepare(request: Request, nativeBuilder: (signal?: AbortSignal) => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS): Promise<Response> {
+export async function handleKakuSanPrepare(request: Request, nativeBuilder: (signal?: AbortSignal) => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<Response> {
   let input: ReturnType<typeof parseKakuSanPrepareRequest>;
   try {
     const text = await request.text();
@@ -257,14 +457,14 @@ export async function handleKakuSanPrepare(request: Request, nativeBuilder: (sig
     return Response.json({ error: error instanceof Error ? error.message : "Invalid Kaku San prepare request" }, { status: 400, headers });
   }
   try {
-    const preparedStep = await withKakuSanTimeout(() => prepareKakuSanStep(input, nativeBuilder()), timeoutMs);
+    const preparedStep = await withKakuSanTimeout(() => prepareKakuSanStep(input, nativeBuilder(), true, journal), timeoutMs);
     return Response.json(preparedStep, { status: 200, headers });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Kaku San prepare unavailable" }, { status: 503, headers });
   }
 }
 
-export async function handleKakuSanSubmit(request: Request, connectionBuilder: () => Connection = () => kakuSanConnection(true), timeoutMs = PREPARE_TIMEOUT_MS): Promise<Response> {
+export async function handleKakuSanSubmit(request: Request, connectionBuilder: () => Connection = () => kakuSanConnection(true), journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<Response> {
   let input: ReturnType<typeof parseKakuSanSubmitRequest>;
   try {
     const text = await request.text();
@@ -274,10 +474,66 @@ export async function handleKakuSanSubmit(request: Request, connectionBuilder: (
     return Response.json({ error: error instanceof Error ? error.message : "Invalid Kaku San submit request" }, { status: 400, headers });
   }
   try {
-    const result = await withKakuSanTimeout(() => submitKakuSanStep(input, connectionBuilder()), timeoutMs);
+    // No timeout race: a 503 must not leave sendRawTransaction running in the background.
+    const result = await submitKakuSanStep(input, connectionBuilder(), journal);
     return Response.json(result, { status: 200, headers });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Kaku San submit unavailable" }, { status: 503, headers });
+  }
+}
+
+export async function handleKakuSanObserve(request: Request, nativeBuilder: () => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS): Promise<Response> {
+  let input: ReturnType<typeof parseKakuSanObserveRequest>;
+  try {
+    const text = await request.text();
+    if (text.length > 4096) return Response.json({ error: "Request too large" }, { status: 413, headers });
+    input = parseKakuSanObserveRequest(JSON.parse(text));
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Invalid Kaku San observe request" }, { status: 400, headers });
+  }
+  try {
+    const result = await withKakuSanTimeout(() => observeKakuSanVault(input, nativeBuilder()), timeoutMs);
+    return Response.json(result, { status: 200, headers });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Kaku San observe unavailable" }, { status: 503, headers });
+  }
+}
+
+/** Only clears a journaled draft that was never broadcast; refuses once submitKakuSanStep has sent the
+ * create transaction (the durable `submitted` latch, immune to a lost confirmation) or once the draft's
+ * vault is observably a real Symmetry vault on-chain (owned by the vault program, not merely funded). */
+export async function discardKakuSanCreateDraft(input: ReturnType<typeof parseKakuSanDiscardRequest>, native: NativeVaultBuilders, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<{ discarded: boolean }> {
+  assertNoPythEnvironment();
+  if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
+  await native.assertNetwork();
+  return journal.update(async state => {
+    if (!state.draft) return { discarded: false };
+    if (state.draft.vault !== input.vault || state.draft.mint !== input.shareMint) throw new Error("Discard target does not match the saved draft; resume it instead");
+    if (state.draft.submitted) throw new Error("Draft create was already broadcast; it cannot be discarded, resume it instead");
+    // Existence alone is not enough: an unrelated address can hold a stray balance at the derived vault
+    // PDA without ever having been created by createVaultTx. Only a real Symmetry vault (owned by the
+    // vault program) may refuse discard.
+    const account = await native.connection.getAccountInfo(new PublicKey(state.draft.vault), "confirmed");
+    if (account && account.owner.toBase58() === SYMMETRY_PROGRAM_ID) throw new Error("Draft vault already exists on-chain; it cannot be discarded");
+    state.draft = null;
+    return { discarded: true };
+  });
+}
+
+export async function handleKakuSanDiscard(request: Request, nativeBuilder: () => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<Response> {
+  let input: ReturnType<typeof parseKakuSanDiscardRequest>;
+  try {
+    const text = await request.text();
+    if (text.length > 4096) return Response.json({ error: "Request too large" }, { status: 413, headers });
+    input = parseKakuSanDiscardRequest(JSON.parse(text));
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Invalid Kaku San discard request" }, { status: 400, headers });
+  }
+  try {
+    const result = await withKakuSanTimeout(() => discardKakuSanCreateDraft(input, nativeBuilder(), journal), timeoutMs);
+    return Response.json(result, { status: 200, headers });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Kaku San discard unavailable" }, { status: 503, headers });
   }
 }
 
