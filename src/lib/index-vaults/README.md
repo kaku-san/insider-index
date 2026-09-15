@@ -78,4 +78,4 @@ The handoff's 77 Python reference tests passed locally using its reference packa
 5. Implement/test persistent claim/fee reconciliation and stage-specific cancellation, bounded normal keeper execution and delayed strategy activation, without holders signing rebalances or force-mode fallback. Test actual native AND thresholds, cooldown/window/bounty, concurrent keeper races and post-send timeouts.
 6. Integrate published FMP models, share-mint position and operation auth APIs (wallet nonce/session/CSRF/rate limits), actual net-of-fee NAV history and claim-resume UX. Only then consider optional exact-credit user-authorized USDC conversion. Native guaranteed-USDC exit stays OFF absent separate proof.
 
-The integration itself confers no funding authorization. The separate devnet creation receipt is not a successful funded deposit roundtrip, production deployment or public-funds approval.
+The integration itself confers no funding authorization. The separate devnet creation/contribution/lock receipts are not a completed deposit roundtrip, production deployment or public-funds approval.

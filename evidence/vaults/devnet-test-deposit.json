@@ -1,0 +1,216 @@
+{
+  "network": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "observedAt": "2026-09-15T05:59:04.078Z",
+  "status": "CONTRIBUTION_AND_LOCK_FINALIZED_SETTLEMENT_PENDING",
+  "programId": "BASKT7aKd8n7ibpUbwLP3Wiyxyi3yoiXsxBk4Hpumate",
+  "vault": "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8",
+  "shareMint": "Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A",
+  "owner": "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+  "basketLabel": "Execution Test — not politician holdings",
+  "basket": [
+    {
+      "mint": "So11111111111111111111111111111111111111112",
+      "weightBps": 5000
+    },
+    {
+      "mint": "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT",
+      "weightBps": 5000
+    }
+  ],
+  "amountUsdcRaw": "100000",
+  "amountUsdcDisplay": "0.1",
+  "usdcMint": "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT",
+  "ownerUsdcAta": "DTJXN8s64Ut8JYF8944XaM3mtt93ehpXxAwyMxvFafYY",
+  "vaultUsdcAta": "9yU5Rd8qtcJzwUKRVv87jABwzmbbMHVC2yDDFGzdsxkt",
+  "ownerUsdcBeforeRaw": "1833029",
+  "ownerUsdcAfterRaw": "1733029",
+  "vaultUsdcAfterRaw": "100000",
+  "shareSupplyRaw": "0",
+  "ownerShareBalanceRaw": "0",
+  "shareDecimals": 6,
+  "nativeIntent": "8YE4XGm767rVxFhEYr8snLDxgRf1G9YLCPwPBKD3QBCL",
+  "nativeNextAction": "update_prices",
+  "nativeIntentTokens": [
+    {
+      "mint": "So11111111111111111111111111111111111111112",
+      "amount": 0,
+      "target_amount": 0,
+      "price": {
+        "price": 4294967296,
+        "conf": 4294967295,
+        "update_time": 0
+      },
+      "keep_token": false
+    },
+    {
+      "mint": "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT",
+      "amount": 100000,
+      "target_amount": 0,
+      "price": {
+        "price": 4294967296,
+        "conf": 4294967295,
+        "update_time": 0
+      },
+      "keep_token": true
+    }
+  ],
+  "stages": [
+    {
+      "network": "devnet",
+      "rpc": "https://api.devnet.solana.com",
+      "stage": "init",
+      "signature": "2Yo8MQENKUnbYeiXFzZHwSxSF1Q3CCcNRYHNeNXZsaWo1Bs3wJMUZGupMW246SfMauD2RorboDnHEVX2A1qTTjkn",
+      "messageHash": "6ded9aa6ead4e6ad6e9b78ddccfaa8af011ddeac18b5d6761460f012be3875af",
+      "blockhash": "5z612F4JubkQoisVFPBXQYAktNnh5GPocoBx45xNeXZL",
+      "lastValidBlockHeight": 486022004,
+      "beforeLamports": 4809072640,
+      "status": "FINALIZED",
+      "at": "2026-09-15T05:55:28.318Z",
+      "slot": 498622874,
+      "error": null,
+      "feeLamports": 30000,
+      "afterLamports": 4807553578,
+      "walletDebitLamports": 1519062,
+      "simulation": {
+        "slot": 498622869,
+        "error": null,
+        "unitsConsumed": 80392,
+        "simulatedWalletDebitLamports": 1519062
+      },
+      "tokenDeltas": [
+        {
+          "mint": "Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A",
+          "owner": "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+          "accountIndex": 5,
+          "beforeRaw": "0",
+          "afterRaw": "0",
+          "deltaRaw": "0"
+        },
+        {
+          "mint": "So11111111111111111111111111111111111111112",
+          "owner": "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+          "accountIndex": 6,
+          "beforeRaw": "10250000",
+          "afterRaw": "9360000",
+          "deltaRaw": "-890000"
+        },
+        {
+          "mint": "So11111111111111111111111111111111111111112",
+          "owner": "fJSm61znCYwaKUKusXCxmT5691W3QzdRxrmQ9MekJU9",
+          "accountIndex": 8,
+          "beforeRaw": "930972774",
+          "afterRaw": "931862774",
+          "deltaRaw": "890000"
+        },
+        {
+          "mint": "Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A",
+          "owner": "9f8MbowyCCgQS6nBrjeGeZQjwygevqXrQNBM7NUuhWV1",
+          "accountIndex": 10,
+          "beforeRaw": "0",
+          "afterRaw": "0",
+          "deltaRaw": "0"
+        }
+      ]
+    },
+    {
+      "network": "devnet",
+      "rpc": "https://api.devnet.solana.com",
+      "stage": "contribute",
+      "signature": "LJdAP9ckLDBrbrNEXjwEBvFLg8Pe7JHtEbCQ7jiLGVMiWpxbx9fqHijWEnRoUVALArBNMatPciecbtezAXhmSf5",
+      "messageHash": "8723eb3f8dfdfda582a55ee20b361fbd43d0ed76bd294b14959c3a5c317856b8",
+      "blockhash": "5jJhPciN4ftizMzAnJ9gsGxpmM7DjGHoXcH1x3kafbXT",
+      "lastValidBlockHeight": 486022152,
+      "beforeLamports": 4807553578,
+      "status": "FINALIZED",
+      "at": "2026-09-15T05:56:07.589Z",
+      "slot": 498623114,
+      "error": null,
+      "feeLamports": 30000,
+      "afterLamports": 4807523578,
+      "walletDebitLamports": 30000,
+      "simulation": {
+        "slot": 498623109,
+        "error": null,
+        "unitsConsumed": 19803,
+        "simulatedWalletDebitLamports": 30000
+      },
+      "tokenDeltas": [
+        {
+          "mint": "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT",
+          "owner": "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+          "accountIndex": 3,
+          "beforeRaw": "1833029",
+          "afterRaw": "1733029",
+          "deltaRaw": "-100000"
+        },
+        {
+          "mint": "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT",
+          "owner": "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8",
+          "accountIndex": 4,
+          "beforeRaw": "0",
+          "afterRaw": "100000",
+          "deltaRaw": "100000"
+        }
+      ]
+    },
+    {
+      "network": "devnet",
+      "rpc": "https://api.devnet.solana.com",
+      "stage": "lock",
+      "signature": "nW52nuqsokCatXPX8tuagmWyWaRfrwW4CLAwS7NqsGDBcMewLgafcYtTATz1hd2VZWuLZnD5kpzGV3y9a1S8RN2",
+      "messageHash": "3207f1639319d41a346bdd767018655d3e77757f10ee8c5f72bf2488934c278e",
+      "blockhash": "ZggNrMTorEP2zvVLqpKyH7oAFQjhLRzKX7LzUBbf4ew",
+      "lastValidBlockHeight": 486022304,
+      "beforeLamports": 4807523578,
+      "status": "FINALIZED",
+      "at": "2026-09-15T05:56:31.815Z",
+      "slot": 498623256,
+      "error": null,
+      "feeLamports": 30000,
+      "afterLamports": 4807493578,
+      "walletDebitLamports": 30000,
+      "simulation": {
+        "slot": 498623250,
+        "error": null,
+        "unitsConsumed": 8857,
+        "simulatedWalletDebitLamports": 30000
+      },
+      "tokenDeltas": []
+    }
+  ],
+  "preflightRejectedAttempts": [
+    {
+      "signature": "3aA1fwNfn5LmiSMpQZ6MtpGu43mMkXbxcLEhSBeroizjzvughfe1Ntc38e1EGdTLWbBctvrpjFCjkmkicRQ5pT4z",
+      "messageHash": "e57ad94f9df0f4c4ff09aef8a126c711d9e621c0bce34cff1a1f3e92c6067c4e",
+      "status": "RPC_PREFLIGHT_REJECTED_SIGNATURE_VERIFICATION",
+      "localSignatureValid": false,
+      "signatureStatus": null,
+      "intentAccountPresent": false,
+      "walletLamports": 4809072640,
+      "reconciledAt": "2026-09-15T05:54:58.458Z",
+      "cause": "One-off signer cleared aliased key buffer before signing; RPC rejected invalid signature. Corrected to copy buffer and verify Ed25519 signature locally before resubmission.",
+      "chainEffects": false
+    }
+  ],
+  "budget": {
+    "initialAuthorizedLamports": 5000000000,
+    "beforeDepositLamports": 4809072640,
+    "depositWalletDebitLamports": 1579062,
+    "depositTransactionFeesLamports": 90000,
+    "depositWsolBountyRaw": "890000",
+    "wsolBountySource": "Previously wrapped SOL from original 5-SOL budget; already included in creation wallet debit, not additive to cumulative wallet debit.",
+    "remainingWalletLamports": 4807493578,
+    "cumulativeWalletDebitLamports": 192506422,
+    "finalizedTransactionsIncludingCreation": 4,
+    "rejectedSubmissions": 1
+  },
+  "mainnetRpcUsed": false,
+  "publicFundsEnabled": false,
+  "keeperStarted": false,
+  "priceUpdate": "NOT_RUN",
+  "settlement": "NOT_RUN",
+  "roundtrip": "NOT_RUN",
+  "readbackChecks": "PASS"
+}
