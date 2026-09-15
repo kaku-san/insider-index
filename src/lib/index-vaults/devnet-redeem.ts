@@ -4,16 +4,19 @@ import { getAssociatedTokenAddressSync, getMint, TOKEN_PROGRAM_ID, unpackAccount
 import { SymmetryCore } from "@symmetry-hq/sdk";
 import type { TxPayloadBatchSequence, Vault } from "@symmetry-hq/sdk";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { DEVNET_TEST_VAULT } from "./devnet-contract.ts";
+import { devnetTestIdentity } from "./devnet-deposit.ts";
+import { completeKeepTokens, GENESIS } from "./symmetry-adapter.ts";
 
 /** One existing execution-test vault. No mainnet, signer, creation or send interface. */
 export const REDEEM_TEST_VAULT = Object.freeze({
   rpc: "https://api.devnet.solana.com",
-  genesis: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
-  program: "BASKT7aKd8n7ibpUbwLP3Wiyxyi3yoiXsxBk4Hpumate",
-  vault: "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8",
-  mint: "Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A",
-  owner: "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
-  decimals: 6,
+  genesis: GENESIS.devnet,
+  program: devnetTestIdentity.programId,
+  vault: DEVNET_TEST_VAULT.vaultAccount,
+  mint: DEVNET_TEST_VAULT.shareMint,
+  owner: devnetTestIdentity.initialDeployer,
+  decimals: DEVNET_TEST_VAULT.shareDecimals,
 });
 
 const READ_METHODS = new Set([
@@ -49,9 +52,8 @@ export function redeemKeepTokens(vault: Pick<Vault, "numTokens" | "composition">
   if (!Number.isInteger(vault.numTokens) || vault.numTokens < 1 || vault.numTokens > 100 || vault.composition.length < vault.numTokens) {
     throw new Error("Incomplete native vault composition");
   }
-  // Allocated slots include inactive/residual assets, not only positive target weights.
-  const mints = vault.composition.slice(0, vault.numTokens).map(asset => asset.mint.toBase58());
-  if (new Set(mints).size !== mints.length || mints.includes(PublicKey.default.toBase58())) throw new Error("Ambiguous native composition");
+  const mints = completeKeepTokens(vault);
+  if (mints.length !== vault.numTokens || mints.includes(PublicKey.default.toBase58())) throw new Error("Ambiguous native composition");
   return mints;
 }
 
