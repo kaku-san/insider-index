@@ -15,13 +15,33 @@ import {
   withKakuSanTimeout, type KakuSanPrepared,
 } from "./kaku-san-create.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyVault } from "./raydium-oracles.ts";
+import { evaluateRebalanceRequired, rebalanceInputFromVault } from "./rebalance-eligibility.ts";
+import type { RebalanceDecision } from "./rebalance-eligibility.ts";
 import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
 import { keeperConfigurationHash, planKeeperObservation } from "../../../workers/stocklana-keeper.ts";
 import type { KeeperIntentObservation, KeeperObservation } from "../../../workers/stocklana-keeper.ts";
 
 export const KAKU_SAN_NATIVE_TOKEN_CAP = MAX_SUPPORTED_TOKENS_PER_VAULT;
-const HUNDRED_PERCENT_BPS = 10_000;
 const headers = KAKU_SAN_HEADERS;
+/** Scale for converting an SDK Decimal price into the shared module's bigint "quote units per 1 raw token". */
+const PRICE_QUOTE_SCALE = 10n ** 18n;
+const ELIGIBILITY_REASONS: Record<string, string> = {
+  "automation-disabled": "Automation is disabled on this vault",
+  "active-rebalance": "An active rebalance is already in progress",
+  "no-bounty": "Vault bounty balance is zero",
+  "cycle-not-started": "Automation cycle has not started",
+  "outside-automation-window": "Outside the automation window",
+  "cooldown": "Rebalance cooldown has not elapsed",
+  "prices-unavailable-hermes-forbidden": "Native gates passed; price-drift still required",
+  "zero-tvl": "Vault TVL is zero; nothing to rebalance",
+  "on-target": "Value drift is within rebalance thresholds",
+};
+
+function describeEligibility(decision: RebalanceDecision): KakuSanEligibility {
+  if (decision.reason.startsWith("unpriceable:")) return { required: decision.required, reason: "A required token cannot be priced from Raydium" };
+  if (decision.reason.startsWith("drift:")) return { required: decision.required, reason: "Native eligibility: value drift exceeds rebalance thresholds" };
+  return { required: decision.required, reason: ELIGIBILITY_REASONS[decision.reason] ?? decision.reason };
+}
 
 export interface KakuSanDriftRow {
   ticker: string | null;
@@ -84,86 +104,25 @@ export function kakuSanDrift(
   return rows;
 }
 
-function asInt(value: unknown, field: string): number {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "bigint") return Number(value);
-  if (value && typeof value === "object" && "toString" in value) {
-    const text = String((value as { toString(): string }).toString());
-    if (!/^-?\d+$/.test(text)) throw new Error(`NATIVE_ELIGIBILITY_UNAVAILABLE: malformed ${field}`);
-    const n = Number(text);
-    if (!Number.isSafeInteger(n)) throw new Error(`NATIVE_ELIGIBILITY_UNAVAILABLE: ${field} exceeds integer range`);
-    return n;
-  }
-  throw new Error(`NATIVE_ELIGIBILITY_UNAVAILABLE: missing ${field}`);
-}
-
-/** Same early gates as SDK `isRebalanceRequired`, without Hermes/Pyth HTTP. */
+/** Same early gates as SDK `isRebalanceRequired`, delegated to the shared Hermes-free AND rule. */
 export function nativeRebalanceGates(vault: Vault, nowSeconds = Math.floor(Date.now() / 1000)): KakuSanEligibility {
-  const settings = vault.settings;
-  if (asInt(settings.automation.allowAutomation, "allowAutomation") !== 1) {
-    return { required: false, reason: "Automation is disabled on this vault" };
-  }
-  if (asInt(settings.activeRebalance, "activeRebalance") > 0) {
-    return { required: false, reason: "An active rebalance is already in progress" };
-  }
-  if (asInt(settings.bountyBalance, "bountyBalance") === 0) {
-    return { required: false, reason: "Vault bounty balance is zero" };
-  }
-  const cycleStart = asInt(settings.schedule.cycleStartTime, "cycleStartTime");
-  if (cycleStart > nowSeconds) return { required: false, reason: "Automation cycle has not started" };
-  const duration = asInt(settings.schedule.cycleDuration, "cycleDuration");
-  const elapsed = nowSeconds - cycleStart;
-  const cycleTimestamp = duration === 0 ? 0 : elapsed % duration;
-  const windowStart = asInt(settings.schedule.automationStart, "automationStart");
-  const windowEnd = asInt(settings.schedule.automationEnd, "automationEnd");
-  if (!(cycleTimestamp >= windowStart && cycleTimestamp < windowEnd)) {
-    return { required: false, reason: "Outside the automation window" };
-  }
-  const last = asInt(settings.lastAutomationExecutionTimestamp, "lastAutomationExecutionTimestamp");
-  const cooldown = asInt(settings.automation.rebalanceActivationCooldown, "rebalanceActivationCooldown");
-  if (last + cooldown >= nowSeconds) return { required: false, reason: "Rebalance cooldown has not elapsed" };
-  return { required: null, reason: "Native gates passed; price-drift still required" };
+  return describeEligibility(evaluateRebalanceRequired(rebalanceInputFromVault(vault, nowSeconds, null)));
 }
 
-async function raydiumValueRebalanceRequired(vault: Vault, connection: NativeVaultBuilders["connection"]): Promise<KakuSanEligibility> {
+function decimalPriceQuote(price: Decimal): bigint {
+  return BigInt(price.mul(PRICE_QUOTE_SCALE.toString()).toFixed(0));
+}
+
+/** Loads Raydium prices, then defers to the shared AND rule for the drift math (never a second copy of it). */
+async function raydiumValueRebalanceRequired(vault: Vault, connection: NativeVaultBuilders["connection"], nowSeconds: number): Promise<KakuSanEligibility> {
   const priced = await loadVaultPrice(vault, connection);
+  const quotes = new Map<string, { priceQuote: bigint; validated: boolean }>();
   for (let i = 0; i < priced.numTokens; i++) {
     const token = priced.composition[i];
-    const mustPrice = token.weight > 0 || !token.amount.isZero();
-    if (!mustPrice) continue;
-    if (token.mint.equals(priced.settings.bountyMint)) continue;
-    if (!token.price || token.price.validated !== true || !token.price.price.gt(new Decimal(0))) {
-      return { required: false, reason: "A required token cannot be priced from Raydium" };
-    }
+    if (!token.price) continue;
+    quotes.set(token.mint.toBase58(), { priceQuote: decimalPriceQuote(token.price.price), validated: token.price.validated === true });
   }
-  let vaultTvl = new Decimal(0);
-  let weightSum = 0;
-  for (let i = 0; i < priced.numTokens; i++) {
-    const token = priced.composition[i];
-    weightSum += token.weight;
-    if (token.amount.isZero()) continue;
-    if (!token.price || !token.value) return { required: false, reason: "Token value unavailable after Raydium price load" };
-    vaultTvl = vaultTvl.add(token.value);
-  }
-  if (vaultTvl.isZero() || weightSum === 0) return { required: false, reason: "Vault TVL is zero; nothing to rebalance" };
-  const relThreshold = new Decimal(priced.settings.automation.rebalanceActivationThresholdRelBps).mul(1.01);
-  const absThreshold = new Decimal(priced.settings.automation.rebalanceActivationThresholdAbsBps).mul(1.01);
-  for (let i = 0; i < priced.numTokens; i++) {
-    const token = priced.composition[i];
-    if (token.mint.equals(priced.settings.bountyMint)) continue;
-    if (!token.price || !token.value) return { required: false, reason: "Token value unavailable after Raydium price load" };
-    const targetValue = vaultTvl.mul(token.weight).div(weightSum);
-    const [valueDiff, maxValue] = token.value.lt(targetValue)
-      ? [targetValue.sub(token.value), targetValue]
-      : [token.value.sub(targetValue), token.value];
-    if (valueDiff.isZero()) continue;
-    const relBps = valueDiff.div(maxValue).mul(HUNDRED_PERCENT_BPS);
-    const absBps = valueDiff.div(vaultTvl).mul(HUNDRED_PERCENT_BPS);
-    if (relBps.gte(relThreshold) && absBps.gte(absThreshold)) {
-      return { required: true, reason: "Native eligibility: value drift exceeds rebalance thresholds" };
-    }
-  }
-  return { required: false, reason: "Value drift is within rebalance thresholds" };
+  return describeEligibility(evaluateRebalanceRequired(rebalanceInputFromVault(priced, nowSeconds, quotes)));
 }
 
 export async function forbidPythNetwork<T>(work: () => Promise<T>): Promise<T> {
@@ -179,12 +138,13 @@ export async function forbidPythNetwork<T>(work: () => Promise<T>): Promise<T> {
 
 /** Keeper eligibility: SDK early gates, then Raydium `loadVaultPrice` — never Hermes. */
 export async function kakuSanRebalanceEligibility(vault: Vault, connection: NativeVaultBuilders["connection"]): Promise<KakuSanEligibility> {
-  const gates = nativeRebalanceGates(vault);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const gates = nativeRebalanceGates(vault, nowSeconds);
   if (gates.required === false) {
     if (await isRebalanceRequired(vault, connection)) throw new Error("Keeper eligibility mismatch: SDK required a rebalance after a failed native gate");
     return gates;
   }
-  return forbidPythNetwork(() => raydiumValueRebalanceRequired(vault, connection));
+  return forbidPythNetwork(() => raydiumValueRebalanceRequired(vault, connection, nowSeconds));
 }
 
 export async function kakuSanIdentity(native: NativeVaultBuilders, vault: string, shareMint: string): Promise<VaultIdentity> {
