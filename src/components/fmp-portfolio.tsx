@@ -60,7 +60,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
       {!index ? <div className={styles.empty}><h3>No mapped index is published</h3><p>The full disclosed book is still available below. Stocklana does not invent a ticker, token, or weight when identity mapping is unresolved.</p></div> : <>
         <TableRegion label="Published index holdings and target weights">
           <table className={`${styles.table} ${styles.holdingsTable}`}>
-            <thead><tr><th scope="col">Ticker</th><th scope="col">Value basis</th><th scope="col" className={styles.number}>Target weight</th></tr></thead>
+            <thead><tr><th scope="col">Ticker</th><th scope="col">{index.definition.methodology === "holding-band-midpoints" ? "Value basis" : "Disclosure evidence"}</th><th scope="col" className={styles.number}>Target weight</th></tr></thead>
             <tbody>{index.constituents.map((item) => {
               const midpoint = item.payload?.evidencedMidpoint;
               const pct = item.weight_bps / 100;
