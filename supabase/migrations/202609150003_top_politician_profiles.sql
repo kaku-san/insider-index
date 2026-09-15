@@ -47,8 +47,7 @@ begin
     or coalesce(d->>'sp500OverlayReason','') = '' then
     raise exception 'omitted series require a reason';
   end if;
-  if exists(select 1 from people where id='P000197')
-    and not exists(
+  if not exists(
       select 1 from jsonb_array_elements(d->'profiles') e where e->'person'->>'id'='P000197'
     ) then
     raise exception 'pelosi-required';

@@ -177,6 +177,14 @@ test("storage failures stay 502 without leaking upstream text", async () => {
   assert.ok(!(await result.text()).includes("secret"));
 });
 
+test("publication adapter refuses a document without Pelosi before RPC", async () => {
+  const calls: string[] = [];
+  const db = database((url) => { calls.push(url.pathname); return null; });
+  const missing = rankPoliticianProfiles([row("A000001", "Other One", 100)]);
+  await assert.rejects(publishTopProfiles(db, missing), /pelosi-required/);
+  assert.equal(calls.length, 0);
+});
+
 test("publication adapter uses only the atomic RPC", async () => {
   const calls: { path: string; body: Record<string, string> }[] = [];
   const db = database((url, init) => { calls.push({ path: url.pathname, body: JSON.parse(String(init?.body)) }); return null; });
@@ -213,14 +221,18 @@ test("owner SQL publishes atomically, requires Pelosi, and refuses invented seri
     for (const name of ["202609140001_fmp_store.sql", "202609140002_trade_indexes.sql", "202609140003_trade_index_period_alias.sql", "202609140004_holdings_indexes.sql", "202609150003_top_politician_profiles.sql"]) {
       await db.exec(await readFile(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8"));
     }
-    await db.query("insert into people(id,payload,book_state) values($1,$2,'not-ingested'),($3,$4,'not-ingested'),($5,$6,'not-ingested')", [
+    await db.query("insert into people(id,payload,book_state) values($1,$2,'not-ingested')", ["A000001", { id: "A000001", name: "Other One" }]);
+    await db.exec("set role service_role");
+    await assert.rejects(db.query("select publish_top_politician_profiles($1)", [document([slim("A000001", 1, 1, false)])]), /pelosi-required/);
+    await db.exec("reset role");
+    await db.query("insert into people(id,payload,book_state) values($1,$2,'not-ingested'),($3,$4,'not-ingested')", [
       PINNED_PERSON_ID, { id: PINNED_PERSON_ID, name: "Nancy Pelosi" },
-      "A000001", { id: "A000001", name: "Other One" },
       "A000002", { id: "A000002", name: "Other Two" },
     ]);
     const books = await db.query("select count(*)::int n from people");
     await db.exec("set role service_role");
     await assert.rejects(db.query("select publish_top_politician_profiles($1)", [document([slim("A000001", 1, 1, false)])]), /pelosi-required/);
+
     const invented = JSON.parse(document([slim(PINNED_PERSON_ID, 1, 1)])) as { netWorth: unknown };
     invented.netWorth = 12_000_000;
     await assert.rejects(db.query("select publish_top_politician_profiles($1)", [JSON.stringify(invented)]), /invented series not allowed/);
