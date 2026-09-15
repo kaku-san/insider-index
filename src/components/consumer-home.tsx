@@ -70,12 +70,12 @@ function PersonCover({ person, featured = false }: { person: ResearchPerson; fea
   return <article className={`${styles.coverCard} ${featured ? styles.featuredCover : ""}`}>
     <Link href={`/p/${encodeURIComponent(person.id)}`} className={styles.coverImage} aria-label={`Open ${person.name}`}>
       <Portrait person={person} />
-      <span className={styles.coverBadge}>{(person.publishedIndexHash || person.indexName) ? "PERSON INDEX" : "ON THE RADAR"}</span>
+      <span className={styles.coverBadge}>{person.publishedIndexHash ? "PERSON INDEX" : "ON THE RADAR"}</span>
       <span className={styles.coverArrow}><Icon name="arrow" size={18} /></span>
     </Link>
     <div className={styles.coverBody}>
       <p>{personContext(person)}</p>
-      <h3>{(person.publishedIndexHash || person.indexName) ? indexName : person.name}</h3>
+      <h3>{person.publishedIndexHash ? indexName : person.name}</h3>
       <div className={styles.coverMeta}>{person.publishedIndexHash ? <PublishedMeta hash={person.publishedIndexHash} compact /> : person.indexName ? <span>{person.bookState ? person.bookState.replaceAll("-", " ") : "Public disclosure model"}</span> : <span>Public disclosure profile</span>}</div>
       <div className={styles.coverActions}><FollowButton person={person} /><Link href={`/p/${encodeURIComponent(person.id)}`}>Open portfolio</Link></div>
     </div>
@@ -145,9 +145,9 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
       <div className={styles.heroVisual}>
         {heroPerson ? <Link href={`/p/${encodeURIComponent(heroPerson.id)}`} className={styles.heroPortraitCard}>
           <Portrait person={heroPerson} />
-          <div className={styles.heroPersonTop}><span>01</span><span>{(heroPerson.publishedIndexHash || heroPerson.indexName) ? "PERSON INDEX" : "PUBLIC PROFILE"}</span></div>
+          <div className={styles.heroPersonTop}><span>01</span><span>{heroPerson.publishedIndexHash ? "PERSON INDEX" : "PUBLIC PROFILE"}</span></div>
           <div className={styles.heroPersonBottom}>
-            <div><small>{personContext(heroPerson)}</small><strong>{(heroPerson.publishedIndexHash || heroPerson.indexName) ? displayIndexName(heroPerson) : heroPerson.name}</strong>{heroPerson.publishedIndexHash ? <PublishedMeta hash={heroPerson.publishedIndexHash}/> : heroPerson.indexName ? <span>{heroPerson.bookState ? heroPerson.bookState.replaceAll("-", " ") : "Public disclosure model"}</span> : <span>Track the public record</span>}</div>
+            <div><small>{personContext(heroPerson)}</small><strong>{heroPerson.publishedIndexHash ? displayIndexName(heroPerson) : heroPerson.name}</strong>{heroPerson.publishedIndexHash ? <PublishedMeta hash={heroPerson.publishedIndexHash}/> : heroPerson.indexName ? <span>{heroPerson.bookState ? heroPerson.bookState.replaceAll("-", " ") : "Public disclosure model"}</span> : <span>Track the public record</span>}</div>
             <span className={styles.roundArrow}><Icon name="arrow" size={20}/></span>
           </div>
         </Link> : <div className={styles.heroPortraitCard}><div className={styles.heroSkeleton}/></div>}
@@ -179,7 +179,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
         <span className={styles.directoryIndex}>{String(index + 1).padStart(2,"0")}</span>
         <Portrait person={person}/>
         <div><strong>{person.name}</strong><small>{personContext(person)}</small></div>
-        <span className={styles.directoryState}>{(person.publishedIndexHash || person.indexName) ? "INDEX" : "WATCH"}</span>
+        <span className={styles.directoryState}>{person.publishedIndexHash ? "INDEX" : "WATCH"}</span>
         <span className={styles.directoryArrow}><Icon name="arrow" size={16}/></span>
       </Link>)}</div>}
       {directory.length > visible ? <button className={styles.moreButton} type="button" onClick={()=>setVisible(v=>v+10)}>Show more people</button> : null}

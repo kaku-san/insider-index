@@ -48,6 +48,16 @@ test("published models use person-index discovery, never legacy crowd baskets", 
   assert.doesNotMatch(html, /Capitol Buys|crowd basket|Sign &amp; buy/);
 });
 
+test("unpublished books retain person discovery labels when an index name exists", () => {
+  const html = renderHome({ people: [{ ...person, indexName: "Example F Index" }], total: 1, partial: true, savedAt: null, storage: "supabase" });
+  assert.match(html, /PUBLIC PROFILE/);
+  assert.match(html, /ON THE RADAR/);
+  assert.match(html, />WATCH</);
+  assert.match(html, /Example Filer/);
+  assert.match(html, /partial disclosure only/);
+  assert.doesNotMatch(html, /PERSON INDEX|>INDEX<|Example F Index/);
+});
+
 test("a failed disclosure tape renders a retryable error instead of an empty tape", () => {
   const html = renderToStaticMarkup(createElement(FilingTape, { disclosures: [], error: "Disclosure service unavailable", retry: () => undefined }));
   assert.match(html, /role="alert"/);
