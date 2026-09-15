@@ -1,133 +1,205 @@
-/* Portfolio-first hierarchy: restrained surfaces, legible filings, one investment rail.
-   Uses Stocklana's Avenir Next / Segoe UI and shared light/dark palette:
-   paper #fafbf8, ink #253128, muted #626d5d, rule #dce2d8, lime #d0f568. */
-.page { max-width: 1240px; margin: 0 auto; }
-.back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px; color: var(--muted-foreground); font-size: 12px; }
-.hero { display: flex; align-items: center; gap: 22px; margin: 0 0 32px; }
-.hero h1 { font-size: clamp(28px, 3.1vw, 42px); font-weight: 700; letter-spacing: -.045em; margin: 5px 0 12px; overflow-wrap: anywhere; }
-.context { color: var(--muted-foreground); font-size: 12px; }
-.strategy { color: var(--muted-foreground); max-width: 70ch; font-size: 15px; line-height: 1.65; }
-.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 28px; border-block: 1px solid var(--border); padding: 22px 0; }
-.stats > div { padding: 0 24px; border-right: 1px solid var(--border); }
-.stats > div:first-child { padding-left: 0; }
-.stats > div:last-child { border: 0; }
-.stats dt { font-size: 13px; color: var(--muted-foreground); }
-.stats dd { margin: 8px 0 4px; font-size: 34px; line-height: 1.2; font-weight: 650; font-variant-numeric: tabular-nums; }
-.stats small { display: block; font-size: 11px; color: var(--muted-foreground); }
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 24px; align-items: start; }
-.content { display: grid; gap: 24px; min-width: 0; }
-.panel { min-width: 0; padding: 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
-.sectionHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.sectionHead h2 { font-size: 20px; font-weight: 650; letter-spacing: -.025em; }
-.badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; color: var(--muted-foreground); font-size: 10px; }
-.caption { font-size: 12px; color: var(--muted-foreground); line-height: 1.7; max-width: 78ch; }
-.chartLegend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 11px; color: var(--muted-foreground); }
+/*
+  Stocklana person portfolio direction
+  ------------------------------------
+  Dark "market card" hero + quiet research surfaces. The page borrows the useful
+  hierarchy of portfolio trackers (identity -> metrics -> performance -> holdings
+  -> allocation -> history) without copying their branding or claiming data we do
+  not have. Lime stays reserved for Stocklana actions and mapped weight signals.
+*/
+.page { max-width: 1080px; margin: 0 auto; padding-bottom: 36px; }
+.back { display: inline-flex; align-items: center; gap: 8px; margin: 2px 0 22px; color: var(--muted-foreground); font-size: 12px; font-weight: 600; }
+.heroCard { position: relative; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ink-text) 14%, transparent); border-radius: 22px; background: var(--ink); color: var(--ink-text); box-shadow: 0 24px 65px -46px #000; }
+.heroCard::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .34; background-image: linear-gradient(color-mix(in srgb, var(--ink-text) 9%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--ink-text) 8%, transparent) 1px, transparent 1px); background-size: 44px 44px; mask-image: linear-gradient(to bottom, #000 0%, transparent 72%); }
+.heroTop { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 30px; padding: 30px 30px 28px; }
+.heroIdentity { display: flex; align-items: flex-start; gap: 20px; min-width: 0; }
+.heroIdentity :global(.avatar-xl) { border: 3px solid color-mix(in srgb, var(--ink-text) 20%, transparent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 9%, transparent); }
+.heroIdentity > div { min-width: 0; }
+.context { color: color-mix(in srgb, var(--ink-text) 65%, transparent); font-size: 12px; line-height: 1.5; }
+.heroCard h1 { margin: 6px 0 10px; font-size: clamp(31px, 4.5vw, 50px); font-weight: 760; letter-spacing: -.05em; overflow-wrap: anywhere; }
+.strategy { max-width: 67ch; color: color-mix(in srgb, var(--ink-text) 78%, transparent); font-size: 14px; line-height: 1.7; }
+.heroMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 15px; color: color-mix(in srgb, var(--ink-text) 56%, transparent); font-size: 11px; }
+.heroMeta strong { color: var(--ink-text); font-weight: 650; }
+.heroActions { width: 184px; flex: 0 0 184px; display: flex; flex-direction: column; gap: 8px; align-self: flex-start; }
+.follow { display: grid; gap: 6px; }
+.follow > p { margin: 0; color: #ef9794; font-size: 10px; }
+.follow > .followNote { color: color-mix(in srgb, var(--ink-text) 65%, transparent); font-size: 9px; line-height: 1.5; }
+.followButton, .shareButton, .primaryAction { width: 100%; min-height: 41px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 12px; border-radius: 9px; font-size: 11px; font-weight: 700; border: 1px solid color-mix(in srgb, var(--ink-text) 22%, transparent); }
+.followButton, .shareButton { background: color-mix(in srgb, var(--ink-text) 7%, transparent); color: var(--ink-text); }
+.followButton[aria-pressed="true"] { border-color: color-mix(in srgb, var(--primary) 70%, transparent); color: var(--primary); }
+.primaryAction { background: var(--primary); color: var(--primary-foreground); border-color: transparent; }
+.primaryAction:disabled { color: color-mix(in srgb, var(--ink-text) 58%, transparent); background: color-mix(in srgb, var(--ink-text) 7%, transparent); border-color: color-mix(in srgb, var(--ink-text) 18%, transparent); opacity: 1; }
+.stats { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, var(--ink-text) 14%, transparent); background: color-mix(in srgb, #000 10%, transparent); }
+.stats > div { min-width: 0; padding: 21px 24px; border-right: 1px solid color-mix(in srgb, var(--ink-text) 12%, transparent); }
+.stats > div:last-child { border-right: 0; }
+.stats dt { color: color-mix(in srgb, var(--ink-text) 57%, transparent); font-size: 11px; }
+.stats dd { margin: 7px 0 5px; font-size: clamp(25px, 3vw, 34px); line-height: 1; font-weight: 720; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.stats small { display: block; min-height: 31px; color: color-mix(in srgb, var(--ink-text) 49%, transparent); font-size: 9.5px; line-height: 1.55; }
+.sourceStrip { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 13px; margin: 14px 0 22px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 13px; background: var(--card); box-shadow: var(--shadow); }
+.sourceStrip > span:nth-child(2) { min-width: 0; display: grid; gap: 2px; }
+.sourceStrip strong { font-size: 12px; }
+.sourceStrip small { color: var(--muted-foreground); font-size: 10px; line-height: 1.6; }
+.sourceStrip > svg { color: var(--muted-foreground); }
+.sourceIcon { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: color-mix(in srgb, var(--primary) 23%, var(--card)); color: var(--positive); }
+.content { display: grid; gap: 18px; min-width: 0; }
+.invest { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; margin-bottom: 18px; scroll-margin-top: 100px; }
+.investAction { display: grid; align-content: center; gap: 12px; }
+.investButton { width: 100%; min-height: 42px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-alt); color: var(--muted-foreground); font-size: 12px; font-weight: 700; cursor: not-allowed; }
+.flow { display: flex; align-items: center; gap: 12px; margin: 14px 0; font-size: 13px; font-weight: 700; }
+.flow > span { padding: 8px 12px; border-radius: 8px; background: var(--surface-alt); }
+.disclaimer { margin-top: 18px; color: var(--muted-foreground); font-size: 10px; line-height: 1.7; }
+.page h2 { scroll-margin-top: 100px; }
+.panel { min-width: 0; padding: 24px 26px; border: 1px solid var(--border); border-radius: 17px; background: var(--card); box-shadow: var(--shadow); }
+.sectionHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.sectionHead > div { min-width: 0; }
+.sectionHead h2 { font-size: 20px; font-weight: 700; letter-spacing: -.028em; }
+.sectionHead h3 { font-size: 16px; }
+.sectionHead p { margin-top: 4px; color: var(--muted-foreground); font-size: 10px; line-height: 1.5; }
+.badge { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; color: var(--muted-foreground); background: var(--surface-alt); font-size: 9px; font-weight: 650; }
+.caption { font-size: 10px; color: var(--muted-foreground); line-height: 1.7; max-width: 84ch; }
+.notice { display: flex; align-items: center; gap: 10px; padding: 11px 14px; margin: -8px 0 18px; border: 1px solid var(--border); border-radius: 9px; color: var(--muted-foreground); background: var(--surface-alt); font-size: 10px; line-height: 1.6; }
+.notice button { margin-left: auto; border: 0; background: none; color: var(--foreground); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Performance: visually useful even when the only honest value is unavailable. */
+.performance { overflow: hidden; }
+.chartLegend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 8px; font-size: 10px; color: var(--muted-foreground); }
 .chartLegend > span { display: inline-flex; align-items: center; gap: 6px; }
 .chartLegend i { width: 14px; height: 3px; background: var(--positive); border-radius: 2px; }
 .chartLegend > span:last-child i { background: var(--soft-text); }
-.emptyChart { min-height: 254px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 13px; padding: 38px 24px; margin: 20px 0 14px; border-block: 1px solid var(--border); background: repeating-linear-gradient(to bottom, transparent 0, transparent 62px, var(--surface-alt) 63px, transparent 64px); }
-.emptyChart > svg { color: var(--muted-foreground); }
-.emptyChart h3 { font-size: 17px; letter-spacing: -.02em; }
-.emptyChart p { max-width: 47ch; font-size: 12px; line-height: 1.8; color: var(--muted-foreground); }
-.rail { position: sticky; top: 100px; min-width: 0; }
-.invest { border: 1px solid var(--border); background: var(--card); border-radius: 14px; padding: 23px; }
-.invest h2 { font-size: 25px; font-weight: 650; letter-spacing: -.035em; margin: 20px 0 9px; }
-.invest p { color: var(--muted-foreground); font-size: 12px; line-height: 1.75; }
-.flow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 19px 13px; margin: 23px 0 18px; background: var(--surface-alt); border-radius: 8px; font-size: 13px; font-weight: 650; }
-.flow > svg { color: var(--muted-foreground); }
-.investButton, .followButton { display: inline-flex; justify-content: center; align-items: center; gap: 8px; width: 100%; min-height: 46px; border-radius: 8px; font-size: 13px; font-weight: 650; }
-.investButton { margin-top: 20px; border: 1px solid var(--border); background: var(--primary); color: var(--primary-foreground); }
-.investButton:disabled { opacity: 1; cursor: not-allowed; background: color-mix(in srgb, var(--primary) 44%, var(--card)); color: var(--foreground); }
-.followButton { border: 1px solid var(--border); background: var(--card); color: var(--foreground); transition: transform 140ms cubic-bezier(.23,1,.32,1); }
-.followButton[aria-pressed="true"] { border-color: var(--positive); color: var(--positive); }
-.follow { margin-top: 10px; }
-.follow > p { font-size: 11px; text-align: center; margin-top: 10px; }
-.invest .finePrint { font-size: 11px; border-top: 1px solid var(--border); padding-top: 17px; margin-top: 20px; }
-.railNote { display: flex; gap: 9px; color: var(--muted-foreground); font-size: 11px; line-height: 1.8; padding: 20px 6px; }
-.railNote > svg { margin-top: 3px; }
-.notice { display: flex; align-items: start; gap: 10px; padding: 12px 15px; margin-bottom: 22px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted-foreground); background: var(--surface-alt); font-size: 12px; line-height: 1.7; }
-.notice button { background: none; border: 0; color: inherit; text-decoration: underline; margin-left: auto; }
-.selector { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 20px 0 10px; font-size: 12px; }
-.selector select { background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--foreground); padding: 9px 10px; max-width: 100%; min-width: 0; }
-.tableRegion { overflow-x: auto; max-width: 100%; margin-top: 18px; }
+.performance :global(.equity-curve) { margin-top: 10px; }
+.performance :global(.equity-curve > svg) { width: 100%; }
+.emptyChart { min-height: 265px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 9px; margin: 8px 0 12px; border-block: 1px solid var(--border); background-image: linear-gradient(to bottom, transparent 63px, color-mix(in srgb, var(--border) 65%, transparent) 64px), linear-gradient(90deg, transparent 98px, color-mix(in srgb, var(--border) 35%, transparent) 99px); background-size: 100% 64px, 100px 100%; }
+.emptyMetric { font-size: 44px; font-weight: 730; line-height: 1; letter-spacing: -.06em; }
+.emptyChart h3 { font-size: 15px; letter-spacing: -.02em; }
+.emptyChart p { max-width: 50ch; padding: 0 14px; color: var(--muted-foreground); font-size: 10px; line-height: 1.7; }
+
+/* Tables keep the target's scanability while using Stocklana's own tape-like identity. */
+.tableRegion { overflow-x: auto; max-width: 100%; margin-top: 14px; }
 .tableRegion:focus-visible, .page summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-.table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; font-variant-numeric: tabular-nums; }
-.table th { color: var(--muted-foreground); font-size: 11px; font-weight: 550; padding: 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.table td { padding: 16px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; font-variant-numeric: tabular-nums; }
+.table th { color: var(--muted-foreground); font-size: 9px; font-weight: 650; padding: 10px 11px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table td { padding: 14px 11px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .table th:first-child, .table td:first-child { padding-left: 0; }
 .table th:last-child, .table td:last-child { padding-right: 0; }
 .table tbody tr:last-child td { border-bottom: 0; }
-.table strong { display: block; font-weight: 650; font-size: 13px; overflow-wrap: anywhere; }
-.table small { display: block; color: var(--muted-foreground); font-size: 11px; margin-top: 5px; line-height: 1.6; }
-.table td:first-child { min-width: 150px; max-width: 300px; }
+.table strong { display: block; font-weight: 700; font-size: 11.5px; overflow-wrap: anywhere; }
+.table small { display: block; color: var(--muted-foreground); font-size: 8.5px; margin-top: 4px; line-height: 1.55; }
+.table td:first-child { min-width: 180px; }
 .number { text-align: right; white-space: nowrap; }
-.rowDetails { margin-top: 7px; font-size: 11px; color: var(--muted-foreground); }
+.holdingsTable td { padding-top: 13px; padding-bottom: 13px; }
+.tickerCell { display: flex; align-items: center; gap: 10px; }
+.tickerMark { width: 34px; height: 34px; flex: 0 0 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--surface-alt); border: 1px solid var(--border); font-size: 9px; font-weight: 800; letter-spacing: -.03em; }
+.weightTrack { width: 92px; height: 4px; margin: 7px 0 0 auto; overflow: hidden; border-radius: 999px; background: var(--surface-alt); }
+.weightTrack > span { display: block; height: 100%; min-width: 3px; border-radius: inherit; background: var(--primary); }
+.panelFooter { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 12px; padding-top: 13px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 9px; }
+.sourceLink { color: var(--foreground); font-size: 9px; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.instrument { display: inline-flex; padding: 4px 7px; border-radius: 6px; background: var(--surface-alt); color: var(--foreground); font-size: 9px; font-weight: 650; text-transform: capitalize; }
+.rowDetails { margin-top: 7px; font-size: 9px; color: var(--muted-foreground); }
 .rowDetails summary { cursor: pointer; }
-.rowDetails p { margin-top: 6px; max-width: 42ch; }
-.sourceLink { text-decoration: underline; text-underline-offset: 3px; font-size: 11px; color: var(--muted-foreground); }
-.empty { padding: 35px 0; }
-.empty h3, .emptyAllocation h3 { font-size: 17px; font-weight: 650; letter-spacing: -.02em; margin-bottom: 10px; }
-.empty p, .emptyAllocation p { color: var(--muted-foreground); font-size: 12px; line-height: 1.8; max-width: 62ch; }
-.allocation { display: grid; gap: 14px; }
-.allocation :global(.portfolio-donut) { margin: 28px 0 12px; align-items: start; }
+.rowDetails p { margin-top: 5px; max-width: 50ch; line-height: 1.6; }
+.selector { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 2px 0 10px; color: var(--muted-foreground); font-size: 10px; }
+.selector label { color: var(--foreground); font-weight: 650; }
+.selector select { max-width: 100%; min-width: 0; padding: 8px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--foreground); font-size: 10px; }
+.coverage { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 16px; color: var(--muted-foreground); font-size: 9px; line-height: 1.7; }
+.coverage summary { color: var(--foreground); cursor: pointer; font-weight: 650; }
+.coverage p { margin-top: 8px; }
+.coverage ul { padding-left: 18px; line-height: 1.8; }
+.empty { padding: 28px 0 18px; }
+.empty h3, .emptyAllocation h3 { font-size: 15px; margin-bottom: 7px; }
+.empty p, .emptyAllocation p { max-width: 65ch; color: var(--muted-foreground); font-size: 10px; line-height: 1.75; }
+
+/* Allocation */
+.allocation { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; align-items: center; }
+.allocation :global(.portfolio-donut) { margin: 8px 0; align-items: center; }
 .allocation :global(.portfolio-donut) > svg { width: 190px; height: 190px; }
-.allocation :global(.donut-legend) { gap: 12px; padding-top: 6px; }
-.allocation :global(.donut-legend) > div { font-size: 12px; }
-.emptyAllocation { display: flex; align-items: center; gap: 24px; padding: 25px 0; }
-.emptyRing { width: 130px; height: 130px; border-radius: 50%; border: 16px solid var(--surface-alt); flex-shrink: 0; }
-.event { display: inline-block; padding: 3px 7px; border-radius: 5px; background: var(--surface-alt); font-size: 11px; white-space: nowrap; }
-.event[data-side="buy"] { color: var(--positive); }
-.event[data-side="sell"] { color: var(--negative); }
-.coverage { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 18px; color: var(--muted-foreground); font-size: 11px; }
-.coverage summary { cursor: pointer; }
-.coverage ul { padding-left: 19px; line-height: 1.9; }
+.allocation :global(.donut-legend) { flex: 1; gap: 10px; }
+.allocation :global(.donut-legend) > div { font-size: 10px; }
+.allocationNote { padding: 18px; border-left: 1px solid var(--border); }
+.allocationNote > strong { display: block; font-size: 13px; }
+.allocationNote p { margin: 7px 0 11px; color: var(--muted-foreground); font-size: 9px; line-height: 1.7; }
+.emptyAllocation { display: flex; align-items: center; gap: 24px; padding: 22px 0 8px; }
+.emptyRing { width: 118px; height: 118px; border-radius: 50%; border: 15px solid var(--surface-alt); flex-shrink: 0; }
+
+/* Activity history echoes the target's grouped-by-date scan, but never fabricates allocation deltas. */
+.timeline { display: grid; gap: 4px; margin-top: 20px; }
+.timelineGroup { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 18px; padding: 18px 0; border-top: 1px solid var(--border); }
+.timelineGroup:first-child { border-top: 0; padding-top: 6px; }
+.timelineDate { position: sticky; top: 98px; align-self: start; display: grid; gap: 3px; }
+.timelineDate strong { font-size: 12px; }
+.timelineDate span { color: var(--muted-foreground); font-size: 9px; }
+.timelineRows { display: grid; gap: 8px; }
+.timelineRow { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 13px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); }
+.tradeMain { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.tradeMain > div { min-width: 0; }
+.tradeMain strong { display: block; font-size: 11.5px; }
+.tradeMain small { display: block; max-width: 390px; color: var(--muted-foreground); font-size: 8.5px; line-height: 1.55; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tradeAmount { flex: 0 0 auto; text-align: right; }
+.tradeAmount > span { display: block; color: var(--muted-foreground); font-size: 8px; }
+.tradeAmount > strong { display: block; margin: 3px 0 4px; font-size: 10.5px; }
+.event { min-width: 70px; display: inline-flex; justify-content: center; padding: 5px 8px; border-radius: 7px; background: var(--surface-alt); font-size: 8.5px; font-weight: 750; white-space: nowrap; }
+.event[data-side="buy"] { color: var(--positive); background: color-mix(in srgb, var(--positive) 10%, var(--surface-alt)); }
+.event[data-side="sell"] { color: var(--negative); background: color-mix(in srgb, var(--negative) 9%, var(--surface-alt)); }
+
 @media (hover: hover) and (pointer: fine) {
-  .followButton:hover { background: var(--surface-alt); }
-  .followButton:active:not(:focus-visible) { transform: scale(.98); }
-  .back:hover, .sourceLink:hover { color: var(--foreground); }
+  .back:hover, .sourceLink:hover { color: var(--positive); }
+  .sourceStrip:hover { border-color: color-mix(in srgb, var(--positive) 35%, var(--border)); }
+  .followButton:hover, .shareButton:hover { background: color-mix(in srgb, var(--ink-text) 12%, transparent); }
 }
-@media (max-width: 1150px) {
-  .layout { grid-template-columns: minmax(0, 1fr) 255px; gap: 18px; }
-  .panel, .invest { padding: 20px; }
+@media (max-width: 900px) {
+  .heroTop { flex-direction: column; }
+  .heroActions { width: 100%; flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats > div:nth-child(2) { border-right: 0; }
+  .stats > div:nth-child(-n+2) { border-bottom: 1px solid color-mix(in srgb, var(--ink-text) 12%, transparent); }
+  .allocation, .invest { grid-template-columns: 1fr; gap: 12px; }
+  .allocationNote { border-left: 0; border-top: 1px solid var(--border); padding: 16px 0 0; }
+}
+@media (max-width: 660px) {
+  .page { margin-inline: -1px; }
+  .heroCard { border-radius: 16px; }
+  .heroTop { padding: 22px 18px 20px; gap: 22px; }
+  .heroIdentity { gap: 13px; }
+  .heroIdentity :global(.avatar-xl) { width: 60px; height: 60px; font-size: 20px; }
+  .heroCard h1 { margin-top: 5px; font-size: 28px; }
+  .context { font-size: 10px; }
+  .strategy { font-size: 11px; line-height: 1.7; }
+  .heroMeta { font-size: 9px; }
+  .heroActions { grid-template-columns: 1fr 1fr; }
+  .primaryAction { grid-column: 1 / -1; }
+  .stats > div { padding: 16px 17px; }
+  .stats dd { font-size: 26px; }
+  .stats small { min-height: 0; font-size: 8px; }
+  .sourceStrip { margin-top: 10px; padding: 12px; }
+  .sourceStrip small { font-size: 9px; }
+  .panel { padding: 18px 16px; border-radius: 14px; }
+  .sectionHead { align-items: flex-start; }
+  .sectionHead h2 { font-size: 17px; }
+  .badge { font-size: 8px; }
+  .emptyChart { min-height: 225px; }
+  .panelFooter { align-items: flex-start; flex-direction: column; }
   .allocation :global(.portfolio-donut) { flex-direction: column; align-items: center; }
   .allocation :global(.donut-legend) { width: 100%; }
+  .timelineGroup { grid-template-columns: 1fr; gap: 9px; padding: 15px 0; }
+  .timelineDate { position: static; display: flex; align-items: baseline; justify-content: space-between; }
+  .timelineRow { align-items: flex-start; }
+  .tradeMain { align-items: flex-start; }
+  .event { min-width: 58px; }
+  .tradeMain small { white-space: normal; }
 }
-@media (max-width: 850px) {
-  .layout { grid-template-columns: minmax(0, 1fr); }
-  .rail { position: static; grid-row: 1; }
-  .invest { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; }
-  .invest > .badge, .invest > h2, .invest > p, .flow { grid-column: 1; }
-  .invest h2 { margin-top: 14px; }
-  .investButton { grid-column: 2; grid-row: 2 / 4; align-self: end; margin: 0; }
-  .follow { grid-column: 2; grid-row: 4 / 6; align-self: start; margin-top: 14px; }
-  .invest .finePrint { grid-column: 1 / -1; margin-top: 15px; }
-  .railNote { display: none; }
-  .allocation :global(.portfolio-donut) { flex-direction: row; align-items: start; }
-  .allocation :global(.donut-legend) { width: auto; }
-}
-@media (max-width: 540px) {
-  .hero { gap: 14px; align-items: start; margin-bottom: 25px; }
-  .hero :global(.avatar-xl) { width: 58px; height: 58px; font-size: 20px; }
-  .hero h1 { font-size: 27px; margin-top: 4px; }
-  .strategy { font-size: 13px; }
-  .context { font-size: 11px; }
-  .stats { padding: 18px 0; gap: 0; }
-  .stats > div { padding-inline: 11px; }
-  .stats dd { font-size: 28px; }
-  .stats dt { font-size: 11px; }
-  .stats small { font-size: 10px; }
-  .panel, .invest { padding: 18px; }
-  .sectionHead h2 { font-size: 19px; }
-  .invest { display: block; }
-  .investButton { margin-top: 18px; }
-  .flow { margin: 18px 0 14px; }
-  .emptyChart { min-height: 230px; padding: 28px 12px; }
-  .emptyAllocation { flex-direction: column; align-items: start; gap: 18px; }
-  .allocation :global(.portfolio-donut) { flex-direction: column; align-items: center; }
-  .allocation :global(.donut-legend) { width: 100%; }
-  .content { gap: 18px; }
+@media (max-width: 460px) {
+  .heroIdentity { align-items: flex-start; }
+  .heroIdentity :global(.avatar-xl) { width: 52px; height: 52px; }
+  .heroCard h1 { font-size: 24px; }
+  .heroActions { grid-template-columns: 1fr; }
+  .primaryAction { grid-column: auto; }
+  .stats dt { font-size: 9px; }
+  .stats dd { font-size: 23px; }
+  .sourceIcon { display: none; }
+  .sourceStrip { grid-template-columns: minmax(0, 1fr) auto; }
+  .sectionHead { flex-direction: column; }
+  .timelineRow { flex-direction: column; gap: 10px; }
+  .tradeAmount { width: 100%; text-align: left; padding-left: 69px; }
+  .weightTrack { width: 68px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .followButton { transition: none; }
-  .followButton:active:not(:focus-visible) { transform: none; }
+  .heroCard::before { display: none; }
 }

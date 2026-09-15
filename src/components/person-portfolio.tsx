@@ -33,65 +33,114 @@ function PersonFollow({ id }: { id: string }) {
       localStorage.setItem(key, String(!following));
       window.dispatchEvent(new Event(followEvent));
       setError(null);
-    } catch { setError("This browser could not save your follow. Allow local storage and try again."); }
+    } catch { setError("This browser could not save your watch."); }
   }
   return <div className={styles.follow}>
     <button type="button" className={styles.followButton} aria-pressed={following} onClick={toggle}>
-      <Icon name={following ? "check" : "people"} size={17} />{following ? "Following" : "Follow"}
+      <Icon name={following ? "check" : "people"} size={16} />{following ? "Watching" : "Add to watchlist"}
     </button>
-    <p>Saved on this device. No alerts or automatic trades.</p>
+    <p className={styles.followNote}>Saved on this device. No alerts or automatic trades.</p>
     {error && <p role="alert">{error}</p>}
   </div>;
 }
 
-export function PortfolioLayout({ id, name, indexName, image, context, strategy, count, countNote, children, notice }: {
+function ShareButton() {
+  const [label, setLabel] = useState("Share");
+  async function share() {
+    const url = window.location.href;
+    try {
+      if (navigator.share) await navigator.share({ title: document.title, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        setLabel("Link copied");
+        window.setTimeout(() => setLabel("Share"), 1800);
+      }
+    } catch {
+      // Native share cancellation is not an error state the page needs to surface.
+    }
+  }
+  return <button type="button" className={styles.shareButton} onClick={share}>{label}</button>;
+}
+
+export function PortfolioLayout({ id, name, indexName, image, context, strategy, count, countNote, mappedCount, activityCount, latestFiling, indexHref, children, notice }: {
   id: string; name: string; indexName?: string; image: string | null; context: string; strategy: string;
-  count: number | null; countNote: string; children: ReactNode; notice?: ReactNode;
+  count: number | null; countNote: string; mappedCount?: number | null; activityCount?: number; latestFiling?: string | null;
+  indexHref?: string; children: ReactNode; notice?: ReactNode;
 }) {
   return <div className={styles.page}>
     <Link href="/#directory" className={styles.back}><Icon name="arrow" size={15} style={{ transform: "rotate(180deg)" }} />People &amp; indexes</Link>
-    <header className={styles.hero}>
-      <PersonAvatar name={name} imageUrl={image} size="xl" />
-      <div><p className={styles.context}>{indexName ? `${name} · ${context}` : context}</p><h1>{indexName ?? `${name} portfolio`}</h1><p className={styles.strategy}>{strategy}</p></div>
-    </header>
-    <dl className={styles.stats} aria-label="Portfolio statistics">
-      <div><dt>Total value</dt><dd aria-label="Unavailable">—</dd><small>No verified current valuation</small></div>
-      <div><dt>Performance</dt><dd aria-label="Unavailable">—</dd><small>No live vault return</small></div>
-      <div><dt>Disclosed entries</dt><dd>{count ?? "—"}</dd><small>{countNote}</small></div>
-    </dl>
-    {notice}
-    <div className={styles.layout}>
-      <div className={styles.content}>{children}</div>
-      <aside id="invest" className={styles.rail} aria-labelledby="invest-title">
-        <div className={styles.invest}>
-          <span className={styles.badge}><Icon name="clock" size={13} />Vault not live</span>
-          <h2 id="invest-title">Invest in this index</h2>
-          <p>One investment. A share of the index.</p>
-          <div className={styles.flow}><span>USDC</span><Icon name="arrow" size={18} /><span>Index shares</span></div>
-          <p id="invest-blocker">No live, execution-approved share-token vault is connected. Deposits and signing are unavailable.</p>
-          <button type="button" className={styles.investButton} disabled aria-describedby="invest-blocker">Invest in this index</button>
-          <PersonFollow id={id} />
-          <p className={styles.finePrint}>When an index vault launches, USDC will buy its share token—not individual stock tokens in your wallet. The devnet test below does not track this person.</p>
-          <VaultInvest />
+    <header className={styles.heroCard}>
+      <div className={styles.heroTop}>
+        <div className={styles.heroIdentity}>
+          <PersonAvatar name={name} imageUrl={image} size="xl" />
+          <div>
+            <p className={styles.context}>{indexName ? `${name} · ${context}` : context}</p>
+            <h1>{indexName ?? `${name} Tracker`}</h1>
+            <p className={styles.strategy}>{strategy}</p>
+            <p className={styles.heroMeta}>
+              {latestFiling ? <>Latest filing <strong>{latestFiling}</strong></> : <>Latest filing <strong>unavailable</strong></>}
+              <span aria-hidden="true">•</span>
+              <strong>{activityCount ?? "—"}</strong> reported trades saved
+            </p>
+          </div>
         </div>
-        <p className={styles.railNote}><Icon name="shield" size={16} />Public disclosures are delayed and may be incomplete. Tracking does not imply affiliation or endorsement.</p>
-      </aside>
-    </div>
+        <div className={styles.heroActions}>
+          <PersonFollow id={id} />
+          <ShareButton />
+          {indexHref ? <Link className={styles.primaryAction} href={indexHref}>View index <Icon name="arrow" size={15} /></Link> :
+            <button type="button" className={styles.primaryAction} disabled>Index not published</button>}
+        </div>
+      </div>
+
+      <dl className={styles.stats} aria-label="Portfolio statistics">
+        <div><dt>Portfolio value</dt><dd aria-label="Unavailable">—</dd><small>No verified live NAV</small></div>
+        <div><dt>Performance</dt><dd aria-label="Unavailable">—</dd><small>No verified price series</small></div>
+        <div><dt>Index holdings</dt><dd>{mappedCount ?? "—"}</dd><small>Mapped stock / ETF names</small></div>
+        <div><dt>Disclosure rows</dt><dd>{count ?? "—"}</dd><small>{countNote}</small></div>
+      </dl>
+    </header>
+
+    <a className={styles.sourceStrip} href="#holdings-title">
+      <span className={styles.sourceIcon}><Icon name="shield" size={18} /></span>
+      <span><strong>Where this portfolio comes from</strong><small>Public filings → saved disclosure book → Stocklana identity and Solana mapping.</small></span>
+      <Icon name="arrow" size={16} />
+    </a>
+
+    {notice}
+    <aside id="invest" className={`${styles.panel} ${styles.invest}`} aria-labelledby="invest-title">
+      <div>
+        <div className={styles.sectionHead}><h2 id="invest-title">Invest in this index</h2><span className={styles.badge}><Icon name="clock" size={13} />Vault not live</span></div>
+        <p className={styles.caption}>One investment. A share of the index.</p>
+        <div className={styles.flow}><span>USDC</span><Icon name="arrow" size={18} /><span>Index shares</span></div>
+        <p className={styles.caption}>When a vault launches, USDC will buy its share token—not individual stock tokens in your wallet. No funds move here today.</p>
+      </div>
+      <div className={styles.investAction}>
+        <p id="invest-blocker" className={styles.caption}>No live, execution-approved share-token vault is connected. Deposits and signing are unavailable.</p>
+        <button type="button" className={styles.investButton} disabled aria-describedby="invest-blocker">Invest in this index</button>
+      </div>
+    </aside>
+    <VaultInvest />
+    <div className={styles.content}>{children}</div>
+    <p className={styles.disclaimer}>Public disclosures are delayed and may be incomplete. Tracking does not imply affiliation or endorsement.</p>
   </div>;
 }
 
 export function PerformancePanel({ points = [] }: { points?: BacktestPoint[] }) {
   const hasSeries = points.filter((point) => Number.isFinite(point.equity)).length >= 2;
-  return <section className={styles.panel} aria-labelledby="performance-title">
-    <div className={styles.sectionHead}><h2 id="performance-title">Portfolio performance</h2><span className={styles.badge}>Historical simulation</span></div>
-    <div className={styles.chartLegend}><span><i />Portfolio</span><span><i />S&amp;P 500 · comparison unavailable</span></div>
-    {hasSeries ? <EquityCurve points={points} label="Historical simulation · not live vault performance" /> :
-      <div className={styles.emptyChart}>
-        <Icon name="clock" size={28} />
-        <h3>Performance is not available yet</h3>
-        <p>A historical simulation and S&amp;P 500 comparison need a verified price series. No return curve is drawn until that data exists.</p>
-      </div>}
-    <p className={styles.caption}>Historical simulations are not actual investment results. Live performance will require a funded vault and a verified NAV history.</p>
+  return <section className={`${styles.panel} ${styles.performance}`} aria-labelledby="performance-title">
+    <div className={styles.sectionHead}>
+      <div><h2 id="performance-title">Portfolio performance</h2><p>Historical model vs. benchmark</p></div>
+      <span className={styles.badge}>S&amp;P 500 · comparison unavailable</span>
+    </div>
+    {hasSeries ? <>
+      <div className={styles.chartLegend}><span><i />Portfolio</span><span><i />S&amp;P 500 · comparison unavailable</span></div>
+      <EquityCurve points={points} label="Historical simulation · not live vault performance" />
+    </> : <div className={styles.emptyChart}>
+      <div className={styles.emptyMetric}>—</div>
+      <h3>Performance series not available yet</h3>
+      <p>Stocklana only draws this chart once dated trades can be paired with a verified market-price history.</p>
+    </div>}
+    <p className={styles.caption}>No return is inferred from filing values. Historical simulations, when available, are not actual investment results.</p>
   </section>;
 }
 
@@ -99,14 +148,17 @@ export function AllocationPanel({ allocations = [], children }: {
   allocations?: { ticker: string; weightBps: number }[]; children?: ReactNode;
 }) {
   return <section className={styles.panel} aria-labelledby="allocation-title">
-    <div className={styles.sectionHead}><h2 id="allocation-title">Holdings distribution</h2><span className={styles.badge}>Published target</span></div>
+    <div className={styles.sectionHead}>
+      <div><h2 id="allocation-title">Holdings distribution</h2><p>Published model weights</p></div>
+      <span className={styles.badge}>{allocations.length ? `${allocations.length} mapped names` : "No model"}</span>
+    </div>
     {allocations.length ? <>
-      <p className={styles.caption}>Published index weights, not the person’s current ownership. Buys and sales both contribute to this separate activity model.</p>
       <div className={styles.allocation}>
-        <PortfolioDonut title="Published index target" holdings={allocations.map((item) => ({ ticker: item.ticker, weightPct: item.weightBps / 10000, venueSymbol: null, valueUsd: 0 }))} />
+        <PortfolioDonut title="Published index target" unit="holdings" holdings={allocations.map((item) => ({ ticker: item.ticker, weightPct: item.weightBps / 10000, venueSymbol: null, valueUsd: 0 }))} />
         {children}
       </div>
-    </> : <div className={styles.emptyAllocation}><div className={styles.emptyRing} aria-hidden="true" /><div><h3>No published allocation yet</h3><p>The disclosed book remains visible. Dollar ranges and unresolved asset names are not exact weights, so there is no allocation pie to draw.</p></div></div>}
+      <p className={styles.caption}>Published model weights over mapped equities / ETFs, using disclosed value bands or a labelled equal-weight fallback. They are not the person’s live brokerage weights.</p>
+    </> : <div className={styles.emptyAllocation}><div className={styles.emptyRing} aria-hidden="true" /><div><h3>No published allocation yet</h3><p>The complete disclosed book can still be inspected below. A pie is not drawn until an explicit model exists.</p></div></div>}
   </section>;
 }
 
