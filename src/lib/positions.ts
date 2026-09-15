@@ -5,7 +5,7 @@ import { positionFromRow, positionToRow, type PositionRow, type TrackedPosition 
 export type { TrackedPosition } from "./position-contract.ts";
 
 export class PositionStoreError extends Error {
-  constructor() { super("Copy receipt storage unavailable. Supabase service role and the positions migration are required."); }
+  constructor() { super("Copy receipt storage unavailable. Supabase service role and the copy storage migrations are required."); }
 }
 
 export function positionClient() {
@@ -19,8 +19,10 @@ const memory = () => globalState("copy_positions", () => new Map<string, Tracked
 export async function assertPositionStoreReady(): Promise<void> {
   const client = positionClient();
   if (!client) return;
-  const { error } = await client.from("positions").select("id").limit(1);
-  if (error) throw new PositionStoreError();
+  const { error: positionsError } = await client.from("positions").select("id").limit(1);
+  const { error: ordersError } = await client.from("copy_orders").select("request_id").limit(1);
+  const { error: pruneError } = await client.rpc("prune_expired_copy_orders");
+  if (positionsError || ordersError || pruneError) throw new PositionStoreError();
 }
 
 export async function listPositions(wallet: string): Promise<TrackedPosition[]> {

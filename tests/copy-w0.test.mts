@@ -15,6 +15,7 @@ import { jupiterMode, mocksAllowed } from "../src/lib/runtime.ts";
 register("./support/ui-loader.mjs", import.meta.url);
 const { POST: quote } = await import("../src/app/api/quote/route.ts");
 const { POST: execute } = await import("../src/app/api/execute/route.ts");
+const { GET: health } = await import("../src/app/api/health/route.ts");
 const { GET: copies } = await import("../src/app/api/positions/copies/route.ts");
 const { POST: basketQuote } = await import("../src/app/api/indexes/quote/route.ts");
 const { POST: basketExecute } = await import("../src/app/api/indexes/execute/route.ts");
@@ -49,7 +50,7 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
   const catalog = snapshotCatalog(), token = catalog.tokens.find(p => p.issuer === "xstock")!;
   await memo("catalog:merged", { ttlMs: 600_000 }, async () => catalog);
   const signer = Keypair.generate(), wallet = signer.publicKey.toBase58();
-  let counter = 0, executeCalls = 0, storageFails = false, receiptWriteFails = false, jupiterFails = false, omitAmounts = false;
+  let counter = 0, executeCalls = 0, storageFails = false, receiptWriteFails = false, jupiterFails = false, omitAmounts = false, pruneRpcMissing = false;
   const transactions = new Map<string, VersionedTransaction>();
   t.mock.method(globalThis, "fetch", async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(String(input));
@@ -68,6 +69,7 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
     assert.equal(url.host, "receipts.example.test", "unexpected network request");
     assert.equal(new Headers(init?.headers).get("apikey"), "test-only-service-role");
     if (url.pathname.endsWith("/rpc/prune_expired_copy_orders")) {
+      if (pruneRpcMissing) return Response.json({ code: "PGRST202", message: "Could not find the function public.prune_expired_copy_orders" }, { status: 404 });
       const { rows } = await db.query("select prune_expired_copy_orders() as deleted_count");
       return Response.json(rows[0]?.deleted_count ?? 0);
     }
@@ -133,12 +135,21 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   await assert.rejects(assertPositionStoreReady(), /service role/);
   Object.assign(process.env, { SUPABASE_SERVICE_ROLE_KEY: "test-only-service-role" });
+  pruneRpcMissing = true;
+  const unavailableHealth = await (await health()).json();
+  assert.equal(unavailableHealth.launch.receipts, false);
+  assert.equal(unavailableHealth.ok, false);
+  pruneRpcMissing = false;
+  const readyHealth = await (await health()).json();
+  assert.equal(readyHealth.launch.receipts, true);
 
+  await db.exec("reset role");
   await db.query("update copy_orders set expires_at=now()-interval '10 minutes' where request_id=$1", [order.requestId]);
   await db.query(
     "insert into copy_orders(request_id,wallet,disclosure_id,ticker,token_symbol,venue,mint,side,token_decimals,message_hash,expires_at,stub) values ($1,$2,null,$3,$4,$5,$6,'buy',$7,'unused',now()-interval '10 minutes',false)",
     ["expired-unfilled", wallet, token.ticker, token.symbol, token.issuer, token.mint, token.decimals],
   );
+  await db.exec("set role service_role");
   const sellResponse = await quote(post("quote", { ...quoteBody, side: "sell", tokenAmount: 0.1 }));
   assert.equal((await db.query("select request_id from copy_orders where request_id='expired-unfilled'")).rows.length, 0);
   assert.equal((await db.query("select request_id from copy_orders where request_id=$1", [order.requestId])).rows.length, 1);

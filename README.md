@@ -176,7 +176,7 @@ Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.e
 - `JUPITER_API_KEY` — live Jupiter Swap V2 `/order` → `/execute`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` — required with the Supabase URL for production quote contexts and copy receipts; apply `202609150001_copy_positions.sql` before deploying
+- `SUPABASE_SERVICE_ROLE_KEY` — required with the Supabase URL for production quote contexts and copy receipts; apply `202609150001_copy_positions.sql`, then `202609150002_prune_copy_orders.sql`, before deploying
 
 Do not commit real keys. Live vs fixture:
 
