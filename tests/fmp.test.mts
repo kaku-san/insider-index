@@ -1,9 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, readdir, stat, mkdtemp, mkdir, rm } from "node:fs/promises";
-import { join } from "node:path";
-import { createFmpClient, privateArchive, type RawCapture } from "../src/lib/fmp/client.ts";
+import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createFmpClient, type RawCapture } from "../src/lib/fmp/client.ts";
+import { supabaseArchive } from "../src/lib/fmp/ingest.ts";
 import { annualSnapshots, mapDisclosedTicker, normalizeActivity, normalizeAnnual, normalizePerson, selectIndexInput } from "../src/lib/fmp/fmp-parse.ts";
 import { createPeopleService } from "../src/lib/fmp/service.ts";
 import { createPeopleHandlers } from "../src/lib/fmp/http.ts";
@@ -129,26 +131,68 @@ test("every endpoint uses senateID even House; aggregate is a documented single 
   assert.equal(calls[1].searchParams.get("limit"), "250");
 });
 
-test("private archive persists exact redacted observation, hash, metadata and restrictive permissions", async () => {
-  await mkdir(new URL("../.data/", import.meta.url), { recursive: true });
-  const directory = await mkdtemp(new URL("../.data/fmp-test-", import.meta.url).pathname);
-  try {
-    const client = clientFor(async () => Response.json({ "Error Message": `secret=${key}` }), { archive: privateArchive(directory) });
-    await client.annual(id);
-    const names = await readdir(directory);
-    assert.equal(names.length, 1);
-    const file = join(directory, names[0]);
-    const capture = JSON.parse(await readFile(file, "utf8")) as RawCapture;
-    assert.equal(capture.body.includes(key), false);
-    assert.equal(capture.payloadHash, createHash("sha256").update(capture.body).digest("hex"));
-    assert.deepEqual(capture.params, { senateID: id, page: 0, limit: 250 });
-    assert.equal(capture.fetchedAt, at.toISOString());
-    assert.equal((await stat(file)).mode & 0o777, 0o600);
-    assert.equal((await stat(directory)).mode & 0o777, 0o700);
-  } finally { await rm(directory, { recursive: true, force: true }); }
-  const failed = await clientFor(async () => Response.json([]), { archive: async () => { throw new Error("disk full"); } }).annual(id);
+test("default client and people handlers work with all filesystem writes denied", () => {
+  // A child permission boundary is deterministic even when tests run as root.
+  // Unlike chmod, it rejects writes on every host without touching the app disk.
+  const output = execFileSync(process.execPath, [
+    "--permission", "--allow-fs-read=*", "--experimental-strip-types", "--input-type=module", "--eval", `
+      import assert from "node:assert/strict";
+      import { createFmpClient } from ${JSON.stringify(new URL("../src/lib/fmp/client.ts", import.meta.url).href)};
+      import { createPeopleService } from ${JSON.stringify(new URL("../src/lib/fmp/service.ts", import.meta.url).href)};
+      import { createPeopleHandlers } from ${JSON.stringify(new URL("../src/lib/fmp/http.ts", import.meta.url).href)};
+      assert.equal(process.permission.has("fs.write"), false);
+      const client = createFmpClient({
+        key: async () => "test-only-key",
+        fetch: async (input) => {
+          const url = new URL(input);
+          return Response.json(url.pathname.endsWith("senate-profile") && url.searchParams.get("page") === "0"
+            ? ${JSON.stringify(profile.payload)} : []);
+        },
+      });
+      const handlers = createPeopleHandlers(createPeopleService(client, async () => new Map()));
+      const directory = await handlers.directory(new Request("https://app.test/api/people"));
+      assert.equal(directory.status, 200);
+      assert.equal((await directory.json()).count, 1);
+      const portfolio = await handlers.portfolio(new Request("https://app.test"), { params: Promise.resolve({ id: "${id}" }) });
+      assert.equal(portfolio.status, 200);
+      const book = await portfolio.json();
+      assert.equal(book.person.id, "${id}");
+      assert.equal(book.ingestion.annual.status, "complete");
+      assert.equal(book.state, "no-annual-book");
+      console.log("read-only-ok");
+    `,
+  ], { encoding: "utf8" });
+  assert.equal(output.trim(), "read-only-ok");
+});
+
+test("Supabase archive persists redacted bytes and metadata; storage failures still fail ingestion", async () => {
+  const inserts: Record<string, unknown>[] = [];
+  let error: { message: string } | null = null;
+  const db = { from(table: string) {
+    assert.equal(table, "raw_batches");
+    return { async insert(row: Record<string, unknown>) { inserts.push(row); return { error }; } };
+  } } as unknown as SupabaseClient;
+  const archive = supabaseArchive(db);
+  const result = await clientFor(async () => Response.json({ "Error Message": `secret=${key}` }), { archive }).annual(id);
+  assert.equal(result.issues[0].code, "payload");
+  assert.equal(inserts.length, 1);
+  const capture = inserts[0];
+  assert.equal(capture.body, JSON.stringify({ "Error Message": "secret=[REDACTED]" }));
+  assert.equal(capture.payload_hash, createHash("sha256").update(capture.body as string).digest("hex"));
+  assert.deepEqual(capture.params, { senateID: id, page: 0, limit: 250 });
+  assert.equal(capture.fetched_at, at.toISOString());
+  assert.equal(capture.http_status, 200);
+  assert.equal(capture.endpoint, "senate-net-worth");
+
+  const client = clientFor(async () => Response.json([]), { archive });
+  assert.equal((await client.annual(id)).complete, true);
+  assert.equal(inserts[1].body, "[]");
+  assert.equal(inserts[1].row_count, 0);
+  error = { message: `storage unavailable ${key}` };
+  const failed = await client.annual(id);
   assert.equal(failed.status, "failed");
   assert.equal(failed.issues[0].code, "storage");
+  assert.equal(JSON.stringify(failed).includes(key), false);
 });
 
 test("normalization preserves annual rows, all years, owner, no-ticker assets, income and liabilities", () => {

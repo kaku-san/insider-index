@@ -45,7 +45,7 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | App | Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui |
 | Auth / wallet | Real `@privy-io/react-auth` Solana when `NEXT_PUBLIC_PRIVY_APP_ID` is set; production fails closed if unavailable |
 | Insiders | `src/lib/disclosures/edgar.ts` (+ pure `edgar-parse.ts`) primary; `form4.ts` orchestrates EDGAR → Form4API → mock. Issuer set: `edgarUniverse()` (`EDGAR_UNIVERSE=wide`, `EDGAR_TICKERS`) |
-| Person-first Congress | `src/lib/fmp/` — FMP stable person IDs, private raw archive, annual source snapshots and separate activity. No PTR-netted current holdings or fabricated rows. |
+| Person-first Congress | `src/lib/fmp/` — FMP stable person IDs, Supabase raw captures, annual source snapshots and separate activity. No PTR-netted current holdings or fabricated rows. |
 | Congress tape | `src/lib/disclosures/ainvest.ts` (+ pure `ainvest-parse.ts`) primary; `congress.ts` orchestrates AInvest → Form4API → mock. AInvest is ticker-scoped (no per-member pull), so the crawl walks `buildCongressUniverse()` (`src/lib/disclosures/universe.ts`) and groups rows by filer |
 | Book | `src/lib/fomo/book.ts` (pure): running net of PTR bands per ticker, Form 4 shares-after × price; `insights.ts` tags venue + copy eligibility |
 | Buy catalog | `src/lib/venues/solana-catalog.ts` — live xStocks + Backpack mints, `catalog-snapshot.json` fallback; `resolve.ts` picks xStock → Backpack → none; `prices.ts` Jupiter Price v3 |
@@ -83,9 +83,9 @@ UI routes:
 
 ## FMP person backend
 
-The contract and publication procedure are documented in [`src/lib/fmp/README.md`](src/lib/fmp/README.md). `/api/people` and `/api/people/[id]/portfolio` read Supabase only, not FMP or its disk archive. Home, `/p/[stable FMP ID]`, and `/indexes/fmp-[hash]` show saved annual books, activity and published model targets. Existing legacy `/api/profiles`, copy and swap routes remain independent. Do **not** feed FMP activity into the PTR-netted `src/lib/fomo/book.ts` calculator.
+The contract and publication procedure are documented in [`src/lib/fmp/README.md`](src/lib/fmp/README.md). `/api/people` and `/api/people/[id]/portfolio` read Supabase only; they never fetch FMP or write archives. Home, `/p/[stable FMP ID]`, and `/indexes/fmp-[hash]` show saved annual books, activity and published model targets. Existing legacy `/api/profiles`, copy and swap routes remain independent. Do **not** feed FMP activity into the PTR-netted `src/lib/fomo/book.ts` calculator.
 
-Set server-only `FMP_API_KEY`, or use `$HOME/.config/fmp-api-key` for local development. Requests use the `apikey` **header**, never a browser secret or query credential. Raw observations (including errors) are redacted and archived under `.data/fmp` with fetch time, request parameters, SHA-256 and page metadata (directory `0700`, files `0600`). `.data` is excluded from git, image builds and deployment rsync; Compose uses a private named volume so observations survive container replacement. No raw archive is web-served. Ensure that directory/volume is writable and back it up privately; storage failure is an ingestion failure.
+Set server-only `FMP_API_KEY`, or use `$HOME/.config/fmp-api-key` for local development. Requests use the `apikey` **header**, never a browser secret or query credential. FMP capture never writes the app disk, so read-only Vercel functions are safe. The [FMP backend contract](src/lib/fmp/README.md#transport-and-completeness) owns redaction, Supabase persistence and failure semantics.
 
 Live integration verification on 2026-09-14 returned **540 real directory entries** after a verified empty page, and **369 PTR activity rows** for `L000397`. These are dated observations, not hard-coded expected provider sizes. The annual endpoint repeated the **same 250 rows** on page 1, ignoring pagination in that probe. The implementation retains the rows and flags `repeated-page` / `partial`; it does **not** advertise a complete annual book or index input. The annual aggregate endpoint is a documented unpaginated yearly series and is fetched once.
 

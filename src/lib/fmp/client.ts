@@ -1,6 +1,6 @@
-/** Node-only transport and private raw archive. Never import this into client components. */
-import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile, chmod } from "node:fs/promises";
+/** Node-only transport with optional raw capture. Never import this into client components. */
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Batch, FmpEndpoint, FmpParams, FmpRow, IngestionIssue, SourcePage } from "./types.ts";
@@ -27,16 +27,6 @@ export async function readFmpKey(): Promise<string | null> {
 }
 
 export type RawCapture = SourcePage & { httpStatus: number; body: string };
-/** Archive is not web-served. Files are unique per observation; hashes describe stored bytes. */
-export function privateArchive(directory = join(process.cwd(), ".data/fmp")) {
-  return async (capture: RawCapture): Promise<void> => {
-    await mkdir(directory, { recursive: true, mode: 0o700 });
-    await chmod(directory, 0o700);
-    await writeFile(join(directory, `${capture.payloadHash}-${randomUUID()}.json`), JSON.stringify(capture), {
-      encoding: "utf8", mode: 0o600, flag: "wx",
-    });
-  };
-}
 
 function redact(body: string, key: string): string {
   return body.split(key).join("[REDACTED]")
@@ -54,6 +44,7 @@ function validRows(payload: unknown): payload is FmpRow[] {
 export type FmpClientOptions = {
   key?: () => Promise<string | null>;
   fetch?: typeof fetch;
+  /** Inject Supabase persistence for ingestion; omitted means no persistence, never local disk. */
   archive?: (capture: RawCapture) => Promise<void>;
   now?: () => Date;
   sleep?: (ms: number) => Promise<void>;
@@ -62,7 +53,7 @@ export type FmpClientOptions = {
 };
 export function createFmpClient(options: FmpClientOptions = {}) {
   const fetcher = options.fetch ?? fetch;
-  const archive = options.archive ?? privateArchive();
+  const archive = options.archive;
   const now = options.now ?? (() => new Date());
   const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const maxPages = options.maxPages ?? 2000;
@@ -116,7 +107,7 @@ export function createFmpClient(options: FmpClientOptions = {}) {
         payloadHash: createHash("sha256").update(body).digest("hex"),
         rowCount: Array.isArray(payload) ? payload.length : 0,
       };
-      try { await archive({ ...source, httpStatus: response.status, body }); }
+      try { await archive?.({ ...source, httpStatus: response.status, body }); }
       catch { throw fail("storage"); }
       if (!response.ok) {
         if ((response.status === 429 || response.status >= 500) && attempt < retries) {

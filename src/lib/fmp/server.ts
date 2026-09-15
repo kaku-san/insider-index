@@ -3,7 +3,7 @@ import { createServiceSupabase } from "@/lib/supabase";
 import { PeopleError } from "./service";
 import { createStoredPeopleService } from "./store";
 
-// Public reads never fetch FMP or touch its private filesystem archive.
+// Public reads never fetch FMP or persist raw captures.
 function store() {
   const db = createServiceSupabase();
   if (!db) throw new PeopleError(503, "saved-data-unconfigured");
