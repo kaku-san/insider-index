@@ -6,7 +6,7 @@
 
 - [`src/lib/index-vaults/raydium-oracles.ts`](../src/lib/index-vaults/raydium-oracles.ts): `oracle_type` must be `raydium_clmm` or `raydium_cpmm` (`assertRaydiumOnlyToken`, wired into `NativeVaultBuilders.addToken`); installed native oracles must all be Raydium (`assertRaydiumOnlyVault`); `mint → pool + kind` bindings only (`DEVNET_RAYDIUM_POOLS`, `raydiumPoolFor` blocks unknown mints instead of inventing a pool); `planRaydiumPriceUpdate` builds the native `update_token_prices` instruction from the vault's own lookup-table oracle accounts. The pinned SDK's `updateTokenPricesTx` is not used anywhere because it unconditionally instantiates a Hermes client even with zero Pyth oracles; `NativeVaultBuilders.settle("prices")` now routes through the Raydium planner.
 - `tests/raydium-oracles.test.mts` exercises `NativeVaultBuilders.settle("prices")` and `planRaydiumPriceUpdate` against deterministic vault/RPC fixtures, rejects any network request outside Solana devnet (including Hermes), and verifies that the emitted transaction contains only the native `update_token_prices` instruction with the bound Raydium pool accounts. Separate behavioral checks reject non-Raydium oracle types and fail closed on any `HERMES_*`/`PYTH_*` environment variable.
-- Program logs are checked on every simulation and receipt: a priced token whose log line reports oracle `type: 0` (Pyth) fails the step closed.
+- Program logs are checked on every simulation and finalized receipt: every mint in the exact price-update plan must have a parsed Raydium `type: 1` or `type: 2` entry. Pyth (`type: 0`), missing, empty or truncated price logs fail the step closed.
 
 ## Commands
 
@@ -18,7 +18,7 @@ npm run vault:settle:devnet -- --step lock [--execute]
 ```
 
 - Default is **dry-run**: build, decode and `simulateTransaction` only; no signer is loaded and the RPC wrapper rejects `sendTransaction`.
-- `--execute` loads `~/.config/stocklana-devnet-keypair.json` (or `--keypair PATH`), checks it is the authorized wallet `C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB`, simulates each transaction immediately before sending with a fresh blockhash, waits for finalization, and stops once `--max-sol-debit` (default `0.02` SOL) is exceeded. The secret is never printed or written.
+- `--execute` loads `~/.config/stocklana-devnet-keypair.json` (or `--keypair PATH`), checks it is the authorized wallet `C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB`, and simulates each transaction immediately before sending. Before broadcast it requires matching payer-balance and simulation slots, conservatively compares the simulated wallet debit with the fee plus direct system-account debits, and refuses when the larger estimate would exceed `--max-sol-debit` (default `0.02` SOL). It then sends with a fresh blockhash, waits for finalization and reconciles the actual wallet debit. The secret is never printed or written.
 - Fixed devnet RPC and genesis; no network, vault, wallet or mainnet flags exist.
 - Public receipts (signature, slot, fee, wallet debit, message hash, oracle types from logs) are appended to `evidence/vaults/devnet-raydium-settlement.json`; a private send log goes to `.data/index-vaults/devnet-settle.log`.
 
