@@ -49,6 +49,6 @@ export function jupiterMode(): JupiterMode {
 export function edgarUserAgent(): string {
   return (
     process.env.SEC_EDGAR_USER_AGENT?.trim() ||
-    "Stocklana/1.0 (https://stocklana.barelystable.dev; ops@barelystable.dev)"
+    "InsiderIndex/1.0 (https://insiderindex.xyz; ops@barelystable.dev)"
   );
 }

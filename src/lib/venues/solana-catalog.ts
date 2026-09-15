@@ -58,7 +58,7 @@ function disabled(issuer: CatalogIssuer): boolean {
 
 async function fetchText(url: string, accept: string): Promise<string> {
   const response = await fetch(url, {
-    headers: { Accept: accept, "User-Agent": "Stocklana/1.0 (+https://stocklana.barelystable.dev)" },
+    headers: { Accept: accept, "User-Agent": "InsiderIndex/1.0 (+https://insiderindex.xyz)" },
     cache: "no-store",
     signal: AbortSignal.timeout(20_000),
   });

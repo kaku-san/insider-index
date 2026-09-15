@@ -10,6 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Stocklana
 
+User-facing brand is **InsiderIndex** (https://insiderindex.xyz, copy as InsiderIndex.xyz). Repo, package name, `STOCKLANA_*` env keys, module paths, and API routes stay `stocklana`.
+
 Disclosure-to-copy-trade app: real insider/politician prints → user-signed xStock swaps on Solana. Product scope, env matrix, and API routes live in `README.md`; empty env template in `.env.example`.
 
 - W0 release: `docs/track-a-w0.md` owns launch checks and receipt semantics. Home (`src/components/index-home.tsx`) remains indexes-first research; primary trading CTA is `/feed` → copy one print. Basket Buy stays unavailable. Copy receipts are not balances/NAV; production requires service-role Supabase. Do not reintroduce party/executive lanes as top-level navigation.

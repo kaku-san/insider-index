@@ -36,7 +36,7 @@ export function IndexHome({ initialData }: { initialData?: SavedDirectory }) {
       </div>
       <div className={styles.passScene} aria-hidden="true">
         <div className={styles.insiderPass}>
-          <div className={styles.passTop}><strong>stocklana.</strong><Icon name="landmark" size={26} /></div>
+          <div className={styles.passTop}><strong>InsiderIndex</strong><Icon name="landmark" size={26} /></div>
           <span className={styles.passLabel}>The public-information club</span>
           <div className={styles.passName}>Insider<br />access.</div>
           <div className={styles.passBottom}><span>Issued to<strong>You.</strong></span><span className={styles.passSeal}>Open<br />to everyone</span></div>
