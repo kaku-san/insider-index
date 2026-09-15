@@ -9,7 +9,7 @@ import { PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } fr
 import { MintLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { isRebalanceRequired } from "@symmetry-hq/sdk";
 import type { Vault } from "@symmetry-hq/sdk";
-import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanKeeper } from "../src/lib/index-vaults/kaku-san.ts";
+import { KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanKeeper } from "../src/lib/index-vaults/kaku-san.ts";
 import { parseKakuSanPrepareRequest } from "../src/lib/index-vaults/kaku-san-create.ts";
 import {
   KAKU_SAN_NATIVE_TOKEN_CAP, assertNativeTokenCap, forbidPythNetwork, handleKakuSanStatus, kakuSanDrift,
