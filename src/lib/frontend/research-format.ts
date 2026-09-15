@@ -13,6 +13,24 @@ export function moneyBand(value?: MoneyBand | null) {
   return "Range unavailable";
 }
 
+const STOCK_ACT_BANDS: ReadonlyArray<readonly [number, number]> = [
+  [1_001, 15_000],
+  [15_001, 50_000],
+  [50_001, 100_000],
+  [100_001, 250_000],
+  [250_001, 500_000],
+  [500_001, 1_000_000],
+  [1_000_001, 5_000_000],
+  [5_000_001, 25_000_000],
+  [25_000_001, 50_000_000],
+];
+
+export function stockActBandFromMidpoint(midpoint?: number | null): MoneyBand {
+  if (typeof midpoint !== "number" || !Number.isFinite(midpoint)) return { low: null, high: null };
+  const match = STOCK_ACT_BANDS.find(([low, high]) => Math.abs((low + high) / 2 - midpoint) < 0.01);
+  return match ? { low: match[0], high: match[1] } : { low: null, high: null };
+}
+
 export function shortDate(value?: string | null) {
   if (!value) return "Date unavailable";
   const date = new Date(value);
