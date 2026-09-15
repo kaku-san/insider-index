@@ -27,7 +27,7 @@ export interface NativeCapabilities {
 export interface CandidateAsset {
   securityId: string;
   ticker: string;
-  provider: "xstocks" | "backpack" | "ondo";
+  provider: "xstocks" | "backpack";
   mint: Address;
   tokenProgram: Address;
   decimals: number;

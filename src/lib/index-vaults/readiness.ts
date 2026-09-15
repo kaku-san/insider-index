@@ -21,7 +21,7 @@ export function assessReadiness(candidate: CandidateAsset, evidence: MintReadine
   let status: ReadinessStatus = "READY";
   const block = (s: ReadinessStatus, reason: string) => { if (status === "READY") status = s; reasons.push(reason); };
   address(candidate.mint); address(candidate.tokenProgram); address(candidate.oracle.account);
-  if (e.network !== policy.network || e.mint !== candidate.mint || e.tokenProgram !== candidate.tokenProgram || e.decimals !== candidate.decimals || e.oracleAccount !== candidate.oracle.account || e.denomination !== candidate.oracle.denomination || e.priceBasis !== candidate.priceBasis || !e.catalogVerified || candidate.provider === "ondo") block("UNTESTED", "Exact network/catalog/mint/program/decimals/oracle identity mismatch");
+  if (e.network !== policy.network || e.mint !== candidate.mint || e.tokenProgram !== candidate.tokenProgram || e.decimals !== candidate.decimals || e.oracleAccount !== candidate.oracle.account || e.denomination !== candidate.oracle.denomination || e.priceBasis !== candidate.priceBasis || !e.catalogVerified) block("UNTESTED", "Exact network/catalog/mint/program/decimals/oracle identity mismatch");
   if (!Number.isSafeInteger(e.observedSlot) || e.observedSlot < 1 || !Number.isFinite(e.observedAt) || policy.now - e.observedAt > policy.maxAgeMs || e.observedAt > policy.now) block("UNTESTED", "Readiness observation stale or invalid");
   if (e.extensions.some(x => !e.testedExtensions.includes(x))) block("EXTENSION_UNSUPPORTED", "Untested mint extension");
   if (e.paused || !e.vaultTokenSupported || !e.depositTransferSimulation || !e.claimTransferSimulation) block("TRANSFER_BLOCKED", "Native deposit and second-wallet claim transfers must both succeed");

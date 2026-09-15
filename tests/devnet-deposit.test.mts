@@ -81,6 +81,13 @@ test("HTTP preview is no-store; prepare is 503 with no signing payload; read fai
   assert.equal((await handleDevnetDeposit(request(input), true, reader())).status, 400);
 });
 
+test("HTTP preview returns unavailable when native observation exceeds its deadline", async () => {
+  const stalled = reader(); stalled.read = async () => new Promise(() => {});
+  const response = await handleDevnetDeposit(request(input), false, stalled, 10);
+  assert.equal(response.status, 503);
+  assert.deepEqual(Object.keys(await response.json()), ["error"]);
+});
+
 test("frontend respects blocked prepare response and rejects substituted vault or HTTP errors", async t => {
   const preview = await previewDevnetDeposit(input, reader());
   t.mock.method(globalThis, "fetch", async () => Response.json(preview, { status: 503 }));
