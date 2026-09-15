@@ -101,7 +101,9 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
   const setLocalQuery = (value: string) => setQueryDraft({ urlQuery, value });
   const [visible, setVisible] = useState(10);
   const peopleResult = useResource<PeopleDirectoryResponse>("/api/people", initialData);
-  const legacyResult = useResource<LegacyProfiles>("/api/profiles");
+  const primaryHasPeople = Boolean(peopleResult.data?.people?.length);
+  const legacyNeeded = !peopleResult.loading && !primaryHasPeople;
+  const legacyResult = useResource<LegacyProfiles>(legacyNeeded ? "/api/profiles" : null);
   const disclosureResult = useResource<DisclosureResponse>("/api/disclosures");
   const people = useMemo(() => normalizedPeople(peopleResult.data ?? undefined, legacyResult.data ?? undefined), [peopleResult.data, legacyResult.data]);
   const disclosures = disclosureResult.data?.disclosures ?? disclosureResult.data?.signals ?? [];
@@ -115,7 +117,10 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
   const spotlight = sorted.slice(1, 5);
   const query = localQuery.trim().toLowerCase();
   const directory = useMemo(() => people.filter((person) => !query || `${person.name} ${person.office ?? ""} ${person.position ?? ""} ${person.state ?? ""}`.toLowerCase().includes(query)), [people, query]);
-  const loading = (peopleResult.loading || legacyResult.loading) && !people.length;
+  const loading = !people.length && (
+    peopleResult.loading ||
+    (legacyNeeded && legacyResult.data == null && legacyResult.error == null)
+  );
 
   return <div className={styles.home}>
     <section className={styles.hero}>

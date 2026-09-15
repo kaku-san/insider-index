@@ -91,16 +91,16 @@ export function PositionsTable() {
           <small>No verified dollar mark. Share counts come from chain reads, never copy receipts.</small>
         </div>
         <div className={styles.balanceStats}>
-          <span><b>0</b> indexes</span>
+          <span><b>—</b> index count unavailable</span>
           <span><b>{fills.length}</b> copied moves</span>
-          <span><b>0</b> pending</span>
+          <span><b>—</b> pending unavailable</span>
         </div>
         <Link href="/">Explore <Icon name="arrow" size={13} /></Link>
       </section>
 
       <div className={styles.tabs}>
         <button className={tab === "indexes" ? styles.active : ""} onClick={() => setTab("indexes")}>
-          Index positions <b>0</b>
+          Index positions
         </button>
         <button className={tab === "copies" ? styles.active : ""} onClick={() => setTab("copies")}>
           Copied moves <b>{fills.length}</b>
@@ -117,8 +117,8 @@ export function PositionsTable() {
           </div>
           <div className={styles.empty}>
             <Icon name="grid" size={26} />
-            <h2>No published index shares yet.</h2>
-            <p>Open a published person index. Native deposits stay fail-closed until the vault prepare path is live.</p>
+            <h2>Index positions are unavailable.</h2>
+            <p>This release cannot enumerate native share balances across published indexes. Use the separate devnet diagnostic only for the documented test vault.</p>
             <Link href="/">Explore indexes <Icon name="arrow" size={13} /></Link>
           </div>
           <button className={styles.diagnosticButton} aria-expanded={showDevnet} onClick={() => setShowDevnet(!showDevnet)}>Separate devnet share diagnostic</button>

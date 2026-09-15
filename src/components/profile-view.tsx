@@ -86,13 +86,14 @@ function FullBook({items}:{items:ResearchItem[]}){const[expanded,setExpanded]=us
 
 export function ProfileView({id, initialData}:{id:string; initialData?: PersonPortfolioResponse}){
  const research=useResource<PersonPortfolioResponse>(`/api/people/${encodeURIComponent(id)}/portfolio`, initialData);
- const legacy=useResource<LegacyProfileData>(`/api/profiles/${encodeURIComponent(id)}`);
+ const legacyNeeded=!research.loading&&!research.data;
+ const legacy=useResource<LegacyProfileData>(legacyNeeded?`/api/profiles/${encodeURIComponent(id)}`:null);
  const ui=useUI();
  const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"overview"|"holdings"|"activity"|"sources">("overview"),[investOpen,setInvestOpen]=useState(false),[vault,setVault]=useState<VaultReadiness|null>(null);
  const researchBook=research.data,legacyProfile=legacy.data?.profile??null;
  const indexId=researchBook?.publishedIndex?`fmp-${researchBook.publishedIndex.hash}`:legacyProfile?.index?.id??null;
  useEffect(()=>{let live=true;async function load(){if(!indexId){if(live)setVault(null);return;}try{const value=await getVaultReadiness(indexId);if(live)setVault(value)}catch{if(live)setVault(null)}}void load();return()=>{live=false}},[indexId]);
- const loading=(research.loading||legacy.loading)&&!researchBook&&!legacyProfile;
+ const loading=!researchBook&&!legacyProfile&&(research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));
  if(loading)return <Skeleton cards={3}/>;
  if(!researchBook&&!legacyProfile&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{research.reload();legacy.reload()}}/>;
  if(!researchBook&&!legacyProfile)return <div className={styles.emptyPage}><strong>Portfolio not found.</strong><Link href="/">Back to Explore</Link></div>;
