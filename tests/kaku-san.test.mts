@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { register } from "node:module";
+import { mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
@@ -13,22 +15,28 @@ import {
 } from "../src/lib/index-vaults/kaku-san.ts";
 import {
   assertKakuSanComposition, assertSignedBy, assertSignedByDeployer, confirmWalletTransaction,
-  handleKakuSanObserve, handleKakuSanPrepare, handleKakuSanSubmit, kakuSanConnection,
-  kakuSanDeactivateInput, kakuSanOracleInput, kakuSanTokenInput, observeKakuSanVault,
-  parseKakuSanObserveRequest, parseKakuSanPrepareRequest, parseKakuSanSubmitRequest,
-  payloadTransactions, prepareKakuSanStep,
+  discardKakuSanCreateDraft, handleKakuSanDiscard, handleKakuSanObserve, handleKakuSanPrepare,
+  handleKakuSanSubmit, kakuSanConnection, kakuSanCreateJournal, kakuSanDeactivateInput, kakuSanOracleInput,
+  kakuSanTokenInput, observeKakuSanVault, parseKakuSanDiscardRequest, parseKakuSanObserveRequest,
+  parseKakuSanPrepareRequest, parseKakuSanSubmitRequest, payloadTransactions, prepareKakuSanStep,
 } from "../src/lib/index-vaults/kaku-san-create.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import {
-  applyKakuSanSubmit, canCreateKakuSan, loadKakuSanReceipt, mergeKakuSanObservation, nextKakuSanStep,
-  parseKakuSanReceipt, saveKakuSanReceipt, signPreparedKakuSan, type KakuSanReceipt,
+  applyKakuSanSubmit, canCreateKakuSan, clearKakuSanReceipt, loadKakuSanReceipt, mergeKakuSanObservation,
+  nextKakuSanStep, parseKakuSanReceipt, saveKakuSanReceipt, signPreparedKakuSan, type KakuSanReceipt,
 } from "../src/lib/frontend/kaku-san.ts";
 import { POST as prepareRoute } from "../src/app/api/vaults/kaku-san/prepare/route.ts";
 import { POST as submitRoute } from "../src/app/api/vaults/kaku-san/submit/route.ts";
 import { POST as observeRoute } from "../src/app/api/vaults/kaku-san/observe/route.ts";
+import { POST as discardRoute } from "../src/app/api/vaults/kaku-san/discard/route.ts";
 import { STUB_WALLET_ADDRESS } from "../src/lib/wallet.ts";
 import robots from "../src/app/robots.ts";
+
+async function temp<T>(fn: (path: string) => Promise<T>): Promise<T> {
+  const dir = await mkdtemp(join(process.cwd(), ".kaku-san-test-"));
+  try { return await fn(dir); } finally { await rm(dir, { recursive: true, force: true }); }
+}
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { KakuAdmin } = await import("../src/components/kaku-admin.tsx");
@@ -87,6 +95,7 @@ function builders(vaultAccount: { data?: Uint8Array } | null = { data: new Uint8
     connection: {
       simulateTransaction: async () => ({ value: { err: null } }),
       getAccountInfo: async () => vaultAccount,
+      getLatestBlockhash: async () => ({ blockhash: PublicKey.default.toBase58(), lastValidBlockHeight: 1 }),
     },
     assertNetwork: async () => {},
     sdk: {
@@ -161,8 +170,9 @@ test("prepare RPC forbids sends, airdrops and devnet; HERMES/PYTH env fails clos
   assert.throws(() => assertNoPythEnvironment({ HERMES_URL: "https://hermes.example" } as unknown as NodeJS.ProcessEnv), /PYTH_ENV_FORBIDDEN/);
 });
 
-test("prepare returns unsigned create transactions and the public vault + share mint", async () => {
-  const prepared = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders());
+test("prepare returns unsigned create transactions and the public vault + share mint", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const prepared = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(), true, journal);
   assert.equal(prepared.vault, VAULT);
   assert.equal(prepared.shareMint, MINT);
   assert.equal(prepared.step, "create");
@@ -172,7 +182,64 @@ test("prepare returns unsigned create transactions and the public vault + share 
   const tx = VersionedTransaction.deserialize(Buffer.from(prepared.transactions[0].txBase64, "base64"));
   assert.ok(tx.signatures[0].every(byte => byte === 0));
   assert.throws(() => payloadTransactions({ batches: [{ transactions: [{ ...unsignedPayload(), payer: OTHER }] }] }, KAKU_SAN_DEPLOYER));
-});
+}));
+
+test("create draft is journaled: a retry resumes the same vault with a refreshed blockhash and never calls createVaultTx twice", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const native = builders();
+  let createCalls = 0;
+  const refreshedBlockhash = new PublicKey(new Uint8Array(32).fill(7)).toBase58();
+  native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
+  native.connection.getLatestBlockhash = async () => ({ blockhash: refreshedBlockhash, lastValidBlockHeight: 1 });
+
+  const first = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(createCalls, 1);
+  assert.equal(first.vault, VAULT);
+  assert.equal(first.shareMint, MINT);
+
+  const second = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(createCalls, 1, "resume must not call createVaultTx a second time");
+  assert.equal(second.vault, VAULT);
+  assert.equal(second.shareMint, MINT);
+  const firstTx = VersionedTransaction.deserialize(Buffer.from(first.transactions[0].txBase64, "base64"));
+  const secondTx = VersionedTransaction.deserialize(Buffer.from(second.transactions[0].txBase64, "base64"));
+  assert.notEqual(firstTx.message.recentBlockhash, secondTx.message.recentBlockhash);
+  assert.equal(secondTx.message.staticAccountKeys[0]?.toBase58(), KAKU_SAN_DEPLOYER);
+}));
+
+test("discard clears an unconfirmed draft and permits exactly one new createVaultTx; a draft with an on-chain vault refuses discard", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const native = builders(null);
+  let createCalls = 0;
+  native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
+
+  await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(createCalls, 1);
+
+  const mismatched = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: OTHER });
+  await assert.rejects(discardKakuSanCreateDraft(mismatched, native, journal), /resume it instead/);
+
+  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT });
+  assert.equal((await discardKakuSanCreateDraft(discardInput, native, journal)).discarded, true);
+
+  await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(createCalls, 2, "discard must allow exactly one fresh createVaultTx");
+
+  const confirmed = builders({ data: new Uint8Array(1) });
+  await assert.rejects(discardKakuSanCreateDraft(discardInput, confirmed, journal), /exists on-chain/);
+}));
+
+test("HTTP discard is no-store and refuses a non-deployer", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(null), true, journal);
+  const denied = await handleKakuSanDiscard(request({ creator: OTHER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
+  assert.equal(denied.status, 400);
+  const ok = await handleKakuSanDiscard(request({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
+  assert.equal(ok.status, 200);
+  assert.equal(ok.headers.get("Cache-Control"), "no-store");
+  assert.deepEqual(await ok.json(), { discarded: true });
+  assert.equal((await discardRoute(request({ creator: OTHER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"))).status, 400);
+}));
 
 test("signed-by helper accepts a matching keypair and deployer submit refuses unsigned or foreign payers", () => {
   const kp = Keypair.generate();
@@ -188,14 +255,15 @@ test("signed-by helper accepts a matching keypair and deployer submit refuses un
   assert.throws(() => assertSignedByDeployer(unsignedPayload().tx_b64), /unsigned/);
 });
 
-test("HTTP prepare is no-store and refuses a non-deployer; submit refuses unsigned bytes", async () => {
-  const ok = await handleKakuSanPrepare(request({ creator: KAKU_SAN_DEPLOYER }), () => builders());
+test("HTTP prepare is no-store and refuses a non-deployer; submit refuses unsigned bytes", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const ok = await handleKakuSanPrepare(request({ creator: KAKU_SAN_DEPLOYER }), () => builders(), undefined, journal);
   assert.equal(ok.status, 200);
   assert.equal(ok.headers.get("Cache-Control"), "no-store");
   const body = await ok.json();
   assert.equal(body.vault, VAULT);
   assert.equal(body.shareMint, MINT);
-  const denied = await handleKakuSanPrepare(request({ creator: OTHER }), () => builders());
+  const denied = await handleKakuSanPrepare(request({ creator: OTHER }), () => builders(), undefined, journal);
   assert.equal(denied.status, 400);
   const unsigned = await handleKakuSanSubmit(request({
     creator: KAKU_SAN_DEPLOYER, step: "create", vault: VAULT, shareMint: MINT, signedTransactions: [unsignedPayload().tx_b64],
@@ -203,19 +271,20 @@ test("HTTP prepare is no-store and refuses a non-deployer; submit refuses unsign
   assert.equal(unsigned.status, 503);
   assert.equal((await prepareRoute(request({ creator: OTHER }))).status, 400);
   assert.equal((await submitRoute(request({ creator: OTHER, step: "create", vault: VAULT, shareMint: MINT, signedTransactions: ["AA"] }, "/api/vaults/kaku-san/submit"))).status, 400);
-});
+}));
 
-test("live deployer may sign; stub, preview and any other wallet are refused. Public Invest Sign stays off", async () => {
+test("live deployer may sign; stub, preview and any other wallet are refused. Public Invest Sign stays off", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
   assert.equal(canCreateKakuSan({ mode: "live", authenticated: true, solanaAddress: KAKU_SAN_DEPLOYER }), true);
   assert.equal(canCreateKakuSan({ mode: "stub", authenticated: true, solanaAddress: STUB_WALLET_ADDRESS }), false);
   assert.equal(canCreateKakuSan({ mode: "live", authenticated: true, solanaAddress: OTHER }), false);
   assert.equal(DEVNET_DEPOSIT_SIGNING_ENABLED, false);
-  const prepared = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(), false);
+  const prepared = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(), false, journal);
   await assert.rejects(signPreparedKakuSan(prepared, {
     mode: "stub", authenticated: true, solanaAddress: STUB_WALLET_ADDRESS,
     signTransaction: async () => { throw new Error("stub must not sign Kaku San"); },
   }, () => true), /approved deployer/);
-});
+}));
 
 function wallet(partial: Partial<TestWallet>): TestWallet {
   return {
@@ -315,8 +384,13 @@ test("receipt resume never returns create after the first vault, and a different
     vault: VAULT, shareMint: MINT, signatures: [], slot: null, created: false, deactivated: [], added: [], weightsSet: false, verified: false,
   });
   assert.equal(nextKakuSanStep(draft).step, "create");
+  assert.match(renderAdmin(wallet({ solanaAddress: KAKU_SAN_DEPLOYER })), /Discard draft/);
   const created = applyKakuSanSubmit(draft, { step: "create", vault: VAULT, shareMint: MINT, signatures: ["sig"], slot: 1 });
   assert.equal(created.created, true);
+  assert.doesNotMatch(renderAdmin(wallet({ solanaAddress: KAKU_SAN_DEPLOYER })), /Discard draft/);
+  clearKakuSanReceipt();
+  assert.equal(loadKakuSanReceipt(), null);
+  saveKakuSanReceipt(created);
   assert.equal(nextKakuSanStep(created).step, "deactivate-default");
   assert.equal((nextKakuSanStep(created) as { mint?: string }).mint, KAKU_SAN_WSOL_MINT);
   assert.throws(() => applyKakuSanSubmit(created, { step: "create", vault: OTHER, shareMint: MINT, signatures: ["nope"], slot: 2 }), /second vault/);
