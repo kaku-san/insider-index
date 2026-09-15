@@ -16,11 +16,9 @@ export const metadata: Metadata = {
     template: "%s · InsiderIndex",
   },
   description: SITE_DESCRIPTION,
-  alternates: { canonical: "/" },
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    url: "https://insiderindex.xyz",
     siteName: "InsiderIndex",
     type: "website",
   },
