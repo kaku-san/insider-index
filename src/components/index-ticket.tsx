@@ -6,7 +6,7 @@ import { PortfolioDonut } from "./portfolio-charts";
 import { PersonAvatar } from "./person-avatar";
 import { PageError, Skeleton, Breadcrumb, PartyBadge, StockIcon, EmptyState } from "./social/shared";
 import { Icon } from "./social/icon";
-import { Button } from "./ui/button";
+import { VaultInvest } from "./vault-invest";
 import type { FomoProfile, PersonIndex, Disclosure } from "@/lib/disclosures/types";
 import { formatDate } from "@/lib/format";
 import { CopyButton } from "./copy-button";
@@ -51,7 +51,7 @@ export function IndexTicket({ id }: { id: string }) {
     </div><aside className="order-panel"><div className="order-panel-heading"><h2>Index investing unavailable</h2></div>
       <div className="order-summary"><div><span>Host entry fee</span><strong>{VAULT_RELEASE.hostEntryFeeBps} bps (0.25%)</strong></div><div><span>Host exit fee</span><strong>0</strong></div><div><span>Native exit</span><strong>Underlying tokens first</strong></div><div><span>Actual position</span><strong>Not connected</strong></div></div>
       <p className="ticket-disclaimer">Protocol, venue, network and bounty costs are separate. Shares, fees, claims and actual holdings must be verified from native chain state—not an app purchase row. No guaranteed asynchronous minimum shares or aggregate USDC exit floor.</p>
-      <Button className="button primary full-width" disabled>Waiting for native verification</Button>
+      <VaultInvest />
       <Link className="text-button center" href={crowd ? "/" : `/p/${encodeURIComponent(index.profileId)}`}>{crowd ? "Back to all indexes" : "View full disclosed book"}</Link>
     </aside></div>
   </div>;

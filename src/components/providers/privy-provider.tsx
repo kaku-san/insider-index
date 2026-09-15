@@ -22,7 +22,7 @@ export type PrivySolanaWallet = {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   /** Always requires an explicit user signature. Never signs discretionary/unattended trades. */
-  signTransaction: (transactionBase64: string) => Promise<string>;
+  signTransaction: (transactionBase64: string, network?: "mainnet-beta" | "devnet") => Promise<string>;
 };
 
 export const PrivySolanaContext = createContext<PrivySolanaWallet | null>(null);
@@ -59,7 +59,8 @@ export function PrivySolanaProvider({
   }, []);
 
   const signTransaction = useCallback(
-    async (transactionBase64: string) => {
+    async (transactionBase64: string, network: "mainnet-beta" | "devnet" = "mainnet-beta") => {
+      if (network === "devnet") throw new Error("Devnet vault signing requires a live wallet; fixtures are never accepted.");
       if (pendingLive || !allowStub) throw new Error("A live wallet is required to sign.");
       if (!authenticated) {
         throw new Error("Connect a Solana wallet before signing.");

@@ -6,6 +6,7 @@ import { Icon } from "./social/icon";
 import type { StoredPerson } from "@/lib/fmp/store";
 import type { PublishedHoldingsIndex } from "@/lib/fmp/holdings-index";
 import styles from "./disclosure-workspace.module.css";
+import { VaultInvest } from "./vault-invest";
 
 export { FmpPerson } from "./fmp-portfolio";
 export { disclosedRange } from "@/lib/frontend/disclosure-labels";
@@ -19,7 +20,8 @@ function InvestPanel() {
     <div className={styles.investPath}><span>USDC</span><Icon name="arrow" size={18} /><span>Index shares</span></div>
     <p id="invest-blocker"><strong>This is a research model.</strong> No live, execution-approved share-token vault is connected to this target. Deposits and signing are unavailable.</p>
     <button className={styles.secondaryButton} disabled aria-describedby="invest-blocker">Invest unavailable</button>
-    <p className={styles.finePrint}>Connecting a wallet does not enable this model. No USDC is sent, no shares are issued, and no individual stock swaps are submitted.</p>
+    <p className={styles.finePrint}>Connecting a wallet does not enable this model. The devnet test below is separate from this published target.</p>
+    <VaultInvest />
   </aside>;
 }
 

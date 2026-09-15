@@ -141,7 +141,7 @@ Without keys, saved-data surfaces report unavailable data rather than inventing 
 
 Home shows saved FMP people and published trade targets only. Search covers the entire returned directory before the display limit; the show-more controls expose the remaining rows. Profiles use provider portraits and show the full annual book before separate trade-derived targets. `/positions` is scoped to the connected wallet; opening the wallet address menu offers copy, positions and disconnect without logging out on a normal click.
 
-Investment is **USDC → index share token**, not individual stock swaps. Current published FMP models have no connected, execution-approved vault, so person and index pages show a disabled investment panel with the reason. They never request a legacy basket quote or simulate a deposit. See [UI direction and verification](docs/ui-design.md).
+Investment is **USDC → index share token**, not individual stock swaps. Published FMP models still have no execution-approved vault. Person and index Invest rails now offer a separately labeled **devnet execution-test preview** for the existing vault, never a claim that it tracks that person. `/api/vaults/devnet/preview` reads native identity, holdings, share supply, wallet shares and blockers; `/api/vaults/devnet/prepare` returns `503` without signing payloads until native readiness is verified. Wallet signing is explicitly devnet-scoped and code-gated off; no broadcast route, mainnet vault release, or new vault is introduced. Legacy basket quote/execute remain `503`. See [devnet Invest contract and verification](src/lib/index-vaults/devnet-invest.md) and [UI direction](docs/ui-design.md).
 
 ```bash
 npm run build

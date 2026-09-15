@@ -9,13 +9,14 @@ register("./support/ui-loader.mjs", import.meta.url);
 const { FmpPerson } = await import("../src/components/fmp-portfolio.tsx");
 const { PerformancePanel } = await import("../src/components/person-portfolio.tsx");
 const { ProfileView } = await import("../src/components/profile-view.tsx");
+const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 type Portfolio = NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
 const person = { id: "T000001", name: "Test Person", firstName: "Test", lastName: "Person", chamber: "house", state: "CA", party: null, image: null };
 const item = (id: string) => ({ id, name: `Disclosed asset ${id}`, ticker: null, kind: "other", owner: "Joint", valueRange: { low: null, high: null }, incomeRange: { low: null, high: 2500 }, mappingReason: "no-source-symbol" });
 function book(extra: Record<string, unknown> = {}): Portfolio {
   return { person, snapshots: [], activity: [], publishedIndex: null, indexName: "Test P Index", savedAt: null, state: "partial-disclosure-only", ...extra } as unknown as Portfolio;
 }
-function render(value: Portfolio) { return renderToStaticMarkup(createElement(FmpPerson, { id: person.id, initialData: value })); }
+function render(value: Portfolio) { return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(FmpPerson, { id: person.id, initialData: value }))); }
 
 // Generated HTML is this test's public output contract; no implementation-source inspection.
 test("a 65-row annual book renders without a published index, independently of zero saved trades", () => {
@@ -77,7 +78,7 @@ test("empty performance has no fabricated curve; real points remain labelled his
 
 test("legacy insider portfolios use the same uncluttered layout and keep unroutable positions", () => {
   const initialData = { profile: { id: "insider-test", name: "Example Insider", kind: "insider", title: "Officer", imageUrl: null, curve: [], portfolio: [{ ticker: "UNMAPPED", issuerName: "Unmapped company", status: "holding", lastTradeAt: "2025-01-01", valueLow: null, valueHigh: 5000 }], index: { constituents: [] } }, trades: [] } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
-  const html = renderToStaticMarkup(createElement(ProfileView, { id: "insider-test", initialData }));
+  const html = renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(ProfileView, { id: "insider-test", initialData })));
   assert.match(html, /UNMAPPED/);
   assert.match(html, /Up to \$5,000/);
   assert.match(html, /Invest in this index/);

@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { PersonAvatar } from "./person-avatar";
 import { EquityCurve, PortfolioDonut } from "./portfolio-charts";
 import { Icon } from "./social/icon";
+import { VaultInvest } from "./vault-invest";
 import type { BacktestPoint } from "@/lib/disclosures/types";
 import styles from "./person-portfolio.module.css";
 
@@ -70,7 +71,8 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
           <p id="invest-blocker">No live, execution-approved share-token vault is connected. Deposits and signing are unavailable.</p>
           <button type="button" className={styles.investButton} disabled aria-describedby="invest-blocker">Invest in this index</button>
           <PersonFollow id={id} />
-          <p className={styles.finePrint}>When a vault launches, USDC will buy its share token—not individual stock tokens in your wallet. No funds move here today.</p>
+          <p className={styles.finePrint}>When an index vault launches, USDC will buy its share token—not individual stock tokens in your wallet. The devnet test below does not track this person.</p>
+          <VaultInvest />
         </div>
         <p className={styles.railNote}><Icon name="shield" size={16} />Public disclosures are delayed and may be incomplete. Tracking does not imply affiliation or endorsement.</p>
       </aside>

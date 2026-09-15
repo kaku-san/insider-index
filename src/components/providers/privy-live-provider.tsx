@@ -89,7 +89,7 @@ function PrivyLiveBridge({
   }, [logout]);
 
   const signTransaction = useCallback(
-    async (transactionBase64: string) => {
+    async (transactionBase64: string, network: "mainnet-beta" | "devnet" = "mainnet-beta") => {
       if (!authenticated || !wallet) {
         throw new Error("Connect a Solana wallet before signing.");
       }
@@ -99,7 +99,7 @@ function PrivyLiveBridge({
       const signed = await signWithPrivy({
         wallet,
         transaction: base64ToBytes(transactionBase64),
-        chain: "solana:mainnet",
+        chain: network === "devnet" ? "solana:devnet" : "solana:mainnet",
         options: { uiOptions: { showWalletUIs: true } },
       });
       return encodeSignedTransaction(signed);
@@ -176,6 +176,10 @@ export function PrivyLiveRoot({
         },
         solana: {
           rpcs: {
+            "solana:devnet": {
+              rpc: createSolanaRpc("https://api.devnet.solana.com"),
+              rpcSubscriptions: createSolanaRpcSubscriptions("wss://api.devnet.solana.com"),
+            },
             "solana:mainnet": {
               rpc: createSolanaRpc(http),
               rpcSubscriptions: createSolanaRpcSubscriptions(ws),
