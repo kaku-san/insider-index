@@ -2,7 +2,8 @@ import { SymmetryCore, isRebalanceRequired } from "@symmetry-hq/sdk";
 import type { AddOrEditTokenInput, TaskContext, TxPayloadBatchSequence, UIRebalanceIntent, Vault } from "@symmetry-hq/sdk";
 import { MINTS, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import { getGlobalConfigPda, getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { prepareTxPayloadBatchSequence, prepareVersionedTxs } from "@symmetry-hq/sdk/dist/txUtils.js";
+import { ComputeBudgetProgram, Connection, PublicKey } from "@solana/web3.js";
 import type { FetchFn } from "@solana/web3.js";
 import { getMint, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
 import type { IndexVaultAdapter, NativeCapabilities, Network, ObservedOperation, PreparedStep, VaultIdentity } from "./adapter-contract.ts";
@@ -11,6 +12,7 @@ import { feeSnapshot } from "./fees.ts";
 import { VAULT_RELEASE } from "./release.ts";
 import type { OperationStore } from "./operations.ts";
 import type { VaultRegistry } from "./registry.ts";
+import { assertRaydiumOnlyToken, planRaydiumPriceUpdate } from "./raydium-oracles.ts";
 
 export const SYMMETRY_SDK_VERSION = "1.0.22";
 export const SYMMETRY_PROGRAM_ID = VAULTS_V3_PROGRAM_ID.toBase58();
@@ -96,7 +98,10 @@ export class NativeVaultBuilders {
     return this.sdk.sellVaultTx({ seller: owner, vault_mint: identity.shareMint, withdraw_amount: sdkRawAmount(sharesRaw), keep_tokens: completeKeepTokens(vault), rebalance_slippage_bps: 100, per_trade_rebalance_slippage_bps: 50 });
   }
   lock(identity: VaultIdentity, owner: string) { return this.sdk.lockDepositsTx({ buyer: address(owner), vault_mint: identity.shareMint }); }
-  addToken(context: TaskContext, token: AddOrEditTokenInput) { return this.sdk.addOrEditTokenTx(context, token); }
+  addToken(context: TaskContext, token: AddOrEditTokenInput) {
+    assertRaydiumOnlyToken(token); // Pyth/other oracle types never reach the native builder.
+    return this.sdk.addOrEditTokenTx(context, token);
+  }
   weights(context: TaskContext, assets: { mint: string; targetWeightBps: number }[]) {
     weightsValid(assets);
     return this.sdk.updateWeightsTx(context, { token_weights: assets.map(a => ({ mint: a.mint, weight_bps: a.targetWeightBps })) });
@@ -108,9 +113,18 @@ export class NativeVaultBuilders {
     if (!await isRebalanceRequired(vault, this.connection)) return null;
     return this.sdk.rebalanceVaultTx({ keeper: address(keeper), vault_mint: identity.shareMint, rebalance_slippage_bps: 100, per_trade_rebalance_slippage_bps: 50 });
   }
+  /** Raydium-only `update_token_prices`: never the SDK's Hermes-backed batch builder. */
+  async priceUpdate(identity: VaultIdentity, keeper: string, intent: string): Promise<TxPayloadBatchSequence> {
+    const { vault } = await this.read(identity);
+    const plan = planRaydiumPriceUpdate({ vault, keeper, rebalanceIntent: intent });
+    const payer = new PublicKey(address(keeper));
+    const batch = { batches: [plan.instructions.map(ix => ({ payer, lookupTables: plan.lookupTables,
+      instructions: [ix, ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 25_000 })] }))] };
+    return prepareTxPayloadBatchSequence(batch, await prepareVersionedTxs(this.connection, batch));
+  }
   settle(kind: "prices" | "mint" | "redeem" | "cleanup", keeper: string, identity: VaultIdentity, intent: string) {
     const params = { keeper: address(keeper), rebalance_intent: address(intent) };
-    if (kind === "prices") return this.sdk.updateTokenPricesTx({ ...params, vault: identity.vaultAccount });
+    if (kind === "prices") return this.priceUpdate(identity, keeper, intent);
     if (kind === "mint") return this.sdk.mintTx(params);
     if (kind === "redeem") return this.sdk.redeemTokensTx(params);
     return this.sdk.claimBountyTx(params);

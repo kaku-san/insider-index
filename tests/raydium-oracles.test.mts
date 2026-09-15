@@ -1,0 +1,177 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import type { AddOrEditTokenInput, Vault } from "@symmetry-hq/sdk";
+import { PYTHNET_CUSTODY_PRICE_USDC_ACCOUNT, PYTHNET_CUSTODY_PRICE_WSOL_ACCOUNT, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
+import {
+  assertNoPythEnvironment, assertRaydiumOnlyToken, assertRaydiumOnlyVault, DEVNET_RAYDIUM_POOLS, planRaydiumPriceUpdate,
+  raydiumCpmmObservationTimestamp, raydiumPoolFor, WSOL_MINT,
+} from "../src/lib/index-vaults/raydium-oracles.ts";
+import {
+  assertRaydiumLogs, fromPayload, intentNextAction, oracleTypesFromLogs, parseSettleArgs, settleConnection, solToLamports, summarizeInstructions,
+} from "../src/lib/index-vaults/devnet-settle.ts";
+import type { UIRebalanceIntent } from "@symmetry-hq/sdk";
+
+/** Minimal BN stand-in for the SDK fields the planner reads. */
+const BN = (value: number) => ({ isZero: () => value === 0, toString: () => String(value) });
+const POOL = "5Eu2G2USTy1pqphmQzQ2SBXWrBq5sdhgEh7hso9R2xix";
+const VAULT = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
+const KEEPER = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
+const INTENT = "8YE4XGm767rVxFhEYr8snLDxgRf1G9YLCPwPBKD3QBCL";
+const USDC = "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT";
+const poolAccounts = [POOL, "Aw93pmXP52u6WSW2HcafRxua1LDht5MZhhXaaR7qCjsN", "CPLUA2NTYSGjsB1E9iXT3MrPn69WRFJvKTdJZw5NdEjh", "7LnqjXdqJEdccWZQs5YJobQ8MDmcK4sG2oo4Ty4LBC8c"];
+
+const oracleInput = (oracle_type: string) => ({
+  oracle_type, account_lut_id: 0, account_lut_index: 10, account: POOL, weight_bps: 10000, is_required: true, conf_thresh_bps: 9999,
+  volatility_thresh_bps: 9999, max_slippage_bps: 9999, min_liquidity: 0, staleness_thresh: 3600, staleness_conf_rate_bps: 0, token_decimals: 9,
+  twap_seconds_ago: 30, twap_secondary_seconds_ago: 120, quote_token: "usdc",
+}) as AddOrEditTokenInput["oracles"][number];
+const tokenInput = (...types: string[]): AddOrEditTokenInput => ({ token_mint: WSOL_MINT, active: true, min_oracles_thresh: 1, min_conf_bps: 50, conf_thresh_bps: 200, conf_multiplier: 1, oracles: types.map(oracleInput) });
+
+/** Mirrors the live devnet vault: two tokens, one Raydium CPMM oracle each, four loaded accounts per oracle from LUT 0. */
+function fixtureVault(types: [number, number] = [2, 2]): Vault {
+  const lut = ["11111111111111111111111111111111", "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", VAULTS_V3_PROGRAM_ID.toBase58(),
+    "BV49JWNeVnRjvMg4BHVoRFXNXHMFqgZFsfHg2QUekynd", VAULT, "Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A", "BSBqMSbSVFcT7FPQ1rR5KYLdqqvA5T6xjgcv9E3PiVXV",
+    PYTHNET_CUSTODY_PRICE_WSOL_ACCOUNT.toBase58(), PYTHNET_CUSTODY_PRICE_USDC_ACCOUNT.toBase58(), ...poolAccounts].map(k => new PublicKey(k));
+  const oracle = (type: number, indices: number[]) => ({ oracleSettings: { oracleType: type, numRequiredAccounts: 4, stalenessThresh: BN(3600), side: indices[1] === 12 ? 1 : 0 },
+    accountsToLoadLutIds: [0, 0, 0, 0], accountsToLoadLutIndices: indices });
+  return {
+    ownAddress: new PublicKey(VAULT), mint: new PublicKey("Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A"), numTokens: 2,
+    composition: [
+      { mint: new PublicKey(WSOL_MINT), amount: BN(0), weight: 5000, active: 1, oracleAggregator: { numOracles: 1, oracles: [oracle(types[0], [10, 11, 12, 13])] } },
+      { mint: new PublicKey(USDC), amount: BN(100000), weight: 5000, active: 1, oracleAggregator: { numOracles: 1, oracles: [oracle(types[1], [10, 12, 11, 13])] } },
+    ],
+    lookupTables: { active: [new PublicKey("64g9E6EcsuvbJD5Rk1z3cc8AUWcPDi2LDCSMB2mMWNQQ"), new PublicKey("CDYTLBNR874M9yN6mAbFefrho3byDajMpKpNat7TbaRg")] },
+    lutPubkeys: [{ state: { addresses: lut } }, { state: { addresses: [] } }],
+    settings: { activeRebalance: BN(0), fees: { hostPerformanceFeeBps: 0, creatorPerformanceFeeBps: 0, managersPerformanceFeeBps: 0 } },
+  } as unknown as Vault;
+}
+
+test("oracle inputs: pyth and every non-Raydium type are rejected before reaching the native builder", () => {
+  assert.doesNotThrow(() => assertRaydiumOnlyToken(tokenInput("raydium_cpmm")));
+  assert.doesNotThrow(() => assertRaydiumOnlyToken(tokenInput("raydium_clmm", "raydium_cpmm")));
+  for (const type of ["pyth", "lst", "overpass", "byreal_clmm", "meteora_dlmm", "example", "PYTH", ""]) assert.throws(() => assertRaydiumOnlyToken(tokenInput(type)), /ORACLE_TYPE_FORBIDDEN/);
+  assert.throws(() => assertRaydiumOnlyToken(tokenInput("raydium_cpmm", "pyth")), /ORACLE_TYPE_FORBIDDEN/);
+  assert.throws(() => assertRaydiumOnlyToken(tokenInput()), /ORACLE_REQUIRED/);
+});
+
+test("pool bindings name only mint → Raydium pool + kind; unknown mints block listing instead of inventing a pool", () => {
+  assert.deepEqual(raydiumPoolFor(WSOL_MINT), { mint: WSOL_MINT, pool: POOL, kind: "raydium_cpmm" });
+  assert.equal(raydiumPoolFor(USDC).pool, POOL);
+  assert.throws(() => raydiumPoolFor("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"), /RAYDIUM_POOL_REQUIRED/);
+  for (const binding of DEVNET_RAYDIUM_POOLS) assert.ok(!("pyth" in binding) && ["raydium_clmm", "raydium_cpmm"].includes(binding.kind));
+});
+
+test("installed native oracles must all be Raydium; a Pyth slot fails the vault closed", () => {
+  assert.deepEqual(assertRaydiumOnlyVault(fixtureVault()), [{ mint: WSOL_MINT, oracleTypes: [2] }, { mint: USDC, oracleTypes: [2] }]);
+  assert.throws(() => assertRaydiumOnlyVault(fixtureVault([2, 0])), /ORACLE_TYPE_FORBIDDEN.*type 0/);
+  assert.throws(() => assertRaydiumOnlyVault(fixtureVault([3, 2])), /ORACLE_TYPE_FORBIDDEN/);
+  assert.doesNotThrow(() => assertRaydiumOnlyVault(fixtureVault([1, 2])));
+});
+
+test("HERMES_*/PYTH_* environment fails the settlement path closed", () => {
+  assert.doesNotThrow(() => assertNoPythEnvironment({ PATH: "/bin", JUPITER_MODE: "live" } as unknown as NodeJS.ProcessEnv));
+  assert.throws(() => assertNoPythEnvironment({ HERMES_URL: "https://hermes.example" } as unknown as NodeJS.ProcessEnv), /PYTH_ENV_FORBIDDEN: unset HERMES_URL/);
+  assert.throws(() => assertNoPythEnvironment({ pyth_api_key: "x" } as unknown as NodeJS.ProcessEnv), /PYTH_ENV_FORBIDDEN/);
+});
+
+test("Raydium price update loads exactly the vault's pool accounts, no Pyth feed accounts and no Hermes batches", () => {
+  const plan = planRaydiumPriceUpdate({ vault: fixtureVault(), keeper: KEEPER, rebalanceIntent: INTENT });
+  assert.equal(plan.instructions.length, 1);
+  assert.deepEqual(plan.tokenIndices, [[0, 1]]);
+  assert.deepEqual(plan.oracleAccounts, [[...poolAccounts, POOL, poolAccounts[2], poolAccounts[1], poolAccounts[3]]]);
+  const ix = plan.instructions[0];
+  assert.ok(ix.programId.equals(VAULTS_V3_PROGRAM_ID));
+  assert.equal(Buffer.from(ix.data.subarray(0, 8)).toString("hex"), "93578c21d6bdb5f2"); // update_token_prices
+  assert.deepEqual([...ix.data.subarray(8)], [0, 1, ...new Array(18).fill(0)]);
+  const keys = ix.keys.map(k => k.pubkey.toBase58());
+  assert.equal(keys[0], KEEPER); assert.equal(keys[1], VAULT); assert.equal(keys[2], INTENT);
+  assert.ok(ix.keys[0].isSigner && !ix.keys.slice(1).some(k => k.isSigner));
+  // Remaining accounts are only Raydium pool state/vaults/observation; the custody slots are fixed program accounts, not our oracles.
+  assert.deepEqual(keys.slice(9), plan.oracleAccounts[0]);
+  assert.equal(keys[8], VAULTS_V3_PROGRAM_ID.toBase58(), "no vault rebalance intent when none is active");
+  assert.throws(() => planRaydiumPriceUpdate({ vault: fixtureVault([0, 2]), keeper: KEEPER, rebalanceIntent: INTENT }), /ORACLE_TYPE_FORBIDDEN/);
+  const active = fixtureVault(); (active.settings as { activeRebalance: unknown }).activeRebalance = BN(1);
+  assert.equal(planRaydiumPriceUpdate({ vault: active, keeper: KEEPER, rebalanceIntent: INTENT }).instructions[0].keys[8].pubkey.toBase58(), "BSBqMSbSVFcT7FPQ1rR5KYLdqqvA5T6xjgcv9E3PiVXV");
+  const missing = fixtureVault(); (missing.lutPubkeys as unknown[])[0] = { state: { addresses: [] } };
+  assert.throws(() => planRaydiumPriceUpdate({ vault: missing, keeper: KEEPER, rebalanceIntent: INTENT }), /ORACLE_ACCOUNT_MISSING/);
+});
+
+test("Raydium CPMM observation ring decodes the current observation timestamp", () => {
+  const data = Buffer.alloc(8 + 1 + 2 + 32 + 100 * 40 + 32);
+  data.writeUInt8(1, 8); data.writeUInt16LE(68, 9);
+  data.writeBigUInt64LE(1789460582n, 8 + 1 + 2 + 32 + 68 * 40);
+  assert.equal(raydiumCpmmObservationTimestamp(data), 1789460582);
+  data.writeUInt16LE(100, 9);
+  assert.throws(() => raydiumCpmmObservationTimestamp(data), /observation index/);
+  assert.throws(() => raydiumCpmmObservationTimestamp(Buffer.alloc(10)), /Malformed/);
+});
+
+test("program logs prove the oracle type per token; a Pyth (type 0) read fails settlement closed", () => {
+  const logs = [
+    "Program log: Instruction: UpdateTokenPricesHandler",
+    `Program log: * loading price for: ${WSOL_MINT}`, "Program log: * * oracle: i 0 type: 2 price: 81.789503334", "Program log: * oracle aggregation price: 81.789503334",
+    `Program log: * loading price for: ${USDC}`, "Program log: * * oracle: i 0 type: 2 price: 1.229878984",
+  ];
+  assert.deepEqual(oracleTypesFromLogs(logs), [{ mint: WSOL_MINT, oracleType: 2, price: "81.789503334" }, { mint: USDC, oracleType: 2, price: "1.229878984" }]);
+  assert.doesNotThrow(() => assertRaydiumLogs(logs));
+  assert.throws(() => assertRaydiumLogs([`Program log: * loading price for: ${WSOL_MINT}`, "Program log: * * oracle: i 0 type: 0 price: 100.478665150"]), /ORACLE_TYPE_FORBIDDEN in program logs/);
+  assert.doesNotThrow(() => assertRaydiumLogs(["Program log: Instruction: MintBasketHandler"]));
+});
+
+test("settlement CLI: strict flags, required intent, devnet-only RPC that rejects sends in dry-run", () => {
+  assert.deepEqual(parseSettleArgs([]), { step: "observe", execute: false, maxSolDebit: "0.02" });
+  assert.equal(parseSettleArgs(["--step", "mint", "--intent", INTENT]).intent, INTENT);
+  assert.throws(() => parseSettleArgs(["--step", "mint"]), /--intent is required/);
+  assert.throws(() => parseSettleArgs(["--step", "deposit"]), /--usdc-raw is required/);
+  assert.throws(() => parseSettleArgs(["--step", "deposit", "--usdc-raw", "0"]));
+  assert.throws(() => parseSettleArgs(["--step", "redeem"]), /Unknown step/);
+  for (const bad of [["--rpc", "x"], ["--vault", VAULT], ["--network", "mainnet"], ["--yes"]]) assert.throws(() => parseSettleArgs(bad), /Unsupported argument/);
+  assert.throws(() => parseSettleArgs(["--intent", "not-a-key"]));
+  assert.equal(solToLamports("0.02"), 20_000_000n);
+  assert.throws(() => solToLamports("0"), /positive/);
+  assert.throws(() => solToLamports("1.0000000001"));
+  const dry = settleConnection(false);
+  assert.rejects(() => dry.sendRawTransaction(Buffer.alloc(8)), /not permitted in dry-run/);
+  assert.rejects(() => dry.requestAirdrop(new PublicKey(KEEPER), 1), /not permitted/);
+  assert.rejects(() => settleConnection(true).requestAirdrop(new PublicKey(KEEPER), 1), /not permitted/);
+});
+
+test("intent stage follows the SDK's single filled data slot", () => {
+  const ui = (slot: string | null) => ({ deposit_data: null, price_updates_data: null, auction_data: null, mint_data: null, redeem_data: null, claim_bounty_data: null, ...(slot ? { [slot]: {} } : {}) }) as unknown as UIRebalanceIntent;
+  assert.equal(intentNextAction(ui("deposit_data")), "deposit-tokens");
+  assert.equal(intentNextAction(ui("price_updates_data")), "update-prices");
+  assert.equal(intentNextAction(ui("auction_data")), "auction-wait");
+  assert.equal(intentNextAction(ui("mint_data")), "mint");
+  assert.equal(intentNextAction(ui("claim_bounty_data")), "claim-bounty");
+  assert.equal(intentNextAction(ui(null)), "unknown");
+});
+
+test("payload batches deserialize to reviewable versioned transactions", () => {
+  const plan = planRaydiumPriceUpdate({ vault: fixtureVault(), keeper: KEEPER, rebalanceIntent: INTENT });
+  const message = new TransactionMessage({ payerKey: new PublicKey(KEEPER), recentBlockhash: PublicKey.default.toBase58(), instructions: plan.instructions }).compileToV0Message();
+  const tx = new VersionedTransaction(message);
+  const payload = { batches: [{ transactions: [{ tx_b64: Buffer.from(tx.serialize()).toString("base64"), message_version: "0" as const, recent_blockhash: "", payer: KEEPER, lookup_tables: [], instructions: [] }] }] };
+  const [[decoded]] = fromPayload(payload);
+  const [summary] = summarizeInstructions(decoded);
+  assert.equal(summary.program, VAULTS_V3_PROGRAM_ID.toBase58());
+  assert.equal(summary.discriminator, "93578c21d6bdb5f2");
+  assert.equal(summary.staticAccounts[0], KEEPER);
+});
+
+/** Policy gate: no Hermes/Pyth client, env or SDK Pyth batch builder may appear on the Symmetry price path. */
+test("CI: the Symmetry price path never imports Hermes/Pyth or the SDK's Hermes-backed price builder", () => {
+  const forbidden = [/@pythnetwork/, /HermesClient/, /hermes\.pyth\.network/, /process\.env\.(HERMES|PYTH)_/, /env\[["'](HERMES|PYTH)_/,
+    /updateTokenPricesTx\(/, /updatePythPriceFeedsTx\(/, /fetchHermesPythPrices/, /buildPythPriceFeedUpdateIxs/, /pythOracle\.js/];
+  const roots = ["src/lib/index-vaults", "scripts"];
+  const files: string[] = [];
+  const walk = (dir: string) => { for (const entry of readdirSync(dir)) { const path = join(dir, entry); if (statSync(path).isDirectory()) walk(path); else if (/\.(ts|mts)$/.test(entry)) files.push(path); } };
+  roots.forEach(walk);
+  assert.ok(files.some(f => f.endsWith("raydium-oracles.ts")) && files.some(f => f.endsWith("settle-devnet-vault.mts")));
+  for (const file of files) {
+    const source = readFileSync(file, "utf8");
+    for (const pattern of forbidden) assert.ok(!pattern.test(source), `${file} matches ${pattern}`);
+  }
+});
