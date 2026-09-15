@@ -202,3 +202,21 @@
   .primaryButton, .secondaryButton, .quietButton, .moreButton { transition: none; }
   .primaryButton:active, .secondaryButton:active, .quietButton:active, .moreButton:active { transform: none; }
 }
+
+/* PelosiTracker top-20 shelf: every handoff person is browsable from the committed dataset. */
+.trackerShelf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.trackerTile { min-width: 0; display: grid; gap: 10px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: inherit; }
+.trackerTile > div { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.trackerTile > div > div { min-width: 0; }
+.trackerTile strong { display: block; font-size: 14px; letter-spacing: -.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trackerTile small { display: block; color: var(--muted-foreground); font-size: 11px; line-height: 1.5; }
+.trackerRank { flex: 0 0 auto; align-self: flex-start; color: var(--soft-text); font-size: 11px; font-weight: 700; }
+.trackerValue { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted-foreground); }
+.trackerValue strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+.trackerStatus { display: inline-flex; width: fit-content; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; border: 1px solid var(--border); background: var(--surface-alt); color: var(--muted-foreground); }
+.trackerStatus[data-status="VAULT_CANDIDATE"] { color: var(--positive); border-color: color-mix(in srgb, var(--positive) 40%, transparent); background: color-mix(in srgb, var(--primary) 24%, var(--card)); }
+.trackerLinks { display: flex; gap: 12px; font-size: 12px; }
+@media (hover: hover) and (pointer: fine) { .trackerTile:hover { border-color: color-mix(in srgb, var(--positive) 40%, var(--border)); } }
+@media (max-width: 1100px) { .trackerShelf { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .trackerShelf { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .trackerShelf { grid-template-columns: 1fr; } }

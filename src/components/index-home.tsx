@@ -7,12 +7,14 @@ import { PersonAvatar } from "./person-avatar";
 import { Icon } from "./social/icon";
 import { bookStatus, filterPeople, personContext } from "@/lib/frontend/disclosure-labels";
 import type { StoredPerson } from "@/lib/fmp/store";
+import type { TrackerDirectoryView } from "@/lib/tracker/views";
+import { TrackerShelf } from "./tracker-shelf";
 import styles from "./disclosure-workspace.module.css";
 
 export type SavedDirectory = { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string };
 const PAGE_SIZE = 24;
 
-export function IndexHome({ initialData }: { initialData?: SavedDirectory }) {
+export function IndexHome({ initialData, tracker }: { initialData?: SavedDirectory; tracker?: TrackerDirectoryView }) {
   const resource = useResource<SavedDirectory>("/api/people", initialData);
   const [query, setQuery] = useState("");
   const [chamber, setChamber] = useState("all");
@@ -31,6 +33,7 @@ export function IndexHome({ initialData }: { initialData?: SavedDirectory }) {
         <div className={styles.actions}>
           <Link className={styles.primaryButton} href="/feed">Copy one print <Icon name="bolt" size={17} /></Link>
           <a className={styles.quietButton} href="#published">Research indexes</a>
+          <a className={styles.quietButton} href="#tracker">Tracker top 20</a>
           <a className={styles.quietButton} href="#directory">Find a person</a>
         </div>
       </div>
@@ -58,6 +61,8 @@ export function IndexHome({ initialData }: { initialData?: SavedDirectory }) {
         {published.length > 6 && <button className={styles.moreButton} aria-expanded={allIndexes} onClick={() => setAllIndexes(!allIndexes)}>{allIndexes ? "Show fewer indexes" : `See all ${published.length} indexes`} <Icon name={allIndexes ? "up" : "grid"} size={16} /></button>}
       </> : <div className={styles.empty}><h3>The next index starts with a filing.</h3><p>No targets have been published yet. You can still explore the saved disclosure books below.</p><a className={styles.secondaryButton} href="#directory">Browse people</a></div>}
     </section>
+
+    <TrackerShelf initialData={tracker} />
 
     <section id="directory" className={styles.section} aria-labelledby="directory-title">
       <div className={styles.sectionHead}><div><h2 id="directory-title">Names worth knowing</h2><p>The people behind the filings. Every disclosed asset stays in the book.</p></div>{directory && <span className={styles.count}>{directory.total} people</span>}</div>

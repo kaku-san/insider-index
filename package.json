@@ -15,6 +15,7 @@
     "catalog:snapshot": "node --experimental-strip-types scripts/snapshot-catalog.mts",
     "indexes:map:top20": "node --experimental-strip-types scripts/map-top20-index-vaults.mts",
     "fmp:holdings:bucket": "node --experimental-strip-types scripts/extract-fmp-holdings-bucket.mts",
+    "raydium:snapshot": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/snapshot-raydium-pools.mts",
     "vault:redeem:preflight": "node --experimental-strip-types scripts/redeem-devnet-vault.mts",
     "keeper:devnet": "node --experimental-strip-types scripts/devnet-keeper-tick.mts",
     "keeper:kaku-san": "node --experimental-strip-types scripts/kaku-san-keeper-tick.mts",

@@ -14,6 +14,7 @@ In V1:
 
 - **SEC EDGAR** is the primary Form 4 source (ticker → CIK → recent `4` filings → XML → open-market P/S). No key.
 - **FMP** supplies saved person-first books and separate PTR activity. Home and stable-ID person pages read Supabase; published holdings-based indexes show target weights from the latest saved annual snapshot, with partial coverage labelled and no trade-history prerequisite. See [FMP person backend](#fmp-person-backend).
+- **PelosiTracker top-20 handoff** (committed, no live scrape) is the shown *current* book for those 20 politicians: tracker positions as of 2026-09-15 first, the older FMP annual disclosure beside them, recent trades as information only, sector mix, filing stats and the tracker's value series — every figure labelled PelosiTracker and never a net worth or vault NAV. Each of the 20 also gets a vault-ready **tracker-positions index** (`/indexes/tracker-[bioguide]`): catalog mint + observed Raydium USDC pool, tracker percentages renormalized to 10,000 bps, trades never an input, Pelosi the first live candidate. See [`src/lib/tracker/README.md`](src/lib/tracker/README.md).
 - **AInvest Congressional Trades** remains the primary House/Senate **legacy tape** source (`AINVEST_API_KEY`, free tier)
 - Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
 - Home is **indexes first**: published FMP holdings models, then the saved person directory. The raw SEC/AInvest tape remains `/feed`; legacy copy/index routes retain their own readiness gates.
@@ -63,6 +64,7 @@ API routes:
 - `GET /api/health` — boolean adapter flags, derived runtime modes, catalog status and Track A W0 launch readiness; never returns secret values. The [W0 launch checklist](docs/track-a-w0.md#production-launch-checklist-operator) owns readiness interpretation
 - `GET /api/people?q=...` — searchable full FMP directory; source pagination/partial status, no featured-person allowlist
 - `GET /api/people/[id]/portfolio` — saved stable FMP `senateID` (both chambers), annual document versions, activity, aggregate history, completeness flags and `publishedIndex`
+- `GET /api/tracker` · `GET /api/tracker/[id]` — the 20 PelosiTracker handoff profiles from the committed dataset (identity, photo, labelled tracker portfolio value, top-5 positions, recent trades, sectors, filing stats, full value series) plus each person's tracker-positions index with Raydium pool readiness; public-cacheable, never scrapes
 - `GET /api/politician-profiles` — persisted top-20 FMP politician profiles ranked by latest annual holding-band midpoints, with `P000197` Pelosi pinned; disclosed holdings (tradable and not), estimated band values, published weights and completeness flags. `netWorth` / YoY / S&P fields are `null` with reasons until those series exist. Supabase-only; no FMP or AInvest crawl
 - `GET /api/tracker-profiles` · `GET /api/tracker-profiles/[id]` — bundled PelosiTracker top-20 snapshot (`TRACKER_AS_OF`, currently 2026-09-15); the featured 20 person pages show this as the current book, with FMP annual filings staying older evidence and tracker trades info-only. Static snapshot, no live crawl
 - `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
@@ -80,7 +82,8 @@ UI routes:
 
 - `/` indexes first: published holdings targets, searchable saved people, links to original disclosed books
 - `/feed` the raw disclosure tape (Everything / Following, search, buy/sell filter)
-- `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges
+- `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges; for the 20 PelosiTracker handoff people the page is tracker-first (shown book, vault-ready index, FMP comparison, trades as info) with the FMP annual filing labelled as the older disclosure
+- `/indexes/tracker-[bioguide]` tracker-positions index: weights, mints, Raydium USDC pools, readiness, disabled Invest (exit is USDC only; nothing enabled)
 - `/indexes/[id]` model allocation, native lifecycle/fee disclosure and disabled investment panel; no holder rebalance button
 - `/disclosures/[id]` inspect
 - `/trade/[id]` one-print live Jupiter quote + explicit Privy approval/signature
@@ -117,7 +120,7 @@ Symmetry vault pricing is **Raydium pools only**: no Pyth oracle type, no Hermes
 
 When both issuers list a name the **xStock mint wins**, then Backpack. Backpack's `/markets` and `/securities` (brokerage symbols) are not a buy list. A thin Backpack pool is a quote-time miss: the holding still shows, the copy fails honestly.
 
-Refresh the offline snapshot with `npm run catalog:snapshot` (writes `src/lib/venues/catalog-snapshot.json`; never edit by hand). Quote mint: USDC `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
+Refresh the offline snapshot with `npm run catalog:snapshot` (writes `src/lib/venues/catalog-snapshot.json`; never edit by hand). Refresh the mainnet Raydium USDC pool evidence for tokenised-stock mints with `npm run raydium:snapshot` (writes `src/lib/index-vaults/raydium-pools-mainnet.json`; CLMM/CPMM only, never edit by hand, never a Pyth account). Quote mint: USDC `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
 
 `POST /api/quote` returns `403` for a requested mint outside the catalog. Execution re-resolves the mint from the server-saved quote context and returns `403` if it is no longer catalog-listed. `GET /api/health.catalog` reports whether each issuer served live or from the snapshot.
 

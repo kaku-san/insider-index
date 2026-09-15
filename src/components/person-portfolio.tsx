@@ -41,10 +41,10 @@ function ShareButton() {
   return <button type="button" className={styles.shareButton} onClick={share}>{label}</button>;
 }
 
-export function PortfolioLayout({ id, name, indexName, image, context, strategy, count, countNote, mappedCount, activityCount, latestFiling, indexHref, children, notice }: {
+export function PortfolioLayout({ id, name, indexName, image, context, strategy, count, countNote, mappedCount, activityCount, latestFiling, indexHref, indexLabel, heroStats, sourceStrip, children, notice }: {
   id: string; name: string; indexName?: string; image: string | null; context: string; strategy: string;
   count: number | null; countNote: string; mappedCount?: number | null; activityCount?: number; latestFiling?: string | null;
-  indexHref?: string; children: ReactNode; notice?: ReactNode;
+  indexHref?: string; indexLabel?: string; heroStats?: ReactNode; sourceStrip?: ReactNode; children: ReactNode; notice?: ReactNode;
 }) {
   const hasFilingMetadata = latestFiling !== undefined || activityCount !== undefined;
   const hasIndexMetadata = mappedCount != null;
@@ -69,23 +69,24 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
         <div className={styles.heroActions}>
           <PersonFollow id={id} />
           <ShareButton />
-          {indexHref ? <Link className={styles.primaryAction} href={indexHref}>View index <Icon name="arrow" size={15} /></Link> : null}
+          {indexHref ? <Link className={styles.primaryAction} href={indexHref}>{indexLabel ?? "View index"} <Icon name="arrow" size={15} /></Link> :
+            hasIndexMetadata ? <button type="button" className={styles.primaryAction} disabled>Index not published</button> : null}
         </div>
       </div>
 
-      <dl className={styles.stats} aria-label="Portfolio statistics">
+      {heroStats ?? <dl className={styles.stats} aria-label="Portfolio statistics">
         <div><dt>Portfolio value</dt><dd aria-label="Unavailable">—</dd><small>No verified live NAV</small></div>
         <div><dt>Performance</dt><dd aria-label="Unavailable">—</dd><small>No verified price series</small></div>
         {hasIndexMetadata && <div><dt>Index holdings</dt><dd>{mappedCount ?? "—"}</dd><small>Mapped stock / ETF names</small></div>}
         <div><dt>Disclosure rows</dt><dd>{count ?? "—"}</dd><small>{countNote}</small></div>
-      </dl>
+      </dl>}
     </header>
 
-    <a className={styles.sourceStrip} href="#holdings-title">
+    {sourceStrip ?? <a className={styles.sourceStrip} href="#holdings-title">
       <span className={styles.sourceIcon}><Icon name="shield" size={18} /></span>
       <span><strong>Where this portfolio comes from</strong><small>Public filings → saved disclosure book → InsiderIndex identity and Solana mapping.</small></span>
       <Icon name="arrow" size={16} />
-    </a>
+    </a>}
 
     {notice}
     <aside id="invest" className={`${styles.panel} ${styles.invest}`} aria-labelledby="invest-title">
