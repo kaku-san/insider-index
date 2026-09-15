@@ -8,17 +8,9 @@ People create discovery. Public disclosures create trust. The person index is th
 
 ## Review these first
 
-The standalone review files require no backend and make design-fixture data explicit:
-
-```text
-preview/InsiderIndex-Home.html
-preview/InsiderIndex-Pelosi-Portfolio.html
-preview/InsiderIndex-Index-Flow.html
-preview/InsiderIndex-Your-Portfolio.html
-preview/InsiderIndex-Position-Detail.html
-```
-
-For one visual pass across all key states, open `preview/InsiderIndex-Full-Flow-Board.jpg`.
+- `docs/insiderindex-fe/DESIGN-REWORK-V2.md` — product direction and signature system this rework follows.
+- `docs/insiderindex-fe/CONSUMER-DESIGN-SYSTEM.md` — the consumer visual system (color, type, components).
+- `docs/insiderindex-fe/FLOW-API-CONTRACT-AUDIT.md` — the implementation checklist reconciling UI, typed clients and backend state per area.
 
 ## Compact person portfolio
 
@@ -117,13 +109,7 @@ POST /api/operations/:id/convert/prepare
 POST /api/operations/:id/recovery/prepare
 ```
 
-The detailed state machines, SDK method mapping, authority boundaries, devnet identifiers and exit correctness rules are in:
-
-```text
-docs/FLOW-API-CONTRACT-AUDIT.md
-docs/INTEGRATION.md
-docs/final-contract-handoff/
-```
+The detailed state machines, SDK method mapping, authority boundaries, devnet identifiers and exit correctness rules are in `docs/insiderindex-fe/FLOW-API-CONTRACT-AUDIT.md`.
 
 ## Retired unsafe basket path
 
@@ -165,14 +151,11 @@ Company marks are bundled for the current reference holdings; unknown symbols fa
 
 ## Validation
 
-Run the review build and tests from the repository environment:
+Run the standard project checks from the repository root (see `README.md` → Commands):
 
 ```bash
-npm run preview:build
-npm run preview:standalone
-npm run test:domain
-python tests/ui_smoke.py
-node --test tests/flow_contract.test.cjs
+npm test
+npm run lint
+npm run typecheck
+npm run build
 ```
-
-A full `next build` still requires the normal project dependency install. This handoff intentionally does not ship `node_modules`.
