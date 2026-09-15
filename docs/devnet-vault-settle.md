@@ -5,7 +5,7 @@
 ## Policy encoded in code
 
 - [`src/lib/index-vaults/raydium-oracles.ts`](../src/lib/index-vaults/raydium-oracles.ts): `oracle_type` must be `raydium_clmm` or `raydium_cpmm` (`assertRaydiumOnlyToken`, wired into `NativeVaultBuilders.addToken`); installed native oracles must all be Raydium (`assertRaydiumOnlyVault`); `mint → pool + kind` bindings only (`DEVNET_RAYDIUM_POOLS`, `raydiumPoolFor` blocks unknown mints instead of inventing a pool); `planRaydiumPriceUpdate` builds the native `update_token_prices` instruction from the vault's own lookup-table oracle accounts. The pinned SDK's `updateTokenPricesTx` is not used anywhere because it unconditionally instantiates a Hermes client even with zero Pyth oracles; `NativeVaultBuilders.settle("prices")` now routes through the Raydium planner.
-- `tests/raydium-oracles.test.mts` fails CI if `@pythnetwork`, `HermesClient`, Hermes/Pyth env reads, or the SDK's Hermes-backed builders appear under `src/lib/index-vaults` or `scripts`.
+- `tests/raydium-oracles.test.mts` exercises `NativeVaultBuilders.settle("prices")` and `planRaydiumPriceUpdate` against deterministic vault/RPC fixtures, rejects any network request outside Solana devnet (including Hermes), and verifies that the emitted transaction contains only the native `update_token_prices` instruction with the bound Raydium pool accounts. Separate behavioral checks reject non-Raydium oracle types and fail closed on any `HERMES_*`/`PYTH_*` environment variable.
 - Program logs are checked on every simulation and receipt: a priced token whose log line reports oracle `type: 0` (Pyth) fails the step closed.
 
 ## Commands
