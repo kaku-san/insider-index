@@ -17,8 +17,9 @@ import {
   assertKakuSanComposition, assertSignedBy, assertSignedByDeployer, confirmWalletTransaction,
   discardKakuSanCreateDraft, handleKakuSanDiscard, handleKakuSanObserve, handleKakuSanPrepare,
   handleKakuSanSubmit, kakuSanConnection, kakuSanCreateJournal, kakuSanDeactivateInput, kakuSanOracleInput,
-  kakuSanTokenInput, observeKakuSanVault, parseKakuSanDiscardRequest, parseKakuSanObserveRequest,
-  parseKakuSanPrepareRequest, parseKakuSanSubmitRequest, payloadTransactions, prepareKakuSanStep,
+  kakuSanTokenInput, markKakuSanCreateBroadcast, observeKakuSanVault, parseKakuSanDiscardRequest,
+  parseKakuSanObserveRequest, parseKakuSanPrepareRequest, parseKakuSanSubmitRequest, payloadTransactions,
+  prepareKakuSanStep,
 } from "../src/lib/index-vaults/kaku-san-create.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
@@ -227,6 +228,30 @@ test("discard clears an unconfirmed draft and permits exactly one new createVaul
 
   const confirmed = builders({ data: new Uint8Array(1) });
   await assert.rejects(discardKakuSanCreateDraft(discardInput, confirmed, journal), /exists on-chain/);
+}));
+
+test("discard refuses once the create has been broadcast, even before any on-chain confirmation is observable", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const native = builders(null);
+  let createCalls = 0;
+  native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
+  const prepared = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(createCalls, 1);
+
+  // Reproduces the exact race a lost submit response leaves behind: submitKakuSanStep latches the draft as
+  // broadcast (markKakuSanCreateBroadcast) strictly before it ever calls sendRawTransaction, so this state
+  // is durable even if the client never sees a confirmation and the vault is not yet observable on-chain
+  // (native.connection.getAccountInfo below still returns null, matching the un-landed transaction).
+  await markKakuSanCreateBroadcast(prepared.vault!, prepared.shareMint!, journal);
+
+  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: prepared.vault!, shareMint: prepared.shareMint! });
+  await assert.rejects(discardKakuSanCreateDraft(discardInput, native, journal), /already broadcast/);
+
+  // Resuming must still resolve to the same journaled vault/mint; it must never call createVaultTx again.
+  const resumed = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(resumed.vault, prepared.vault);
+  assert.equal(resumed.shareMint, prepared.shareMint);
+  assert.equal(createCalls, 1, "a broadcast draft must resume, never re-derive via createVaultTx");
 }));
 
 test("HTTP discard is no-store and refuses a non-deployer", async () => temp(async dir => {
