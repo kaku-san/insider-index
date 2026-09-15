@@ -4,11 +4,7 @@ The person, published FMP index and legacy index rails share `src/components/vau
 
 ## Fixed existing identity
 
-`devnet-contract.ts` owns the public identity from the finalized creation receipt:
-
-- Vault: `Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8`
-- Shares: `Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A`, six decimals
-- Required SDK devnet USDC: `USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT`
+[`devnet-contract.ts`](devnet-contract.ts) owns the exact public network, vault, native share mint and SDK-USDC identity accepted by the app. The finalized creation receipt and historical readback live in [`evidence/vaults/DEVNET_TEST_VAULT.md`](../../../evidence/vaults/DEVNET_TEST_VAULT.md).
 
 No arbitrary network, mint, RPC endpoint, person-to-vault mapping or vault creation is accepted. Reads use the existing `NativeVaultBuilders` on a read-only connection to the public devnet RPC. Genesis, native account owner, creator/host, vault/share addresses and share decimals are checked by the native reader. The mainnet single-trade RPC configuration is never reused for this path.
 
@@ -33,4 +29,3 @@ Host entry/exit bps are observed separately from unquoted protocol, network, ren
 - `tests/devnet-deposit.test.mts`: executable request validation, exact amounts, native-reader fixture observations, missing/current-owner/state blockers, endpoint status/no-store behavior, failed reads, and zero wallet calls under unreadiness/fixture/stale/forged-ready cases. Fixtures are not native funding evidence.
 - Existing person/holdings rendering tests run inside the wallet provider and preserve all disclosed rows; generated HTML checks the separate test-vault label and disabled signing.
 - `evidence/vaults/invest-devnet-preview.json`: real read-only native preview from this wiring task. At the recorded slot the existing test vault had zero raw share supply and zero recorded backing; this historical observation does not assert the outcome of a later parallel funded deposit.
-- Local checks: `npm run typecheck`, `npm test` (114 passing), `npm run build`, and targeted ESLint passed. No browser was used. Full no-mistakes delivery is a separate supervisor-requested stage after this branch is committed.
