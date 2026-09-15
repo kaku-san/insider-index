@@ -10,6 +10,9 @@ register("./support/ui-loader.mjs", import.meta.url);
 const { IndexHome } = await import("../src/components/index-home.tsx");
 const { FmpPerson, PublishedTarget } = await import("../src/components/fmp-person.tsx");
 const { PrivySolanaProvider, usePrivySolana } = await import("../src/components/providers/privy-provider.tsx");
+function renderPerson(book: NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>) {
+  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(FmpPerson, { id: person.id, initialData: book })));
+}
 
 const person: StoredPerson = {
   id: "A000001", provider: "fmp", providerId: "A000001", name: "Example Filer",
@@ -62,13 +65,18 @@ test("disclosure presentation preserves missing and open-ended bands", () => {
 
 test("person with no saved book does not claim zero holdings or permit a deposit", () => {
   const book = { person, state: "not-ingested", savedAt: null, snapshots: [], activity: [], publishedIndex: null } as unknown as NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
-  const html = renderToStaticMarkup(createElement(FmpPerson, { id: person.id, initialData: book }));
+  const html = renderPerson(book);
   assert.match(html, /No annual book saved yet/);
   assert.match(html, /does not mean the person owns nothing/);
   assert.match(html, /USDC/);
   assert.match(html, /Index shares/);
   assert.match(html, /disabled=""[^>]*>Invest in this index/);
   assert.match(html, /No live, execution-approved share-token vault/);
+  assert.match(html, /Devnet only · execution test/);
+  assert.match(html, /Preview devnet deposit/);
+  assert.match(html, /disabled=""[^>]*>Sign devnet deposit/);
+  assert.match(html, /separate from the person’s disclosed book/);
+  assert.match(html, /Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8/);
   assert.doesNotMatch(html, /\$0|Deposit successful|privy-stub:/);
   assert.ok(html.indexOf("Portfolio performance") < html.indexOf("Current holdings"));
   assert.ok(html.indexOf("Current holdings") < html.indexOf("Holdings distribution"));
@@ -83,7 +91,7 @@ test("person with no saved book does not claim zero holdings or permit a deposit
 test("annual evidence keeps unmapped assets and missing bands, with unsafe source links disabled", () => {
   const item = { id: "item-1", name: "Private partnership", ticker: null, kind: "other", owner: null, valueRange: { low: null, high: null }, incomeRange: { low: 1001, high: 2500 }, mappingReason: "No Solana token", token: null };
   const book = { person, state: "partial-disclosure-only", savedAt: null, activity: [], publishedIndex: null, snapshots: [{ id: "version-1", year: 2025, filingDate: "2026-05-01", complete: false, sourceUrl: "javascript:alert(1)", issues: [], items: [item] }] } as unknown as NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
-  const html = renderToStaticMarkup(createElement(FmpPerson, { id: person.id, initialData: book }));
+  const html = renderPerson(book);
   assert.match(html, /Private partnership/);
   assert.match(html, /No Solana token/);
   assert.match(html, /Not disclosed/);
@@ -114,6 +122,7 @@ test("production fallback cannot authenticate, expose a fixture address, or sign
     assert.equal(wallet.solanaAddress, null);
     await assert.rejects(wallet.connect(), /unavailable/);
     await assert.rejects(wallet.signTransaction("test-transaction"), /live wallet is required/);
+    await assert.rejects(wallet.signTransaction("test-transaction", "devnet"), /fixtures are never accepted/);
     renderToStaticMarkup(cloneElement(fallback, { pendingLive: true }));
     assert.equal(wallet.ready, false);
     assert.equal(wallet.solanaAddress, null);
