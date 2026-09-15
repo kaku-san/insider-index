@@ -104,7 +104,7 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
 
     <a className={styles.sourceStrip} href="#holdings-title">
       <span className={styles.sourceIcon}><Icon name="shield" size={18} /></span>
-      <span><strong>Where this portfolio comes from</strong><small>Public filings → saved disclosure book → Stocklana identity and Solana mapping.</small></span>
+      <span><strong>Where this portfolio comes from</strong><small>Public filings → saved disclosure book → InsiderIndex identity and Solana mapping.</small></span>
       <Icon name="arrow" size={16} />
     </a>
 
@@ -138,7 +138,7 @@ export function PerformancePanel({ points = [] }: { points?: BacktestPoint[] }) 
     </> : <div className={styles.emptyChart}>
       <div className={styles.emptyMetric}>—</div>
       <h3>Performance series not available yet</h3>
-      <p>Stocklana only draws this chart once dated trades can be paired with a verified market-price history.</p>
+      <p>InsiderIndex only draws this chart once dated trades can be paired with a verified market-price history.</p>
     </div>}
     <p className={styles.caption}>No return is inferred from filing values. Historical simulations, when available, are not actual investment results.</p>
   </section>;

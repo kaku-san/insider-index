@@ -1,10 +1,10 @@
 /*
-  Stocklana person portfolio direction
+  InsiderIndex person portfolio direction
   ------------------------------------
   Dark "market card" hero + quiet research surfaces. The page borrows the useful
   hierarchy of portfolio trackers (identity -> metrics -> performance -> holdings
   -> allocation -> history) without copying their branding or claiming data we do
-  not have. Lime stays reserved for Stocklana actions and mapped weight signals.
+  not have. Lime stays reserved for InsiderIndex actions and mapped weight signals.
 */
 .page { max-width: 1080px; margin: 0 auto; padding-bottom: 36px; }
 .back { display: inline-flex; align-items: center; gap: 8px; margin: 2px 0 22px; color: var(--muted-foreground); font-size: 12px; font-weight: 600; }
@@ -72,7 +72,7 @@
 .emptyChart h3 { font-size: 15px; letter-spacing: -.02em; }
 .emptyChart p { max-width: 50ch; padding: 0 14px; color: var(--muted-foreground); font-size: 10px; line-height: 1.7; }
 
-/* Tables keep the target's scanability while using Stocklana's own tape-like identity. */
+/* Tables keep the target's scanability while using InsiderIndex's own tape-like identity. */
 .tableRegion { overflow-x: auto; max-width: 100%; margin-top: 14px; }
 .tableRegion:focus-visible, .page summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; font-variant-numeric: tabular-nums; }

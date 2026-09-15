@@ -1,4 +1,4 @@
-# Stocklana live UI
+# InsiderIndex live UI
 
 ## Direction
 

@@ -7,7 +7,7 @@ export async function readApi<T>(url: string, signal?: AbortSignal): Promise<T> 
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(response.status === 404 ? "This record is unavailable. Check the original API connection." : `Could not load this view (${response.status}). Please retry.`);
   try { return await response.json() as T; }
-  catch { throw new Error("The API did not return JSON. Connect the original Stocklana backend, or enable the labelled UI preview."); }
+  catch { throw new Error("The API did not return JSON. Connect the original InsiderIndex backend, or enable the labelled UI preview."); }
 }
 export async function writeApi<T>(url: string, body: unknown): Promise<T> {
   // A preview never signs, submits, or fabricates a successful trade.

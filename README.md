@@ -1,10 +1,10 @@
-# Stocklana V1
+# InsiderIndex V1
 
-Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
+Disclosure-to-copy-trade app: real insider/politician prints → user-signed xStock swaps on Solana.
 
 **Track A W0: copy one print from `/feed`, sign with Privy, execute through Jupiter, save the receipt.** Full disclosed books and model indexes remain research-only; basket Buy is unavailable. [W0 launch checklist and receipt contract](docs/track-a-w0.md).
 
-This repository is a Next.js App Router app. **Live product:** [https://stocklana-nine.vercel.app](https://stocklana-nine.vercel.app). The existing Barely Stable / Hetzner deployment is documented below. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
+This repository is a Next.js App Router app. **Live product:** [https://insiderindex.xyz](https://insiderindex.xyz) (InsiderIndex.xyz). The existing Barely Stable / Hetzner deployment is documented below. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 
 ## Product scope
 
@@ -119,7 +119,7 @@ Refresh the offline snapshot with `npm run catalog:snapshot` (writes `src/lib/ve
 
 ## Compliance
 
-Stocklana is **not available to persons in the United States, United Kingdom, Canada, or Australia**. The eligibility banner is rendered on every page. The trade ticket requires explicit self-attestation before signing. This is UX-only, not server-enforced geo or identity verification.
+InsiderIndex is **not available to persons in the United States, United Kingdom, Canada, or Australia**. The eligibility banner is rendered on every page. The trade ticket requires explicit self-attestation before signing. This is UX-only, not server-enforced geo or identity verification.
 
 xStocks and Backpack `.US` tokens are tokenized stock exposures, not listed equity. Individual trades and native investor actions require user authorization. Future native fund rebalances use eligible keeper tasks, not holder signatures; unattended execution remains disabled.
 
@@ -224,4 +224,4 @@ rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.*`, `.en
 
 `NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present in the server `.env` at image **build** time so the client bundle can initialize Privy. On Vercel, set these for the deployment environment and rebuild after changes.
 
-**Privy dashboard:** allow `https://stocklana-nine.vercel.app`, `https://stocklana.barelystable.dev`, and `http://localhost:3000` as appropriate in allowed origins. Without that origin, the live wallet client will not finish loading. Do not commit real keys.
+**Privy dashboard:** allow `https://insiderindex.xyz`, `https://stocklana.barelystable.dev`, and `http://localhost:3000` as appropriate in allowed origins. Without that origin, the live wallet client will not finish loading. Do not commit real keys.
