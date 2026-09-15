@@ -10,10 +10,9 @@ import { StockIcon } from "./social/shared";
 import { AllocationBreakdown } from "./allocation-breakdown";
 import { portraitFor } from "@/lib/frontend/portraits";
 import { getIndexPosition, getVaultReadiness, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { markedDollars } from "@/lib/frontend/research-format";
 import { PREVIEW_MODE, errorText } from "@/lib/frontend/api";
 import styles from "./position-detail.module.css";
-
-function dollars(v?:string|null){const n=Number(v);return Number.isFinite(n)?n.toLocaleString("en-US",{style:"currency",currency:"USD",maximumFractionDigits:2}):"—"}
 
 export function PositionDetail({indexId}:{indexId:string}){
   const wallet=usePrivySolana();
@@ -30,7 +29,7 @@ export function PositionDetail({indexId}:{indexId:string}){
   return <div className={styles.page}>
     <Link className={styles.back} href="/positions"><Icon name="arrow" size={13} style={{transform:"rotate(180deg)"}}/>Your portfolio</Link>
     {loading?<div className={styles.loading}>Reading share balance and native vault state…</div>:error?<div className={styles.error}>{error}</div>:!position?<div className={styles.gate}><span>NO POSITION</span><h1>No index shares found.</h1><p>The authoritative per-index position endpoint returned no share balance for this wallet.</p><Link href={`/indexes/${encodeURIComponent(indexId)}`}>Open index</Link></div>:<>
-      <section className={styles.hero}><div className={styles.photo}><img src={portraitFor("nancy-pelosi")??""} alt=""/><span>YOUR INDEX</span></div><div className={styles.identity}><small>PERSON INDEX POSITION</small><h1>{name}</h1><div className={styles.numbers}><div><strong>{position.sharesText??position.sharesRaw}</strong><span>shares</span></div><div><strong>{dollars(position.markedValueUsdc)}</strong><span>{position.priceBasis??"marked value"}</span></div></div><div className={styles.actions}><button onClick={()=>setExitOpen(true)}>Exit position <Icon name="arrow" size={13}/></button><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link></div>{PREVIEW_MODE?<p className={styles.preview}>DESIGN FLOW FIXTURE · no live NAV or transaction is implied.</p>:null}</div><aside><span>VAULT STATUS</span><strong>{readiness?.redeemEnabled||readiness?.ready?"Redeem ready":readiness?.identity?"Observed":"Unavailable"}</strong><small>Exit fee {readiness?.hostExitFeeBps??0} bps host · protocol/network costs separate</small></aside></section>
+      <section className={styles.hero}><div className={styles.photo}><img src={portraitFor("nancy-pelosi")??""} alt=""/><span>YOUR INDEX</span></div><div className={styles.identity}><small>PERSON INDEX POSITION</small><h1>{name}</h1><div className={styles.numbers}><div><strong>{position.sharesText??position.sharesRaw}</strong><span>shares</span></div><div><strong>{markedDollars(position.markedValueUsdc)}</strong><span>{position.priceBasis??"marked value"}</span></div></div><div className={styles.actions}><button onClick={()=>setExitOpen(true)}>Exit position <Icon name="arrow" size={13}/></button><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link></div>{PREVIEW_MODE?<p className={styles.preview}>DESIGN FLOW FIXTURE · no live NAV or transaction is implied.</p>:null}</div><aside><span>VAULT STATUS</span><strong>{readiness?.redeemEnabled||readiness?.ready?"Redeem ready":readiness?.identity?"Observed":"Unavailable"}</strong><small>Exit fee {readiness?.hostExitFeeBps??0} bps host · protocol/network costs separate</small></aside></section>
 
       {pending.length?<section className={styles.attention}><Icon name="info" size={17}/><div><strong>{pending.length} operation{pending.length===1?"":"s"} need attention.</strong><span>Native operations are resumable after closing the app or disconnecting.</span></div>{pending[0]?<Link href={`/operations/${encodeURIComponent(pending[0].operationId)}`}>Resume</Link>:null}</section>:null}
 

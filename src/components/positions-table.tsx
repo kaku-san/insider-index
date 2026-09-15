@@ -23,21 +23,11 @@ export function PositionsTable() {
   const wallet = usePrivySolana();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Tab>("indexes");
+  const [showDevnet, setShowDevnet] = useState(false);
   const connected = wallet.mode === "live" && wallet.authenticated && wallet.solanaAddress;
   const copies = useResource<CopyReceipts>(connected ? `/api/positions/copies?wallet=${encodeURIComponent(connected)}` : null);
-  const vault = useResource<VaultResponse>(connected ? `/api/positions?wallet=${encodeURIComponent(connected)}` : null);
   const fills = copies.data?.positions ?? [];
   const visible = fills.filter((p) => `${p.ticker} ${p.tokenSymbol}`.toLowerCase().includes(query.toLowerCase()));
-  const position = !vault.loading && !vault.error ? vault.data?.position ?? null : null;
-  const identityMatches = Boolean(
-    position &&
-      position.owner === connected &&
-      position.identity.network === "devnet" &&
-      position.identity.vaultAccount === DEVNET_TEST_VAULT.vaultAccount &&
-      position.identity.shareMint === DEVNET_TEST_VAULT.shareMint,
-  );
-  const sharePosition = identityMatches ? position : null;
-  const hasShares = Boolean(sharePosition && sharePosition.shareBalanceRaw !== "0");
 
   if (!connected) {
     return (
@@ -101,7 +91,7 @@ export function PositionsTable() {
           <small>No verified dollar mark. Share counts come from chain reads, never copy receipts.</small>
         </div>
         <div className={styles.balanceStats}>
-          <span><b>{hasShares ? 1 : 0}</b> indexes</span>
+          <span><b>0</b> indexes</span>
           <span><b>{fills.length}</b> copied moves</span>
           <span><b>0</b> pending</span>
         </div>
@@ -110,7 +100,7 @@ export function PositionsTable() {
 
       <div className={styles.tabs}>
         <button className={tab === "indexes" ? styles.active : ""} onClick={() => setTab("indexes")}>
-          Index positions <b>{hasShares ? 1 : 0}</b>
+          Index positions <b>0</b>
         </button>
         <button className={tab === "copies" ? styles.active : ""} onClick={() => setTab("copies")}>
           Copied moves <b>{fills.length}</b>
@@ -125,43 +115,14 @@ export function PositionsTable() {
               <p>Confirmed native share balances only. Basket buying stays unavailable until prepare returns real transactions.</p>
             </div>
           </div>
-          {vault.loading ? <Skeleton cards={2} /> : vault.error ? <PageError error={vault.error} retry={vault.reload} /> : sharePosition && hasShares ? (
-            <div className={styles.indexGrid}>
-              <Link className={styles.indexCard} href={`/positions/${encodeURIComponent(sharePosition.identity.vaultAccount)}`}>
-                <div className={styles.indexImage}>
-                  <img src={portraitFor("nancy-pelosi") ?? ""} alt="" />
-                  <span>INDEX</span>
-                </div>
-                <div className={styles.indexBody}>
-                  <div className={styles.indexTop}>
-                    <div>
-                      <small>DEVNET TEST VAULT</small>
-                      <h3>{sharePosition.identity.name}</h3>
-                    </div>
-                    <Icon name="arrow" size={15} />
-                  </div>
-                  <div className={styles.indexNumbers}>
-                    <span>
-                      <b>{formatVaultShares(sharePosition.shareBalanceRaw, sharePosition.shareDecimals)}</b>
-                      <small>shares</small>
-                    </span>
-                    <span>
-                      <b>—</b>
-                      <small>no verified mark</small>
-                    </span>
-                  </div>
-                  <div className={styles.clean}><i />Observed at slot {sharePosition.observedSlot}</div>
-                </div>
-              </Link>
-            </div>
-          ) : (
-            <div className={styles.empty}>
-              <Icon name="grid" size={26} />
-              <h2>No index shares yet.</h2>
-              <p>Open a published person index. Native deposits stay fail-closed until the vault prepare path is live.</p>
-              <Link href="/">Explore indexes <Icon name="arrow" size={13} /></Link>
-            </div>
-          )}
+          <div className={styles.empty}>
+            <Icon name="grid" size={26} />
+            <h2>No published index shares yet.</h2>
+            <p>Open a published person index. Native deposits stay fail-closed until the vault prepare path is live.</p>
+            <Link href="/">Explore indexes <Icon name="arrow" size={13} /></Link>
+          </div>
+          <button className={styles.diagnosticButton} aria-expanded={showDevnet} onClick={() => setShowDevnet(!showDevnet)}>Separate devnet share diagnostic</button>
+          {showDevnet ? <DevnetDiagnostic address={connected} /> : null}
         </section>
       ) : null}
 
@@ -219,4 +180,14 @@ export function PositionsTable() {
       </div>
     </div>
   );
+}
+
+function DevnetDiagnostic({ address }: { address: string }) {
+  const vault = useResource<VaultResponse>(`/api/positions?wallet=${encodeURIComponent(address)}`);
+  const position = !vault.loading && !vault.error ? vault.data?.position ?? null : null;
+  const identityMatches = Boolean(position && position.owner === address && position.identity.network === "devnet" && position.identity.vaultAccount === DEVNET_TEST_VAULT.vaultAccount && position.identity.shareMint === DEVNET_TEST_VAULT.shareMint);
+  return <section className={styles.diagnostic}>
+    <div className={styles.sectionTitle}><div><h2>Execution-test vault</h2><p>This read-only devnet diagnostic is not a person index or portfolio position.</p></div><button onClick={vault.reload} disabled={vault.loading}>Refresh</button></div>
+    {vault.loading ? <Skeleton cards={1} /> : vault.error ? <PageError error={vault.error} retry={vault.reload} /> : position && !identityMatches ? <PageError error="Vault observation identity mismatch. No balance is shown." retry={vault.reload} /> : position ? <div className={styles.indexNumbers}><span><b>{formatVaultShares(position.shareBalanceRaw, position.shareDecimals)}</b><small>test-vault shares</small></span><span><b>—</b><small>no verified mark</small></span><span><b>{position.observedSlot}</b><small>observed devnet slot</small></span></div> : null}
+  </section>;
 }

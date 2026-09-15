@@ -28,3 +28,9 @@ export function personContext(person: ResearchPerson) {
 export function slugifyPerson(name: string) {
   return name.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
+
+export function markedDollars(value?: string | null) {
+  if (typeof value !== "string" || !value.trim()) return "—";
+  const amount = Number(value);
+  return Number.isFinite(amount) ? amount.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }) : "—";
+}

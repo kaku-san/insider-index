@@ -4,33 +4,29 @@ This file is the implementation checklist for the consumer redesign. It reconcil
 
 ## Product identity migration
 
-Canonical product name: **InsiderIndex**. Canonical public URL: **InsiderIndex.xyz**. New browser-storage keys, preview globals, gateway headers and deployment env names use `insiderindex` / `INSIDERINDEX_*`. For a safe rollout, the gateway temporarily accepts the legacy `STOCKLANA_*` backend env names and `x-stocklana-wallet-proof` header and forwards both header variants upstream. This compatibility layer can be removed after production services migrate.
+Canonical product name: **InsiderIndex**. Canonical public URL: **InsiderIndex.xyz**. New browser-storage keys and preview globals use `insiderindex` / `INSIDERINDEX_*`.
 
 ## Executive status
 
 | Area | UI | Typed client | Backend in this recovered ZIP | Real funds status |
 | --- | --- | --- | --- | --- |
-| Browse people / portfolio / published model | Done | Done | Same-origin gateway present; upstream research API required | Read-only |
-| Follow | Done | Existing/local contract | Same-origin gateway present; upstream persistence required outside preview | No funds |
-| Copy one eligible disclosure | Done | `/api/quote` + `/api/execute` | Same-origin gateway present; upstream quote/execute service required | Fail closed without production API + wallet |
+| Browse people / portfolio / published model | Done | Done | Existing same-origin research routes | Read-only |
+| Follow | Done | Existing/local contract | Device-local persistence | No funds |
+| Copy one eligible disclosure | Done | `/api/quote` + `/api/execute` | Existing same-origin quote/execute routes | Fail closed without production API + wallet |
 | Connect / wallet-scoped portfolio | Done | Privy React/Solana adapter + preview adapter | Production app ID/config required | Real external/email connect when configured; preview stays local |
-| Native index readiness | Done | Done | Same-origin gateway present; native upstream adapter not present | Read-only until native backend exists |
-| Native index deposit | Done, including separate deposit + lock approvals | Done | Gateway present; native prepare/reconcile implementation not present | Fail closed |
-| Native index position | Done | Done | Gateway present; authoritative native position service not present | Read-only until backend exists |
-| Native withdrawal | Done | Done | Gateway present; native redemption/claim implementation not present | Fail closed |
-| Claim / partial claim / resume | Done | Done | Gateway present; chain reconciliation store/worker not present | Fail closed |
-| Optional redeemed-token → USDC conversion | Done | Done | Gateway present; redeemed-credit conversion service not present | Fail closed |
-| Operation resume / recovery UI | Done | Done | Gateway present; durable operation/recovery backend not present | Fail closed |
+| Native index readiness | Done | Done | Native person-index route not present | Read-only until native backend exists |
+| Native index deposit | Done, including separate deposit + lock approvals | Done | Native prepare/reconcile routes not present | Fail closed |
+| Native index position | Done | Done | Authoritative person-index position route not present | Read-only until backend exists |
+| Native withdrawal | Done | Done | Native redemption/claim routes not present | Fail closed |
+| Claim / partial claim / resume | Done | Done | Chain reconciliation route/store/worker not present | Fail closed |
+| Optional redeemed-token → USDC conversion | Done | Done | Redeemed-credit conversion route not present | Fail closed |
+| Operation resume / recovery UI | Done | Done | Durable operation/recovery routes not present | Fail closed |
 | Retired multi-leg basket stub | Safe tombstone only | No calls | N/A | **Never sign** |
 
-The rework now includes `src/app/api/[...path]/route.ts`, a same-origin **fail-closed API gateway** for every non-catalog product route. It proxies research/copy requests to `INSIDERINDEX_API_BACKEND_URL` and native vault lifecycle requests to `INSIDERINDEX_NATIVE_BACKEND_URL` (falling back to the general backend). If no upstream is configured it returns an explicit 503; it never fabricates a financial success. The actual quote engine, persistence, native SDK adapter, reconciliation and keeper services still must exist upstream.
+The rework does not add a generic API proxy. Existing same-origin routes continue to own research and copy behavior. Native lifecycle clients target same-origin contracts that remain unavailable until explicit server routes, authentication, reconciliation and keeper infrastructure are implemented.
 
 ---
 
-
-### Same-origin route coverage
-
-`src/app/api/[...path]/route.ts` physically covers the browser-facing endpoint surface, including research, following, Track A, positions and Track B. The gateway forwards authorization / Privy identity headers and cookies to the configured trusted upstream, blocks self-proxy loops, disables caching, and returns explicit 502/503 failures when the upstream is unavailable. Authentication and wallet ownership must still be verified by the upstream before any prepare endpoint returns signable bytes.
 
 ## Consumer routes now covered
 
@@ -45,7 +41,6 @@ The rework now includes `src/app/api/[...path]/route.ts`, a same-origin **fail-c
 | `/positions/[indexId]` | share position detail | opens native exit flow |
 | `/operations/[operationId]` | resume/reconcile operation | status/next/recovery boundary |
 | `/following` | device/local watchlist | none |
-| `/flow-lab` | end-to-end interactive design review | preview simulation only |
 
 ---
 
@@ -60,7 +55,8 @@ The rework now includes `src/app/api/[...path]/route.ts`, a same-origin **fail-c
 | `GET /api/disclosures/:id` | used by copy ticket | exact public print |
 | `POST /api/quote` | wired | body: `mint`, `usdcAmount`, `side`, optional `taker` |
 | `POST /api/execute` | wired | signed one-leg transaction → durable fill receipt |
-| `GET /api/positions?wallet=…` | wired | copy fills; may additionally return chain share summaries |
+| `GET /api/positions/copies?wallet=…` | wired | copy-fill receipts |
+| `GET /api/positions?wallet=…` | wired diagnostic | execution-test devnet vault shares only; never a person index |
 
 ### Guardrails
 
@@ -109,7 +105,7 @@ DRAFT
 → COMPLETE
 ```
 
-**Important:** the simulator no longer bundles deposit and lock as one pretend approval. Production `/next` must decide when lock is valid.
+**Important:** production `/next` must decide when a separate lock approval is valid.
 
 ### Withdrawal lifecycle shown in UI
 
@@ -223,4 +219,4 @@ The old multi-leg basket implementation is retired. `src/components/index-ticket
 9. Keeper/strategy/deployer services and authority separation.
 10. Round-trip devnet tests including failed claim, partial conversion, browser disconnect/resume and duplicate-intent prevention.
 
-Until those are present, the redesigned frontend stays fail-closed outside explicit design-preview mode.
+Until those are present, the redesigned frontend stays fail-closed for native fund actions.

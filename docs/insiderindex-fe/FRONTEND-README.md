@@ -16,28 +16,9 @@ preview/InsiderIndex-Pelosi-Portfolio.html
 preview/InsiderIndex-Index-Flow.html
 preview/InsiderIndex-Your-Portfolio.html
 preview/InsiderIndex-Position-Detail.html
-preview/InsiderIndex-Flow-Lab.html
 ```
 
 For one visual pass across all key states, open `preview/InsiderIndex-Full-Flow-Board.jpg`.
-
-`/flow-lab` is the fastest way to inspect the entire lifecycle:
-
-```text
-Discover
-→ Connect
-→ Review person index
-→ Deposit
-→ Native settlement
-→ Hold shares
-→ My Portfolio
-→ Exit shares
-→ Claim underlying basket
-→ Keep tokens OR separately convert redeemed credits to USDC
-→ Complete / partial / recovery
-```
-
-Preview mode is a **design simulator only**. It never creates a wallet signature, RPC request, or real transaction.
 
 ## Compact person portfolio
 
@@ -157,7 +138,7 @@ POST /api/indexes/execute
 
 ## Important implementation boundary
 
-The recovered frontend snapshot does **not** contain the production native vault backend. The rework now includes a production Privy Solana adapter boundary plus a same-origin fail-closed API gateway (`src/app/api/[...path]/route.ts`). Configure `INSIDERINDEX_API_BACKEND_URL` for research/copy services and `INSIDERINDEX_NATIVE_BACKEND_URL` for the native vault lifecycle. Without trusted upstream services, money routes return explicit unavailable errors rather than fabricating success.
+The recovered frontend snapshot does **not** contain the production native vault backend or a generic upstream gateway. The rework includes a production Privy Solana adapter boundary and typed same-origin client contracts. Native lifecycle calls fail closed unless matching server routes are implemented in this application.
 
 This package therefore does two things deliberately:
 
