@@ -77,9 +77,8 @@ export class NativeVaultBuilders {
       if (!account.isInitialized || account.mint.toBase58() !== identity.shareMint || account.owner.toBase58() !== owner) throw new Error("Share token account identity mismatch");
       balance += account.amount;
     }
-    const intent = await this.ownerIntent(identity, owner);
     return { identity, owner, shareBalanceRaw: balance.toString(), shareDecimals: mint.decimals, observedSlot: accounts.context.slot,
-      nativeIntent: intent?.chain_data.ownAddress?.toBase58() ?? null, claimsStatus: intent ? "RECONCILIATION_REQUIRED" : "NO_CURRENT_OWNER_INTENT", source: "native-token-accounts" };
+      source: "native-token-accounts" };
   }
   async deposit(identity: VaultIdentity, owner: string, amountUsdcRaw: string): Promise<TxPayloadBatchSequence> {
     rawAmount(amountUsdcRaw, true);

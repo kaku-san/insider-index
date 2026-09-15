@@ -42,17 +42,18 @@ export async function previewDevnetDeposit(input: DevnetDepositRequest, native =
   const global = await native.sdk.fetchGlobalConfig();
   const fees = feeSnapshot(vault, global);
   const position = input.owner ? await native.position(devnetTestIdentity, input.owner) : null;
+  const intent = input.owner ? await native.ownerIntent(devnetTestIdentity, input.owner) : null;
   const blockers: string[] = [...DEVNET_DEPOSIT_BLOCKERS];
   if (input.expectedStateHash && input.expectedStateHash !== stateHash) blockers.unshift("Vault state changed. Preview again.");
   if (!vault.settings.depositsAreAllowed || !global.allowInteractions) blockers.push("Native deposits or protocol interactions are disabled.");
   if (!fees.stocklanaFeesValid) blockers.push("Native fee configuration differs from the approved host fee policy.");
-  if (position?.nativeIntent) blockers.unshift("Existing native intent: recovery is required; do not create another deposit.");
+  if (intent) blockers.unshift("Existing native intent: recovery is required; do not create another deposit.");
   if (!input.owner) blockers.push("Connect a live Solana wallet to inspect its native share balance and pending intent.");
   return {
     identity: DEVNET_TEST_VAULT, owner: input.owner, amountUsdcRaw: input.amountUsdcRaw,
     observedAt: new Date().toISOString(), observedSlot: await native.connection.getSlot("confirmed"), stateHash,
     shareSupplyRaw: mint.supply.toString(), shareBalanceRaw: position?.shareBalanceRaw ?? null,
-    nativeIntent: position?.nativeIntent ?? null,
+    nativeIntent: intent?.chain_data.ownAddress?.toBase58() ?? null,
     holdings: vault.composition.slice(0, vault.numTokens).map(asset => ({ mint: asset.mint.toBase58(), amountRaw: asset.amount.toString(), weightBps: asset.weight, active: asset.active === 1 })),
     hostEntryFeeBps: fees.hostEntryFeeBps, hostExitFeeBps: fees.hostExitFeeBps, estimatedSharesRaw: null,
     prepared: {

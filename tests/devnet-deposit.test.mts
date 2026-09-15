@@ -23,7 +23,8 @@ function reader(pending = false): NativeVaultBuilders {
       numTokens: 1, composition: [{ mint: new PublicKey(DEVNET_TEST_VAULT.usdcMint), amount: 100000n, weight: 10000, active: 1 }],
     } }),
     sdk: { fetchGlobalConfig: async () => ({ allowInteractions: 1, bountyBondAmount: 1n }) },
-    position: async () => ({ shareBalanceRaw: "42", nativeIntent: pending ? owner : null }),
+    position: async () => ({ shareBalanceRaw: "42" }),
+    ownerIntent: async () => pending ? { chain_data: { ownAddress: new PublicKey(owner) } } : null,
   } as unknown as NativeVaultBuilders;
 }
 const request = (body: unknown) => new Request("http://localhost/api/vaults/devnet/preview", { method: "POST", body: JSON.stringify(body) });

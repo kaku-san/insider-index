@@ -68,12 +68,13 @@ test("no accounts means confirmed zero; re-reading reflects transferred shares",
   assert.equal((await readDevnetPosition(owner, native)).shareBalanceRaw, "0");
 });
 
-test("pending intent is separate and does not inflate owned shares", async t => {
+test("pending intent lookup failure does not hide owned shares", async t => {
   const { native } = fixture(t, [3n]);
-  t.mock.method(native, "ownerIntent", async () => ({ chain_data: { ownAddress: key(other) } }));
+  const intent = t.mock.method(native, "ownerIntent", async () => { throw new Error("intent RPC unavailable"); });
   const result = await readDevnetPosition(owner, native);
   assert.equal(result.shareBalanceRaw, "3");
-  assert.equal(result.nativeIntent, other);
+  assert.equal(result.nativeIntent, null);
+  assert.equal(intent.mock.callCount(), 0);
 });
 
 test("HTTP rejects absent/invalid/fixture wallets and alternate network/vault/RPC selectors", async () => {
