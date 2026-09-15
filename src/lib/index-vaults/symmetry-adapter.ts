@@ -1,4 +1,4 @@
-import { SymmetryCore, isRebalanceRequired } from "@symmetry-hq/sdk";
+import { SymmetryCore } from "@symmetry-hq/sdk";
 import type { AddOrEditTokenInput, TaskContext, TxPayloadBatchSequence, UIRebalanceIntent, Vault } from "@symmetry-hq/sdk";
 import { MINTS, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import { getGlobalConfigPda, getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
@@ -108,9 +108,10 @@ export class NativeVaultBuilders {
   }
   executeConfiguration(keeper: string, intent: string) { return this.sdk.executeVaultIntentTx({ keeper: address(keeper), intent: address(intent) }); }
   lookupTables(identity: VaultIdentity, deployer: string, accounts: string[]) { return this.sdk.rewriteLookupTablesTx({ signer: address(deployer), vault_mint: identity.shareMint, additional_accounts: accounts.map(address) }); }
-  async normalRebalance(identity: VaultIdentity, keeper: string) {
-    const { vault } = await this.read(identity);
-    if (!await isRebalanceRequired(vault, this.connection)) return null;
+  /** Caller supplies Hermes-free eligibility from `evaluateRebalanceRequired`. Never the SDK helper that opens Hermes. */
+  async normalRebalance(identity: VaultIdentity, keeper: string, required: boolean) {
+    if (!required) return null;
+    await this.read(identity);
     return this.sdk.rebalanceVaultTx({ keeper: address(keeper), vault_mint: identity.shareMint, rebalance_slippage_bps: 100, per_trade_rebalance_slippage_bps: 50 });
   }
   /** Raydium-only `update_token_prices`: never the SDK's Hermes-backed batch builder. */

@@ -61,7 +61,7 @@ export async function previewDevnetDeposit(input: DevnetDepositRequest, native =
       blockers, constraints: [
         { label: "Native shares", value: "Unavailable until native accounting and settlement are verified", strength: "unverified" },
         { label: "Fees", value: "Host fees only; protocol, network, rent, bounty and swap costs are separate and unquoted", strength: "app-policy" },
-        { label: "Exit", value: "Underlying tokens first; no guaranteed USDC redemption", strength: "unverified" },
+        { label: "Exit", value: "USDC zap-out unproven; public Invest Sign disabled until create→mint→rebalance→USDC-out receipt", strength: "unverified" },
       ],
     },
   };

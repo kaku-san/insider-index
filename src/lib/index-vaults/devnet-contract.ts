@@ -1,4 +1,5 @@
 import type { PreparedStep } from "./adapter-contract.ts";
+import { publicInvestSignAllowed } from "./full-cycle.ts";
 
 /** Public identity from the finalized creation receipt. Never a person/index mapping. */
 export const DEVNET_TEST_VAULT = {
@@ -16,6 +17,7 @@ export const DEVNET_DEPOSIT_BLOCKERS = [
   "Native settlement, unused returns and claim recovery are not verified.",
   "Independent native instruction decoding, debit budgets and asynchronous share minima are not verified.",
   "Test-vault role/configuration and oracle/route readiness are not approved for app deposits.",
+  "Public Invest Sign stays off until create→mint→rebalance→USDC-out has a receipt.",
 ];
 
 export interface DevnetDepositRequest {
@@ -53,7 +55,9 @@ export function devnetUsdcRaw(value: string): string {
 }
 
 export function canSignDevnetDeposit(preview: DevnetDepositPreview | null): boolean {
-  return DEVNET_DEPOSIT_SIGNING_ENABLED && !!preview && preview.identity.network === "devnet" &&
+  return DEVNET_DEPOSIT_SIGNING_ENABLED && publicInvestSignAllowed([], {
+    network: "devnet", vaultAccount: DEVNET_TEST_VAULT.vaultAccount, shareMint: DEVNET_TEST_VAULT.shareMint,
+  }) && !!preview && preview.identity.network === "devnet" &&
     preview.identity.vaultAccount === DEVNET_TEST_VAULT.vaultAccount &&
     preview.identity.shareMint === DEVNET_TEST_VAULT.shareMint &&
     preview.prepared.requires === "user-signature" && preview.prepared.blockers.length === 0 &&

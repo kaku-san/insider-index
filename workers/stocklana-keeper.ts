@@ -1,4 +1,3 @@
-import { isRebalanceRequired } from "@symmetry-hq/sdk";
 import type { Vault } from "@symmetry-hq/sdk";
 import type { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import type { VaultIdentity } from "../src/lib/index-vaults/adapter-contract.ts";
@@ -6,6 +5,7 @@ import type { VaultRegistry } from "../src/lib/index-vaults/registry.ts";
 import { Journal } from "../src/lib/index-vaults/journal.ts";
 import { hashObject } from "../src/lib/index-vaults/amounts.ts";
 import { feeSnapshot } from "../src/lib/index-vaults/fees.ts";
+import { evaluateRebalanceRequired, rebalanceInputFromVault } from "../src/lib/index-vaults/rebalance-eligibility.ts";
 
 export interface KeeperIntentObservation {
   address: string; owner: string; type: string; action: string;
@@ -70,7 +70,8 @@ export async function readKeeperObservation(native: NativeVaultBuilders, identit
       action: intent.formatted_data.current_action, bountyLeftRaw: chain.bounty.bountyLeft.toString(10) };
   });
   return planKeeperObservation({ vault: identity.vaultAccount, configHash, shareSupplyRaw: mint.supply.toString(), intents: summaries, retired,
-    normalRebalanceRequired: intents.length || retired ? null : await isRebalanceRequired(vault, native.connection) }, previous);
+    // Quotes stay unloaded here so eligibility never opens Hermes. Price-dependent AND is null until Raydium/JUP quotes are supplied.
+    normalRebalanceRequired: intents.length || retired ? null : evaluateRebalanceRequired(rebalanceInputFromVault(vault, Math.floor(Date.now() / 1000), null)).required }, previous);
 }
 
 /** Single tick, registered vaults only, persistent exclusive lease. No KeeperMonitor, signer,
