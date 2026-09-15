@@ -69,7 +69,7 @@ API routes:
 - `GET /api/indexes` lists model indexes (crowd first) and explicit unavailable native-position status. Legacy `POST /api/indexes/quote` and `/execute` now return `503` with native release blockers; no fabricated transaction or receipt
 - `POST /api/quote` — Jupiter `/order`, catalog-enforced (`403` for a mint outside the catalog)
 - `POST /api/execute` — Jupiter `/execute`, then record a position
-- `GET /api/positions` — tracked user-signed fills
+- `GET /api/positions?wallet=<Solana public key>` — confirmed on-chain share balance for the existing devnet test vault only (no-store); missing/invalid wallet returns 400, RPC/identity failures return 503, never an inferred zero. No NAV or fill-derived balances. See `src/lib/index-vaults/devnet-positions.ts`.
 
 UI routes:
 
@@ -79,7 +79,7 @@ UI routes:
 - `/indexes/[id]` model allocation, native lifecycle/fee disclosure and disabled investment panel; no holder rebalance button
 - `/disclosures/[id]` inspect
 - `/trade/[id]` one-print copy + approve/sign stub
-- `/positions` tracked book
+- `/positions` connected live wallet’s devnet vault shares; exact token units, observation slot and explicit unavailable dollar valuation (not Jupiter receipts)
 
 ## FMP person backend
 

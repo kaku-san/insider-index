@@ -9,7 +9,7 @@ import type { DevnetDepositPreview, DevnetDepositRequest } from "./devnet-contra
 
 const deployer = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
 // Observation identity only. This is not registration/publication or entry authorization.
-const identity: VaultIdentity = {
+export const devnetTestIdentity: VaultIdentity = {
   ...DEVNET_TEST_VAULT, programId: SYMMETRY_PROGRAM_ID,
   hostTreasury: deployer, initialDeployer: deployer, indexId: "execution-test-stocklana-devnet",
   deploymentGeneration: 1, metadataHash: "unverified:empty-native-uri",
@@ -38,10 +38,10 @@ export function devnetNativeReader() {
 export async function previewDevnetDeposit(input: DevnetDepositRequest, native = devnetNativeReader()): Promise<DevnetDepositPreview> {
   parseDevnetDepositRequest(input);
   if (native.network !== "devnet") throw new Error("Devnet reader required");
-  const { vault, mint, stateHash } = await native.read(identity); // includes genesis and exact identity checks
+  const { vault, mint, stateHash } = await native.read(devnetTestIdentity); // includes genesis and exact identity checks
   const global = await native.sdk.fetchGlobalConfig();
   const fees = feeSnapshot(vault, global);
-  const position = input.owner ? await native.position(identity, input.owner) : null;
+  const position = input.owner ? await native.position(devnetTestIdentity, input.owner) : null;
   const blockers: string[] = [...DEVNET_DEPOSIT_BLOCKERS];
   if (input.expectedStateHash && input.expectedStateHash !== stateHash) blockers.unshift("Vault state changed. Preview again.");
   if (!vault.settings.depositsAreAllowed || !global.allowInteractions) blockers.push("Native deposits or protocol interactions are disabled.");

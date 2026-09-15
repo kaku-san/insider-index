@@ -3,7 +3,7 @@ import type { AddOrEditTokenInput, TaskContext, TxPayloadBatchSequence, UIRebala
 import { MINTS, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import { getGlobalConfigPda, getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getMint, unpackAccount } from "@solana/spl-token";
+import { getMint, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
 import type { IndexVaultAdapter, NativeCapabilities, Network, ObservedOperation, PreparedStep, VaultIdentity } from "./adapter-contract.ts";
 import { address, hashObject, rawAmount, sdkRawAmount, sha256, weightsValid } from "./amounts.ts";
 import { feeSnapshot } from "./fees.ts";
@@ -53,6 +53,7 @@ export class NativeVaultBuilders {
     if (vault.mint.toBase58() !== identity.shareMint || vault.ownAddress.toBase58() !== identity.vaultAccount || vault.settings.creator.toBase58() !== identity.initialDeployer || vault.settings.host.toBase58() !== identity.hostTreasury) throw new Error("Native vault identity mismatch");
     const mintAccount = await this.connection.getAccountInfo(vault.mint, "confirmed");
     if (!mintAccount) throw new Error("Missing native share mint");
+    if (![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].some(program => mintAccount.owner.equals(program))) throw new Error("Wrong share mint program");
     const mint = await getMint(this.connection, vault.mint, "confirmed", mintAccount.owner);
     if (mint.decimals !== identity.shareDecimals) throw new Error("Native share decimal mismatch");
     return { vault, mint, stateHash: sha256(account.data) };
@@ -71,8 +72,9 @@ export class NativeVaultBuilders {
     const accounts = await this.connection.getTokenAccountsByOwner(new PublicKey(address(owner)), { mint: vault.mint }, "confirmed");
     let balance = 0n;
     for (const entry of accounts.value) {
+      if (![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].some(program => entry.account.owner.equals(program))) throw new Error("Wrong share token program");
       const account = unpackAccount(entry.pubkey, entry.account, entry.account.owner);
-      if (account.mint.toBase58() !== identity.shareMint || account.owner.toBase58() !== owner) throw new Error("Share token account identity mismatch");
+      if (!account.isInitialized || account.mint.toBase58() !== identity.shareMint || account.owner.toBase58() !== owner) throw new Error("Share token account identity mismatch");
       balance += account.amount;
     }
     const intent = await this.ownerIntent(identity, owner);
