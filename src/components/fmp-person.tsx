@@ -6,7 +6,6 @@ import { Icon } from "./social/icon";
 import type { StoredPerson } from "@/lib/fmp/store";
 import type { PublishedHoldingsIndex } from "@/lib/fmp/holdings-index";
 import styles from "./disclosure-workspace.module.css";
-import { VaultInvest } from "./vault-invest";
 
 export { FmpPerson } from "./fmp-portfolio";
 export { disclosedRange } from "@/lib/frontend/disclosure-labels";
@@ -14,14 +13,12 @@ const date = (value: string) => new Date(value).toLocaleDateString("en-US", { mo
 
 function InvestPanel() {
   return <aside id="invest" className={styles.investPanel} aria-labelledby="invest-title">
-    <span className={styles.count}>Not open for investment</span>
-    <h2 id="invest-title">One index. One token.</h2>
-    <p>The intended investment flow is USDC into an index vault, in exchange for its share token.</p>
-    <div className={styles.investPath}><span>USDC</span><Icon name="arrow" size={18} /><span>Index shares</span></div>
-    <p id="invest-blocker"><strong>This is a research model.</strong> No live, execution-approved share-token vault is connected to this target. Deposits and signing are unavailable.</p>
-    <button className={styles.secondaryButton} disabled aria-describedby="invest-blocker">Invest unavailable</button>
-    <p className={styles.finePrint}>Connecting a wallet does not enable this model. The devnet test below is separate from this published target.</p>
-    <VaultInvest />
+    <span className={styles.count}>Research only</span>
+    <h2 id="invest-title">Research the target</h2>
+    <p id="invest-blocker">This model is not an executable basket. Basket buying, deposits and signing are unavailable.</p>
+    <button className={styles.secondaryButton} disabled aria-describedby="invest-blocker">Basket buying unavailable</button>
+    <Link className={styles.primaryButton} href="/feed">Copy one print from the feed</Link>
+    <p className={styles.finePrint}>Individual copies are separate user-signed swaps, not ownership of this model.</p>
   </aside>;
 }
 

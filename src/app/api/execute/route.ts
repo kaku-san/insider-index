@@ -1,84 +1,50 @@
 import { NextResponse } from "next/server";
-import { fromAtomicAmount, resolveBuyableMint } from "@/lib/allowlist";
+import { resolveBuyableMint } from "@/lib/allowlist";
 import { JupiterError, executeJupiterOrder } from "@/lib/jupiter";
-import { recordPosition } from "@/lib/positions";
+import { assertPositionStoreReady, PositionStoreError, recordPosition } from "@/lib/positions";
+import { loadCopyOrder, verifyCopyOrder } from "@/lib/copy-orders";
+import { jupiterMode } from "@/lib/runtime";
 
 export const dynamic = "force-dynamic";
-
-type ExecuteBody = {
-  signedTransaction?: string;
-  requestId?: string;
-  wallet?: string;
-  disclosureId?: string;
-  ticker?: string;
-  outputMint?: string;
-  inAmount?: string;
-  outAmount?: string;
-};
+const atomic = (value: string | undefined) => typeof value === "string" && /^\d+$/.test(value) ? value : null;
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as ExecuteBody;
-
-  if (!body.signedTransaction || !body.requestId) {
-    return NextResponse.json(
-      { error: "signedTransaction and requestId are required." },
-      { status: 400 },
-    );
+  let body;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON." }, { status: 400 }); }
+  if (!body || ![body.signedTransaction, body.requestId, body.wallet].every(v => typeof v === "string" && v.length > 0)) {
+    return NextResponse.json({ error: "signedTransaction, requestId and wallet are required." }, { status: 400 });
   }
 
-  if (!body.wallet) {
-    return NextResponse.json(
-      { error: "wallet is required so the user-signed trade can be tracked." },
-      { status: 400 },
-    );
-  }
-
-  const token = body.outputMint ? await resolveBuyableMint(body.outputMint) : null;
-  if (!token) {
-    return NextResponse.json(
-      { error: "Copy blocked: mint is not an xStock or Backpack tokenised stock in the Solana catalog." },
-      { status: 403 },
-    );
-  }
-
-  let result;
   try {
-    result = await executeJupiterOrder({
-      signedTransaction: body.signedTransaction,
-      requestId: body.requestId,
-    });
+    const order = await loadCopyOrder(body.requestId);
+    if (!verifyCopyOrder(order, body.wallet, body.signedTransaction) || (order.stub && jupiterMode() === "live")) {
+      return NextResponse.json({ error: "Unknown, expired or mismatched order. Request a fresh quote." }, { status: 400 });
+    }
+    // Never trust client ticker/mint/amount metadata to manufacture a durable receipt.
+    const token = await resolveBuyableMint(order.mint);
+    if (!token) return NextResponse.json({ error: "Copy blocked: mint is not in the Solana catalog." }, { status: 403 });
+    await assertPositionStoreReady();
+    const result = await executeJupiterOrder({ signedTransaction: body.signedTransaction, requestId: order.request_id });
+    if (result.status !== "Success" || !result.signature) {
+      return NextResponse.json({ error: "Jupiter execution not confirmed. Check your wallet before retrying.", result }, { status: 502 });
+    }
+    try {
+      const position = await recordPosition({
+        wallet: order.wallet, disclosureId: order.disclosure_id, ticker: order.ticker,
+        tokenSymbol: order.token_symbol, venue: order.venue, mint: order.mint, side: order.side,
+        inputAmountRaw: atomic(result.inputAmountResult), outputAmountRaw: atomic(result.outputAmountResult),
+        inputDecimals: order.side === "buy" ? 6 : order.token_decimals,
+        outputDecimals: order.side === "buy" ? order.token_decimals : 6,
+        requestId: order.request_id, signature: result.signature, stub: result.stub,
+      });
+      return NextResponse.json({ flow: "jupiter-swap-v2-execute", result, position, persistence: "saved" });
+    } catch {
+      // The swap already happened. Do not turn a receipt outage into a retryable trade failure.
+      return NextResponse.json({ flow: "jupiter-swap-v2-execute", result, position: null, persistence: "failed",
+        warning: "Trade executed, but receipt could not be saved. Keep the signature and check your wallet. Do not repeat the trade." });
+    }
   } catch (error) {
-    const status = error instanceof JupiterError ? error.status : 502;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Jupiter execute failed." },
-      { status },
-    );
+    const status = error instanceof PositionStoreError ? 503 : error instanceof JupiterError ? error.status : 502;
+    return NextResponse.json({ error: error instanceof PositionStoreError || error instanceof JupiterError ? error.message : "Execution status unavailable. Check your wallet before retrying." }, { status });
   }
-
-  if (result.status !== "Success") {
-    return NextResponse.json(
-      { error: result.error ? `Jupiter execute failed: ${result.error}` : "Jupiter execute failed.", result },
-      { status: 502 },
-    );
-  }
-
-  const position = await recordPosition({
-    wallet: body.wallet,
-    disclosureId: body.disclosureId ?? null,
-    ticker: body.ticker ?? token.ticker,
-    tokenSymbol: token.symbol,
-    venue: token.issuer,
-    mint: token.mint,
-    usdcIn: fromAtomicAmount(result.inputAmountResult ?? body.inAmount ?? "0", 6),
-    tokensOut: fromAtomicAmount(result.outputAmountResult ?? body.outAmount ?? "0", token.decimals),
-    requestId: body.requestId,
-    signature: result.signature,
-    stub: result.stub,
-  });
-
-  return NextResponse.json({
-    flow: "jupiter-swap-v2-execute",
-    result,
-    position,
-  });
 }

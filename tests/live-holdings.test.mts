@@ -73,7 +73,7 @@ test("portfolio HTML shows persisted pie, ticker and venue overlays while keepin
   assert.match(html, /<dd>65<\/dd>/);
   assert.match(html, /No trade activity saved/);
   assert.doesNotMatch(html, /No published allocation yet|Activity through|\$0/);
-  assert.match(html, /disabled="" aria-describedby="invest-blocker">Invest in this index/);
+  assert.match(html, /disabled="" aria-describedby="invest-blocker">Basket buying unavailable/);
   const annual = html.slice(html.indexOf('id="holdings-title"'), html.indexOf('id="allocation-title"'));
   assert.doesNotMatch(annual, /75\.00%|25\.00%/);
   assert.deepEqual(value, before);
