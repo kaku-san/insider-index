@@ -82,9 +82,10 @@ function PersonCover({ person, featured = false }: { person: ResearchPerson; fea
   </article>;
 }
 
-export function FilingTape({ disclosures, error, retry }: { disclosures: CopySignal[]; error: string | null; retry: () => void }) {
+export function FilingTape({ disclosures, error, loading = false, retry }: { disclosures: CopySignal[]; error: string | null; loading?: boolean; retry: () => void }) {
   const rows = disclosures.slice(0, 5);
   if (error && !rows.length) return <PageError error={error} retry={retry}/>;
+  if (loading && !rows.length) return <div className={styles.tapeLoading} aria-busy="true" aria-label="Loading recent disclosures"><i/><i/><i/></div>;
   if (!rows.length) return <div className={styles.tapeEmpty}><strong>Nothing new on the tape.</strong><span>Fresh sourced disclosures appear here when the feed is connected.</span></div>;
   return <div className={styles.tape}>{rows.map((row, index) => <Link href={row.tradeEligible ? `/trade/${encodeURIComponent(row.id)}?copy=1` : `/disclosures/${encodeURIComponent(row.id)}`} className={styles.tapeRow} key={row.id}>
     <span className={styles.tapeIndex}>{String(index + 1).padStart(2, "0")}</span>
@@ -166,7 +167,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
 
     <section className={styles.tapeSection}>
       <div className={styles.tapeIntro}><span>THE TAPE</span><h2>What moved<br/>this week.</h2><p>Recent public filings, translated from paperwork into something you can scan in ten seconds.</p><Link href="/feed">Open full feed <Icon name="arrow" size={14}/></Link></div>
-      <FilingTape disclosures={disclosures} error={!disclosures.length ? disclosureResult.error : null} retry={disclosureResult.reload}/>
+      <FilingTape disclosures={disclosures} error={!disclosures.length ? disclosureResult.error : null} loading={disclosureResult.loading} retry={disclosureResult.reload}/>
     </section>
 
     {!directoryError ? <section className={styles.directorySection}>

@@ -91,6 +91,7 @@ test("consumer person portfolios keep annual rows separate from published alloca
   assert.match(html, /Holdings 4/);
   assert.match(html, /2 positions/);
   assert.match(html, /aria-label="AAPL 60\.0%, MSFT 40\.0%"/);
+  assert.match(html, new RegExp(`href="/indexes/fmp-${"a".repeat(64)}"[^>]*>View index`));
   assert.doesNotMatch(html, /AAPL 75\.0%|MSFT 25\.0%|\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:/);
 });
 

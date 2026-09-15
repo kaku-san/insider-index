@@ -56,6 +56,13 @@ test("a failed disclosure tape renders a retryable error instead of an empty tap
   assert.doesNotMatch(html, /Nothing new on the tape/);
 });
 
+test("a loading disclosure tape does not claim the feed is empty", () => {
+  const html = renderToStaticMarkup(createElement(FilingTape, { disclosures: [], error: null, loading: true, retry: () => undefined }));
+  assert.match(html, /aria-busy="true"/);
+  assert.match(html, /Loading recent disclosures/);
+  assert.doesNotMatch(html, /Nothing new on the tape/);
+});
+
 test("search includes names outside the first page and combines chamber filters without mutating data", () => {
   assert.equal(filterPeople(directory, "  FILER 539  ", "all")[0]?.id, "A000539");
   assert.equal(filterPeople(directory, "A000539", "senate").length, 0);
