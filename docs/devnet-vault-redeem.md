@@ -10,27 +10,15 @@ npm run vault:redeem:preflight -- --shares-raw 1
 
 The amount is an exact positive integer in native share base units (6 decimals); `1` means 0.000001 shares, not one share. Values above JavaScript's safe integer limit are rejected because the pinned SDK accepts a number. Exit **2** means an observed safe stop; exit **1** means invalid input/RPC/identity/encoding failure. Neither means redemption succeeded. There are no wallet, network, vault or broadcast flags.
 
-Identity is fixed in [`devnet-redeem.ts`](../src/lib/index-vaults/devnet-redeem.ts):
-
-- RPC: `https://api.devnet.solana.com`; devnet genesis is checked before native reads.
-- Existing vault: `Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8`.
-- Share mint: `Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A`.
-- Funded test wallet: `C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB`.
-- Native program: `BASKT7aKd8n7ibpUbwLP3Wiyxyi3yoiXsxBk4Hpumate`.
+[`devnet-redeem.ts`](../src/lib/index-vaults/devnet-redeem.ts) owns the fixed RPC/genesis, program, vault, share mint and test-wallet identity. The CLI offers no override for them, and it checks the devnet genesis before native reads.
 
 The observer checks native program/existing vault identity, creator/host, initialized classic SPL share mint, authority and decimals. It sums actual owner share accounts separately from unfrozen associated-account shares (the SDK burns from the ATA). Any existing owner intent blocks another burn, even if it cannot be decoded. Active vault rebalances are conservatively blocked.
 
 ## Observed safe stop
 
-[`devnet-redeem-preflight.json`](../evidence/vaults/devnet-redeem-preflight.json) records a finalized read at slot **498626560** on **2026-09-15**:
+[`devnet-redeem-preflight.json`](../evidence/vaults/devnet-redeem-preflight.json) is the authoritative dated readback for the exact slot, identity, balances, basket and blockers. That observation stopped because the wallet had no spendable shares and an existing owner intent needed reconciliation; it did not build, simulate, sign or broadcast a transaction. The intent's stage and effects are not attested by this tool, so do not overwrite it, cancel it blindly or initiate another burn.
 
-- Wallet shares **0**, spendable ATA shares **0**, total share supply **0**.
-- Wallet SOL: **4.807493578**; SOL funding does not imply ownership of vault shares.
-- An owner intent account exists at `8YE4XGm767rVxFhEYr8snLDxgRf1G9YLCPwPBKD3QBCL`. Its stage/effects are **not attested by this tool**; do not overwrite it, cancel it blindly or initiate another burn.
-- Native allocated basket: WSOL `So11111111111111111111111111111111111111112` and SDK devnet USDC `USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT`. This is an execution-test basket, not politician holdings or production securities.
-- No withdrawal transaction built for this wallet. No simulation, signing, broadcast or redemption performed; no test funds spent by this task.
-
-Reads are a dated observation, not an atomic snapshot or continuing assertion about the wallet. Re-run before any future work. Do not seed/buy shares or create a second vault merely to make this redemption test pass.
+The readback is not an atomic snapshot or continuing assertion about the wallet. Re-run before any future work. SOL funding does not imply share ownership, and the execution-test basket is not politician holdings or production securities. Do not seed or buy shares, or create a second vault, merely to make this redemption test pass.
 
 ## Documented native path and verification limits
 
@@ -53,11 +41,3 @@ This task verifies the documentation and **SDK wire encoding**, not deployed eco
 If the wallet eventually has sufficient shares and no pending operation, the CLI may build an **internal unsigned sell diagnostic** and emit only its message hash/keep-mask check. It still returns `NATIVE_REDEEM_ROUNDTRIP_UNVERIFIED`, with no transaction bytes or signing option. Encoding checks are not a complete transaction-spend audit and must not be repurposed as broadcast authorization. There is no environment-variable release override.
 
 Before adding a funded execution path, require verified native sell → redeem → residual-claim recovery evidence on this same devnet vault, current fee/config attestation, complete message/account/spend inspection, simulation and explicit bounded spending authorization. No native-USDC payout, all-in exit quote, minimum basket output, cancellation refund or production readiness is claimed.
-
-## Local validation
-
-- `npm test`: **100 passed**, including 9 redemption tests.
-- `npm run typecheck` and `npm run build`: **passed**.
-- ESLint on the new module, CLI and test: **passed**.
-- Full `npm run lint`: **5 existing errors / 4 warnings** in unchanged UI files (`index-ticket.tsx`, `trade-approve.tsx`, `providers/ui-provider.tsx`, `feed-view.tsx`, `person-avatar.tsx`). These were not silently fixed as part of the devnet task.
-- no-mistakes validation/shipping is a separate supervisor-directed gate; local checks do not claim CI readiness.
