@@ -244,5 +244,8 @@
 .trackerTile strong { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trackerTile small { display: block; color: var(--muted-foreground); font-size: 8.5px; line-height: 1.5; }
 .trackerRank { flex: 0 0 auto; color: var(--soft-text); font-size: 9px; font-weight: 700; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; color: var(--muted-foreground); font-size: 9.5px; }
+.pager button { padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-alt); color: var(--foreground); font-size: 10px; font-weight: 650; cursor: pointer; }
+.pager button:disabled { color: var(--muted-foreground); cursor: not-allowed; opacity: .5; }
 @media (max-width: 900px) { .statGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .sectorBar { grid-template-columns: 120px minmax(0, 1fr) 50px; } }
 @media (max-width: 660px) { .statGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .statGrid dd { font-size: 19px; } .sectorBar { grid-template-columns: 96px minmax(0, 1fr) 44px; font-size: 9.5px; } }
