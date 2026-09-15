@@ -38,6 +38,7 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
   t.after(() => db.close());
   await db.exec("create role anon; create role authenticated; create role service_role bypassrls;");
   await db.exec(await readFile(new URL("../supabase/migrations/202609150001_copy_positions.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../supabase/migrations/202609150002_prune_copy_orders.sql", import.meta.url), "utf8"));
   for (const role of ["anon", "authenticated"]) {
     await db.exec(`set role ${role}`);
     await assert.rejects(db.query("select * from positions"), /permission denied/);
@@ -66,6 +67,10 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
     }
     assert.equal(url.host, "receipts.example.test", "unexpected network request");
     assert.equal(new Headers(init?.headers).get("apikey"), "test-only-service-role");
+    if (url.pathname.endsWith("/rpc/prune_expired_copy_orders")) {
+      const { rows } = await db.query("select prune_expired_copy_orders() as deleted_count");
+      return Response.json(rows[0]?.deleted_count ?? 0);
+    }
     const table = url.pathname.split("/").pop()!;
     assert.ok(["positions", "copy_orders"].includes(table));
     if (storageFails || (receiptWriteFails && table === "positions" && init?.method === "POST")) return Response.json({ message: "private DB failure" }, { status: 503 });
@@ -129,7 +134,14 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
   await assert.rejects(assertPositionStoreReady(), /service role/);
   Object.assign(process.env, { SUPABASE_SERVICE_ROLE_KEY: "test-only-service-role" });
 
+  await db.query("update copy_orders set expires_at=now()-interval '10 minutes' where request_id=$1", [order.requestId]);
+  await db.query(
+    "insert into copy_orders(request_id,wallet,disclosure_id,ticker,token_symbol,venue,mint,side,token_decimals,message_hash,expires_at,stub) values ($1,$2,null,$3,$4,$5,$6,'buy',$7,'unused',now()-interval '10 minutes',false)",
+    ["expired-unfilled", wallet, token.ticker, token.symbol, token.issuer, token.mint, token.decimals],
+  );
   const sellResponse = await quote(post("quote", { ...quoteBody, side: "sell", tokenAmount: 0.1 }));
+  assert.equal((await db.query("select request_id from copy_orders where request_id='expired-unfilled'")).rows.length, 0);
+  assert.equal((await db.query("select request_id from copy_orders where request_id=$1", [order.requestId])).rows.length, 1);
   const sellOrder = (await sellResponse.json()).order;
   const sellTx = transactions.get(sellOrder.requestId)!; sellTx.sign([signer]);
   const sellBody = { wallet, requestId: sellOrder.requestId, signedTransaction: Buffer.from(sellTx.serialize()).toString("base64") };

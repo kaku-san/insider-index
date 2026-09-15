@@ -12,6 +12,15 @@ export type CopyOrder = {
   expires_at: string; stub: boolean;
 };
 const memory = () => globalState("copy_orders", () => new Map<string, CopyOrder>());
+const RETENTION_GRACE_MS = 5 * 60_000;
+
+function pruneMemoryOrders(now = Date.now()): Map<string, CopyOrder> {
+  const orders = memory();
+  for (const [requestId, order] of orders) {
+    if (Date.parse(order.expires_at) < now - RETENTION_GRACE_MS) orders.delete(requestId);
+  }
+  return orders;
+}
 
 /** Signing may change signatures, never the quoted message, recipient, or amounts. */
 export function transactionMessageHash(transaction: string): string {
@@ -29,7 +38,9 @@ export async function saveCopyOrder(order: JupiterOrder, token: BuyableToken, si
     expires_at: new Date(Math.min(Date.now() + 60_000, order.expireAt ? order.expireAt * 1000 : Infinity)).toISOString(), stub: order.stub,
   };
   const client = positionClient();
-  if (!client) { memory().set(row.request_id, row); return; }
+  if (!client) { pruneMemoryOrders().set(row.request_id, row); return; }
+  const { error: pruneError } = await client.rpc("prune_expired_copy_orders");
+  if (pruneError) throw new PositionStoreError();
   const { error } = await client.from("copy_orders").insert(row);
   if (error) throw new PositionStoreError();
 }
