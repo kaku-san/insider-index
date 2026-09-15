@@ -45,7 +45,7 @@ Publication uses a stable content hash and an atomic service-only owner RPC: val
 
 `GET /api/people/[id]/portfolio` returns saved `person`, `snapshots`, `indexInput`, `activity`, `annualAggregates`, per-source `ingestion`, completeness/state, catalog observations and `publishedIndex`. Uningested people stay `not-ingested`. Home links to `/p/[stable FMP ID]` and `/indexes/fmp-[hash]`; the person page displays the full saved book including unresolved names and separate derived mappings. `GET /api/published-indexes/[hash]` returns a currently published holdings target; retired trade-only or superseded versions are not live targets.
 
-`GET /api/politician-profiles` reads the persisted top-20 table only (`top-profiles.ts` ranks latest annual closed band midpoints, pins `P000197`, and never invents net-worth, YoY or S&P series). Public reads do not recompute rankings or call FMP. Operator publication is `npm run profiles:publish -- --publish` after applying `202609150003`.
+`GET /api/politician-profiles` reads the persisted top-20 publication through one database snapshot (`top-profiles.ts` ranks latest annual closed band midpoints, pins `P000197`, and never invents net-worth, YoY or S&P series). `stale` becomes true when a saved annual book is newer than the ranking; public reads do not recompute or auto-republish rankings and never call FMP. Operator publication is `npm run profiles:publish -- --publish` after applying `202609150003`.
 
 ## Person portfolio presentation
 

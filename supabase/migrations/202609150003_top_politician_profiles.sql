@@ -84,4 +84,46 @@ end $$;
 
 revoke all on function public.publish_top_politician_profiles(text) from public, anon, authenticated;
 grant execute on function public.publish_top_politician_profiles(text) to service_role;
+
+create function public.read_top_politician_profiles() returns jsonb
+language sql stable security definer set search_path = public, pg_temp as $$
+  with publication as (
+    select payload, saved_at, true as published
+    from fmp_store_state
+    where id = 'top-politician-profiles'
+    union all
+    select '{}'::jsonb, null::timestamptz, false
+    where not exists(select 1 from fmp_store_state where id = 'top-politician-profiles')
+  ), profiles as (
+    select
+      coalesce(jsonb_agg(payload order by list_order), '[]'::jsonb) as payload,
+      count(*)::integer as listed,
+      coalesce(bool_or(person_id = 'P000197'), false) as pelosi_pinned
+    from top_politician_profiles
+  )
+  select jsonb_build_object(
+    'source', 'fmp',
+    'storage', 'supabase',
+    'methodology', 'holding-band-midpoints',
+    'universeSize', coalesce((publication.payload->>'universeSize')::integer, 0),
+    'listed', profiles.listed,
+    'pelosiPinned', profiles.pelosi_pinned,
+    'published', publication.published or profiles.listed > 0,
+    'savedAt', publication.saved_at,
+    'stale', publication.saved_at is not null and exists(
+      select 1 from book_snapshots where saved_at > publication.saved_at
+    ),
+    'profiles', profiles.payload,
+    'netWorth', null,
+    'netWorthReason', coalesce(publication.payload->>'netWorthReason', 'no-verified-net-worth-series'),
+    'yearOverYearReturn', null,
+    'yearOverYearReturnReason', coalesce(publication.payload->>'yearOverYearReturnReason', 'no-dated-holdings-price-series'),
+    'sp500Overlay', null,
+    'sp500OverlayReason', coalesce(publication.payload->>'sp500OverlayReason', 'no-benchmark-series')
+  )
+  from publication cross join profiles
+$$;
+
+revoke all on function public.read_top_politician_profiles() from public, anon, authenticated;
+grant execute on function public.read_top_politician_profiles() to service_role;
 commit;

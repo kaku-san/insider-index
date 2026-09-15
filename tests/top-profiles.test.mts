@@ -146,15 +146,19 @@ function database(respond: (url: URL, init?: RequestInit) => unknown) {
   } }, auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-test("GET reads the persisted table only and keeps omitted series honest", async () => {
+test("GET reads one persisted publication snapshot and keeps omitted series honest", async () => {
   const profile = rankPoliticianProfiles([row(PINNED_PERSON_ID, "Nancy Pelosi", 100)]).profiles[0];
   const requests: string[] = [];
   const handler = createTopProfilesHandler(createStoredPeopleService(database((url) => {
     requests.push(url.pathname);
-    if (url.pathname.endsWith("top_politician_profiles")) return [{ list_order: 1, person_id: PINNED_PERSON_ID, payload: profile }];
-    if (url.pathname.endsWith("fmp_store_state")) {
-      return { payload: { universeSize: 540, netWorthReason: NO_NET_WORTH_SERIES, yearOverYearReturnReason: NO_YOY_SERIES, sp500OverlayReason: NO_SP_OVERLAY_SERIES }, saved_at: "2026-09-15" };
-    }
+    if (url.pathname.endsWith("rpc/read_top_politician_profiles")) return {
+      source: "fmp", storage: "supabase", methodology: "holding-band-midpoints",
+      universeSize: 540, listed: 1, pelosiPinned: true, published: true,
+      savedAt: "2026-09-15", stale: false, profiles: [profile],
+      netWorth: null, netWorthReason: NO_NET_WORTH_SERIES,
+      yearOverYearReturn: null, yearOverYearReturnReason: NO_YOY_SERIES,
+      sp500Overlay: null, sp500OverlayReason: NO_SP_OVERLAY_SERIES,
+    };
     throw new Error(`unexpected ${url.pathname}`);
   })));
   const response = await handler();
@@ -164,9 +168,10 @@ test("GET reads the persisted table only and keeps omitted series honest", async
   assert.equal(body.published, true);
   assert.equal(body.listed, 1);
   assert.equal(body.universeSize, 540);
+  assert.equal(body.stale, false);
   assert.equal(body.profiles[0].person.id, PINNED_PERSON_ID);
   omitted(body);
-  assert.ok(requests.every((path) => path.endsWith("top_politician_profiles") || path.endsWith("fmp_store_state")));
+  assert.deepEqual(requests, ["/rest/v1/rpc/read_top_politician_profiles"]);
 });
 
 test("storage failures stay 502 without leaking upstream text", async () => {
@@ -238,6 +243,16 @@ test("owner SQL publishes atomically, requires Pelosi, and refuses invented seri
     await assert.rejects(db.query("select publish_top_politician_profiles($1)", [JSON.stringify(invented)]), /invented series not allowed/);
     await db.query("select publish_top_politician_profiles($1)", [document([slim("A000001", 1, 1, false), slim(PINNED_PERSON_ID, 2, 2)])]);
     await db.query("select publish_top_politician_profiles($1)", [document([slim(PINNED_PERSON_ID, 3, 1)])]);
+    const current = await db.query<{ read_top_politician_profiles: Record<string, unknown> }>("select read_top_politician_profiles()");
+    assert.equal(current.rows[0].read_top_politician_profiles.stale, false);
+    assert.equal(current.rows[0].read_top_politician_profiles.listed, 1);
+    assert.deepEqual((current.rows[0].read_top_politician_profiles.profiles as { person: { id: string } }[])[0].person.id, PINNED_PERSON_ID);
+    await db.exec("reset role");
+    await db.query("insert into source_documents(id,person_id,period,payload) values($1,$2,'2025-12-31',$3)", ["new-document", PINNED_PERSON_ID, {}]);
+    await db.query("insert into book_snapshots(id,person_id,document_id,complete,period,payload,saved_at) values($1,$2,$3,false,'2025-12-31',$4,now() + interval '1 second')", ["new-snapshot", PINNED_PERSON_ID, "new-document", {}]);
+    await db.exec("set role service_role");
+    const stale = await db.query<{ read_top_politician_profiles: Record<string, unknown> }>("select read_top_politician_profiles()");
+    assert.equal(stale.rows[0].read_top_politician_profiles.stale, true);
     await db.exec("reset role");
     const rows = await db.query<{ person_id: string; list_order: number; pinned: boolean; n: number }>("select person_id, list_order, pinned from top_politician_profiles order by list_order");
     assert.equal(rows.rows.length, 1);
