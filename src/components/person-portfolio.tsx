@@ -5,7 +5,6 @@ import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { PersonAvatar } from "./person-avatar";
 import { EquityCurve, PortfolioDonut } from "./portfolio-charts";
 import { Icon } from "./social/icon";
-import { VaultInvest } from "./vault-invest";
 import type { BacktestPoint } from "@/lib/disclosures/types";
 import styles from "./person-portfolio.module.css";
 
@@ -64,15 +63,13 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
       <div className={styles.content}>{children}</div>
       <aside id="invest" className={styles.rail} aria-labelledby="invest-title">
         <div className={styles.invest}>
-          <span className={styles.badge}><Icon name="clock" size={13} />Vault not live</span>
-          <h2 id="invest-title">Invest in this index</h2>
-          <p>One investment. A share of the index.</p>
-          <div className={styles.flow}><span>USDC</span><Icon name="arrow" size={18} /><span>Index shares</span></div>
-          <p id="invest-blocker">No live, execution-approved share-token vault is connected. Deposits and signing are unavailable.</p>
-          <button type="button" className={styles.investButton} disabled aria-describedby="invest-blocker">Invest in this index</button>
+          <span className={styles.badge}><Icon name="eye" size={13} />Research only</span>
+          <h2 id="invest-title">Research this book</h2>
+          <p id="invest-blocker">Disclosed holdings and model targets are not executable baskets. Basket buying, deposits and signing are unavailable.</p>
+          <button type="button" className={styles.investButton} disabled aria-describedby="invest-blocker">Basket buying unavailable</button>
+          <Link className={styles.sourceLink} href="/feed">Copy one print from the feed</Link>
           <PersonFollow id={id} />
-          <p className={styles.finePrint}>When an index vault launches, USDC will buy its share token—not individual stock tokens in your wallet. The devnet test below does not track this person.</p>
-          <VaultInvest />
+          <p className={styles.finePrint}>The feed is a separate disclosure tape. A copy trade buys or sells one catalog-listed stock token, not this model or index shares.</p>
         </div>
         <p className={styles.railNote}><Icon name="shield" size={16} />Public disclosures are delayed and may be incomplete. Tracking does not imply affiliation or endorsement.</p>
       </aside>
@@ -101,7 +98,7 @@ export function AllocationPanel({ allocations = [], children }: {
   return <section className={styles.panel} aria-labelledby="allocation-title">
     <div className={styles.sectionHead}><h2 id="allocation-title">Holdings distribution</h2><span className={styles.badge}>Published target</span></div>
     {allocations.length ? <>
-      <p className={styles.caption}>Published index weights, not the person’s current ownership. Buys and sales both contribute to this separate activity model.</p>
+      <p className={styles.caption}>Published model weights, not the person’s current ownership. Read the source methodology; trades never rewrite saved annual holdings.</p>
       <div className={styles.allocation}>
         <PortfolioDonut title="Published index target" holdings={allocations.map((item) => ({ ticker: item.ticker, weightPct: item.weightBps / 10000, venueSymbol: null, valueUsd: 0 }))} />
         {children}

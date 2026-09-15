@@ -2,7 +2,7 @@
 
 Disclosure-to-trade scaffold for the Solana Stocklana hackathon.
 
-**Disclosures → full disclosed books → model indexes → one native Symmetry V3 vault/share mint per index (not yet open).** Individual user-signed copy trades remain a separate fallback.
+**Track A W0: copy one print from `/feed`, sign with Privy, execute through Jupiter, save the receipt.** Full disclosed books and model indexes remain research-only; basket Buy is unavailable. [W0 launch checklist and receipt contract](docs/track-a-w0.md).
 
 This repository is a Next.js App Router app. **Live product:** [https://stocklana-nine.vercel.app](https://stocklana-nine.vercel.app). The existing Barely Stable / Hetzner deployment is documented below. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 
@@ -15,7 +15,7 @@ In V1:
 - **AInvest Congressional Trades** remains the primary House/Senate **legacy tape** source (`AINVEST_API_KEY`, free tier)
 - Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
 - Home is **indexes first**: published FMP holdings models, then the saved person directory. The raw SEC/AInvest tape remains `/feed`; legacy copy/index routes retain their own readiness gates.
-- Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. The "too thin" gate applies only to **Buy this index**; a profile renders with one holding
+- Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. A profile renders with one holding; basket buying remains unavailable regardless of book size
 - Fallback when a basket is too thin: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
 - One-trade copying remains available separately. Native index entry is disabled until deployer setup, settlement and claim-recovery evidence pass
@@ -53,7 +53,7 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | Native indexes | `src/lib/index-vaults/adapter-contract.ts`; SDK `1.0.22`, read-only builders, durable local journals, public funds and USDC exits disabled. No second share mint. |
 | RPC | Helius URL helper + `@solana/kit` `createSolanaRpc`; browser reaches Helius via `POST /api/rpc` without seeing the key |
 | Cache | `src/lib/cache.ts` in-process memo (TTL, stale-while-revalidate); `src/instrumentation.ts` warms the tape at boot |
-| Persistence | Supabase saved FMP books + immutable holdings targets; in-memory legacy positions when keys are absent |
+| Persistence | Supabase saved FMP books + immutable holdings targets + copy order contexts/receipts; production copy execution requires service-role storage, never memory fallback |
 | Buy gate | `src/lib/allowlist.ts` — `resolveBuyableMint()` against the catalog; no hand list |
 
 API routes:
@@ -68,7 +68,8 @@ API routes:
 - `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
 - `GET /api/indexes` lists model indexes (crowd first) and explicit unavailable native-position status. Legacy `POST /api/indexes/quote` and `/execute` now return `503` with native release blockers; no fabricated transaction or receipt
 - `POST /api/quote` — Jupiter `/order`, catalog-enforced (`403` for a mint outside the catalog)
-- `POST /api/execute` — Jupiter `/execute`, then record a position
+- `POST /api/execute` — verify the saved quote's wallet, expiry and transaction message, Jupiter `/execute`, then save an idempotent copy receipt (explicit warning if a confirmed fill cannot be persisted)
+- `GET /api/positions/copies?wallet=<Solana public key>` — latest 100 saved copy receipts for a public wallet, no-store; no current balances or NAV
 - `GET /api/positions?wallet=<Solana public key>` — confirmed on-chain share balance for the existing devnet test vault only (no-store); missing/invalid wallet returns 400, RPC/identity failures return 503, never an inferred zero. No NAV or fill-derived balances. See `src/lib/index-vaults/devnet-positions.ts`.
 
 UI routes:
@@ -78,8 +79,8 @@ UI routes:
 - `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges
 - `/indexes/[id]` model allocation, native lifecycle/fee disclosure and disabled investment panel; no holder rebalance button
 - `/disclosures/[id]` inspect
-- `/trade/[id]` one-print copy + approve/sign stub
-- `/positions` connected live wallet’s devnet vault shares; exact token units, observation slot and explicit unavailable dollar valuation (not Jupiter receipts)
+- `/trade/[id]` one-print live Jupiter quote + explicit Privy approval/signature
+- `/positions` connected wallet’s saved copy receipts, no invented balances or NAV; existing devnet share diagnostic is separate and opt-in
 
 ## FMP person backend
 
@@ -114,7 +115,7 @@ Refresh the offline snapshot with `npm run catalog:snapshot` (writes `src/lib/ve
 
 ## Compliance
 
-Stocklana is **not available to persons in the United States, United Kingdom, Canada, or Australia**. The eligibility banner is rendered on every page. The trade ticket also requires an explicit self-attestation before the stub signature is accepted.
+Stocklana is **not available to persons in the United States, United Kingdom, Canada, or Australia**. The eligibility banner is rendered on every page. The trade ticket requires explicit self-attestation before signing. This is UX-only, not server-enforced geo or identity verification.
 
 xStocks and Backpack `.US` tokens are tokenized stock exposures, not listed equity. Individual trades and native investor actions require user authorization. Future native fund rebalances use eligible keeper tasks, not holder signatures; unattended execution remains disabled.
 
@@ -143,9 +144,9 @@ Without keys, saved-data surfaces report unavailable data rather than inventing 
 
 ### Live product workspace
 
-Home shows saved FMP people and published trade targets only. Search covers the entire returned directory before the display limit; the show-more controls expose the remaining rows. Profiles use provider portraits and show the full annual book before separate trade-derived targets. `/positions` is scoped to the connected wallet; opening the wallet address menu offers copy, positions and disconnect without logging out on a normal click.
+Home shows saved FMP people and published holdings targets. Search covers the entire returned directory before the display limit; the show-more controls expose the remaining rows. Profiles use provider portraits and show the full annual book before separate published model targets. `/positions` is scoped to the connected wallet; opening the wallet address menu offers copy, positions and disconnect without logging out on a normal click.
 
-Investment is **USDC → index share token**, not individual stock swaps. Published FMP models still have no execution-approved vault. Person and index Invest rails now offer a separately labeled **devnet execution-test preview** for the existing vault, never a claim that it tracks that person. `/api/vaults/devnet/preview` reads native identity, holdings, share supply, wallet shares and blockers; `/api/vaults/devnet/prepare` returns `503` without signing payloads until native readiness is verified. Wallet signing is explicitly devnet-scoped and code-gated off; no broadcast route, mainnet vault release, or new vault is introduced. Legacy basket quote/execute remain `503`. See [devnet Invest contract and verification](src/lib/index-vaults/devnet-invest.md) and [UI direction](docs/ui-design.md).
+W0 trading is **one catalog-listed stock token per user-signed swap**, not basket ownership. Home/person/index CTAs are research-only with a primary link to `/feed`; devnet investment previews are not promoted on these surfaces. Native vault APIs remain unchanged and fail closed. Legacy basket quote/execute remain `503`. See [W0 launch checklist](docs/track-a-w0.md), [native integration status](src/lib/index-vaults/README.md) and [UI direction](docs/ui-design.md).
 
 ```bash
 npm run build
@@ -167,15 +168,15 @@ Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.e
 - `AINVEST_API_KEY` — AInvest Congressional Trades (primary legacy congress tape source); crawl width `AINVEST_UNIVERSE=wide|catalog|full`, `AINVEST_TICKERS`, depth `AINVEST_PAGES_PER_TICKER`, `AINVEST_PAGE_SIZE`, `AINVEST_CONCURRENCY`, `AINVEST_TICKER_TTL_MINUTES`
 - `XSTOCKS_CATALOG_DISABLED` / `BACKPACK_CATALOG_DISABLED` — `1` drops an issuer from the buy catalog
 - `FORM4API_KEY` — Form4API fallback (insiders + House PTRs)
-- `STOCKLANA_ALLOW_MOCKS` — `1`/`0` to force labelled fixtures on/off (default: dev on, prod off)
-- `JUPITER_MODE` — `live`/`stub` override
+- `STOCKLANA_ALLOW_MOCKS` — `1`/`0` to force labelled fixtures on/off in development; always off in production
+- `JUPITER_MODE` — `live`/`stub` development override; always live in production
 - `NEXT_PUBLIC_PRIVY_APP_ID` — Privy wallet (`NEXT_PUBLIC_PRIVY_APPID` alias also accepted)
 - `PRIVY_APP_ID` / `PRIVY_APP_SECRET` — Privy server SDK
 - `HELIUS_API_KEY` — builds `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` (public Solana RPC when empty)
 - `JUPITER_API_KEY` — live Jupiter Swap V2 `/order` → `/execute`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` — required with the Supabase URL for production quote contexts and copy receipts; apply `202609150001_copy_positions.sql` before deploying
 
 Do not commit real keys. Live vs fixture:
 

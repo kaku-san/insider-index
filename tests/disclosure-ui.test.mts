@@ -26,6 +26,7 @@ const directory = Array.from({ length: 540 }, (_, i) => ({ ...person, id: `A${St
 test("home renders index-first discovery, portraits, honest empty models and a bounded full directory", () => {
   const html = renderToStaticMarkup(createElement(IndexHome, { initialData: { people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" } }));
   assert.match(html, /Everyone is/);
+  assert.match(html, /class="primaryButton" href="\/feed">Copy one print/);
   assert.ok(html.indexOf("The index desk") < html.indexOf("Names worth knowing"));
   assert.match(html, /540 people/);
   assert.match(html, /Show 24 more people/);
@@ -68,15 +69,10 @@ test("person with no saved book does not claim zero holdings or permit a deposit
   const html = renderPerson(book);
   assert.match(html, /No annual book saved yet/);
   assert.match(html, /does not mean the person owns nothing/);
-  assert.match(html, /USDC/);
-  assert.match(html, /Index shares/);
-  assert.match(html, /disabled=""[^>]*>Invest in this index/);
-  assert.match(html, /No live, execution-approved share-token vault/);
-  assert.match(html, /Devnet only · execution test/);
-  assert.match(html, /Preview devnet deposit/);
-  assert.match(html, /disabled=""[^>]*>Sign devnet deposit/);
-  assert.match(html, /separate from the person’s disclosed book/);
-  assert.match(html, /Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8/);
+  assert.match(html, /Research only/);
+  assert.match(html, /disabled=""[^>]*>Basket buying unavailable/);
+  assert.match(html, /href="\/feed">Copy one print from the feed/);
+  assert.doesNotMatch(html, /Preview devnet deposit|Sign devnet deposit|Invest in this index/);
   assert.doesNotMatch(html, /\$0|Deposit successful|privy-stub:/);
   assert.ok(html.indexOf("Portfolio performance") < html.indexOf("Current holdings"));
   assert.ok(html.indexOf("Current holdings") < html.indexOf("Holdings distribution"));

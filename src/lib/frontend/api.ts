@@ -1,4 +1,4 @@
-export const PREVIEW_MODE = process.env.NEXT_PUBLIC_STOCKLANA_PREVIEW === "1";
+export const PREVIEW_MODE = process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_STOCKLANA_PREVIEW === "1";
 export async function readApi<T>(url: string, signal?: AbortSignal): Promise<T> {
   if (PREVIEW_MODE) {
     const { previewRead } = await import("./preview-data");

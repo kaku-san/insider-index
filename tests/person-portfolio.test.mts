@@ -45,8 +45,9 @@ test("published weights stay separate from the entire annual book and never enab
   assert.match(html, /Published index target allocation: AAA 75\.0 percent, BBB 25\.0 percent/);
   const annual = html.slice(html.indexOf('id="holdings-title"'), html.indexOf('id="allocation-title"'));
   assert.doesNotMatch(annual, /75\.00%|25\.00%/);
-  assert.match(html, /disabled="" aria-describedby="invest-blocker">Invest in this index/);
-  assert.match(html, /No live, execution-approved share-token vault/);
+  assert.match(html, /disabled="" aria-describedby="invest-blocker">Basket buying unavailable/);
+  assert.match(html, /Research only/);
+  assert.match(html, /href="\/feed">Copy one print from the feed/);
 });
 
 test("activity uses transaction order and preserves nullable, open-ended ranges and instrument types", () => {
@@ -81,7 +82,7 @@ test("legacy insider portfolios use the same uncluttered layout and keep unrouta
   const html = renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(ProfileView, { id: "insider-test", initialData })));
   assert.match(html, /UNMAPPED/);
   assert.match(html, /Up to \$5,000/);
-  assert.match(html, /Invest in this index/);
+  assert.match(html, /Basket buying unavailable/);
   assert.match(html, /Holdings distribution/);
   assert.doesNotMatch(html, /Copy latest|Buy the index|Tradable basket|followers|role="switch"/);
 });

@@ -18,23 +18,24 @@ export function isProduction(): boolean {
 /**
  * Whether labelled mock fixtures may be served when a live source is missing
  * or fails. Default: on in development, off in production. Override with
- * STOCKLANA_ALLOW_MOCKS=1|0.
+ * STOCKLANA_ALLOW_MOCKS=1|0 in development only.
  *
  * Production never invents politicians or insiders: without a live source the
  * lane is empty and /api/disclosures reports the lane as "off".
  */
 export function mocksAllowed(): boolean {
-  return flag(process.env.STOCKLANA_ALLOW_MOCKS) ?? !isProduction();
+  return !isProduction() && (flag(process.env.STOCKLANA_ALLOW_MOCKS) ?? true);
 }
 
 export type JupiterMode = "live" | "stub";
 
 /**
  * Jupiter Swap V2 /order + /execute work without an API key (rate-limited).
- * A key raises limits. JUPITER_MODE=live|stub forces a mode; otherwise live
+ * Production is always live. A key raises limits. JUPITER_MODE=live|stub forces a development mode; otherwise live
  * when a key is present or in production, stub in development.
  */
 export function jupiterMode(): JupiterMode {
+  if (isProduction()) return "live";
   const forced = process.env.JUPITER_MODE?.trim().toLowerCase();
   if (forced === "live" || forced === "stub") return forced;
   if (process.env.JUPITER_API_KEY?.trim()) return "live";
