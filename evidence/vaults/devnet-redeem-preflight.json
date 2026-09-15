@@ -1,0 +1,41 @@
+{
+  "network": "devnet",
+  "identity": {
+    "rpc": "https://api.devnet.solana.com",
+    "genesis": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+    "program": "BASKT7aKd8n7ibpUbwLP3Wiyxyi3yoiXsxBk4Hpumate",
+    "vault": "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8",
+    "mint": "Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A",
+    "owner": "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+    "decimals": 6
+  },
+  "observedAt": "2026-09-15T06:05:41.608Z",
+  "requestedSharesRaw": "1",
+  "observation": {
+    "observedSlot": 498626560,
+    "walletLamports": 4807493578,
+    "shareSupplyRaw": "0",
+    "shareBalanceRaw": "0",
+    "spendableAtaSharesRaw": "0",
+    "ownerIntent": "8YE4XGm767rVxFhEYr8snLDxgRf1G9YLCPwPBKD3QBCL",
+    "activeVaultRebalance": false,
+    "keepTokens": [
+      "So11111111111111111111111111111111111111112",
+      "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT"
+    ]
+  },
+  "mode": "native-in-kind",
+  "status": "BLOCKED",
+  "blockers": [
+    "EXISTING_OWNER_INTENT_RECONCILIATION_REQUIRED",
+    "NO_WALLET_SHARES",
+    "INSUFFICIENT_SPENDABLE_SHARES",
+    "NATIVE_REDEEM_ROUNDTRIP_UNVERIFIED"
+  ],
+  "diagnostic": null,
+  "nativeRedeemVerified": false,
+  "usdcExit": false,
+  "transactionsSigned": 0,
+  "transactionsBroadcast": 0,
+  "redeemCompleted": false
+}

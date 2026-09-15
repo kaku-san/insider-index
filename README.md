@@ -93,6 +93,10 @@ Only a complete, unambiguous annual document version can supply `indexInput` (st
 
 A profile does not guarantee an annual book. `npm run holdings:ingest -- --save` ingests missing annual snapshots, including Pelosi (`P000197`), without requesting trades. Failed/partial sources stay labelled. `npm run indexes:publish -- --publish` builds **holdings-based** models from the latest saved annual document, resolving names with archived FMP candidates or that person’s saved symbol evidence. Target weights use holding value-band midpoints, otherwise labelled equal weights, xStock first then Backpack. Unresolved and nontradable names stay on the full book. Trades may supply identity evidence later, never remaining balances. Models are not funded vaults, historical performance or execution-approved baskets. Owner migration `202609140004_holdings_indexes.sql` adds atomic holdings publication and retires trade-only versions without deleting evidence; apply it before publishing. See the FMP contract for dry-run behavior and limitations.
 
+## Devnet vault redemption diagnostic
+
+`npm run vault:redeem:preflight -- --shares-raw 1` inspects the existing execution-test vault only. It fails closed with no signing/broadcast, no new vault and no USDC conversion. See [native redemption procedure and dated readback](docs/devnet-vault-redeem.md). This does not enable app withdrawals or change public investment gates.
+
 ## Buy catalog
 
 **Buy only if the output mint is in the Solana catalog.** The catalog is read live (keyless, memoised hourly) from the two issuers whose tokens Jupiter can route, and falls back to the committed snapshot when an issuer is unreachable:
