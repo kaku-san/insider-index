@@ -39,8 +39,6 @@ export async function saveCopyOrder(order: JupiterOrder, token: BuyableToken, si
   };
   const client = positionClient();
   if (!client) { pruneMemoryOrders().set(row.request_id, row); return; }
-  const { error: pruneError } = await client.rpc("prune_expired_copy_orders");
-  if (pruneError) throw new PositionStoreError();
   const { error } = await client.from("copy_orders").insert(row);
   if (error) throw new PositionStoreError();
 }

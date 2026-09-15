@@ -50,7 +50,7 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
   const catalog = snapshotCatalog(), token = catalog.tokens.find(p => p.issuer === "xstock")!;
   await memo("catalog:merged", { ttlMs: 600_000 }, async () => catalog);
   const signer = Keypair.generate(), wallet = signer.publicKey.toBase58();
-  let counter = 0, executeCalls = 0, storageFails = false, receiptWriteFails = false, jupiterFails = false, omitAmounts = false, pruneRpcMissing = false;
+  let counter = 0, executeCalls = 0, pruneCalls = 0, storageFails = false, receiptWriteFails = false, jupiterFails = false, omitAmounts = false, pruneRpcMissing = false;
   const transactions = new Map<string, VersionedTransaction>();
   t.mock.method(globalThis, "fetch", async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(String(input));
@@ -69,6 +69,7 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
     assert.equal(url.host, "receipts.example.test", "unexpected network request");
     assert.equal(new Headers(init?.headers).get("apikey"), "test-only-service-role");
     if (url.pathname.endsWith("/rpc/prune_expired_copy_orders")) {
+      pruneCalls++;
       if (pruneRpcMissing) return Response.json({ code: "PGRST202", message: "Could not find the function public.prune_expired_copy_orders" }, { status: 404 });
       const { rows } = await db.query<{ deleted_count: bigint }>("select prune_expired_copy_orders() as deleted_count");
       return Response.json(rows[0]?.deleted_count ?? 0);
@@ -91,6 +92,7 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
   const quoteBody = { outputMint: token.mint, usdcAmount: 1, taker: wallet, disclosureId: "print-1" };
   const q = await quote(post("quote", quoteBody));
   assert.equal(q.status, 200);
+  assert.equal(pruneCalls, 1, "quote prunes expired orders once");
   const { order } = await q.json();
   assert.equal(order.mode, "live");
   const tx = transactions.get(order.requestId)!;
