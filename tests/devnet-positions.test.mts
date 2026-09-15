@@ -28,7 +28,7 @@ function fixture(t: TestContext, amounts: bigint[] = []) {
   t.mock.method(connection, "getAccountInfo", async (address: PublicKey) => {
     if (address.toBase58() === DEVNET_TEST_VAULT.vaultAccount) return info(Buffer.from("vault"), key(SYMMETRY_PROGRAM_ID));
     if (address.toBase58() === DEVNET_TEST_VAULT.shareMint) return info(mintData);
-    return null; // No pending intent.
+    return null;
   });
   t.mock.method(native.sdk, "fetchVault", async () => ({ mint: key(DEVNET_TEST_VAULT.shareMint), ownAddress: key(DEVNET_TEST_VAULT.vaultAccount), settings: { creator: key(owner), host: key(owner) } }));
   t.mock.method(connection, "getTokenAccountsByOwner", async (wallet: PublicKey, filter: { mint: PublicKey }, commitment: string) => {
@@ -55,7 +55,6 @@ test("positions execute native account decoding and sum all share accounts exact
   assert.equal(position.source, "native-token-accounts");
   assert.equal(position.navUsd, null);
   assert.equal(position.valueUsd, null);
-  assert.equal(position.nativeIntent, null);
   assert.ok(Number.isFinite(Date.parse(position.observedAt)));
 });
 
@@ -68,12 +67,11 @@ test("no accounts means confirmed zero; re-reading reflects transferred shares",
   assert.equal((await readDevnetPosition(owner, native)).shareBalanceRaw, "0");
 });
 
-test("pending intent lookup failure does not hide owned shares", async t => {
+test("positions do not query optional native intents", async t => {
   const { native } = fixture(t, [3n]);
   const intent = t.mock.method(native, "ownerIntent", async () => { throw new Error("intent RPC unavailable"); });
   const result = await readDevnetPosition(owner, native);
   assert.equal(result.shareBalanceRaw, "3");
-  assert.equal(result.nativeIntent, null);
   assert.equal(intent.mock.callCount(), 0);
 });
 

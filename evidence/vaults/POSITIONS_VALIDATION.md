@@ -6,7 +6,7 @@ Composed `fm/stocklana-vault-wire-f1` at `922242d07d625d7eacc2e45bf5651a7c5e9054
 
 ## Local checks
 
-- `npm test`: 128 passed, including 14 behavioral positions tests covering binary token decoding, multiple accounts, transfers, exact large values, zero accounts, pending intents, invalid selectors and native read failures.
+- `npm test`: 128 passed, including 14 behavioral positions tests covering binary token decoding, multiple accounts, transfers, exact large values, zero accounts, optional-intent isolation, invalid selectors and native read failures.
 - `npm run typecheck`: passed after regenerating stale Next route types.
 - `npm run build`: passed.
 - ESLint over every changed TypeScript/TSX file: passed.
@@ -15,6 +15,6 @@ Composed `fm/stocklana-vault-wire-f1` at `922242d07d625d7eacc2e45bf5651a7c5e9054
 
 ## Live read-only evidence
 
-`devnet-share-position.json` is the actual successful native read for the public deployer address at confirmed slot 498627408. Zero owned shares and a pending native intent were observed independently; the intent is not counted as minted shares. This is not evidence of a settled deposit, claim recovery, NAV, or successful vault roundtrip.
+`devnet-share-position.json` is the actual successful native share read for the public deployer address at confirmed slot 498627408. Zero owned shares were observed. This is not evidence of a settled deposit, claim recovery, NAV, or successful vault roundtrip.
 
 No browser, signer, airdrop, transaction broadcast, mainnet RPC, or second vault was used. Public funding and signing gates remain closed. No-mistakes pipeline validation follows the committed implementation handoff.

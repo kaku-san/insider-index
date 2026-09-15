@@ -8,7 +8,6 @@ export interface DevnetVaultPosition {
   observedSlot: number;
   observedAt: string;
   source: "native-token-accounts";
-  nativeIntent: string | null;
   navUsd: null;
   valueUsd: null;
 }

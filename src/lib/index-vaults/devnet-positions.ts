@@ -22,7 +22,7 @@ export async function readDevnetPosition(owner: string, native = devnetNativeRea
     identity: DEVNET_TEST_VAULT, owner, shareBalanceRaw: position.shareBalanceRaw,
     shareDecimals: position.shareDecimals, observedSlot: position.observedSlot,
     observedAt: new Date().toISOString(), source: "native-token-accounts",
-    nativeIntent: null, navUsd: null, valueUsd: null,
+    navUsd: null, valueUsd: null,
   };
 }
 

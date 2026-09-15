@@ -43,7 +43,6 @@ function WalletPositions({ address }: { address: string }) {
         <p className={styles.finePrint}>Observed at {position.observedAt} · Confirmed slot {position.observedSlot}</p>
         <p>Vault: <a href={`https://explorer.solana.com/address/${position.identity.vaultAccount}?cluster=devnet`} target="_blank" rel="noreferrer"><code className={styles.mint}>{position.identity.vaultAccount}</code></a></p>
         <p>Share mint: <a href={`https://explorer.solana.com/address/${position.identity.shareMint}?cluster=devnet`} target="_blank" rel="noreferrer"><code className={styles.mint}>{position.identity.shareMint}</code></a></p>
-        {position.nativeIntent && <p role="status">A native operation is pending reconciliation. Its deposits or claims are not added to your share balance. Recovery is not enabled in the app.</p>}
       </section>
     </>}
   </>;
