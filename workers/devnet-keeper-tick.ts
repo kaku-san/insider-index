@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import type { FetchFn } from "@solana/web3.js";
 import type { VaultIdentity } from "../src/lib/index-vaults/adapter-contract.ts";
 import { Journal } from "../src/lib/index-vaults/journal.ts";
 import { rawAmount } from "../src/lib/index-vaults/amounts.ts";
@@ -19,6 +20,7 @@ export const DEVNET_KEEPER_IDENTITY: Readonly<VaultIdentity> = Object.freeze({
   indexId: "execution-test-stocklana-devnet", deploymentGeneration: 1, metadataHash: "unverified:test-metadata-only",
 });
 export const DEVNET_KEEPER_RPC = "https://api.devnet.solana.com";
+export const DEVNET_KEEPER_RPC_TIMEOUT_MS = 15_000;
 /** Deliberately read-only dependency surface; no builders, signer, sender or configurable RPC. */
 export interface DevnetTickReader {
   network: string;
@@ -26,8 +28,8 @@ export interface DevnetTickReader {
   observe(previous?: KeeperObservation): Promise<KeeperObservation>;
   balance(): Promise<{ slot: number; lamports: number }>;
 }
-export function devnetTickReader(): DevnetTickReader {
-  const connection = readOnlyConnection(DEVNET_KEEPER_RPC);
+export function devnetTickReader(signal: AbortSignal = AbortSignal.timeout(DEVNET_KEEPER_RPC_TIMEOUT_MS), fetch?: FetchFn): DevnetTickReader {
+  const connection = readOnlyConnection(DEVNET_KEEPER_RPC, signal, fetch);
   const native = new NativeVaultBuilders(connection, "devnet");
   return {
     network: native.network,

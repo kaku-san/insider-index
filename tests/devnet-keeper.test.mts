@@ -4,9 +4,9 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { PublicKey } from "@solana/web3.js";
-import { planKeeperObservation } from "../workers/stocklana-keeper.ts";
+import { keeperConfigurationHash, planKeeperObservation } from "../workers/stocklana-keeper.ts";
 import type { KeeperSnapshot } from "../workers/stocklana-keeper.ts";
-import { DEVNET_KEEPER_IDENTITY, runDevnetKeeperTick } from "../workers/devnet-keeper-tick.ts";
+import { DEVNET_KEEPER_IDENTITY, devnetTickReader, runDevnetKeeperTick } from "../workers/devnet-keeper-tick.ts";
 import type { DevnetTickReader } from "../workers/devnet-keeper-tick.ts";
 import type { StrategyTickInput } from "../workers/strategy-service.ts";
 import { GENESIS } from "../src/lib/index-vaults/symmetry-adapter.ts";
@@ -95,6 +95,33 @@ test("configuration drift persists across restart and blocks strategy change", (
   assert.equal(repeat.strategy.decision, "WAIT");
 }));
 
+test("runtime accounting transitions do not latch configuration drift", () => {
+  const key = new PublicKey(new Uint8Array(32).fill(7));
+  const settings = {
+    creator: key, host: key, fees: { hostDepositFeeBps: 25 }, bountyBalance: 1,
+    highWaterMark: 2, activeRebalance: 3, activeWithdraws: 4, activeManagements: 5,
+    lastAutomationExecutionTimestamp: 6, managersLastUpdateTimestamp: 7, feesLastUpdateTimestamp: 8,
+    scheduleLastUpdateTimestamp: 9, automationLastUpdateTimestamp: 10, lpLastUpdateTimestamp: 11,
+    metadataLastUpdateTimestamp: 12, forceRebalanceLastUpdateTimestamp: 13,
+    customRebalanceLastUpdateTimestamp: 14, addTokenLastUpdateTimestamp: 15,
+    updateWeightsLastUpdateTimestamp: 16, makeDirectSwapLastUpdateTimestamp: 17, creationTimestamp: 18,
+  };
+  const fees = {
+    host: key.toBase58(), hostEntryFeeBps: 25, hostExitFeeBps: 0, stocklanaFeesValid: true,
+    protocol: { depositFlatBps: 1, depositFeeShareBps: 2, withdrawFlatBps: 3, withdrawFeeShareBps: 4, tradeBps: 5 },
+    accruedNativeUnits: { host: "1", creator: "2", managers: "3", protocol: "4" },
+    bountyBondRaw: "10", representation: "native-accounting-units; not assumed immediately spendable shares or USDC" as const,
+  };
+  const vaultState = { settings, numTokens: 1, composition: [{ mint: key, amount: 100, weight: 10_000, active: 1, oracleAggregator: {} }] };
+  const initial = keeperConfigurationHash(vaultState as never, fees);
+  const transitioned = keeperConfigurationHash({ ...vaultState, settings: { ...settings, bountyBalance: 99, activeRebalance: 30, lastAutomationExecutionTimestamp: 60 }, composition: [{ ...vaultState.composition[0], amount: 999 }] } as never,
+    { ...fees, accruedNativeUnits: { host: "9", creator: "8", managers: "7", protocol: "6" } });
+  assert.equal(transitioned, initial);
+  assert.ok(!planKeeperObservation({ ...snapshot(), configHash: transitioned }, planKeeperObservation({ ...snapshot(), configHash: initial })).blocked.includes("CONFIG_CHANGED_REATTEST_REQUIRED"));
+  const changed = keeperConfigurationHash({ ...vaultState, settings: { ...settings, fees: { hostDepositFeeBps: 50 } } } as never, fees);
+  assert.notEqual(changed, initial);
+});
+
 test("wrong network/genesis fail before observing vault or balance", () => temporary(async path => {
   for (const wrong of [false, true]) {
     const source = reader();
@@ -128,6 +155,15 @@ test("exclusive lease prevents concurrent ticks, and a failed tick releases it",
   await start;
   await assert.rejects(runDevnetKeeperTick(reader(), path), { code: "EEXIST" });
   release(); await first;
+  assert.equal((await runDevnetKeeperTick(reader(), path)).broadcasts, 0);
+}));
+
+test("bounded RPC abort releases the keeper lease", () => temporary(async path => {
+  const signal = AbortSignal.timeout(10);
+  const stalledFetch = (_input: unknown, init?: RequestInit) => new Promise<never>((_resolve, reject) => {
+    init?.signal?.addEventListener("abort", () => reject(init.signal?.reason), { once: true });
+  });
+  await assert.rejects(runDevnetKeeperTick(devnetTickReader(signal, stalledFetch as never), path), error => error === signal.reason);
   assert.equal((await runDevnetKeeperTick(reader(), path)).broadcasts, 0);
 }));
 

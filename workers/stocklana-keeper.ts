@@ -1,9 +1,11 @@
 import { isRebalanceRequired } from "@symmetry-hq/sdk";
+import type { Vault } from "@symmetry-hq/sdk";
 import type { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import type { VaultIdentity } from "../src/lib/index-vaults/adapter-contract.ts";
 import type { VaultRegistry } from "../src/lib/index-vaults/registry.ts";
 import { Journal } from "../src/lib/index-vaults/journal.ts";
 import { hashObject } from "../src/lib/index-vaults/amounts.ts";
+import { feeSnapshot } from "../src/lib/index-vaults/fees.ts";
 
 export interface KeeperIntentObservation {
   address: string; owner: string; type: string; action: string;
@@ -19,6 +21,26 @@ export interface KeeperSnapshot {
 export interface KeeperObservation extends KeeperSnapshot {
   at: string; next: string; blocked: string[];
 }
+type NativeFeeSnapshot = ReturnType<typeof feeSnapshot>;
+export function keeperConfigurationHash(vault: Pick<Vault, "settings" | "composition" | "numTokens">, fees: NativeFeeSnapshot): string {
+  const {
+    bountyBalance, highWaterMark, activeRebalance, activeWithdraws, activeManagements,
+    lastAutomationExecutionTimestamp, managersLastUpdateTimestamp, feesLastUpdateTimestamp,
+    scheduleLastUpdateTimestamp, automationLastUpdateTimestamp, lpLastUpdateTimestamp,
+    metadataLastUpdateTimestamp, forceRebalanceLastUpdateTimestamp, customRebalanceLastUpdateTimestamp,
+    addTokenLastUpdateTimestamp, updateWeightsLastUpdateTimestamp, makeDirectSwapLastUpdateTimestamp,
+    creationTimestamp, ...settings
+  } = vault.settings;
+  const { accruedNativeUnits, representation, ...feeConfiguration } = fees;
+  return hashObject({
+    fees: feeConfiguration,
+    settings: JSON.parse(JSON.stringify(settings)),
+    composition: vault.composition.slice(0, vault.numTokens).map(asset => ({
+      mint: asset.mint.toBase58(), weight: asset.weight, active: asset.active,
+      oracleAggregator: JSON.parse(JSON.stringify(asset.oracleAggregator)),
+    })),
+  });
+}
 export function planKeeperObservation(snapshot: KeeperSnapshot, previous?: Pick<KeeperObservation, "configHash"> & { blocked?: string[] }): KeeperObservation {
   const blocked = ["BROADCAST_DISABLED", "NATIVE_RELEASE_TESTS_NOT_RUN"];
   if (previous && (previous.configHash !== snapshot.configHash || previous.blocked?.includes("CONFIG_CHANGED_REATTEST_REQUIRED"))) blocked.push("CONFIG_CHANGED_REATTEST_REQUIRED");
@@ -32,7 +54,7 @@ export function planKeeperObservation(snapshot: KeeperSnapshot, previous?: Pick<
 /** Read exactly the supplied identity. Caller must supply registry scope or the fixed devnet test identity. */
 export async function readKeeperObservation(native: NativeVaultBuilders, identity: VaultIdentity, retired: boolean, previous?: KeeperObservation): Promise<KeeperObservation> {
   const { vault, mint } = await native.read(identity);
-  const configHash = hashObject({ fees: (await native.fees(identity)).snapshot, settings: JSON.parse(JSON.stringify(vault.settings)), composition: vault.composition.slice(0, vault.numTokens).map(a => ({ mint: a.mint.toBase58(), weight: a.weight, active: a.active, oracleAggregator: JSON.parse(JSON.stringify(a.oracleAggregator)) })) });
+  const configHash = keeperConfigurationHash(vault, feeSnapshot(vault, await native.sdk.fetchGlobalConfig()));
   const intents = await native.sdk.fetchVaultRebalanceIntents(identity.vaultAccount);
   const summaries = intents.map(intent => {
     const chain = intent.chain_data;
