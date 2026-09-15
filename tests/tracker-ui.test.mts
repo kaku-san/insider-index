@@ -12,6 +12,7 @@ register("./support/ui-loader.mjs", import.meta.url);
 const { FmpPerson } = await import("../src/components/fmp-portfolio.tsx");
 const { TrackerIndex } = await import("../src/components/tracker-index.tsx");
 const { TrackerShelf } = await import("../src/components/tracker-shelf.tsx");
+const { TrackerLedger } = await import("../src/components/tracker-portfolio.tsx");
 const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 type Portfolio = NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
 
@@ -142,6 +143,26 @@ test("the tracker index page shows proportions with mint and pool addresses and 
   assert.match(html, /host exit fee 0 bps; native USDC exit verified: no/);
   assert.match(html, /href="\/indexes\/fmp-c{64}"/);
   assert.doesNotMatch(html, /314,903,941|\$314\.9M|Redeem in kind|receive xStocks/);
+});
+
+test("a member with a large filings ledger renders only one bounded page of rows, not the full unpaginated table", () => {
+  const gottheimer = handoff.profiles.find((p) => p.id === "G000583")!;
+  assert.ok(gottheimer.ledger.length > 3000, `expected a large ledger, got ${gottheimer.ledger.length}`);
+  const html = render(createElement(TrackerLedger, { profile: gottheimer }));
+  const bodyRowCount = (html.match(/<tbody>[\s\S]*<\/tbody>/)?.[0].match(/<tr>/g) ?? []).length;
+  assert.equal(bodyRowCount, 50, `first page must render exactly 50 body rows, got ${bodyRowCount} for a ${gottheimer.ledger.length}-row ledger`);
+  assert.match(html, new RegExp(`Rows 1–50 of ${gottheimer.ledger.length.toLocaleString("en-US")} · page 1 of ${Math.ceil(gottheimer.ledger.length / 50)}`));
+  assert.match(html, /<button type="button"[^>]*disabled="">Previous<\/button>/);
+  assert.match(html, /<button type="button"[^>]*>Next<\/button>/);
+  assert.doesNotMatch(html, /<button type="button"[^>]*disabled=""[^>]*>Next<\/button>/);
+});
+
+test("a member with a short ledger shows every row and no pager", () => {
+  const short = handoff.profiles.find((p) => p.ledger.length > 0 && p.ledger.length <= 50)!;
+  const html = render(createElement(TrackerLedger, { profile: short }));
+  const bodyRowCount = (html.match(/<tbody>[\s\S]*<\/tbody>/)?.[0].match(/<tr>/g) ?? []).length;
+  assert.equal(bodyRowCount, short.ledger.length);
+  assert.doesNotMatch(html, /Transaction ledger pages/);
 });
 
 test("the home shelf lists all 20 handoff people with photos, tracker value labels and both links", () => {
