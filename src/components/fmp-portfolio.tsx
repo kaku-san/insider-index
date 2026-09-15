@@ -41,7 +41,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
   const latestFiling = snapshots.map((entry) => entry.filingDate).filter((date): date is string => Boolean(date)).sort().at(-1) ?? null;
 
   return <PortfolioLayout id={id} name={book.person.name} indexName={index ? book.indexName : undefined} image={book.person.image} context={personContext(book.person)}
-    strategy="Track the complete disclosed book, then inspect the mapped Stocklana index separately. Reported trades remain activity—they never overwrite the annual filing."
+    strategy="Track the disclosed book, then inspect the mapped Stocklana index separately. Reported trades remain activity—they never overwrite the annual filing."
     count={snapshot ? snapshot.items.length : null}
     countNote={snapshot ? `${snapshot.year ?? "Undated"} annual filing` : "Annual book unavailable"}
     mappedCount={index?.constituents.length ?? null}
@@ -57,7 +57,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
         <div><h2 id="mapped-holdings-title">Current holdings · published index</h2><p>Saved published target · annual reference {index?.period ?? "unavailable"}. Changing the filing version below does not change this model.</p></div>
         <span className={styles.badge}>{index ? `${index.constituents.length} holdings` : "Not published"}</span>
       </div>
-      {!index ? <div className={styles.empty}><h3>No mapped index is published</h3><p>The full disclosed book is still available below. Stocklana does not invent a ticker, token, or weight when identity mapping is unresolved.</p></div> : <>
+      {!index ? <div className={styles.empty}><h3>No mapped index is published</h3><p>The disclosed book is still available below. Stocklana does not invent a ticker, token, or weight when identity mapping is unresolved.</p></div> : <>
         <TableRegion label="Published index holdings and target weights">
           <table className={`${styles.table} ${styles.holdingsTable}`}>
             <thead><tr><th scope="col">Ticker</th><th scope="col">{index.definition.methodology === "holding-band-midpoints" ? "Value basis" : "Disclosure evidence"}</th><th scope="col" className={styles.number}>Target weight</th></tr></thead>
@@ -86,7 +86,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
 
     <section id="disclosed-book" className={styles.panel} aria-labelledby="holdings-title">
       <div className={styles.sectionHead}>
-        <div><h2 id="holdings-title">Full disclosed book</h2><p>Every row in the selected annual source version</p></div>
+        <div><h2 id="holdings-title">Disclosed book</h2><p>Every row in the selected annual source version</p></div>
         <span className={styles.badge}>Public filing · not live holdings</span>
       </div>
       {!snapshot ? <div className={styles.empty}><h3>{book.state === "annual-source-unavailable" ? "Annual source unavailable" : "No annual book saved yet"}</h3><p>This does not mean the person owns nothing. Reported activity is shown below and is never used to manufacture a missing annual book.</p></div> : <>
@@ -98,7 +98,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
           <FilingLink url={snapshot.sourceUrl} />
         </div>
         <p className={styles.caption}>{snapshot.year ? `Annual reference: ${snapshot.year}-12-31. ` : "Annual reference unknown. "}{snapshot.complete ? "Source ingestion complete; not independently verified." : "Partial / unreconciled source version; not a complete portfolio."}</p>
-        <TableRegion label="Full disclosed book; scroll for all columns">
+        <TableRegion label="Disclosed book; scroll for all columns">
           <table className={styles.table}>
             <thead><tr><th scope="col">Asset</th><th scope="col">Instrument</th><th scope="col" className={styles.number}>Disclosed value</th><th scope="col">Stocklana mapping</th></tr></thead>
             <tbody>{snapshot.items.map((item) => {
@@ -140,7 +140,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
         <div className={styles.timeline}>{[...groupedActivity.entries()].map(([tradeDate, trades]) => <section className={styles.timelineGroup} key={tradeDate}>
           <div className={styles.timelineDate}><strong>{tradeDate === "Date unknown" ? tradeDate : savedDate(tradeDate)}</strong><span>{trades.length} {trades.length === 1 ? "change" : "changes"}</span></div>
           <div className={styles.timelineRows}>{trades.map((trade) => <article className={styles.timelineRow} key={trade.id}>
-            <div className={styles.tradeMain}><span className={styles.event} data-side={eventSide(trade.event)}>{trade.event ?? "Reported"}</span><div><strong>{trade.ticker ?? trade.name ?? "Unnamed disclosure"}</strong>{trade.ticker && <small>{trade.name}</small>}<small>{trade.kind} · {trade.owner ?? "Owner not specified"} · disclosed {trade.disclosureDate ?? "date unknown"}</small></div></div>
+            <div className={styles.tradeMain}><span className={styles.event} data-side={eventSide(trade.event)}>{trade.event ?? "Not disclosed"}</span><div><strong>{trade.ticker ?? trade.name ?? "Unnamed disclosure"}</strong>{trade.ticker && <small>{trade.name}</small>}<small>{trade.kind} · {trade.owner ?? "Owner not specified"} · disclosed {trade.disclosureDate ?? "date unknown"}</small></div></div>
             <div className={styles.tradeAmount}><span>Amount range</span><strong>{disclosedRange(trade.amount)}</strong><FilingLink url={trade.sourceUrl} /></div>
           </article>)}</div>
         </section>)}</div>}

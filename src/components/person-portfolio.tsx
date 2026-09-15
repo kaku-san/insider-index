@@ -67,6 +67,9 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
   count: number | null; countNote: string; mappedCount?: number | null; activityCount?: number; latestFiling?: string | null;
   indexHref?: string; children: ReactNode; notice?: ReactNode;
 }) {
+  const hasFilingMetadata = latestFiling !== undefined || activityCount !== undefined;
+  const hasIndexMetadata = mappedCount !== undefined;
+
   return <div className={styles.page}>
     <Link href="/#directory" className={styles.back}><Icon name="arrow" size={15} style={{ transform: "rotate(180deg)" }} />People &amp; indexes</Link>
     <header className={styles.heroCard}>
@@ -77,25 +80,25 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
             <p className={styles.context}>{indexName ? `${name} · ${context}` : context}</p>
             <h1>{indexName ?? `${name} Tracker`}</h1>
             <p className={styles.strategy}>{strategy}</p>
-            <p className={styles.heroMeta}>
+            {hasFilingMetadata && <p className={styles.heroMeta}>
               {latestFiling ? <>Latest filing <strong>{latestFiling}</strong></> : <>Latest filing <strong>unavailable</strong></>}
               <span aria-hidden="true">•</span>
               <strong>{activityCount ?? "—"}</strong> reported trades saved
-            </p>
+            </p>}
           </div>
         </div>
         <div className={styles.heroActions}>
           <PersonFollow id={id} />
           <ShareButton />
           {indexHref ? <Link className={styles.primaryAction} href={indexHref}>View index <Icon name="arrow" size={15} /></Link> :
-            <button type="button" className={styles.primaryAction} disabled>Index not published</button>}
+            hasIndexMetadata ? <button type="button" className={styles.primaryAction} disabled>Index not published</button> : null}
         </div>
       </div>
 
       <dl className={styles.stats} aria-label="Portfolio statistics">
         <div><dt>Portfolio value</dt><dd aria-label="Unavailable">—</dd><small>No verified live NAV</small></div>
         <div><dt>Performance</dt><dd aria-label="Unavailable">—</dd><small>No verified price series</small></div>
-        <div><dt>Index holdings</dt><dd>{mappedCount ?? "—"}</dd><small>Mapped stock / ETF names</small></div>
+        {hasIndexMetadata && <div><dt>Index holdings</dt><dd>{mappedCount ?? "—"}</dd><small>Mapped stock / ETF names</small></div>}
         <div><dt>Disclosure rows</dt><dd>{count ?? "—"}</dd><small>{countNote}</small></div>
       </dl>
     </header>
@@ -158,7 +161,7 @@ export function AllocationPanel({ allocations = [], children }: {
         {children}
       </div>
       <p className={styles.caption}>Published model weights over mapped equities / ETFs, using disclosed value bands or a labelled equal-weight fallback. They are not the person’s live brokerage weights.</p>
-    </> : <div className={styles.emptyAllocation}><div className={styles.emptyRing} aria-hidden="true" /><div><h3>No published allocation yet</h3><p>The complete disclosed book can still be inspected below. A pie is not drawn until an explicit model exists.</p></div></div>}
+    </> : <div className={styles.emptyAllocation}><div className={styles.emptyRing} aria-hidden="true" /><div><h3>No published allocation yet</h3><p>The disclosed book can still be inspected below. A pie is not drawn until an explicit model exists.</p></div></div>}
   </section>;
 }
 
