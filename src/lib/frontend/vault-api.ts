@@ -1,5 +1,4 @@
 import { ApiError, PREVIEW_MODE, readApi, writeApi } from "./api";
-import { Message, VersionedMessage } from "@solana/web3.js";
 
 export type Network = "devnet" | "mainnet-beta";
 export type RawAmount = string;
@@ -201,38 +200,8 @@ function array(value: unknown, label: string): unknown[] {
   return value;
 }
 
-function decodeBase64(value: string): Uint8Array {
-  try {
-    const binary = atob(value);
-    if (!binary.length || btoa(binary).replace(/=+$/, "") !== value.replace(/=+$/, "")) throw new Error();
-    return Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  } catch {
-    throw new Error("The prepared transaction bytes are invalid.");
-  }
-}
-
-function inspectMessage(bytes: Uint8Array): { signers: string[]; programs: string[]; recentBlockhash: string } {
-  try {
-    const message = bytes[0] !== undefined && (bytes[0] & 0x80) !== 0 ? VersionedMessage.deserialize(bytes) : Message.from(bytes);
-    const keys = "staticAccountKeys" in message ? message.staticAccountKeys : message.accountKeys;
-    const instructions = "compiledInstructions" in message ? message.compiledInstructions : message.instructions;
-    return {
-      signers: keys.slice(0, message.header.numRequiredSignatures).map((key) => key.toBase58()),
-      programs: [...new Set(instructions.map((instruction) => keys[instruction.programIdIndex]?.toBase58()).filter((value): value is string => Boolean(value)))],
-      recentBlockhash: message.recentBlockhash,
-    };
-  } catch {
-    throw new Error("The prepared transaction message is invalid.");
-  }
-}
-
-async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
 export async function validatePreparedStep(payload: unknown, context: { owner: string; network: Network }): Promise<PreparedStep> {
-  const owner = addressValue(context.owner, "wallet owner");
+  addressValue(context.owner, "wallet owner");
   if (context.network !== "devnet" && context.network !== "mainnet-beta") throw new Error("The prepared network is invalid.");
   const step = record(payload);
   const requires = string(step.requires, "authority");
@@ -248,38 +217,7 @@ export async function validatePreparedStep(payload: unknown, context: { owner: s
     if (transactions.length) throw new Error("A non-user step returned wallet transactions.");
     return { ...(payload as Omit<PreparedStep, "network">), network: context.network };
   }
-  if (blockers.length) throw new Error("The prepared step is blocked.");
-  if (!transactions.length) throw new Error("No signable transactions were returned.");
-
-  for (const candidate of transactions) {
-    const transaction = record(candidate);
-    string(transaction.stepId, "step ID");
-    const bytes = decodeBase64(string(transaction.messageBase64, "transaction"));
-    const inspected = inspectMessage(bytes);
-    const messageHash = string(transaction.messageHash, "message hash").toLowerCase();
-    if (!/^[0-9a-f]{64}$/.test(messageHash) || await sha256Hex(bytes) !== messageHash) throw new Error("The prepared transaction hash does not match its bytes.");
-    const signers = array(transaction.requiredSigners, "required signers").map((value) => addressValue(value, "required signer"));
-    if (!signers.includes(owner) || signers.length !== inspected.signers.length || signers.some((signer) => !inspected.signers.includes(signer))) throw new Error("The prepared transaction is not bound to its declared signers.");
-    const programs = array(transaction.allowedProgramIds, "allowed programs").map((value) => addressValue(value, "allowed program"));
-    if (!programs.length || new Set(programs).size !== programs.length || programs.length !== inspected.programs.length || programs.some((program) => !inspected.programs.includes(program))) throw new Error("The prepared allowed programs do not match the transaction.");
-    for (const value of array(transaction.maxDebits, "maximum debits")) {
-      const debit = record(value);
-      if (addressValue(debit.owner, "debit owner") !== owner) throw new Error("A prepared debit is not bound to the connected wallet.");
-      addressValue(debit.mint, "debit mint");
-      if (typeof debit.amountRaw !== "string" || !rawAmountPattern.test(debit.amountRaw)) throw new Error("A prepared debit amount is invalid.");
-    }
-    for (const value of array(transaction.expectedRecipients, "expected recipients")) {
-      const recipient = record(value);
-      addressValue(recipient.owner, "recipient owner");
-      addressValue(recipient.mint, "recipient mint");
-    }
-    if (string(transaction.recentBlockhash, "recent blockhash") !== inspected.recentBlockhash) throw new Error("The prepared transaction blockhash does not match its bytes.");
-    if (!Number.isSafeInteger(transaction.lastValidBlockHeight) || Number(transaction.lastValidBlockHeight) <= 0) throw new Error("The prepared transaction expiry is invalid.");
-    const simulation = record(transaction.simulation);
-    if (simulation.ok !== true || !Number.isSafeInteger(simulation.slot) || Number(simulation.slot) <= 0 || !string(simulation.logsHash, "simulation log hash")) throw new Error("The prepared transaction simulation did not pass.");
-  }
-
-  return { ...(payload as Omit<PreparedStep, "network">), network: context.network };
+  throw new Error("Native vault signing is unavailable until transaction instructions can be verified against declared debits and recipients.");
 }
 
 export async function prepareDeposit(indexId: string, input: { owner: string; amountRaw: RawAmount; idempotencyKey: string; walletProof?: string }, network: Network): Promise<PreparedStep> {

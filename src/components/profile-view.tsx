@@ -27,9 +27,16 @@ function eventSide(value?:string|null):ActivityView["side"]{if(/purchase|buy/i.t
 
 function researchHoldings(book:PersonPortfolioResponse):HoldingView[]{
  const index=book.publishedIndex;
- if(index?.constituents?.length)return [...index.constituents].sort((a,b)=>b.weight_bps-a.weight_bps).map(item=>({key:item.mint,ticker:item.ticker,name:item.issuer==="xstock"?"xStock mapped equity":item.issuer==="backpack"?"Backpack mapped equity":"Mapped equity",weightPct:item.weight_bps/10000,venue:item.issuer==="xstock"?"xStock":item.issuer==="backpack"?"Backpack":item.issuer,mint:item.mint,disclosedValue:typeof item.payload?.evidencedMidpoint==="number"?item.payload.evidencedMidpoint.toLocaleString("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}):null}));
  const snapshot=[...(book.snapshots??[])].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0];
- return (snapshot?.items??[]).filter(i=>i.kind==="stock"||i.kind==="etf").slice(0,24).map(item=>({key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:null,venue:item.token?.issuer??null,mint:item.token?.mint??null,disclosedValue:moneyBand(item.valueRange)}));
+ const items=snapshot?.items??[];
+ const tickerCounts=new Map<string,number>();
+ for(const item of items){if(item.ticker)tickerCounts.set(item.ticker,(tickerCounts.get(item.ticker)??0)+1)}
+ const evidenceByHolding=new Map((index?.definition?.evidence??[]).flatMap(evidence=>evidence.holding?.id&&evidence.token?.mint?[[evidence.holding.id,evidence.token.mint] as const]:[]));
+ return items.map(item=>{
+  const evidencedMint=evidenceByHolding.get(item.id);
+  const constituent=index?.constituents.find(candidate=>candidate.mint===(evidencedMint??item.token?.mint))??(item.ticker&&tickerCounts.get(item.ticker)===1?index?.constituents.find(candidate=>candidate.ticker===item.ticker):undefined);
+  return {key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:constituent?constituent.weight_bps/10000:null,venue:constituent?.issuer??item.token?.issuer??null,mint:constituent?.mint??item.token?.mint??null,disclosedValue:moneyBand(item.valueRange)};
+ }).sort((a,b)=>(b.weightPct??-1)-(a.weightPct??-1));
 }
 function legacyHoldings(profile:FomoProfile):HoldingView[]{return [...profile.portfolio].sort((a,b)=>b.weightPct-a.weightPct).map(item=>({key:item.mint??item.ticker,ticker:item.ticker,name:companyNameFor(item.ticker,item.issuerName),weightPct:Number.isFinite(item.weightPct)&&item.weightPct>0?item.weightPct:null,venue:item.venue==="none"?null:item.venue,mint:item.mint,disclosedValue:moneyBand({low:item.valueLow,high:item.valueHigh})}))}
 function researchActivity(book:PersonPortfolioResponse):ActivityView[]{return [...(book.activity??[])].sort((a,b)=>(b.transactionDate??b.disclosureDate??"").localeCompare(a.transactionDate??a.disclosureDate??"")).map((item:ResearchActivity)=>({id:item.id,ticker:item.ticker??item.name??"Asset",name:item.name??"Public disclosure",side:eventSide(item.event),tradeDate:item.transactionDate??null,filedDate:item.disclosureDate??null,amount:moneyBand(item.amount),sourceUrl:item.sourceUrl}))}

@@ -19,7 +19,7 @@ type DisclosureResponse = { disclosures?: CopySignal[]; signals?: CopySignal[]; 
 function normalizedPeople(directory?: PeopleDirectoryResponse, legacy?: LegacyProfiles): ResearchPerson[] {
   if (directory?.people?.length) return directory.people;
   return (legacy?.profiles ?? []).map((profile) => ({
-    id: profile.cikOrBioguide || profile.id,
+    id: profile.id,
     name: profile.name,
     office: profile.title,
     party: profile.party,

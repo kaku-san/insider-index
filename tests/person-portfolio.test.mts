@@ -81,13 +81,14 @@ test("empty performance has no fabricated curve; real points remain labelled his
 test("consumer person portfolios keep unroutable positions and never invent a buy", () => {
   const initialData = {
     person: { id: "insider-test", name: "Example Insider", office: "Officer", image: null },
-    snapshots: [{ id: "s1", year: 2025, items: [{ id: "h1", ticker: "UNMAPPED", name: "Unmapped company", kind: "stock", valueRange: { low: null, high: 5000 } }] }],
+    snapshots: [{ id: "s1", year: 2025, items: [{ id: "h1", ticker: "AAPL", name: "Apple Inc.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h2", ticker: null, name: "Unmapped mutual fund", kind: "mutual-fund", valueRange: { low: null, high: 5000 } }] }],
     activity: [],
-    publishedIndex: null,
+    publishedIndex: { hash: "a".repeat(64), person_id: "insider-test", constituents: [{ ticker: "AAPL", mint: "mint-aapl", issuer: "xstock", weight_bps: 10000 }], definition: { evidence: [{ holding: { id: "h1" }, token: { mint: "mint-aapl" } }] } },
   } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
   const html = renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(ProfileView, { id: "insider-test", initialData })));
-  assert.match(html, /UNMAPPED/);
-  assert.match(html, /Unmapped company/);
+  assert.match(html, /Apple Inc\./);
+  assert.match(html, /Unmapped mutual fund/);
+  assert.match(html, /100%/);
   assert.doesNotMatch(html, /\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:/);
 });
 
