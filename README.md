@@ -16,7 +16,7 @@ In V1:
 - Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
 - Home is **indexes first**: published FMP holdings models, then the saved person directory. The raw SEC/AInvest tape remains `/feed`; legacy copy/index routes retain their own readiness gates.
 - Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. A profile renders with one holding; basket buying remains unavailable regardless of book size
-- Fallback when a basket is too thin: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
+- Day-1 alternative to research-only baskets: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
 - One-trade copying remains available separately. Native index entry is disabled until deployer setup, settlement and claim-recovery evidence pass
 - Performance is never invented: return / hit rate stay `—` until a real dated-trade price series exists
@@ -195,7 +195,7 @@ Congress rows are STOCK Act PTRs: they disclose a dollar range (`amountLow`/`amo
 
 ## Deploy
 
-**Public host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev)
+**Barely Stable / Hetzner host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev). The current live product URL is listed at the top of this README.
 
 | Where | How |
 | --- | --- |

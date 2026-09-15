@@ -17,7 +17,7 @@ Apply `supabase/migrations/202609150001_copy_positions.sql`, then `supabase/migr
 
 ## Production launch checklist (operator)
 
-Use the current production host in `README.md`. No real keys, keypairs or signed transaction payloads belong in git or this checklist.
+Use the **Live product** URL at the top of `README.md`; the Barely Stable / Hetzner section documents the other deployment. No real keys, keypairs or signed transaction payloads belong in git or this checklist.
 
 1. Apply both copy storage migrations in order with the Supabase owner. Do not claim durability until the production tables exist and the service role can read/insert and execute the pruning RPC.
 2. Configure `NEXT_PUBLIC_PRIVY_APP_ID` at **build time**, mainnet `HELIUS_API_KEY`, `JUPITER_MODE=live` (optional `JUPITER_API_KEY`), server `FMP_API_KEY`, valid/rotated `AINVEST_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL` and server `SUPABASE_SERVICE_ROLE_KEY`. Allow the production origin in Privy. Production ignores stub/mock/preview overrides; still set `STOCKLANA_ALLOW_MOCKS=0` and remove `NEXT_PUBLIC_STOCKLANA_PREVIEW` to avoid accidental development previews. Never set `PYTH_*` or `HERMES_*`.

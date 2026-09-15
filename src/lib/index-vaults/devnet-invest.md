@@ -1,6 +1,6 @@
-# Devnet Invest rail
+# Devnet Invest preview
 
-The person, published FMP index and legacy index rails share `src/components/vault-invest.tsx`. They offer a **separate execution-test preview**, not an investment in the displayed politician/model. The disclosed book, published weights and native observed holdings remain independent.
+`src/components/vault-invest.tsx` retains a **separate execution-test preview**, but Track A W0 no longer mounts it on person or index research surfaces. Those surfaces disable basket buying and direct the primary trading action to `/feed` for a one-print copy. The preview is not an investment in a displayed politician/model; disclosed books, published weights and native observed holdings remain independent.
 
 ## Fixed existing identity
 
@@ -18,7 +18,7 @@ Both endpoints accept JSON with `network: "devnet"`, the exact `vaultAccount` an
 
 ## Signing safety and remaining work
 
-`DEVNET_DEPOSIT_SIGNING_ENABLED` is false in code, independent of public-funds release and environment. The UI invalidates previews after amount/wallet changes and ignores late responses; its sign handler prepares afresh and fails closed. The signature seam accepts only a live matching wallet and passes **devnet explicitly** to Privy. Fixture wallets cannot sign devnet. Mainnet remains only the unchanged default for the separate individual-trade feature.
+`DEVNET_DEPOSIT_SIGNING_ENABLED` is false in code, independent of public-funds release and environment. If the retained preview is mounted again, its UI invalidates previews after amount/wallet changes and ignores late responses; its sign handler prepares afresh and fails closed. The signature seam accepts only a live matching wallet and passes **devnet explicitly** to Privy. Fixture wallets cannot sign devnet. Mainnet remains the default for the separate individual-trade feature.
 
 No signed bytes are broadcast, persisted or submitted to legacy execute. No keeper/service signer, key file, airdrop, new vault or fund expenditure was used for this wiring. Do not lift the gate just because the sibling worker funds the test vault. First complete the integration README's native instruction/effect policy, settlement/minima, route/oracle/config, budget, operation-auth, broadcast and recovery work. The seam currently refuses even a forged READY response. There is no functioning end-to-end app deposit yet, and the button deliberately says so.
 
@@ -27,5 +27,5 @@ Host entry/exit bps are observed separately from unquoted protocol, network, ren
 ## Verification
 
 - `tests/devnet-deposit.test.mts`: executable request validation, exact amounts, native-reader fixture observations, missing/current-owner/state blockers, endpoint status/no-store behavior, failed reads, deterministic deadline cancellation of stalled RPC transport, and zero wallet calls under unreadiness/fixture/stale/forged-ready cases. Fixtures are not native funding evidence.
-- Existing person/holdings rendering tests run inside the wallet provider and preserve all disclosed rows; generated HTML checks the separate test-vault label and disabled signing.
+- `tests/person-portfolio.test.mts` and related rendering tests preserve all disclosed rows while verifying that W0 research surfaces do not mount the retained devnet preview.
 - `evidence/vaults/invest-devnet-preview.json`: real read-only native preview from this wiring task. At the recorded slot the existing test vault had zero raw share supply and zero recorded backing; this historical observation does not assert the outcome of a later parallel funded deposit.

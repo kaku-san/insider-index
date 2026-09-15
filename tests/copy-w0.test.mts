@@ -70,7 +70,7 @@ test("W0 production quote → signed message → Jupiter fill → durable, walle
     assert.equal(new Headers(init?.headers).get("apikey"), "test-only-service-role");
     if (url.pathname.endsWith("/rpc/prune_expired_copy_orders")) {
       if (pruneRpcMissing) return Response.json({ code: "PGRST202", message: "Could not find the function public.prune_expired_copy_orders" }, { status: 404 });
-      const { rows } = await db.query("select prune_expired_copy_orders() as deleted_count");
+      const { rows } = await db.query<{ deleted_count: bigint }>("select prune_expired_copy_orders() as deleted_count");
       return Response.json(rows[0]?.deleted_count ?? 0);
     }
     const table = url.pathname.split("/").pop()!;
