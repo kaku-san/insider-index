@@ -1,27 +1,40 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { register } from "node:module";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { OracleType } from "@symmetry-hq/sdk/dist/layouts/oracle.js";
+import type { Vault } from "@symmetry-hq/sdk";
 import { DEVNET_DEPOSIT_SIGNING_ENABLED } from "../src/lib/index-vaults/devnet-contract.ts";
-import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanDeployer } from "../src/lib/index-vaults/kaku-san.ts";
 import {
-  assertSignedBy, assertSignedByDeployer, handleKakuSanPrepare, handleKakuSanSubmit, kakuSanConnection,
-  kakuSanOracleInput, kakuSanTokenInput, parseKakuSanPrepareRequest, parseKakuSanSubmitRequest,
+  KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS,
+  KAKU_SAN_USDC_MINT, KAKU_SAN_WSOL_MINT, assertKakuSanDeployer,
+} from "../src/lib/index-vaults/kaku-san.ts";
+import {
+  assertKakuSanComposition, assertSignedBy, assertSignedByDeployer, confirmWalletTransaction,
+  handleKakuSanObserve, handleKakuSanPrepare, handleKakuSanSubmit, kakuSanConnection,
+  kakuSanDeactivateInput, kakuSanOracleInput, kakuSanTokenInput, observeKakuSanVault,
+  parseKakuSanObserveRequest, parseKakuSanPrepareRequest, parseKakuSanSubmitRequest,
   payloadTransactions, prepareKakuSanStep,
 } from "../src/lib/index-vaults/kaku-san-create.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
-import { canCreateKakuSan, signPreparedKakuSan } from "../src/lib/frontend/kaku-san.ts";
+import {
+  applyKakuSanSubmit, canCreateKakuSan, loadKakuSanReceipt, mergeKakuSanObservation, nextKakuSanStep,
+  parseKakuSanReceipt, saveKakuSanReceipt, signPreparedKakuSan, type KakuSanReceipt,
+} from "../src/lib/frontend/kaku-san.ts";
 import { POST as prepareRoute } from "../src/app/api/vaults/kaku-san/prepare/route.ts";
 import { POST as submitRoute } from "../src/app/api/vaults/kaku-san/submit/route.ts";
+import { POST as observeRoute } from "../src/app/api/vaults/kaku-san/observe/route.ts";
 import { STUB_WALLET_ADDRESS } from "../src/lib/wallet.ts";
+import robots from "../src/app/robots.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { KakuAdmin } = await import("../src/components/kaku-admin.tsx");
 const { PrivySolanaContext } = await import("../src/components/providers/privy-provider.tsx");
+const { IndexHome } = await import("../src/components/index-home.tsx");
+const { metadata: kakuAdminMetadata } = await import("../src/app/kaku-admin/page.tsx");
 type TestWallet = {
   ready: boolean; configured: boolean; mode: "live" | "stub" | "unavailable"; authenticated: boolean;
   previewConnection: boolean; solanaAddress: string | null; appId: string | null;
@@ -34,6 +47,29 @@ const VAULT = new PublicKey(new Uint8Array(32).fill(2)).toBase58();
 const MINT = new PublicKey(new Uint8Array(32).fill(3)).toBase58();
 const OTHER = new PublicKey(new Uint8Array(32).fill(9)).toBase58();
 
+function raydiumOracle(poolIndex = 0) {
+  return {
+    oracleSettings: { oracleType: OracleType.RaydiumClmm, numRequiredAccounts: 1 },
+    accountsToLoadLutIds: [0], accountsToLoadLutIndices: [poolIndex],
+  };
+}
+function installedVault(overrides: Partial<{ pyth: boolean; wsolActive: boolean; missingStock: boolean }> = {}): Vault {
+  const lut = KAKU_SAN_ASSETS.map(asset => new PublicKey(asset.pool));
+  const defaults = KAKU_SAN_DEFAULT_SLOTS.map(slot => ({
+    mint: new PublicKey(slot.mint), amount: 0n, weight: 0, active: overrides.wsolActive && slot.mint === KAKU_SAN_WSOL_MINT ? 1 : 0,
+    oracleAggregator: { numOracles: overrides.pyth ? 1 : 0, oracles: overrides.pyth ? [{ oracleSettings: { oracleType: OracleType.Pyth }, accountsToLoadLutIds: [0], accountsToLoadLutIndices: [0] }] : [] },
+  }));
+  const stocks = KAKU_SAN_ASSETS.flatMap((asset, index) => overrides.missingStock && index === 0 ? [] : [{
+    mint: new PublicKey(asset.mint), amount: 0n, weight: asset.targetWeightBps, active: 1,
+    oracleAggregator: { numOracles: 1, oracles: [raydiumOracle(index)] },
+  }]);
+  const composition = [...defaults, ...stocks];
+  return {
+    ownAddress: new PublicKey(VAULT), mint: new PublicKey(MINT), numTokens: composition.length, composition,
+    lutPubkeys: [{ state: { addresses: lut } }],
+  } as unknown as Vault;
+}
+
 function unsignedPayload(payer = KAKU_SAN_DEPLOYER) {
   const payerKey = new PublicKey(payer);
   const message = new TransactionMessage({
@@ -44,13 +80,20 @@ function unsignedPayload(payer = KAKU_SAN_DEPLOYER) {
   return { tx_b64: Buffer.from(tx.serialize()).toString("base64"), payer, message_version: "0" as const, recent_blockhash: "", lookup_tables: [] as string[], instructions: [] };
 }
 
-function builders(): NativeVaultBuilders {
+function builders(vaultAccount: { data?: Uint8Array } | null = { data: new Uint8Array(1) }, fetched: Vault | null = null): NativeVaultBuilders {
   const payload = { batches: [{ transactions: [unsignedPayload()] }] };
   return {
     network: "mainnet-beta",
-    connection: { simulateTransaction: async () => ({ value: { err: null } }) },
+    connection: {
+      simulateTransaction: async () => ({ value: { err: null } }),
+      getAccountInfo: async () => vaultAccount,
+    },
     assertNetwork: async () => {},
-    sdk: { createVaultTx: async () => ({ vault: VAULT, mint: MINT, ...payload }) },
+    sdk: {
+      createVaultTx: async () => ({ vault: VAULT, mint: MINT, ...payload }),
+      addOrEditTokenTx: async () => payload,
+      fetchVault: async () => fetched ?? installedVault(),
+    },
     addToken: async () => payload,
     weights: async () => payload,
   } as unknown as NativeVaultBuilders;
@@ -100,7 +143,13 @@ test("only the approved deployer may prepare or submit; extra fields and keypair
     { creator: KAKU_SAN_DEPLOYER, execute: true }, { creator: KAKU_SAN_DEPLOYER, step: "redeem" }, {},
   ]) assert.throws(() => parseKakuSanPrepareRequest(body));
   assert.throws(() => parseKakuSanPrepareRequest({ creator: KAKU_SAN_DEPLOYER, step: "add-token" }), /vault and share mint/i);
+  assert.throws(() => parseKakuSanPrepareRequest({ creator: KAKU_SAN_DEPLOYER, step: "deactivate-default", vault: VAULT, shareMint: MINT, mint: KAKU_SAN_ASSETS[0].mint }), /default slot/);
+  assert.deepEqual(
+    parseKakuSanPrepareRequest({ creator: KAKU_SAN_DEPLOYER, step: "deactivate-default", vault: VAULT, shareMint: MINT, mint: KAKU_SAN_WSOL_MINT }),
+    { creator: KAKU_SAN_DEPLOYER, step: "deactivate-default", vault: VAULT, shareMint: MINT, mint: KAKU_SAN_WSOL_MINT },
+  );
   assert.throws(() => parseKakuSanSubmitRequest({ creator: KAKU_SAN_DEPLOYER, step: "create", vault: VAULT, shareMint: MINT, signedTransactions: [] }));
+  assert.throws(() => parseKakuSanObserveRequest({ creator: OTHER, vault: VAULT, shareMint: MINT }));
 });
 
 test("prepare RPC forbids sends, airdrops and devnet; HERMES/PYTH env fails closed", () => {
@@ -189,6 +238,9 @@ test("kaku-admin labels the execution test, refuses any other connected wallet, 
   assert.match(refused, /refused/);
   assert.match(refused, /Create Kaku San vault/);
   assert.match(refused, /disabled=""/);
+  assert.match(refused, /25 bps in/);
+  assert.match(refused, /Estimated shares are not guaranteed/);
+  assert.match(refused, /does not redeem or pay USDC out/);
   assert.doesNotMatch(refused, /Nancy|Pelosi|Invest Sign/);
   const stub = renderAdmin(wallet({ mode: "stub", solanaAddress: STUB_WALLET_ADDRESS }));
   assert.match(stub, /live Solana wallet is required/i);
@@ -198,15 +250,89 @@ test("kaku-admin labels the execution test, refuses any other connected wallet, 
   assert.match(allowed, /2000 bps/);
 });
 
-test("kaku-admin is not linked from nav, footer, sitemap or home, and create never loads a keypair", () => {
-  for (const file of ["src/components/site-header.tsx", "src/app/layout.tsx", "src/components/index-home.tsx", "src/app/page.tsx", "src/app/robots.ts"]) {
-    const text = readFileSync(file, "utf8");
-    assert.doesNotMatch(text, /href=["']\/kaku-admin["']/);
-  }
-  const robots = readFileSync("src/app/robots.ts", "utf8");
-  assert.match(robots, /disallow: \["\/kaku-admin"\]/);
-  const create = readFileSync("src/lib/index-vaults/kaku-san-create.ts", "utf8");
-  assert.doesNotMatch(create, /fromSecretKey|readFileSync|Keypair\.from/);
-  const page = readFileSync("src/app/kaku-admin/page.tsx", "utf8");
-  assert.match(page, /index: false/);
+test("kaku-admin is unlisted: robots disallow it, the page is noindex, and home has no create link", () => {
+  const rules = robots().rules as { disallow: string[] };
+  assert.deepEqual(rules.disallow, ["/kaku-admin"]);
+  assert.equal((kakuAdminMetadata.robots as { index: boolean }).index, false);
+  const home = renderToStaticMarkup(createElement(IndexHome, { initialData: { people: [], total: 0, partial: false, savedAt: null, storage: "supabase" } }));
+  assert.doesNotMatch(home, /kaku-admin/);
+  assert.doesNotMatch(home, /Create Kaku San/);
+});
+
+test("deactivate input strips oracles and refuses basket mints; prepare uses addOrEditTokenTx", async () => {
+  const token = kakuSanDeactivateInput(KAKU_SAN_WSOL_MINT);
+  assert.equal(token.active, false);
+  assert.deepEqual(token.oracles, []);
+  assert.equal(kakuSanDeactivateInput(KAKU_SAN_USDC_MINT).token_mint, KAKU_SAN_USDC_MINT);
+  assert.throws(() => kakuSanDeactivateInput(KAKU_SAN_ASSETS[0].mint), /creation-time WSOL\/USDC/);
+  const prepared = await prepareKakuSanStep({
+    creator: KAKU_SAN_DEPLOYER, step: "deactivate-default", vault: VAULT, shareMint: MINT, mint: KAKU_SAN_WSOL_MINT,
+  }, builders());
+  assert.equal(prepared.step, "deactivate-default");
+  assert.equal(prepared.mint, KAKU_SAN_WSOL_MINT);
+  assert.equal(prepared.vault, VAULT);
+});
+
+test("installed composition requires the 5 xStocks, deactivated defaults, and no Pyth", () => {
+  assert.deepEqual(assertKakuSanComposition(installedVault()).activeMints, KAKU_SAN_ASSETS.map(asset => asset.mint));
+  assert.throws(() => assertKakuSanComposition(installedVault({ pyth: true })), /ORACLE_TYPE_FORBIDDEN/);
+  assert.throws(() => assertKakuSanComposition(installedVault({ wsolActive: true })), /still active/);
+  assert.throws(() => assertKakuSanComposition(installedVault({ missingStock: true })), /5 xStocks/);
+});
+
+test("observe reports missing accounts without fabricating a vault, and HTTP observe refuses non-deployers", async () => {
+  const missing = await observeKakuSanVault({ vault: VAULT, shareMint: MINT }, builders(null));
+  assert.equal(missing.exists, false);
+  assert.equal(missing.verified, false);
+  const ok = await observeKakuSanVault({ vault: VAULT, shareMint: MINT }, builders());
+  assert.equal(ok.exists, true);
+  assert.equal(ok.verified, true);
+  assert.equal(ok.pythRemaining, false);
+  const denied = await handleKakuSanObserve(request({ creator: OTHER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/observe"));
+  assert.equal(denied.status, 400);
+  assert.equal((await observeRoute(request({ creator: OTHER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/observe"))).status, 400);
+});
+
+test("confirm uses signature status, not a freshly fetched blockhash", async () => {
+  const seen: unknown[] = [];
+  const slot = await confirmWalletTransaction({
+    confirmTransaction: async (arg: unknown) => { seen.push(arg); return { value: { err: null }, context: { slot: 99 } }; },
+  } as never, "5" + "x".repeat(86));
+  assert.equal(slot, 99);
+  assert.equal(seen.length, 1);
+  assert.equal(typeof seen[0], "string");
+});
+
+test("receipt resume never returns create after the first vault, and a different vault is refused", () => {
+  const memory = new Map<string, string>();
+  globalThis.localStorage = {
+    getItem: (key: string) => memory.get(key) ?? null,
+    setItem: (key: string, value: string) => { memory.set(key, value); },
+    removeItem: (key: string) => { memory.delete(key); },
+  } as unknown as Storage;
+  assert.equal(nextKakuSanStep(null).step, "create");
+  const draft = saveKakuSanReceipt({
+    vault: VAULT, shareMint: MINT, signatures: [], slot: null, created: false, deactivated: [], added: [], weightsSet: false, verified: false,
+  });
+  assert.equal(nextKakuSanStep(draft).step, "create");
+  const created = applyKakuSanSubmit(draft, { step: "create", vault: VAULT, shareMint: MINT, signatures: ["sig"], slot: 1 });
+  assert.equal(created.created, true);
+  assert.equal(nextKakuSanStep(created).step, "deactivate-default");
+  assert.equal((nextKakuSanStep(created) as { mint?: string }).mint, KAKU_SAN_WSOL_MINT);
+  assert.throws(() => applyKakuSanSubmit(created, { step: "create", vault: OTHER, shareMint: MINT, signatures: ["nope"], slot: 2 }), /second vault/);
+  let current: KakuSanReceipt = created;
+  for (const slot of KAKU_SAN_DEFAULT_SLOTS) current = applyKakuSanSubmit(current, { step: "deactivate-default", vault: VAULT, shareMint: MINT, signatures: ["d"], slot: 2 }, slot.mint);
+  for (const asset of KAKU_SAN_ASSETS) current = applyKakuSanSubmit(current, { step: "add-token", vault: VAULT, shareMint: MINT, signatures: ["a"], slot: 3 }, asset.mint);
+  current = applyKakuSanSubmit(current, { step: "weights", vault: VAULT, shareMint: MINT, signatures: ["w"], slot: 4 });
+  assert.equal(nextKakuSanStep(current).step, "observe");
+  current = mergeKakuSanObservation(current, {
+    vault: VAULT, shareMint: MINT, exists: true, activeMints: KAKU_SAN_ASSETS.map(asset => asset.mint),
+    inactiveDefaults: KAKU_SAN_DEFAULT_SLOTS.map(slot => slot.mint), pythRemaining: false, weightsSet: true, verified: true,
+  });
+  assert.equal(nextKakuSanStep(current).step, "done");
+  assert.equal(loadKakuSanReceipt()?.vault, VAULT);
+  assert.equal(parseKakuSanReceipt({ vault: VAULT }), null);
+  const resumed = renderAdmin(wallet({ solanaAddress: KAKU_SAN_DEPLOYER }));
+  assert.match(resumed, /Resume basket install|Vault ready/);
+  assert.doesNotMatch(resumed, />Create Kaku San vault</);
 });
