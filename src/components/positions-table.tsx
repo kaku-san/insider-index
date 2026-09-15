@@ -51,7 +51,7 @@ export function PositionsTable() {
           </div>
           <div className={styles.connectCopy}>
             <small>CONNECT TO CONTINUE</small>
-            <h2>The app is public.<br />Your positions aren't.</h2>
+            <h2>The app is public.<br />Your positions aren&apos;t.</h2>
             <p>
               {wallet.mode === "unavailable"
                 ? "Wallet connection is unavailable. Retry to reload Privy. We won’t substitute a demo wallet."

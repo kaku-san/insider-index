@@ -64,6 +64,7 @@ API routes:
 - `GET /api/people?q=...` — searchable full FMP directory; source pagination/partial status, no featured-person allowlist
 - `GET /api/people/[id]/portfolio` — saved stable FMP `senateID` (both chambers), annual document versions, activity, aggregate history, completeness flags and `publishedIndex`
 - `GET /api/politician-profiles` — persisted top-20 FMP politician profiles ranked by latest annual holding-band midpoints, with `P000197` Pelosi pinned; disclosed holdings (tradable and not), estimated band values, published weights and completeness flags. `netWorth` / YoY / S&P fields are `null` with reasons until those series exist. Supabase-only; no FMP or AInvest crawl
+- `GET /api/tracker-profiles` · `GET /api/tracker-profiles/[id]` — bundled PelosiTracker top-20 snapshot (`TRACKER_AS_OF`, currently 2026-09-15); the featured 20 person pages show this as the current book, with FMP annual filings staying older evidence and tracker trades info-only. Static snapshot, no live crawl
 - `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
 - `GET /api/disclosures` — insider + congress tape with per-lane provenance in `lanes.{insiders,congress}` (`source`, `live`, `count`, `note`) and `catalog` feed status; every row carries `venue` / `venueSymbol` / `mint` / `mintDecimals` / `tradeEligible`
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)

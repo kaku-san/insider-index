@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePrivySolana } from "./providers/privy-provider";
 import { WalletConnectSheet } from "./wallet-connect-sheet";
 import { Icon } from "./social/icon";
 import { errorText } from "@/lib/frontend/api";
 import {
-  DEPOSIT_PHASES, WITHDRAW_PHASES, creditHasRemainingAmount, depositIsEnabled, getOperation, prepareConversion, prepareDeposit,
+  DEPOSIT_PHASES, creditHasRemainingAmount, depositIsEnabled, getOperation, prepareConversion, prepareDeposit,
   prepareNext, prepareWithdrawal, submitReceipts,
   type IndexSharePosition, type ObservedOperation, type PreparedStep, type VaultReadiness,
 } from "@/lib/frontend/vault-api";

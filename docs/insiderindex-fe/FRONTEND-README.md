@@ -161,7 +161,7 @@ It would be incorrect to label the native vault as production-ready solely becau
 
 The current design pass uses Public.com's Generated Assets / portfolio ergonomics as a reference for information hierarchy: asset-first rows, compact portfolio breakdowns, allocation before detail tables, and consumer brokerage review patterns. InsiderIndex keeps its own signal-orange brand, editorial politician photography, disclosure clocks, and native vault flow.
 
-Company marks are bundled for the current reference holdings and the UI falls back to a remote company-logo source, then a ticker monogram, for unknown symbols. Allocation now uses a segmented multi-color breakdown rather than a generic single-color donut.
+Company marks are bundled for the current reference holdings; unknown symbols fall back to a ticker monogram (no third-party logo network calls). Allocation now uses a segmented multi-color breakdown rather than a generic single-color donut.
 
 ## Validation
 
