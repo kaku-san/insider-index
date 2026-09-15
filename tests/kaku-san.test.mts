@@ -25,7 +25,8 @@ import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "../src/lib/inde
 import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import {
   applyKakuSanSubmit, canCreateKakuSan, clearKakuSanReceipt, loadKakuSanReceipt, mergeKakuSanObservation,
-  nextKakuSanStep, parseKakuSanReceipt, saveKakuSanReceipt, signPreparedKakuSan, type KakuSanReceipt,
+  nextKakuSanStep, parseKakuSanReceipt, reconcileKakuSanCreateDraft, saveKakuSanReceipt, signPreparedKakuSan,
+  type KakuSanReceipt,
 } from "../src/lib/frontend/kaku-san.ts";
 import { POST as prepareRoute } from "../src/app/api/vaults/kaku-san/prepare/route.ts";
 import { POST as submitRoute } from "../src/app/api/vaults/kaku-san/submit/route.ts";
@@ -271,6 +272,50 @@ test("a submit racing a concurrent discard must abort before broadcasting, never
 
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
   assert.equal(createCalls, 2, "discard must allow exactly one fresh createVaultTx, not zero and not more");
+}));
+
+test("a local receipt for a since-discarded draft is reconciled to the server's current draft, never stuck", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const native = builders(null);
+  const vaults = [VAULT, OTHER];
+  let createCalls = 0;
+  native.sdk.createVaultTx = async () => ({ vault: vaults[createCalls++], mint: MINT, batches: [{ transactions: [unsignedPayload()] }] });
+
+  const memory = new Map<string, string>();
+  globalThis.localStorage = {
+    getItem: (key: string) => memory.get(key) ?? null,
+    setItem: (key: string, value: string) => { memory.set(key, value); },
+    removeItem: (key: string) => { memory.delete(key); },
+  } as unknown as Storage;
+  try {
+    const first = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+    const staleReceipt = saveKakuSanReceipt({
+      vault: first.vault!, shareMint: first.shareMint!, signatures: [], slot: null,
+      created: false, deactivated: [], added: [], weightsSet: false, verified: false,
+    });
+
+    // Another tab discards the never-broadcast draft, then a fresh prepare (e.g. the same operator resuming)
+    // journals a genuinely new draft. The server now tracks OTHER, not VAULT.
+    const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: first.vault!, shareMint: first.shareMint! });
+    assert.equal((await discardKakuSanCreateDraft(discardInput, native, journal)).discarded, true);
+    const second = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+    assert.equal(createCalls, 2);
+    assert.notEqual(second.vault, staleReceipt.vault);
+
+    // The stale local receipt must be reconciled to the server's current draft, not dead-end the operator.
+    const reconciled = reconcileKakuSanCreateDraft(staleReceipt, second);
+    assert.equal(reconciled.vault, second.vault);
+    assert.equal(reconciled.created, false);
+    assert.equal(loadKakuSanReceipt()?.vault, second.vault, "the local receipt must follow the server, not the discarded draft");
+
+    // A matching draft is returned unchanged (no unnecessary re-save of in-progress steps).
+    const unchanged = reconcileKakuSanCreateDraft(reconciled, second);
+    assert.equal(unchanged, reconciled);
+
+    assert.throws(() => reconcileKakuSanCreateDraft(null, { vault: null, shareMint: null }), /vault and share mint/);
+  } finally {
+    clearKakuSanReceipt();
+  }
 }));
 
 test("HTTP discard is no-store and refuses a non-deployer", async () => temp(async dir => {
