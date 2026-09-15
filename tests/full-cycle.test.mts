@@ -13,7 +13,9 @@ import { VAULT_RELEASE } from "../src/lib/index-vaults/release.ts";
 import { assertAllowedPriceUrl, priceFetch, selectQuoteVenue } from "../src/lib/index-vaults/vault-prices.ts";
 import { DEVNET_RAYDIUM_POOLS, WSOL_MINT } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { assertKeeperHotWallet, planKeeperCycle, planZapIn, planZapOut } from "../src/lib/index-vaults/zap.ts";
+import { admitVaultLeg } from "../src/lib/index-vaults/vault-legs.ts";
 import { NATIVE_USDC_EXIT_VERIFIED, PUBLIC_FUNDS_ENABLED } from "../src/lib/index-vaults/symmetry-adapter.ts";
+import type { CatalogToken } from "../src/lib/venues/catalog-parse.ts";
 
 const key = (n: number) => new PublicKey(new Uint8Array(32).fill(n)).toBase58();
 const onCurve = () => Keypair.generate().publicKey.toBase58();
@@ -30,6 +32,16 @@ const fiveStock = (): CreateLeg[] => [
   { mint: NVDA, targetWeightBps: 2000, oracleKind: "raydium_clmm" },
   { mint: GOOG, targetWeightBps: 2000, oracleKind: "raydium_clmm" },
   { mint: META, targetWeightBps: 2000, oracleKind: "raydium_clmm" },
+];
+const BACKPACK_ONLY = key(16);
+const catalog = (): CatalogToken[] => [
+  { issuer: "xstock", ticker: "AAPL", symbol: "AAPLx", name: "Apple", mint: AAPL, decimals: 8 },
+  { issuer: "xstock", ticker: "AMZN", symbol: "AMZNx", name: "Amazon", mint: AMZN, decimals: 8 },
+  { issuer: "xstock", ticker: "NVDA", symbol: "NVDAx", name: "Nvidia", mint: NVDA, decimals: 8 },
+  { issuer: "xstock", ticker: "GOOG", symbol: "GOOGx", name: "Alphabet", mint: GOOG, decimals: 8 },
+  { issuer: "xstock", ticker: "META", symbol: "METAx", name: "Meta", mint: META, decimals: 8 },
+  { issuer: "backpack", ticker: "AAPL", symbol: "AAPL.US", name: "Apple US", mint: key(21), decimals: 6 },
+  { issuer: "backpack", ticker: "IBKR", symbol: "IBKR.US", name: "IBKR", mint: BACKPACK_ONLY, decimals: 6 },
 ];
 const quote = (mint: string, venue: "raydium" | "jupiter", inMint: string, outMint: string, inAmountRaw: string, outAmountRaw: string) => ({ mint, venue, inMint, outMint, inAmountRaw, outAmountRaw });
 
@@ -114,7 +126,7 @@ test("keeper and adapter source never import SDK isRebalanceRequired or hermes.p
 
 test("create refuses Pyth composition, resumes one vault, host 25/0", () => {
   const deployer = onCurve(), host = key(4), strategy = key(5), keeper = onCurve();
-  const plan = planCreateVault({ deployer, host, strategy, keeper, legs: fiveStock() });
+  const plan = planCreateVault({ deployer, host, strategy, keeper, legs: fiveStock(), catalog: catalog() });
   assert.equal(plan.defaultPythWsolUsdcSlots, false);
   assert.equal(plan.oneVault, true);
   assert.equal(plan.hostEntryFeeBps, 25);
@@ -122,11 +134,22 @@ test("create refuses Pyth composition, resumes one vault, host 25/0", () => {
   assert.equal(plan.vault, null);
   assert.ok(plan.blockers.includes("BROADCAST_DISABLED"));
   assert.equal(plan.programConstantPythnetAccounts.wsol, PROGRAM_CONSTANT_PYTHNET_ACCOUNTS.wsol);
-  const resume = planCreateVault({ deployer, host, strategy, keeper, legs: fiveStock(), existingDraft: { vault: key(2), mint: key(3) } });
+  const resume = planCreateVault({ deployer, host, strategy, keeper, legs: fiveStock(), catalog: catalog(), existingDraft: { vault: key(2), mint: key(3) } });
   assert.equal(resume.phase, "CREATE_RESUME");
   assert.equal(resume.vault, key(2));
-  assert.throws(() => planCreateVault({ deployer, host, strategy, keeper, legs: [{ mint: AAPL, targetWeightBps: 10000, oracleKind: "pyth" }] }), /PYTH_COMPOSITION_FORBIDDEN/);
-  assert.throws(() => planCreateVault({ deployer: host, host, strategy, keeper, legs: fiveStock() }), /separate/);
+  assert.throws(() => planCreateVault({ deployer, host, strategy, keeper, legs: [{ mint: AAPL, targetWeightBps: 10000, oracleKind: "pyth" }], catalog: catalog() }), /PYTH_COMPOSITION_FORBIDDEN/);
+  assert.throws(() => planCreateVault({ deployer: host, host, strategy, keeper, legs: fiveStock(), catalog: catalog() }), /separate/);
+});
+
+test("vault legs prefer xStock, admit Backpack .US only when there is no xStock, reject DEX lookalikes", () => {
+  assert.equal(admitVaultLeg(AAPL, catalog()).provider, "xstocks");
+  assert.equal(admitVaultLeg(BACKPACK_ONLY, catalog()).provider, "backpack");
+  assert.throws(() => admitVaultLeg(key(21), catalog()), /XSTOCK_PREFERRED/);
+  assert.throws(() => admitVaultLeg(key(22), catalog()), /DEX_LOOKALIKE_FORBIDDEN/);
+  const deployer = onCurve(), host = key(4), strategy = key(5), keeper = onCurve();
+  assert.throws(() => planCreateVault({ deployer, host, strategy, keeper, legs: [{ mint: key(22), targetWeightBps: 10000, oracleKind: "raydium_clmm" }], catalog: catalog() }), /DEX_LOOKALIKE_FORBIDDEN/);
+  const backpack = planCreateVault({ deployer, host, strategy, keeper, legs: [{ mint: BACKPACK_ONLY, targetWeightBps: 10000, oracleKind: "raydium_clmm" }], catalog: catalog() });
+  assert.equal(backpack.legs[0].mint, BACKPACK_ONLY);
 });
 
 test("zap in splits USDC at target bps, returns unused, never guarantees shares", () => {
@@ -140,7 +163,7 @@ test("zap in splits USDC at target bps, returns unused, never guarantees shares"
   const plan = planZapIn({
     usdcMint: USDC, usdcAmountRaw: "1000",
     assets: fiveStock().map(({ mint, targetWeightBps }) => ({ mint, targetWeightBps })),
-    quotes,
+    quotes, catalog: catalog(),
   });
   assert.equal(plan.estimatedOnly, true);
   assert.equal(plan.estimatedSharesRaw, null);
@@ -152,10 +175,10 @@ test("zap in splits USDC at target bps, returns unused, never guarantees shares"
   const dust = planZapIn({
     usdcMint: USDC, usdcAmountRaw: "10",
     assets: [{ mint: AAPL, targetWeightBps: 3333 }, { mint: AMZN, targetWeightBps: 3333 }, { mint: NVDA, targetWeightBps: 3334 }],
-    quotes: quotes.slice(0, 3),
+    quotes: quotes.slice(0, 3), catalog: catalog(),
   });
   assert.equal(dust.unusedUsdcRaw, "1");
-  assert.throws(() => planZapIn({ usdcMint: USDC, usdcAmountRaw: "1000", assets: fiveStock().map(({ mint, targetWeightBps }) => ({ mint, targetWeightBps })), quotes: quotes.slice(0, 1) }), /ZAP_QUOTE_REQUIRED/);
+  assert.throws(() => planZapIn({ usdcMint: USDC, usdcAmountRaw: "1000", assets: fiveStock().map(({ mint, targetWeightBps }) => ({ mint, targetWeightBps })), quotes: quotes.slice(0, 1), catalog: catalog() }), /ZAP_QUOTE_REQUIRED/);
 });
 
 test("zap out is USDC only; user does not receive xStocks; host 0", () => {

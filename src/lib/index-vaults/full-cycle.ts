@@ -5,6 +5,8 @@ import { address, weightsValid } from "./amounts.ts";
 import { HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
 import { discloseNativeCaps } from "./native-caps.ts";
 import { VAULT_RELEASE } from "./release.ts";
+import { admitVaultLegs } from "./vault-legs.ts";
+import type { CatalogToken } from "../venues/catalog-parse.ts";
 
 /** Fail-closed full vault cycle. Public Invest Sign stays off until every stage has a matching receipt. */
 export const CYCLE_STAGES = ["create", "zap-in", "mint", "rebalance", "zap-out"] as const;
@@ -61,9 +63,10 @@ export function publicInvestSignAllowed(
   return release.publicFundsEnabled && release.nativeUsdcExitVerified && release.publicInvestSign && cycleProven(receipts, identity);
 }
 
-export function assertCreateLegs(legs: CreateLeg[]): CreateLeg[] {
+export function assertCreateLegs(legs: CreateLeg[], catalog: readonly CatalogToken[]): CreateLeg[] {
   weightsValid(legs);
   discloseNativeCaps(legs.length);
+  admitVaultLegs(legs.map(l => l.mint), catalog);
   for (const leg of legs) {
     address(leg.mint);
     if (leg.oracleKind === "pyth" || leg.oracleKind === "0" || !RAYDIUM_KINDS.has(leg.oracleKind)) throw new Error(`PYTH_COMPOSITION_FORBIDDEN: ${leg.mint} oracle ${leg.oracleKind}`);
@@ -74,12 +77,13 @@ export function assertCreateLegs(legs: CreateLeg[]): CreateLeg[] {
 export function planCreateVault(input: {
   deployer: string; host: string; strategy: string; keeper: string;
   legs: CreateLeg[];
+  catalog: readonly CatalogToken[];
   existingDraft?: { vault: string; mint: string };
 }): CreateVaultPlan {
   const roles = [input.deployer, input.host, input.strategy, input.keeper].map(address);
   if (new Set(roles).size !== 4) throw new Error("Deployer, strategy, treasury and keeper must be separate");
   if (!PublicKey.isOnCurve(new PublicKey(roles[0]))) throw new Error("Deployer must be on-curve");
-  const legs = assertCreateLegs(input.legs);
+  const legs = assertCreateLegs(input.legs, input.catalog);
   const blockers = [
     "BROADCAST_DISABLED",
     "CREATE_EXECUTE_REQUIRES_OPERATOR_SIGNATURE",

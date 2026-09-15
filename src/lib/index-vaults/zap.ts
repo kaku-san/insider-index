@@ -3,6 +3,8 @@ import { address, rawAmount, weightsValid } from "./amounts.ts";
 import { HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
 import { discloseNativeCaps } from "./native-caps.ts";
 import { assertQuoteVenue, requireQuotes, type VenueQuote } from "./vault-prices.ts";
+import { admitVaultLegs } from "./vault-legs.ts";
+import type { CatalogToken } from "../venues/catalog-parse.ts";
 
 export interface ZapAsset { mint: string; targetWeightBps: number }
 export interface ZapHolding { mint: string; amountRaw: string }
@@ -44,17 +46,18 @@ const UNPROVEN = [
   "PREVIEW_ESTIMATED_NOT_GUARANTEED",
 ];
 
-export function planZapIn(input: { usdcMint: string; usdcAmountRaw: string; assets: ZapAsset[]; quotes: readonly VenueQuote[] }): ZapInPlan {
+export function planZapIn(input: { usdcMint: string; usdcAmountRaw: string; assets: ZapAsset[]; quotes: readonly VenueQuote[]; catalog: readonly CatalogToken[] }): ZapInPlan {
   const usdcMint = address(input.usdcMint);
   const usdcIn = rawAmount(input.usdcAmountRaw, true);
   weightsValid(input.assets);
   const caps = discloseNativeCaps(input.assets.length);
+  admitVaultLegs(input.assets.map(a => a.mint), input.catalog);
   const quoted = requireQuotes(input.assets.map(a => a.mint), input.quotes);
   const legs: ZapLeg[] = [];
   let allocated = 0n;
   for (const asset of input.assets) {
     const mint = address(asset.mint);
-    if (mint === usdcMint) throw new Error("ZAP_IN_USDC_LEG: zap-in buys mapped xStocks, not USDC");
+    if (mint === usdcMint) throw new Error("ZAP_IN_USDC_LEG: zap-in buys catalog tokens, not USDC");
     const quote = quoted.get(mint)!;
     if (quote.inMint !== usdcMint || quote.outMint !== mint) throw new Error(`ZAP_IN_QUOTE_DIRECTION: ${mint}`);
     assertQuoteVenue(quote);
