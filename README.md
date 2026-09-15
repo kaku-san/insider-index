@@ -1,8 +1,10 @@
-# InsiderIndex V1
+# InsiderIndex
 
-Disclosure-to-copy-trade app: real insider/politician prints → user-signed xStock swaps on Solana.
+Famous portfolios. Public receipts. Canonical product URL: [https://insiderindex.xyz](https://insiderindex.xyz).
 
-**Track A W0: copy one print from `/feed`, sign with Privy, execute through Jupiter, save the receipt.** Full disclosed books and model indexes remain research-only; basket Buy is unavailable. [W0 launch checklist and receipt contract](docs/track-a-w0.md).
+Index-first consumer app: people create discovery, public disclosures create trust, and the person index is the product. Copying one disclosure and owning native index shares remain separate money rails. Basket Buy stays unavailable; vault Sign is fail-closed.
+
+**Track A W0: copy one print from `/feed`, sign with Privy, execute through Jupiter, save the receipt.** Full disclosed books and model indexes remain research-only until a verified native vault prepare path exists. [W0 launch checklist and receipt contract](docs/track-a-w0.md). Consumer frontend contract: [docs/insiderindex-fe/FRONTEND-README.md](docs/insiderindex-fe/FRONTEND-README.md).
 
 This repository is a Next.js App Router app. **Live product:** [https://insiderindex.xyz](https://insiderindex.xyz) (InsiderIndex.xyz). The existing Barely Stable / Hetzner deployment is documented below. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 

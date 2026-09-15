@@ -1,61 +1,128 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useResource } from "@/lib/frontend/use-resource";
+import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
+import type { PersonPortfolioResponse, ResearchActivity, ResearchItem } from "@/lib/frontend/research-contract";
+import { moneyBand, personContext, shortDate, slugifyPerson } from "@/lib/frontend/research-format";
+import { portraitFor } from "@/lib/frontend/portraits";
+import { useDeviceFollows } from "@/lib/frontend/device-follows";
+import { PageError, Skeleton, StockIcon } from "./social/shared";
+import { AllocationBreakdown } from "./allocation-breakdown";
+import { companyNameFor } from "@/lib/frontend/company-logos";
+import { Icon } from "./social/icon";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import type { FomoProfile, CopySignal } from "@/lib/disclosures/types";
-import { disclosedRange } from "@/lib/frontend/disclosure-labels";
-import { PageError, Skeleton, EmptyState } from "./social/shared";
-import { FmpPerson } from "./fmp-portfolio";
-import {
-  AllocationPanel, FilingLink, MissingValue, PerformancePanel, PortfolioLayout,
-  TableRegion, portfolioStyles as styles,
-} from "./person-portfolio";
+import { getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { VaultFlow } from "./vault-flow";
+import styles from "./consumer-person.module.css";
 
-type ProfileData = { profile: FomoProfile; trades: CopySignal[] };
+type LegacyProfileData = { profile: FomoProfile; trades: CopySignal[] };
+type HoldingView = { key:string; ticker:string; name:string; weightPct:number|null; venue:string|null; mint:string|null; disclosedValue?:string|null };
+type ActivityView = { id:string; ticker:string; name:string; side:"buy"|"sell"|"other"; tradeDate:string|null; filedDate:string|null; amount:string; sourceUrl?:string|null; copyHref?:string|null };
 
-/** Legacy URLs share the portfolio layout; Congress resolves to its saved FMP book. */
-export function ProfileView({ id, initialData }: { id: string; initialData?: ProfileData }) {
-  const resource = useResource<ProfileData>(`/api/profiles/${encodeURIComponent(id)}`, initialData);
-  const profile = resource.data?.profile;
-  if (resource.loading && !profile) return <Skeleton />;
-  if (resource.error && !profile) return <PageError error={resource.error} retry={resource.reload} />;
-  if (!profile) return <EmptyState title="Profile not found." description="This public profile is unavailable." />;
-  if (profile.kind === "politician" && /^[A-Z][0-9]{6}$/.test(profile.cikOrBioguide)) {
-    return <FmpPerson key={profile.cikOrBioguide} id={profile.cikOrBioguide} />;
-  }
-  const trades = [...(resource.data?.trades ?? [])].sort((a, b) => b.transactionDate.localeCompare(a.transactionDate));
-  return <PortfolioLayout id={id} name={profile.name} image={profile.imageUrl} context={profile.title}
-    strategy="Follow publicly disclosed positions and the trades behind them."
-    count={profile.portfolio.length || null} countNote="Names on the filing record · not live holdings"
-    notice={PREVIEW_MODE ? <div className={styles.notice}>Illustrative preview. These are fictional figures, not an actual portfolio.</div> : resource.error ? <div className={styles.notice} role="alert">Could not refresh this profile. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : undefined}>
-    <PerformancePanel points={profile.curve} />
-    <section className={styles.panel} aria-labelledby="holdings-title">
-      <div className={styles.sectionHead}><h2 id="holdings-title">Current holdings</h2><span className={styles.badge}>Disclosed book · not live</span></div>
-      <p className={styles.caption}>{profile.kind === "politician" ? "Reported purchase and sale ranges, not share counts or a verified current balance." : "Positions reported after the latest Form 4 print, valued at that disclosed print’s price—not a current market quote."} Every disclosed name stays visible, including sold and exited positions.</p>
-      {profile.portfolio.length ? <TableRegion label="Disclosed positions; scroll for all columns"><table className={styles.table}>
-        <thead><tr><th scope="col">Ticker / asset</th><th scope="col" className={styles.number}>Last price</th><th scope="col" className={styles.number}>Disclosed value</th><th scope="col" className={styles.number}>Weight</th></tr></thead>
-        <tbody>{profile.portfolio.map((holding) => <tr key={holding.ticker}>
-          <td><strong>{holding.ticker}</strong><small>{holding.issuerName}</small><small>{holding.status} · latest trade {holding.lastTradeAt.slice(0, 10)}</small></td>
-          <td className={styles.number}><MissingValue /></td>
-          <td className={styles.number}>{disclosedRange({ low: holding.valueLow, high: holding.valueHigh })}</td>
-          <td className={styles.number}><MissingValue /></td>
-        </tr>)}</tbody>
-      </table></TableRegion> : <div className={styles.empty}><h3>No disclosed book available</h3><p>Missing filings do not mean the person owns nothing.</p></div>}
-      <p className={styles.caption}>No current price feed or published target weights are available for this book.</p>
-    </section>
-    <AllocationPanel />
-    <section className={styles.panel} aria-labelledby="activity-title">
-      <div className={styles.sectionHead}><h2 id="activity-title">Allocation history / trades</h2><span className={styles.badge}>{trades.length} disclosures</span></div>
-      <p className={styles.caption}>Reported transactions, not executed vault rebalances.</p>
-      {trades.length ? <TableRegion label="Disclosed trade history"><table className={styles.table}>
-        <thead><tr><th scope="col">Trade date</th><th scope="col">Ticker</th><th scope="col">Activity</th><th scope="col" className={styles.number}>Amount range</th></tr></thead>
-        <tbody>{trades.map((trade) => <tr key={trade.id}>
-          <td>{trade.transactionDate.slice(0, 10)}<small>Disclosed {trade.filedAt.slice(0, 10)}</small><FilingLink url={null} /></td>
-          <td><strong>{trade.ticker}</strong><small>{trade.issuerName}</small></td>
-          <td><span className={styles.event} data-side={trade.side}>{trade.side === "buy" ? "Buy" : trade.side === "sell" ? "Sell" : "Other"}</span></td>
-          <td className={styles.number}>{disclosedRange({ low: trade.amountLow, high: trade.amountHigh })}</td>
-        </tr>)}</tbody>
-      </table></TableRegion> : <div className={styles.empty}><h3>No trade history available</h3><p>Transactions will appear when disclosure records are available.</p></div>}
-    </section>
-  </PortfolioLayout>;
+
+const fmtWeight=(v:number|null)=>v==null||!Number.isFinite(v)?"—":`${(v*100).toFixed(v*100>=10?0:1)}%`;
+function eventSide(value?:string|null):ActivityView["side"]{if(/purchase|buy/i.test(value??""))return"buy";if(/sale|sell/i.test(value??""))return"sell";return"other"}
+
+function researchHoldings(book:PersonPortfolioResponse):HoldingView[]{
+ const index=book.publishedIndex;
+ if(index?.constituents?.length)return [...index.constituents].sort((a,b)=>b.weight_bps-a.weight_bps).map(item=>({key:item.mint,ticker:item.ticker,name:item.issuer==="xstock"?"xStock mapped equity":item.issuer==="backpack"?"Backpack mapped equity":"Mapped equity",weightPct:item.weight_bps/10000,venue:item.issuer==="xstock"?"xStock":item.issuer==="backpack"?"Backpack":item.issuer,mint:item.mint,disclosedValue:typeof item.payload?.evidencedMidpoint==="number"?item.payload.evidencedMidpoint.toLocaleString("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}):null}));
+ const snapshot=[...(book.snapshots??[])].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0];
+ return (snapshot?.items??[]).filter(i=>i.kind==="stock"||i.kind==="etf").slice(0,24).map(item=>({key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:null,venue:item.token?.issuer??null,mint:item.token?.mint??null,disclosedValue:moneyBand(item.valueRange)}));
+}
+function legacyHoldings(profile:FomoProfile):HoldingView[]{return [...profile.portfolio].sort((a,b)=>b.weightPct-a.weightPct).map(item=>({key:item.mint??item.ticker,ticker:item.ticker,name:companyNameFor(item.ticker,item.issuerName),weightPct:Number.isFinite(item.weightPct)&&item.weightPct>0?item.weightPct:null,venue:item.venue==="none"?null:item.venue,mint:item.mint,disclosedValue:moneyBand({low:item.valueLow,high:item.valueHigh})}))}
+function researchActivity(book:PersonPortfolioResponse):ActivityView[]{return [...(book.activity??[])].sort((a,b)=>(b.transactionDate??b.disclosureDate??"").localeCompare(a.transactionDate??a.disclosureDate??"")).map((item:ResearchActivity)=>({id:item.id,ticker:item.ticker??item.name??"Asset",name:item.name??"Public disclosure",side:eventSide(item.event),tradeDate:item.transactionDate??null,filedDate:item.disclosureDate??null,amount:moneyBand(item.amount),sourceUrl:item.sourceUrl}))}
+function legacyActivity(trades:CopySignal[]):ActivityView[]{return [...trades].sort((a,b)=>b.transactionDate.localeCompare(a.transactionDate)).map(item=>({id:item.id,ticker:item.ticker,name:item.issuerName,side:item.side,tradeDate:item.transactionDate,filedDate:item.filedAt,amount:moneyBand({low:item.amountLow,high:item.amountHigh}),copyHref:item.tradeEligible?`/trade/${encodeURIComponent(item.id)}?copy=1`:null}))}
+
+function Portrait({name,image}:{name:string;image:string|null}){const[failed,setFailed]=useState(false);return <div className={styles.portrait}>{image&&!failed?<img src={image} alt={name} onError={()=>setFailed(true)}/>:<span>{name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span>}</div>}
+
+function PerformanceGraphic({profile,activity}:{profile:FomoProfile|null;activity:ActivityView[]}){
+ const [range,setRange]=useState("1Y");
+ const [hover,setHover]=useState<number|null>(null);
+ const allPoints=profile?.curve?.filter(p=>Number.isFinite(p.equity))??[];
+ const take=range==="1M"?Math.min(2,allPoints.length):range==="3M"?Math.min(4,allPoints.length):range==="6M"?Math.min(7,allPoints.length):allPoints.length;
+ const points=allPoints.slice(Math.max(0,allPoints.length-take));
+ if(points.length<2)return <div className={styles.chartUnavailable}><div className={styles.chartGhost}><i/><i/><i/><i/></div><div><strong>Performance connects when price history does.</strong><span>InsiderIndex never converts disclosure amounts into fake returns.</span></div></div>;
+ const width=1000,height=360,pad=20;const min=Math.min(...points.map(p=>p.equity)),max=Math.max(...points.map(p=>p.equity)),span=max-min||1;
+ const coords=points.map((p,i)=>({x:pad+i/Math.max(1,points.length-1)*(width-pad*2),y:height-pad-(p.equity-min)/span*(height-pad*2),label:p.label,equity:p.equity}));
+ const poly=coords.map(p=>`${p.x},${p.y}`).join(" ");const first=points[0].equity,last=points.at(-1)!.equity,change=first?(last-first)/Math.abs(first):0;
+ const markers=activity.slice(0,3).map((item,i)=>({item,point:coords[Math.max(1,Math.min(coords.length-2,Math.round((coords.length-1)*(.38+i*.2))))]}));
+ return <div className={styles.performanceWrap}>
+   <div className={styles.performanceHead}><div><span>{PREVIEW_MODE?"DESIGN PREVIEW CURVE":"HISTORICAL MODEL"}</span><strong>{change>=0?"+":""}{(change*100).toFixed(1)}%</strong><small>{points[0].label} → {points.at(-1)!.label}</small></div><div className={styles.rangeTabs}>{["1M","3M","6M","1Y","ALL"].map(x=><button key={x} className={range===x?styles.activeRange:""} onClick={()=>setRange(x)}>{x}</button>)}</div></div>
+   <div className={styles.chartCanvas} onPointerLeave={()=>setHover(null)} onPointerMove={(event)=>{const rect=event.currentTarget.getBoundingClientRect();const ratio=Math.max(0,Math.min(1,(event.clientX-rect.left)/Math.max(1,rect.width)));setHover(Math.round(ratio*(coords.length-1)));}}>
+     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={`Historical model performance ${(change*100).toFixed(1)} percent`}>
+       {[90,180,270].map(y=><line key={y} x1="0" y1={y} x2={width} y2={y} className={styles.gridLine}/>) }
+       <path d={`M ${coords[0].x} ${height-pad} `+coords.map(p=>`L ${p.x} ${p.y}`).join(" ")+` L ${coords.at(-1)!.x} ${height-pad} Z`} className={styles.area}/>
+       <polyline points={poly} className={styles.performanceLine} vectorEffect="non-scaling-stroke"/>
+       {markers.map(({item,point})=><g key={item.id} className={styles.marker}><line x1={point.x} x2={point.x} y1={point.y+8} y2={height} /><circle cx={point.x} cy={point.y} r="6"/></g>)}
+     </svg>
+     {markers.map(({item,point},i)=><div key={item.id} className={`${styles.eventChip} ${i===1?styles.eventChipAlt:""}`} style={{left:`${point.x/width*100}%`,top:`${Math.max(8,point.y/height*100-4)}%`}}><b>{item.side==="buy"?"BUY":item.side==="sell"?"SELL":"FILE"} {item.ticker}</b><span>{item.amount}</span></div>)}
+     {hover!=null&&coords[hover]?<div className={styles.scrub} style={{left:`${coords[hover].x/width*100}%`}}><i/><div><b>{coords[hover].label}</b><span>{((coords[hover].equity/points[0].equity-1)*100)>=0?"+":""}{((coords[hover].equity/points[0].equity-1)*100).toFixed(1)}%</span></div></div>:null}
+   </div>
+   <div className={styles.chartFooter}><span>{PREVIEW_MODE?"Illustrative curve for design review · holdings/activity snapshot is sourced":"Hindsight reconstruction · not live account performance"}</span><span>Drag/scrub interaction plugs into the production chart data layer.</span></div>
+ </div>
+}
+
+function ShareSheet({open,onClose,name,indexName,image,profile,holdings}:{open:boolean;onClose:()=>void;name:string;indexName:string;image:string|null;profile:FomoProfile|null;holdings:HoldingView[]}){
+ const[copied,setCopied]=useState(false);if(!open)return null;const pts=profile?.curve??[];const ret=pts.length>1&&pts[0].equity?((pts.at(-1)!.equity-pts[0].equity)/Math.abs(pts[0].equity))*100:null;
+ async function copy(){try{await navigator.clipboard.writeText(window.location.href);setCopied(true);setTimeout(()=>setCopied(false),1200)}catch{}}
+ async function share(){try{if(navigator.share)await navigator.share({title:`${indexName} · InsiderIndex`,url:window.location.href});else await copy()}catch{}}
+ return <div className={styles.shareBackdrop} onMouseDown={e=>{if(e.currentTarget===e.target)onClose()}}><section className={styles.shareSheet} role="dialog" aria-modal="true">
+   <header><div><strong>Ready for the group chat.</strong><span>Share the portfolio, not a spreadsheet.</span></div><button onClick={onClose} aria-label="Close"><Icon name="close" size={17}/></button></header>
+   <div className={styles.storyCard}><div className={styles.storyBrand}>InsiderIndex<span>®</span></div><Portrait name={name} image={image}/><div className={styles.storyCopy}><small>PERSON INDEX</small><h2>{indexName}</h2>{ret!=null?<strong>{ret>=0?"+":""}{ret.toFixed(1)}%</strong>:<strong>{holdings.length} names</strong>}<span>{ret!=null?(PREVIEW_MODE?"design preview curve":"historical model return"):"public disclosure model"}</span></div><div className={styles.storyFooter}><span>PUBLIC FILINGS → INDEX</span><span>InsiderIndex.xyz</span></div></div>
+   <div className={styles.shareActions}><button className={styles.sharePrimary} onClick={()=>void share()}><Icon name="share" size={16}/>Share</button><button onClick={()=>void copy()}>{copied?"Copied":"Copy link"}</button></div>
+ </section></div>
+}
+
+function FullBook({items}:{items:ResearchItem[]}){const[expanded,setExpanded]=useState(false);const visible=expanded?items:items.slice(0,10);if(!items.length)return <div className={styles.emptyBlock}><strong>No annual book saved.</strong><span>Missing source data is not treated as an empty portfolio.</span></div>;return <><div className={styles.bookTable}><table><thead><tr><th>Asset</th><th>Type</th><th>Disclosed value</th><th>Mapping</th></tr></thead><tbody>{visible.map(item=><tr key={item.id}><td><strong>{item.ticker??item.name??"Unnamed asset"}</strong>{item.ticker&&item.name?<small>{item.name}</small>:null}</td><td>{item.kind??item.assetType??"Other"}</td><td><strong>{moneyBand(item.valueRange)}</strong></td><td>{item.token?.symbol?<><strong>{item.token.symbol}</strong><small>{item.token.issuer??"Mapped token"}</small></>:<><strong>Disclosure only</strong><small>{item.mappingReason??"No approved mapping"}</small></>}</td></tr>)}</tbody></table></div>{items.length>10?<button className={styles.showAll} onClick={()=>setExpanded(v=>!v)}>{expanded?"Show less":`Show all ${items.length} rows`}</button>:null}</>}
+
+export function ProfileView({id, initialData}:{id:string; initialData?: PersonPortfolioResponse}){
+ const research=useResource<PersonPortfolioResponse>(`/api/people/${encodeURIComponent(id)}/portfolio`, initialData);
+ const legacy=useResource<LegacyProfileData>(`/api/profiles/${encodeURIComponent(id)}`);
+ const follows=useDeviceFollows();
+ const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"overview"|"holdings"|"activity"|"sources">("overview"),[investOpen,setInvestOpen]=useState(false),[vault,setVault]=useState<VaultReadiness|null>(null);
+ const researchBook=research.data,legacyProfile=legacy.data?.profile??null;
+ const indexId=researchBook?.publishedIndex?`fmp-${researchBook.publishedIndex.hash}`:legacyProfile?.index?.id??null;
+ useEffect(()=>{let live=true;if(!indexId){setVault(null);return;}getVaultReadiness(indexId).then(v=>{if(live)setVault(v)}).catch(()=>{if(live)setVault(null)});return()=>{live=false}},[indexId]);
+ const loading=research.loading&&legacy.loading&&!researchBook&&!legacyProfile;
+ if(loading)return <Skeleton cards={3}/>;
+ if(!researchBook&&!legacyProfile&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{research.reload();legacy.reload()}}/>;
+ if(!researchBook&&!legacyProfile)return <div className={styles.emptyPage}><strong>Portfolio not found.</strong><Link href="/">Back to Explore</Link></div>;
+ const person=researchBook?.person;const name=person?.name??legacyProfile!.name;const image=person?.image??legacyProfile?.imageUrl??portraitFor(slugifyPerson(name));const context=person?personContext(person):legacyProfile!.title;const indexName=researchBook?.indexName||researchBook?.publishedIndex?.indexName||legacyProfile?.index?.name||`${name} portfolio`;
+ const holdings=researchBook?.publishedIndex?.constituents?.length?researchHoldings(researchBook):(legacyProfile?.portfolio?.length?legacyHoldings(legacyProfile):researchBook?researchHoldings(researchBook):[]);
+ const activity=researchBook?.activity?.length?researchActivity(researchBook):legacyActivity(legacy.data?.trades??[]);const snapshot=researchBook?[...researchBook.snapshots].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0]:null;const fullItems=snapshot?.items??[];const mappedCount=researchBook?.publishedIndex?.constituents.length??holdings.filter(x=>x.mint).length;const following=follows.following(id);const latestFiling=snapshot?.filingDate??snapshot?.referenceDate??activity[0]?.filedDate??null;
+ const indexHref=indexId?`/indexes/${encodeURIComponent(indexId)}`:null;
+ const curve=legacyProfile?.curve??[];const historicalReturn=curve.length>1&&curve[0].equity?((curve.at(-1)!.equity-curve[0].equity)/Math.abs(curve[0].equity))*100:null;const topHolding=holdings.find(h=>h.weightPct!=null);
+ const investLabel=vault?.depositEnabled||vault?.ready?"Invest":vault?.identity||vault?.vault?"Preview index":"View index";
+ return <div className={styles.page}>
+   <div className={styles.topline}><Link href="/"><Icon name="arrow" size={14} style={{transform:"rotate(180deg)"}}/>Explore</Link><span>Public disclosures · delayed, not live positions</span></div>
+
+   <section className={styles.compactHero}>
+     <div className={styles.compactIdentity}>
+       <div className={styles.heroPortrait}><Portrait name={name} image={image}/><span className={styles.personNumber}>SL / {id.slice(-6).toUpperCase()}</span></div>
+       <div className={styles.identityCopy}><span className={styles.eyebrow}>{context}</span><h1>{name}</h1><p>{indexName}</p><div className={styles.compactReturn}>{historicalReturn!=null?<><strong>{historicalReturn>=0?"+":""}{historicalReturn.toFixed(1)}%</strong><span>{PREVIEW_MODE?"design preview · 1Y":"historical model · 1Y"}</span></>:<><strong>{holdings.length||"—"}</strong><span>visible holdings</span></>}</div><div className={styles.heroMeta}><span>{latestFiling?`Filed ${shortDate(latestFiling)}`:"Filing date unavailable"}</span><i/><span>{mappedCount||"No"} mapped</span></div>
+       <div className={styles.heroActions}><button className={`${styles.followButton} ${following?styles.following:""}`} onClick={()=>follows.toggle(id)}><Icon name={following?"check":"people"} size={15}/>{following?"Following":"Follow"}</button><button className={styles.shareButton} onClick={()=>setShareOpen(true)}><Icon name="share" size={15}/>Share</button>{indexId?<button className={styles.indexButton} onClick={()=>setInvestOpen(true)}>{investLabel}<Icon name="arrow" size={14}/></button>:null}</div></div>
+     </div>
+     <div className={styles.heroChart}><PerformanceGraphic profile={legacyProfile} activity={activity}/></div>
+   </section>
+
+   <div className={styles.tabs} role="tablist">{([['overview','Overview'],['holdings',`Holdings ${holdings.length}`],['activity',`Moves ${activity.length}`],['sources','Sources']] as const).map(([key,label])=><button key={key} className={tab===key?styles.activeTab:""} onClick={()=>setTab(key)}>{label}</button>)}</div>
+
+   {tab==="overview"?<section className={styles.overviewGrid}>
+     <div className={styles.allocationPanel}>{holdings.some(h=>h.weightPct!=null)?<AllocationBreakdown title="Portfolio allocation" subtitle="Breakdown by asset" items={holdings.filter(h=>h.weightPct!=null).map(h=>({ticker:h.ticker,name:h.name,weight:h.weightPct!}))}/>:null}<div className={styles.compactPanel}><header><div><h2>Top holdings</h2><p>Largest visible weights first.</p></div><button onClick={()=>setTab("holdings")}>See all</button></header>{holdings.length?<div className={styles.compactHoldings}>{holdings.slice(0,7).map((item)=><div className={styles.compactHolding} key={item.key}><StockIcon ticker={item.ticker}/><div><strong>{item.ticker}</strong><small>{item.name}</small></div><b className={styles.holdingPct}>{fmtWeight(item.weightPct)}</b></div>)}</div>:<div className={styles.emptyBlock}><strong>No mapped holdings published.</strong></div>}</div></div>
+     <div className={styles.compactPanel}><header><div><h2>Recent moves</h2><p>Trade date ≠ filing date.</p></div><button onClick={()=>setTab("activity")}>See all</button></header>{activity.length?<div className={styles.compactMoves}>{activity.slice(0,5).map(item=><div className={styles.compactMove} key={item.id}><StockIcon ticker={item.ticker} size="sm"/><span className={`${styles.moveSide} ${styles[item.side]}`}>{item.side==="buy"?"BUY":item.side==="sell"?"SELL":"FILE"}</span><div><strong>{item.ticker}</strong><small>{shortDate(item.tradeDate)} → filed {shortDate(item.filedDate)}</small></div><b>{item.amount}</b></div>)}</div>:<div className={styles.emptyBlock}><strong>No recent activity saved.</strong></div>}</div>
+     <div className={styles.compactTrust}><Icon name="shield" size={18}/><div><strong>Public receipts, not a live brokerage account.</strong><span>Performance is reconstructed only when verified price history exists. Source rows and unmapped assets stay visible.</span></div><button onClick={()=>setTab("sources")}>How it works</button></div>
+   </section>:null}
+
+   {tab==="holdings"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Holdings</h2><p>Disclosed names stay visible even when there is no approved on-chain mapping.</p></div>{indexHref?<Link href={indexHref}>Open model index <Icon name="arrow" size={13}/></Link>:null}</div>{holdings.length?<div className={styles.holdingsGrid}>{holdings.map((item,index)=><article className={styles.holdingCard} key={item.key}><span className={styles.rank}>{String(index+1).padStart(2,"0")}</span><StockIcon ticker={item.ticker}/><div className={styles.holdingName}><strong>{item.ticker}</strong><span>{item.name}</span></div><div className={styles.holdingWeight}><strong>{fmtWeight(item.weightPct)}</strong><span>{item.venue??"Disclosure only"}</span></div><div className={styles.weightTrack}><i style={{width:item.weightPct!=null?`${Math.max(3,(item.weightPct/Math.max(.01,topHolding?.weightPct??.01))*100)}%`:"0%"}}/></div></article>)}</div>:<div className={styles.emptyBlock}><strong>No holdings are published.</strong></div>}</section>:null}
+
+   {tab==="activity"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Public moves</h2><p>Copy appears only when the disclosure is eligible and has a real disclosure ID.</p></div><Link href="/feed">Open Feed</Link></div>{!activity.length?<div className={styles.emptyBlock}><strong>No activity is saved.</strong></div>:<div className={styles.movesList}>{activity.map((item,index)=><article className={styles.moveRow} key={item.id}><span className={styles.moveIndex}>{String(index+1).padStart(2,"0")}</span><StockIcon ticker={item.ticker} size="sm"/><span className={`${styles.moveSide} ${styles[item.side]}`}>{item.side==="buy"?"BOUGHT":item.side==="sell"?"SOLD":"FILED"}</span><div className={styles.moveAsset}><strong>{item.ticker}</strong><span>{item.name}</span></div><div className={styles.moveDates}><span><b>Trade</b>{shortDate(item.tradeDate)}</span><span><b>Filed</b>{shortDate(item.filedDate)}</span></div><div className={styles.moveAmount}><strong>{item.amount}</strong>{item.copyHref?<Link href={item.copyHref}>Copy this print</Link>:item.sourceUrl?<a href={item.sourceUrl} target="_blank" rel="noreferrer">Source ↗</a>:<span>Research only</span>}</div></article>)}</div>}</section>:null}
+
+   {tab==="sources"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Source book</h2><p>The detail lives here instead of turning the whole portfolio page into a filing report.</p></div><Link href="/methodology">Methodology</Link></div>{researchBook?<FullBook items={fullItems}/>:<div className={styles.emptyBlock}><strong>Annual filing table isn't connected on this profile.</strong></div>}<div className={styles.clockGrid}><article><span>1</span><strong>Period end</strong><p>What date the holdings describe.</p></article><article><span>2</span><strong>Filed</strong><p>When the public saw it.</p></article><article><span>3</span><strong>Fetched</strong><p>When InsiderIndex stored it.</p></article><article><span>4</span><strong>Chain time</strong><p>Only for real vault operations.</p></article></div></section>:null}
+
+   <div className={styles.mobileBar}><button className={following?styles.following:""} onClick={()=>follows.toggle(id)}>{following?"Following":"Follow"}</button>{indexId?<button onClick={()=>setInvestOpen(true)}>{investLabel}</button>:<button onClick={()=>setShareOpen(true)}>Share</button>}</div>
+   <ShareSheet open={shareOpen} onClose={()=>setShareOpen(false)} name={name} indexName={indexName} image={image} profile={legacyProfile} holdings={holdings}/>
+   {indexId?<VaultFlow open={investOpen} onClose={()=>setInvestOpen(false)} indexId={indexId} indexName={indexName} readiness={vault}/>:null}
+ </div>
 }

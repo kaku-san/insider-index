@@ -78,14 +78,17 @@ test("empty performance has no fabricated curve; real points remain labelled his
   assert.match(measured, /comparison unavailable/);
 });
 
-test("legacy insider portfolios use the same uncluttered layout and keep unroutable positions", () => {
-  const initialData = { profile: { id: "insider-test", name: "Example Insider", kind: "insider", title: "Officer", imageUrl: null, curve: [], portfolio: [{ ticker: "UNMAPPED", issuerName: "Unmapped company", status: "holding", lastTradeAt: "2025-01-01", valueLow: null, valueHigh: 5000 }], index: { constituents: [] } }, trades: [] } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
+test("consumer person portfolios keep unroutable positions and never invent a buy", () => {
+  const initialData = {
+    person: { id: "insider-test", name: "Example Insider", office: "Officer", image: null },
+    snapshots: [{ id: "s1", year: 2025, items: [{ id: "h1", ticker: "UNMAPPED", name: "Unmapped company", kind: "stock", valueRange: { low: null, high: 5000 } }] }],
+    activity: [],
+    publishedIndex: null,
+  } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
   const html = renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(ProfileView, { id: "insider-test", initialData })));
   assert.match(html, /UNMAPPED/);
-  assert.match(html, /Up to \$5,000/);
-  assert.match(html, /Basket buying unavailable/);
-  assert.match(html, /Holdings distribution/);
-  assert.doesNotMatch(html, /Copy latest|Buy the index|Tradable basket|followers|role="switch"/);
+  assert.match(html, /Unmapped company/);
+  assert.doesNotMatch(html, /\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:/);
 });
 
 test("automated names use first name and last initial; only actual name collisions append IDs", () => {

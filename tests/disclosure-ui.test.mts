@@ -7,11 +7,15 @@ import { bookStatus, disclosedRange, filterPeople, personContext } from "../src/
 import type { StoredPerson } from "../src/lib/fmp/store.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { IndexHome } = await import("../src/components/index-home.tsx");
+const { ConsumerHome } = await import("../src/components/consumer-home.tsx");
 const { FmpPerson, PublishedTarget } = await import("../src/components/fmp-person.tsx");
 const { PrivySolanaProvider, usePrivySolana } = await import("../src/components/providers/privy-provider.tsx");
+const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 function renderPerson(book: NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>) {
   return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(FmpPerson, { id: person.id, initialData: book })));
+}
+function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }) {
+  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData }))));
 }
 
 const person: StoredPerson = {
@@ -24,27 +28,24 @@ const directory = Array.from({ length: 540 }, (_, i) => ({ ...person, id: `A${St
 
 // Assertions below inspect generated HTML, the public render output, not implementation source.
 test("home renders index-first discovery, portraits, honest empty models and a bounded full directory", () => {
-  const html = renderToStaticMarkup(createElement(IndexHome, { initialData: { people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" } }));
-  assert.match(html, /Everyone is/);
-  assert.match(html, /class="primaryButton" href="\/feed">Copy one print/);
-  assert.ok(html.indexOf("The index desk") < html.indexOf("Names worth knowing"));
-  assert.match(html, /540 people/);
-  assert.match(html, /Show 24 more people/);
-  assert.match(html, /24 of 540/);
-  assert.equal((html.match(/class="personRow"/g) ?? []).length, 24);
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" });
+  assert.match(html, /Follow the money/);
+  assert.match(html, /href="\/feed"[^>]*>See the disclosure tape/);
+  assert.ok(html.indexOf("PEOPLE ARE THE INDEX") < html.indexOf("THE DIRECTORY"));
+  assert.match(html, /Everyone we&#x27;re watching/);
+  assert.match(html, /Show more people/);
+  assert.equal((html.match(/class="directoryRow"/g) ?? []).length, 10);
   assert.match(html, /portrait.jpg/);
-  assert.match(html, /No targets have been published yet/);
-  assert.doesNotMatch(html, /Capitol Buys|Form-4 CEO|Sign &amp; buy/);
-  assert.doesNotMatch(html, />Index</);
+  assert.doesNotMatch(html, /Capitol Buys|Form-4 CEO|Sign &amp; buy|Basket Buy/);
 });
 
-test("published models use saved publication links, never legacy crowd baskets", () => {
+test("published models use person-index discovery, never legacy crowd baskets", () => {
   const hash = "a".repeat(64);
-  const html = renderToStaticMarkup(createElement(IndexHome, { initialData: { people: [{ ...person, publishedIndexHash: hash }], total: 1, partial: true, savedAt: null, storage: "supabase" } }));
-  assert.match(html, new RegExp(`/indexes/fmp-${hash}`));
-  assert.match(html, /1 published/);
-  assert.match(html, /Buying is not available/);
-  assert.match(html, /Directory coverage is partial/);
+  const html = renderHome({ people: [{ ...person, publishedIndexHash: hash, indexName: "Example F Index" }], total: 1, partial: true, savedAt: null, storage: "supabase" });
+  assert.match(html, /\/p\/A000001/);
+  assert.match(html, /PERSON INDEX|INDEX/);
+  assert.match(html, /Example F Index/);
+  assert.doesNotMatch(html, /Capitol Buys|crowd basket|Sign &amp; buy/);
 });
 
 test("search includes names outside the first page and combines chamber filters without mutating data", () => {
@@ -118,9 +119,12 @@ test("production fallback cannot authenticate, expose a fixture address, or sign
     assert.equal(wallet.mode, "unavailable");
     assert.equal(wallet.authenticated, false);
     assert.equal(wallet.solanaAddress, null);
+    assert.equal(wallet.previewConnection, false);
     await assert.rejects(wallet.connect(), /unavailable/);
     await assert.rejects(wallet.signTransaction("test-transaction"), /live wallet is required/);
     await assert.rejects(wallet.signTransaction("test-transaction", "devnet"), /fixtures are never accepted/);
+    await assert.rejects(wallet.signAndSendTransaction("test-transaction"), /live wallet is required/);
+    await assert.rejects(wallet.signAndSendTransaction("test-transaction", "devnet"), /fixtures are never accepted/);
     renderToStaticMarkup(cloneElement(fallback, { pendingLive: true }));
     assert.equal(wallet.ready, false);
     assert.equal(wallet.solanaAddress, null);

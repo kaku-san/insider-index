@@ -1,0 +1,136 @@
+/* InsiderIndex consumer revamp — Market Social x Editorial credibility.
+   Loaded after globals.css so existing transaction flows inherit the new system. */
+:root {
+  --background:#f7f6f2;
+  --foreground:#171717;
+  --card:#ffffff;
+  --surface-alt:#f0eee9;
+  --surface-hover:#fbfaf7;
+  --border:#e2dfd8;
+  --muted-foreground:#6f6d68;
+  --soft-text:#9a968f;
+  --primary:#ff5a36;
+  --primary-strong:#e84725;
+  --primary-soft:#fff0ea;
+  --primary-foreground:#ffffff;
+  --positive:#13845f;
+  --negative:#d94b61;
+  --focus:#ff5a36;
+  --ink:#171717;
+  --ink-text:#ffffff;
+  --shadow:0 20px 60px -44px rgba(34,48,94,.42);
+  --hero:#ffe2d9;
+  --note:#fff8d9;
+  --note-foreground:#5d5528;
+  --democrat:#3157d5;
+  --democrat-bg:#eaf0ff;
+  --republican:#d94b61;
+  --republican-bg:#ffebee;
+  --executive:#6c5bb8;
+  --executive-bg:#f0ecff;
+  --radius:16px;
+  --consumer-max:1280px;
+  --consumer-header-h:68px;
+  color-scheme:light;
+}
+.dark {
+  --background:#11110f;
+  --foreground:#f7f4ef;
+  --card:#1a1916;
+  --surface-alt:#24211d;
+  --surface-hover:#2a2621;
+  --border:#34302b;
+  --muted-foreground:#aaa49c;
+  --soft-text:#7f7971;
+  --primary:#ff7455;
+  --primary-strong:#ff5a36;
+  --primary-soft:#34231e;
+  --primary-foreground:#171717;
+  --positive:#58c69b;
+  --negative:#ff8294;
+  --focus:#ff7455;
+  --ink:#f7f4ef;
+  --ink-text:#171717;
+  --hero:#3b251f;
+  --note:#332f1c;
+  --note-foreground:#f0df8d;
+  --democrat:#89a0ff;
+  --democrat-bg:#1d2948;
+  --republican:#ff91a0;
+  --republican-bg:#42232b;
+  --executive:#b5a5ff;
+  --executive-bg:#30294d;
+  color-scheme:dark;
+}
+html{scroll-padding-top:calc(var(--consumer-header-h) + 22px)}
+body{font-family:"Avenir Next",Avenir,"Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;background:var(--background);font-size:14px;letter-spacing:-.006em}
+::selection{background:#ffd4c8;color:#171717}
+h1,h2,h3{font-weight:760;letter-spacing:-.045em}
+.sidebar,.site-header,.mobile-nav,.app-frame>.app-footer{display:none!important}
+.consumer-app-frame{padding-top:var(--consumer-header-h);min-height:100vh}
+.consumer-main{width:min(var(--consumer-max),calc(100% - 40px));margin:0 auto;padding:30px 0 72px;min-height:calc(100vh - 190px)}
+.eligibility-banner{font-size:11px;min-height:38px;padding:8px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.consumer-header{position:fixed;inset:0 0 auto 0;height:var(--consumer-header-h);z-index:80;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(18px);border-bottom:1px solid color-mix(in srgb,var(--border) 78%,transparent)}
+.consumer-header-inner{height:100%;width:min(var(--consumer-max),calc(100% - 40px));margin:auto;display:flex;align-items:center;gap:28px}
+.consumer-brand{display:flex;align-items:center;gap:9px;flex:0 0 auto;font-size:22px;font-weight:850;letter-spacing:-.055em}
+.consumer-brand .brand-mark{width:28px;height:30px;color:var(--primary)}
+.consumer-brand .brand-mark svg{width:27px;height:29px}
+.consumer-nav{display:flex;align-items:center;gap:4px}
+.consumer-nav a{position:relative;padding:9px 11px;border-radius:8px;color:var(--muted-foreground);font-size:13px;font-weight:650;transition:color .15s ease,background .15s ease}
+.consumer-nav a:hover{color:var(--foreground);background:var(--surface-alt)}
+.consumer-nav a.active{color:var(--foreground)}
+.consumer-nav a.active::after{content:"";position:absolute;left:11px;right:11px;bottom:3px;height:2px;border-radius:2px;background:var(--primary)}
+.consumer-search{margin-left:auto;width:min(310px,28vw);height:38px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--border);border-radius:10px;background:var(--background);color:var(--soft-text);transition:border-color .15s ease,background .15s ease,box-shadow .15s ease}
+.consumer-search:focus-within{background:var(--card);border-color:color-mix(in srgb,var(--primary) 55%,var(--border));box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 10%,transparent)}
+.consumer-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:var(--foreground);font-size:12px}
+.consumer-search kbd{padding:1px 5px;border:1px solid var(--border);border-radius:5px;background:var(--card);font-size:9px;color:var(--soft-text)}
+.consumer-header-actions{display:flex;align-items:center;gap:8px}
+.consumer-icon-button{width:36px;height:36px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--muted-foreground);display:inline-flex;align-items:center;justify-content:center;transition:transform .12s ease,background .12s ease,color .12s ease}
+.consumer-icon-button:hover{background:var(--surface-alt);color:var(--foreground)}
+.consumer-icon-button:active{transform:scale(.96)}
+.mobile-search-toggle{display:none}
+.consumer-mobile-nav{display:none}
+.consumer-footer{width:min(var(--consumer-max),calc(100% - 40px));margin:0 auto 26px;padding:28px 0 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:30px;color:var(--muted-foreground)}
+.consumer-footer>div{display:grid;gap:5px}.consumer-footer strong{font-size:17px;color:var(--foreground);letter-spacing:-.04em}.consumer-footer span{font-size:11px}.consumer-footer p{max-width:650px;font-size:10px;line-height:1.7;text-align:right}
+.toast{left:50%;bottom:26px;border-radius:12px;background:var(--ink);color:var(--ink-text)}
+
+/* Bring legacy money flows into the new system without changing their behavior. */
+.button,.button[data-slot=button]{border-radius:10px;font-size:12px;min-height:40px;font-weight:700;transition:transform .12s ease,background .12s ease,border-color .12s ease}
+.button:hover:not(:disabled){transform:none}.button:active:not(:disabled){transform:scale(.98)}
+.button.primary{background:var(--primary);color:var(--primary-foreground)}
+.button.primary:hover:not(:disabled){background:color-mix(in srgb,var(--primary) 90%,#000)}
+.button.ink,.button.ink-theme{background:var(--foreground);color:var(--card)}
+.panel,.order-panel,.positions-panel{border-color:var(--border);box-shadow:none}
+.eyebrow,.mini-label{letter-spacing:.02em;text-transform:none;font-family:inherit}
+.accent-dot{color:var(--primary)}
+.outlined-pill,.status-chip,.availability-pill,.preview-tag{border-radius:999px}
+.person-avatar{background:var(--surface-alt);border-color:var(--border)}
+
+@media(max-width:900px){
+  .consumer-header-inner{gap:14px}.consumer-nav{display:none}.consumer-search{width:min(360px,42vw)}
+  .consumer-main{width:min(100% - 28px,var(--consumer-max));padding-top:22px;padding-bottom:92px}
+  .consumer-footer{width:calc(100% - 28px);padding-bottom:78px;flex-direction:column;gap:12px}.consumer-footer p{text-align:left}
+  .consumer-mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(4,1fr);left:12px;right:12px;bottom:12px;z-index:90;padding:7px;border:1px solid color-mix(in srgb,var(--border) 82%,transparent);border-radius:18px;background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:0 16px 60px -30px rgba(15,25,55,.65);backdrop-filter:blur(18px)}
+  .consumer-mobile-nav a{display:flex;min-width:0;min-height:48px;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:12px;color:var(--soft-text);font-size:9px;font-weight:700}
+  .consumer-mobile-nav a.active{background:var(--surface-alt);color:var(--primary)}
+}
+@media(max-width:620px){
+  :root{--consumer-header-h:62px}
+  .consumer-header-inner{width:calc(100% - 24px)}.consumer-brand{font-size:20px}.consumer-brand .brand-mark{width:25px}
+  .consumer-search{display:none;position:absolute;left:12px;right:12px;top:calc(100% + 8px);width:auto;height:46px;background:var(--card);box-shadow:0 18px 50px -28px rgba(19,31,68,.55)}.consumer-search.open{display:flex}
+  .consumer-search kbd{display:none}.mobile-search-toggle{display:inline-flex}.consumer-header-actions{margin-left:auto}
+  .consumer-header-actions .wallet-button span:not(.sr-only){display:none}
+  .consumer-main{width:calc(100% - 22px);padding-top:18px}.eligibility-banner{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+/* Single-print execution: serious money surface inside the consumer shell. */
+.trade-page{max-width:1120px;margin:0 auto;padding:42px 0 70px}.trade-page>.breadcrumbs{margin-bottom:30px}.trade-page .page-intro{padding:10px 0 30px;border-bottom:1px solid var(--border)}.trade-page .page-intro h1{max-width:760px;font-size:clamp(48px,6.5vw,78px);line-height:.92;letter-spacing:-.07em;margin:8px 0}.trade-page .page-intro p{font-size:15px;color:var(--muted-foreground)}.trade-page-layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:24px;align-items:start;padding-top:24px}.trade-context{display:grid;gap:16px}.copy-visual{position:relative;overflow:hidden;min-height:330px;padding:28px;border:1px solid var(--border);border-radius:18px;background:var(--card)}.copy-visual::before{content:"ONE PRINT";position:absolute;right:-10px;top:-16px;font-size:96px;font-weight:900;letter-spacing:-.08em;color:color-mix(in srgb,var(--primary) 7%,transparent);white-space:nowrap}.copy-visual-path{position:relative;z-index:1;display:flex;align-items:center;gap:24px;margin:34px 0 28px}.copy-visual-path .person-avatar{width:118px;height:134px;border:0;border-radius:16px;overflow:hidden}.copy-visual-path .person-avatar img{width:100%;height:100%;object-fit:cover}.copy-path-arrow{color:var(--primary)}.copy-visual h2{font-size:34px;margin:0 0 6px;letter-spacing:-.055em}.copy-visual>p{color:var(--muted-foreground);font-size:13px}.trade-context-note{display:flex;gap:14px;padding:18px 20px;border:1px solid var(--border);border-radius:14px;background:transparent}.trade-context-note>.icon{flex:0 0 auto;color:var(--primary)}.trade-context-note h3{font-size:14px;margin:0 0 6px}.trade-context-note p{font-size:11px;line-height:1.55;color:var(--muted-foreground);margin:0 0 9px}.trade-context-note .text-button{color:var(--foreground);font-size:10px;font-weight:800}.trade-page .order-panel{position:sticky;top:90px;border:1px solid var(--border);border-radius:18px;background:var(--card);padding:22px}.trade-page .order-panel-heading{padding-bottom:18px;margin-bottom:17px;border-bottom:1px solid var(--border)}.trade-page .order-panel-heading h2{font-size:22px;letter-spacing:-.045em}.trade-page .order-summary{border-block:1px solid var(--border);margin:16px 0;padding:6px 0}.trade-page .order-summary>div{padding:8px 0}.trade-page .order-summary span{color:var(--muted-foreground);font-size:10px}.trade-page .order-summary strong{font-size:11px}.trade-page .basket-preview{border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border));background:color-mix(in srgb,var(--primary) 4%,var(--card));border-radius:11px}.trade-page .ticket-disclaimer,.trade-page .order-status{font-size:9px;line-height:1.5;color:var(--muted-foreground)}
+@media(max-width:850px){.trade-page{padding:24px 0 100px}.trade-page-layout{grid-template-columns:1fr}.trade-page .order-panel{position:static}.copy-visual{min-height:290px}.copy-visual::before{font-size:70px}}
+
+/* Public-inspired asset identity + allocation language. Public is a UX reference only; InsiderIndex keeps its own brand. */
+.stock-logo{position:relative;overflow:hidden;background:#fff;border:1px solid var(--border);display:inline-grid;place-items:center;flex:0 0 auto;color:var(--foreground);font-weight:850;box-shadow:0 1px 0 rgba(20,22,26,.03)}
+.stock-logo img{width:72%;height:72%;object-fit:contain;display:block}.stock-logo b{font-size:.72em;letter-spacing:-.04em}.stock-logo.stock-size-sm{width:24px;height:24px;border-radius:7px}.stock-logo.stock-size-md{width:36px;height:36px;border-radius:10px}.stock-logo.stock-size-lg{width:54px;height:54px;border-radius:14px}
+.allocation-breakdown{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px}.allocation-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}.allocation-head span{display:block;font-size:10px;color:var(--muted-foreground);margin-bottom:3px}.allocation-head h3{font-size:21px;margin:0;letter-spacing:-.04em}.allocation-head>strong{font-size:10px;color:var(--muted-foreground);font-weight:700}.allocation-strip{height:18px;display:flex;gap:2px;margin:18px 0 15px;border-radius:6px;overflow:hidden;background:var(--surface-alt)}.allocation-strip button{height:100%;min-width:3px;border:0;padding:0;cursor:pointer;opacity:.9;transition:opacity .12s ease,filter .12s ease}.allocation-strip button:hover,.allocation-strip button.active{opacity:1;filter:saturate(1.18) brightness(.98)}
+.allocation-focus{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 0 15px;border-bottom:1px solid var(--border)}.allocation-focus strong,.allocation-focus span{display:block}.allocation-focus strong{font-size:13px}.allocation-focus span{font-size:9px;color:var(--muted-foreground);margin-top:2px}.allocation-focus>b{font-size:18px;letter-spacing:-.04em}.allocation-legend{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;margin-top:4px}.allocation-legend button{display:grid;grid-template-columns:5px 24px 1fr auto;gap:8px;align-items:center;border:0;border-bottom:1px solid var(--border);background:transparent;padding:10px 0;text-align:left;color:inherit;cursor:pointer;opacity:.78}.allocation-legend button:hover,.allocation-legend button.active{opacity:1}.allocation-legend button>i{width:5px;height:26px;border-radius:5px}.allocation-legend span strong,.allocation-legend span small{display:block}.allocation-legend span strong{font-size:11px}.allocation-legend span small{font-size:8px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px}.allocation-legend button>b{font-size:10px;font-variant-numeric:tabular-nums}
+@media(max-width:620px){.allocation-breakdown{padding:15px}.allocation-legend{grid-template-columns:1fr}.allocation-strip{height:15px}.allocation-focus>b{font-size:16px}}

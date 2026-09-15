@@ -9,14 +9,14 @@ export function UIProvider({children}: {children:ReactNode}) {
  const [theme,setThemeState]=useState<Theme>("system"),[query,setQuery]=useState(""),[lane,setLane]=useState<Lane>("live");
  const [saved,setSaved]=useState<string[]>([]),[message,setMessage]=useState("");
  const timer=useRef<ReturnType<typeof setTimeout> | null>(null);
- useEffect(()=>{try { const t=localStorage.getItem("stocklana:theme");if(t==="dark"||t==="light"||t==="system") setThemeState(t);
-  const s=JSON.parse(localStorage.getItem("stocklana:saved")||"[]");
+ useEffect(()=>{try { const t=localStorage.getItem("insiderindex:theme")||localStorage.getItem("stocklana:theme");if(t==="dark"||t==="light"||t==="system") setThemeState(t);
+  const s=JSON.parse(localStorage.getItem("insiderindex:saved")||localStorage.getItem("stocklana:saved")||"[]");
   if(Array.isArray(s))setSaved(s.filter(x=>typeof x==="string"));
  }catch{};return ()=>{if(timer.current)clearTimeout(timer.current);};},[]);
  useEffect(()=>{const mq=matchMedia("(prefers-color-scheme: dark)");const apply=()=>{const dark=theme==="dark"||(theme==="system"&&mq.matches);document.documentElement.classList.toggle("dark",dark);document.documentElement.style.colorScheme=dark?"dark":"light";};apply();mq.addEventListener("change",apply);return ()=>mq.removeEventListener("change",apply);},[theme]);
- const setTheme=useCallback((t:Theme)=>{setThemeState(t);try{localStorage.setItem("stocklana:theme",t);}catch{}},[]);
+ const setTheme=useCallback((t:Theme)=>{setThemeState(t);try{localStorage.setItem("insiderindex:theme",t);}catch{}},[]);
  const toast=useCallback((text:string)=>{setMessage(text);if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>setMessage(""),4200);},[]);
- const toggleSave=(id:string)=>setSaved(old=>{const next=old.includes(id)?old.filter(x=>x!==id):[...old,id];try{localStorage.setItem("stocklana:saved",JSON.stringify(next));}catch{};return next;});
+ const toggleSave=(id:string)=>setSaved(old=>{const next=old.includes(id)?old.filter(x=>x!==id):[...old,id];try{localStorage.setItem("insiderindex:saved",JSON.stringify(next));}catch{};return next;});
  return <Context.Provider value={{theme,setTheme,query,setQuery,lane,setLane,toast,saved,toggleSave}}>{children}<div className={`toast ${message?"is-visible":""}`} role="status" aria-live="polite">{message}</div></Context.Provider>;
 }
 export function useUI(){const ui=useContext(Context);if(!ui)throw new Error("UIProvider is missing");return ui;}

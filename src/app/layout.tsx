@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { AppProviders } from "@/components/providers/app-providers";
 import { EligibilityBanner } from "@/components/eligibility-banner";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
+import "./consumer.css";
 
-const SITE_TITLE = "InsiderIndex — Everyone is an insider.";
+const SITE_TITLE = "InsiderIndex — Famous portfolios. Public receipts.";
 const SITE_DESCRIPTION =
-  "Explore published trade indexes and the public disclosures behind them. Original books, transparent target weights, and personal decisions. Everyone is an insider.";
+  "Explore public politician and executive disclosures, follow people, and access user-signed person indexes.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://insiderindex.xyz"),
@@ -29,33 +30,26 @@ export const metadata: Metadata = {
   },
 };
 
-const themeScript = `try{var t=localStorage.getItem('stocklana:theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem('insiderindex:theme')||localStorage.getItem('stocklana:theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
-      <body>
-        <a className="skip-link" href="#main-content">
-          Skip to content
-        </a>
+  return <html lang="en" suppressHydrationWarning>
+    <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
+    <body>
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <Suspense fallback={<div className="app-loading">Opening InsiderIndex…</div>}>
         <AppProviders>
           <SiteHeader />
-          <div className="app-frame">
+          <div className="consumer-app-frame">
             <EligibilityBanner />
-            <main id="main-content" className="main-content">
-              {children}
-            </main>
-            <footer className="app-footer">
-              <span>Less noise. More receipts.</span>
-              <span>Public disclosures ≠ live trades. Not investment advice.</span>
-              <strong>InsiderIndex</strong>
+            <main id="main-content" className="consumer-main">{children}</main>
+            <footer className="consumer-footer">
+              <div><strong>InsiderIndex</strong><span>Famous portfolios. Public receipts.</span></div>
+              <p>Public disclosures can be delayed, partial, household-owned, and different from current positions. Research first. Not investment advice.</p>
             </footer>
           </div>
         </AppProviders>
-      </body>
-    </html>
-  );
+      </Suspense>
+    </body>
+  </html>;
 }

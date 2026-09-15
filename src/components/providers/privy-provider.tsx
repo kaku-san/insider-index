@@ -12,17 +12,22 @@ import {
 import { STUB_WALLET_ADDRESS as STUB_WALLET } from "@/lib/wallet";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
 
+export type WalletConnectMethod = "wallet" | "email";
 export type PrivySolanaWallet = {
   ready: boolean;
   configured: boolean;
   mode: "live" | "stub" | "unavailable";
   authenticated: boolean;
+  previewConnection: boolean;
   solanaAddress: string | null;
   appId: string | null;
-  connect: () => Promise<void>;
+  connectionMethod: WalletConnectMethod | null;
+  connect: (method?: WalletConnectMethod) => Promise<void>;
   disconnect: () => Promise<void>;
   /** Always requires an explicit user signature. Never signs discretionary/unattended trades. */
   signTransaction: (transactionBase64: string, network?: "mainnet-beta" | "devnet") => Promise<string>;
+  /** Broadcast stays off for fixtures. Live wallets send only user-approved payloads. */
+  signAndSendTransaction: (transactionBase64: string, network?: "mainnet-beta" | "devnet") => Promise<string>;
 };
 
 export const PrivySolanaContext = createContext<PrivySolanaWallet | null>(null);
@@ -44,18 +49,21 @@ export function PrivySolanaProvider({
   pendingLive?: boolean;
 }) {
   const [authenticated, setAuthenticated] = useState(false);
+  const [connectionMethod, setConnectionMethod] = useState<WalletConnectMethod | null>(null);
   const allowStub = process.env.NODE_ENV !== "production" && PREVIEW_MODE;
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (method: WalletConnectMethod = "wallet") => {
     if (pendingLive) {
       throw new Error("Wallet is still connecting.");
     }
     if (!allowStub) throw new Error("Wallet connection is unavailable. Reload to retry Privy.");
+    setConnectionMethod(method);
     setAuthenticated(true);
   }, [allowStub, pendingLive]);
 
   const disconnect = useCallback(async () => {
     setAuthenticated(false);
+    setConnectionMethod(null);
   }, []);
 
   const signTransaction = useCallback(
@@ -73,19 +81,31 @@ export function PrivySolanaProvider({
     [allowStub, authenticated, pendingLive],
   );
 
+  const signAndSendTransaction = useCallback(
+    async (_transactionBase64: string, network: "mainnet-beta" | "devnet" = "mainnet-beta") => {
+      if (network === "devnet") throw new Error("Devnet vault signing requires a live wallet; fixtures are never accepted.");
+      if (pendingLive || !allowStub) throw new Error("A live wallet is required to sign.");
+      throw new Error("Fixture wallets cannot broadcast. Connect a live wallet for native index operations.");
+    },
+    [allowStub, pendingLive],
+  );
+
   const value = useMemo<PrivySolanaWallet>(
     () => ({
       ready: !pendingLive,
       configured: pendingLive,
       mode: pendingLive ? "live" : allowStub ? "stub" : "unavailable",
       authenticated: allowStub && authenticated,
+      previewConnection: allowStub && authenticated,
       solanaAddress: allowStub && authenticated ? STUB_WALLET : null,
       appId: null,
+      connectionMethod: allowStub && authenticated ? connectionMethod : null,
       connect,
       disconnect,
       signTransaction,
+      signAndSendTransaction,
     }),
-    [allowStub, authenticated, connect, disconnect, pendingLive, signTransaction],
+    [allowStub, authenticated, connectionMethod, connect, disconnect, pendingLive, signAndSendTransaction, signTransaction],
   );
 
   return (
