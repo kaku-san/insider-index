@@ -1,5 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {
+  isPersonFollowed,
+  listFollowedPersonIds,
+  personFollowKey,
+  subscribeToPersonFollows,
+  PERSON_FOLLOW_EVENT,
+} from "../src/lib/frontend/watchlist.ts";
 
 // Device-local watchlist replaced the deleted server-side follow store; this
 // exercises its real getItem/setItem/event-fanout behavior, not its source text.
@@ -18,7 +25,6 @@ function installFakeBrowserGlobals() {
 
 test("watchlist add/remove round-trips through the real localStorage-backed store", async () => {
   installFakeBrowserGlobals();
-  const { isPersonFollowed, listFollowedPersonIds, personFollowKey } = await import(`../src/lib/frontend/watchlist.ts?case=roundtrip`);
 
   assert.equal(isPersonFollowed("P000197"), false);
   assert.deepEqual(listFollowedPersonIds(), []);
@@ -37,7 +43,6 @@ test("watchlist add/remove round-trips through the real localStorage-backed stor
 
 test("subscribeToPersonFollows notifies on the same-tab change event and unsubscribes cleanly", async () => {
   installFakeBrowserGlobals();
-  const { subscribeToPersonFollows, PERSON_FOLLOW_EVENT } = await import(`../src/lib/frontend/watchlist.ts?case=subscribe`);
 
   let calls = 0;
   const unsubscribe = subscribeToPersonFollows(() => { calls += 1; });
@@ -61,8 +66,6 @@ test("a broken localStorage (e.g. private-mode Safari) fails closed instead of t
   (globalThis as unknown as { localStorage: unknown }).localStorage = new ThrowingStorage();
   class FakeWindow extends EventTarget {}
   (globalThis as unknown as { window: unknown }).window = new FakeWindow();
-
-  const { isPersonFollowed, listFollowedPersonIds } = await import(`../src/lib/frontend/watchlist.ts?case=broken`);
 
   assert.equal(isPersonFollowed("P000197"), false);
   assert.deepEqual(listFollowedPersonIds(), []);
