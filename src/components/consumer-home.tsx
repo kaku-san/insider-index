@@ -8,6 +8,7 @@ import { Icon } from "./social/icon";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { slugifyPerson, personContext, shortDate } from "@/lib/frontend/research-format";
 import type { PeopleDirectoryResponse, PublishedIndexResponse, ResearchPerson } from "@/lib/frontend/research-contract";
+import type { TrackerListResponse } from "@/lib/tracker/types";
 import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
 import { useUI } from "./providers/ui-provider";
 import { PageError } from "./social/shared";
@@ -104,16 +105,37 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
   const setLocalQuery = (value: string) => setQueryDraft({ urlQuery, value });
   const [visible, setVisible] = useState(10);
   const peopleResult = useResource<PeopleDirectoryResponse>("/api/people", initialData);
-  const primaryHasPeople = Boolean(peopleResult.data?.people?.length);
-  const legacyNeeded = !peopleResult.loading && !primaryHasPeople;
+  const trackerResult = useResource<TrackerListResponse>("/api/tracker-profiles");
+  const primaryHasPeople = Boolean(peopleResult.data?.people?.length || trackerResult.data?.people?.length);
+  const legacyNeeded = !peopleResult.loading && !trackerResult.loading && !primaryHasPeople;
   const legacyResult = useResource<LegacyProfiles>(legacyNeeded ? "/api/profiles" : null);
   const disclosureResult = useResource<DisclosureResponse>("/api/disclosures");
-  const people = useMemo(() => normalizedPeople(peopleResult.data ?? undefined, legacyResult.data ?? undefined), [peopleResult.data, legacyResult.data]);
+  const people = useMemo(() => {
+    const tracked = (trackerResult.data?.people ?? []).map((person) => ({
+      id: person.id,
+      name: person.name,
+      office: person.title,
+      party: person.party,
+      state: person.state,
+      chamber: person.chamber,
+      image: person.image,
+      publishedIndexHash: null,
+      indexName: null,
+      bookState: "tracker-current-book",
+    } satisfies ResearchPerson));
+    const rest = normalizedPeople(peopleResult.data ?? undefined, legacyResult.data ?? undefined);
+    const enriched = tracked.map((person) => {
+      const match = rest.find((row) => row.id === person.id || row.name === person.name);
+      return match ? { ...person, publishedIndexHash: match.publishedIndexHash, indexName: match.indexName, image: person.image ?? match.image } : person;
+    });
+    const leftover = rest.filter((person) => !enriched.some((row) => row.id === person.id || row.name === person.name));
+    return [...enriched, ...leftover];
+  }, [peopleResult.data, legacyResult.data, trackerResult.data]);
   const disclosures = disclosureResult.data?.disclosures ?? disclosureResult.data?.signals ?? [];
-  const directoryError = !people.length && !peopleResult.loading && !legacyResult.loading
-    ? [peopleResult.error, legacyResult.error].filter((error, index, errors): error is string => Boolean(error) && errors.indexOf(error) === index).join(" ") || null
+  const directoryError = !people.length && !peopleResult.loading && !trackerResult.loading && !legacyResult.loading
+    ? [trackerResult.error, peopleResult.error, legacyResult.error].filter((error, index, errors): error is string => Boolean(error) && errors.indexOf(error) === index).join(" ") || null
     : null;
-  const retryDirectory = () => { peopleResult.reload(); legacyResult.reload(); };
+  const retryDirectory = () => { trackerResult.reload(); peopleResult.reload(); legacyResult.reload(); };
 
   const sorted = useMemo(() => [...people].sort((a, b) => {
     const ap = /nancy pelosi/i.test(a.name) ? -20 : 0;
@@ -123,8 +145,9 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
   const heroPerson = sorted[0] ?? null;
   const spotlight = sorted.slice(1, 5);
   const query = localQuery.trim().toLowerCase();
-  const directory = useMemo(() => people.filter((person) => !query || `${person.name} ${person.office ?? ""} ${person.position ?? ""} ${person.state ?? ""}`.toLowerCase().includes(query)), [people, query]);
+  const directory = useMemo(() => people.filter((person) => !query || `${person.name} ${person.office ?? ""} ${person.state ?? ""}`.toLowerCase().includes(query)), [people, query]);
   const loading = !people.length && (
+    trackerResult.loading ||
     peopleResult.loading ||
     (legacyNeeded && legacyResult.data == null && legacyResult.error == null)
   );
