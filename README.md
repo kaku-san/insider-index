@@ -58,7 +58,7 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 
 API routes:
 
-- `GET /api/health` — boolean adapter flags (`edgar` / `ainvest` / `form4` / `jupiter` / `helius` / `privy` / `supabase`) plus derived `modes` (which path each lane takes) and `catalog` (mint / ticker counts, per-issuer `live` vs `snapshot`); never echoes secret values
+- `GET /api/health` — boolean adapter flags, derived runtime modes, catalog status and Track A W0 launch readiness; never returns secret values. The [W0 launch checklist](docs/track-a-w0.md#production-launch-checklist-operator) owns readiness interpretation
 - `GET /api/people?q=...` — searchable full FMP directory; source pagination/partial status, no featured-person allowlist
 - `GET /api/people/[id]/portfolio` — saved stable FMP `senateID` (both chambers), annual document versions, activity, aggregate history, completeness flags and `publishedIndex`
 - `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
@@ -67,9 +67,9 @@ API routes:
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
 - `GET /api/indexes` lists model indexes (crowd first) and explicit unavailable native-position status. Legacy `POST /api/indexes/quote` and `/execute` now return `503` with native release blockers; no fabricated transaction or receipt
-- `POST /api/quote` — Jupiter `/order`, catalog-enforced (`403` for a mint outside the catalog)
-- `POST /api/execute` — verify the saved quote's wallet, expiry and transaction message, Jupiter `/execute`, then save an idempotent copy receipt (explicit warning if a confirmed fill cannot be persisted)
-- `GET /api/positions/copies?wallet=<Solana public key>` — latest 100 saved copy receipts for a public wallet, no-store; no current balances or NAV
+- `POST /api/quote` — Jupiter `/order` for at least 1 USDC notional, catalog-enforced (`403` for a mint outside the catalog); a signable order requires a valid wallet and saved server context
+- `POST /api/execute` — verify the server-saved quote context, call Jupiter `/execute`, then save a copy receipt; see the [W0 receipt contract](docs/track-a-w0.md#receipt-contract)
+- `GET /api/positions/copies?wallet=<Solana public key>` — no-store, wallet-scoped copy receipt history; see the [W0 receipt contract](docs/track-a-w0.md#receipt-contract)
 - `GET /api/positions?wallet=<Solana public key>` — confirmed on-chain share balance for the existing devnet test vault only (no-store); missing/invalid wallet returns 400, RPC/identity failures return 503, never an inferred zero. No NAV or fill-derived balances. See `src/lib/index-vaults/devnet-positions.ts`.
 
 UI routes:
@@ -111,7 +111,7 @@ When both issuers list a name the **xStock mint wins**, then Backpack. Backpack'
 
 Refresh the offline snapshot with `npm run catalog:snapshot` (writes `src/lib/venues/catalog-snapshot.json`; never edit by hand). Quote mint: USDC `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
 
-`POST /api/quote` and `POST /api/execute` return `403` when the output mint is not in the catalog. `GET /api/health.catalog` reports whether each issuer served live or from the snapshot.
+`POST /api/quote` returns `403` for a requested mint outside the catalog. Execution re-resolves the mint from the server-saved quote context and returns `403` if it is no longer catalog-listed. `GET /api/health.catalog` reports whether each issuer served live or from the snapshot.
 
 ## Compliance
 
@@ -202,7 +202,7 @@ Congress rows are STOCK Act PTRs: they disclose a dollar range (`amountLow`/`amo
 | Local | `cp .env.example .env.local`, fill keys, `npm run dev` |
 | Server | gitignored `.env` at `/srv/projects/stocklana` — the deploy script never rsyncs `.env` / `.env.local` |
 | Traefik | Compose router rule is locked in `docker-compose.yml`. Barely Stable’s network is `edge` (default). Override with `TRAEFIK_NETWORK=edge` if you need to set it explicitly; do not switch the host. |
-| Health | `GET https://stocklana.barelystable.dev/api/health` reports which adapters are configured (`true`/`false`) and the derived `modes` |
+| Health | Check `/api/health` using the [W0 launch checklist](docs/track-a-w0.md#production-launch-checklist-operator) |
 | Congress | Set `AINVEST_API_KEY` in the server `.env` or the congress lane stays empty in production (no invented politicians) |
 
 ```
