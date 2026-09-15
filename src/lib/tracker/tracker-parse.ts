@@ -3,8 +3,10 @@
  *
  * The handoff is a third-party estimate scraped once (2026-09-15). Its dollar figures are
  * PelosiTracker's model of a member's brokerage book, never net worth and never a vault NAV.
- * Holdings and trades are the tracker's top/recent slices (5 holdings, ~10 trades), not every
- * lot ever filed; nothing here fills the gaps.
+ * Politician-API holdings are a top-5 slice plus an unitemized OTHER aggregate — tickers are never
+ * invented for OTHER. Where PelosiTracker also publishes a copy-trade portfolio (Pelosi 15, MTG 76),
+ * that full book is the shown current book; it is a different product with a different dollar total
+ * and is still not a vault NAV. Trades stay the politician-API recent slice (info only).
  */
 
 export const TRACKER_SOURCE = "pelositracker.app" as const;
@@ -14,6 +16,8 @@ export const TRACKER_AS_OF = "2026-09-15" as const;
 export const TRACKER_HOLDINGS_SLICE = 5;
 export const TRACKER_TRADES_SLICE = 10;
 export const TRACKER_VALUE_LABEL = "PelosiTracker estimated portfolio value · third-party model · not net worth · not vault NAV" as const;
+export const COPY_TRADE_VALUE_LABEL = "PelosiTracker copy-trade portfolio · different product from the disclosure estimate · not net worth · not vault NAV" as const;
+export type HoldingsBasis = "copy-trade-full" | "disclosure-slice";
 
 export type Band = { low: number | null; high: number | null };
 
@@ -38,6 +42,8 @@ export function trackerAmountBand(amount: unknown): Band | null {
 }
 
 export type TrackerHolding = { ordinal: number; ticker: string; name: string | null; valueUsd: number | null; percentage: number | null };
+export type UnitemizedOther = { label: string; valueUsd: number | null; percentage: number | null; note: string | null };
+export type CopyTradeMeta = { totalValueUsd: number | null; holdingsCount: number; warning: string | null; kind: string | null; label: typeof COPY_TRADE_VALUE_LABEL };
 export type TrackerTradeFlag = "non-date-label" | "after-scrape-date" | "unknown-band" | "filing-status-missing";
 export type TrackerTrade = {
   ordinal: number;
@@ -92,7 +98,13 @@ export type TrackerProfile = {
   portfolio: { valueUsd: number | null; cashUsd: number | null; monthlyChangePercent: number | null; label: typeof TRACKER_VALUE_LABEL };
   filingStats: TrackerFilingStats;
   sectors: TrackerSector[];
+  /** Shown current book: copy-trade full holdings when present, otherwise the politician-API top-5 slice. */
   topHoldings: TrackerHolding[];
+  /** Politician-API itemized slice (always ≤5); kept even when the shown book is the copy-trade portfolio. */
+  disclosureSlice: TrackerHolding[];
+  unitemizedOther: UnitemizedOther | null;
+  holdingsBasis: HoldingsBasis;
+  copyTrade: CopyTradeMeta | null;
   recentTrades: TrackerTrade[];
   performance: { points: TrackerPerformancePoint[]; leadingZeroPoints: number; firstDate: string | null; lastDate: string | null };
   news: TrackerNewsItem[];
@@ -133,6 +145,23 @@ function holding(raw: unknown, ordinal: number): TrackerHolding | null {
   const ticker = str(row.ticker)?.toUpperCase() ?? null;
   if (!ticker) return null;
   return { ordinal, ticker, name: str(row.name), valueUsd: num(row.value), percentage: num(row.percentage) };
+}
+
+/** Copy-trade rows use `symbol`/`weight`/`marketValue`. Quantity is ignored: it is never an index weight. */
+function copyTradeHolding(raw: unknown, ordinal: number): TrackerHolding | null {
+  const row = rec(raw);
+  const ticker = str(row.symbol)?.toUpperCase() ?? str(row.ticker)?.toUpperCase() ?? null;
+  if (!ticker) return null;
+  return { ordinal, ticker, name: str(row.name), valueUsd: num(row.marketValue), percentage: num(row.weight) };
+}
+
+function unitemizedOther(raw: unknown): UnitemizedOther | null {
+  const row = rec(raw);
+  const label = str(row.label);
+  const valueUsd = num(row.value);
+  const percentage = num(row.percentage);
+  if (!label && valueUsd === null && percentage === null) return null;
+  return { label: label ?? "OTHER", valueUsd, percentage, note: str(row.note) };
 }
 
 function trade(raw: unknown, ordinal: number, asOf: string): TrackerTrade | null {
@@ -198,6 +227,19 @@ export function normalizeTrackerProfile(raw: unknown, rank: number, scrapedAt: s
   if (!id || !slug || !name || !/^[A-Z][0-9]{6}$/.test(id) || !/^[a-z0-9-]+$/.test(slug)) return null;
   const title = str(row.title) ?? str(row.role);
   const remotePhoto = str(row.photoUrl);
+  const disclosureSlice = list(row.topHoldings).flatMap((entry, i) => { const h = holding(entry, i); return h ? [h] : []; });
+  const disclosure = rec(row.disclosureHoldings);
+  const other = unitemizedOther(disclosure.unitemizedOther);
+  const copyRaw = rec(row.copyTradePortfolioHoldings);
+  const copyHoldings = list(copyRaw.holdings).flatMap((entry, i) => { const h = copyTradeHolding(entry, i); return h ? [h] : []; })
+    .sort((a, b) => (b.percentage ?? -1) - (a.percentage ?? -1) || a.ticker.localeCompare(b.ticker))
+    .map((h, i) => ({ ...h, ordinal: i }));
+  const holdingsBasis: HoldingsBasis = copyHoldings.length ? "copy-trade-full" : "disclosure-slice";
+  const topHoldings = holdingsBasis === "copy-trade-full" ? copyHoldings : disclosureSlice;
+  const copyTrade: CopyTradeMeta | null = copyHoldings.length ? {
+    totalValueUsd: num(copyRaw.totalValue), holdingsCount: copyHoldings.length,
+    warning: str(copyRaw.warning), kind: str(copyRaw.kind), label: COPY_TRADE_VALUE_LABEL,
+  } : null;
   return {
     source: TRACKER_SOURCE, sourceLabel: TRACKER_SOURCE_LABEL, asOf: TRACKER_AS_OF, scrapedAt,
     sourceUrl: (() => { const url = str(row.sourceUrl); return url && /^https:\/\/pelositracker\.app\//.test(url) ? url : null; })(),
@@ -211,13 +253,16 @@ export function normalizeTrackerProfile(raw: unknown, rank: number, scrapedAt: s
     portfolio: { valueUsd: num(row.portfolioValue), cashUsd: num(row.cashValue), monthlyChangePercent: num(row.monthlyChangePercent), label: TRACKER_VALUE_LABEL },
     filingStats: filingStats(row.filingStats),
     sectors: list(row.sectorDistribution).flatMap((entry) => { const s = rec(entry); const sector = str(s.sector), percentage = num(s.percentage); return sector && percentage !== null ? [{ sector, percentage }] : []; }),
-    topHoldings: list(row.topHoldings).flatMap((entry, i) => { const h = holding(entry, i); return h ? [h] : []; }),
+    topHoldings, disclosureSlice, unitemizedOther: other, holdingsBasis, copyTrade,
     recentTrades: list(row.recentTrades).flatMap((entry, i) => { const t = trade(entry, i, TRACKER_AS_OF); return t ? [t] : []; }),
     performance: performance(row.performanceHistory),
     news: news(row.news),
     coverage: {
-      holdingsSlice: TRACKER_HOLDINGS_SLICE, tradesSlice: TRACKER_TRADES_SLICE,
-      note: `PelosiTracker top ${TRACKER_HOLDINGS_SLICE} positions and ~${TRACKER_TRADES_SLICE} most recent trades as scraped ${TRACKER_AS_OF}; not every lot ever filed.`,
+      holdingsSlice: holdingsBasis === "copy-trade-full" ? topHoldings.length : TRACKER_HOLDINGS_SLICE,
+      tradesSlice: TRACKER_TRADES_SLICE,
+      note: holdingsBasis === "copy-trade-full"
+        ? `PelosiTracker copy-trade portfolio: ${topHoldings.length} itemized holdings as scraped ${TRACKER_AS_OF}. Different dollar total from the politician disclosure estimate (top ${TRACKER_HOLDINGS_SLICE} + OTHER). Neither is a vault NAV. Trades remain the politician-API recent slice and are never index weights.`
+        : `PelosiTracker top ${TRACKER_HOLDINGS_SLICE} positions plus an unitemized OTHER aggregate as scraped ${TRACKER_AS_OF}; not every lot ever filed. Tickers are not invented for OTHER. ~${TRACKER_TRADES_SLICE} most recent trades are information only.`,
     },
   };
 }

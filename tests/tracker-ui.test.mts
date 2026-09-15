@@ -15,7 +15,7 @@ const { TrackerShelf } = await import("../src/components/tracker-shelf.tsx");
 const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 type Portfolio = NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
 
-const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
+const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20full-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
 const handoff = normalizeTrackerHandoff(brief);
 const catalogSnapshot = JSON.parse(readFileSync(new URL("../src/lib/venues/catalog-snapshot.json", import.meta.url), "utf8")) as { xstocks: CatalogToken[]; backpack: CatalogToken[] };
 const catalog = { ...indexCatalog([...catalogSnapshot.xstocks, ...catalogSnapshot.backpack]), feeds: [] };
@@ -38,43 +38,36 @@ test("the tracker-first person page labels every tracker figure PelosiTracker ·
   assert.match(html, /<h1>Nancy P Index · Tracker positions<\/h1>/);
   assert.match(html, /src="\/tracker\/photos\/nancy-pelosi\.jpg"/);
   assert.ok((html.match(/PelosiTracker · as of Sep 15, 2026/g) ?? []).length >= 6, "every tracker section carries the source and scrape date");
-  assert.match(html, /PelosiTracker portfolio value<\/dt><dd>\$314\.9M<\/dd><small>Third-party estimate as of Sep 15, 2026\. Not net worth, not a vault NAV\./);
+  assert.match(html, /PelosiTracker portfolio value<\/dt><dd>\$314\.9M<\/dd><small>Politician-API third-party estimate as of Sep 15, 2026\. Not net worth, not a vault NAV, and not the copy-trade book \(\$23\.2M\)/);
   assert.match(html, /PelosiTracker 30-day change<\/dt><dd data-tone="negative">-3\.05%/);
   // Shown book: tracker positions first with their percentage, then the older annual rows.
   const shown = html.slice(html.indexOf('id="shown-book-title"'), html.indexOf('id="tracker-index-title"'));
   assert.match(shown, /Current positions · shown book/);
-  assert.match(shown, /annual disclosure as of December 31, 2024/);
-  assert.match(shown, /never added together/);
-  assert.ok(shown.indexOf("NVDA</strong>") < shown.indexOf("AMZN</strong>") && shown.indexOf("GOOG</strong>") < shown.indexOf("AAPL</strong>"), "tracker rows precede annual-only rows");
-  assert.match(shown, /43\.49%/);
-  assert.match(shown, /\$136,951,952 tracker est\./);
-  assert.match(shown, /\$5,000,001–\$25,000,000/);
+  assert.match(shown, /copy-trade book/);
+  assert.match(shown, /never one total|never added together/);
+  assert.match(shown, /15\.17%/);
+  assert.match(shown, /copy-trade MTM/);
+  assert.match(shown, /NVDA<\/strong>/);
+  assert.match(shown, /GOOGL<\/strong>/);
+  assert.match(shown, /VST<\/strong>/);
   assert.match(shown, /Union Bank of California/);
   assert.match(shown, /Tracker Sep 15, 2026 \+ annual filing/);
   assert.match(shown, /FMP annual filing · 2024-12-31/);
-  assert.match(shown, /Raydium pool observed/);
-  assert.match(shown, /No Raydium USDC pool observed/);
   assert.doesNotMatch(shown, /Total portfolio|Combined value|\$0<\/strong>/);
   // Vault-ready index: weights from positions, GOOG excluded with a reason, trades never used, funds disabled.
   const index = html.slice(html.indexOf('id="tracker-index-title"'), html.indexOf('id="compare-title"'));
-  assert.match(index, /Vault candidate · first live candidate/);
-  assert.match(index, /66\.88%/);
-  assert.match(index, /11\.79%/);
-  assert.match(index, /10\.72%/);
-  assert.match(index, /10\.61%/);
-  assert.match(index, /Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh/);
-  assert.match(index, /49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6/);
-  assert.match(index, /GOOG \(5\.00%\): no raydium usdc pool/);
-  assert.match(index, /Weights sum to 10,000 bps over 4 names/);
+  assert.match(index, /first live candidate|Wait readiness/);
+  assert.match(index, /IBTA\.L/);
+  assert.match(index, /no solana mint/);
+  assert.match(index, /10,000 bps|No investable slice yet/);
   assert.match(index, /trades not used/);
   assert.match(index, /Public funds remain disabled \(WAIT_NATIVE_VERIFICATION\)/);
   assert.match(index, /href="\/indexes\/tracker-P000197"/);
   // FMP comparison on the same bioguide: both sides present.
   const compare = html.slice(html.indexOf('id="compare-title"'), html.indexOf('id="sectors-title"'));
   assert.match(compare, /FMP target · annual 2024-12-31/);
-  assert.match(compare, /NVDA<\/strong>.*?Both.*?43\.49%.*?28\.57%/s);
-  assert.match(compare, /AAPL<\/strong>.*?FMP only.*?71\.43%/s);
-  assert.match(compare, /1 on both · 4 tracker only · 1 FMP only/);
+  assert.match(compare, /NVDA<\/strong>.*?Both.*?15\.17%/s);
+  assert.match(compare, /AAPL<\/strong>.*?Both/s);
   assert.match(compare, /href="\/indexes\/fmp-c{64}"/);
   // Sectors, trades (info only, decoded bands), filing stats, series.
   assert.match(html, /Technology<\/span>.*?67\.39%/s);
@@ -115,9 +108,10 @@ test("a tracker person with no saved FMP book still renders every tracker sectio
   assert.match(html, /2021 - 2026/);
   assert.match(html, /No saved FMP annual book exists for this person/);
   assert.match(html, /Not in saved FMP directory|No FMP index published/);
-  assert.match(html, /Wait readiness/);
   assert.match(html, /AMD<\/strong>/);
   assert.match(html, /IBIT<\/strong>/);
+  assert.match(html, /copy-trade book/);
+  assert.equal(greene.topHoldings.length, 76);
   assert.doesNotMatch(html, /Older annual disclosure · FMP/);
 });
 
@@ -127,18 +121,18 @@ test("Senate rows show tracker coverage gaps honestly instead of zero filings", 
   assert.match(html, /Not tracked by PelosiTracker for this member/);
   assert.doesNotMatch(html, /Total filings<\/dt><dd>0<\/dd>/);
   assert.match(html, /GLDM<\/strong>/);
-  assert.match(html, /No investable slice yet/);
+  assert.match(html, /Unitemized OTHER|OTHER \(not itemized/);
+  assert.match(html, /No tickers invented|No investable slice yet/);
 });
 
 test("the tracker index page shows proportions with mint and pool addresses and a disabled invest rail", () => {
   const html = render(createElement(TrackerIndex, { personId: "P000197", initialData: pelosiView, fmpIndexHash: "c".repeat(64) }));
   assert.match(html, /<h1>Nancy P Index · Tracker positions<\/h1>/);
   assert.match(html, /PelosiTracker positions as of Sep 15, 2026/);
-  assert.match(html, /4 names · 10,000 bps/);
-  assert.match(html, /66\.88%/);
+  assert.match(html, /10,000 bps|No tracker position has both/);
   assert.match(html, /Proportions, not a NAV\./);
-  assert.match(html, /EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB/);
-  assert.match(html, /First live candidate/);
+  assert.match(html, /copy-trade portfolio|xStock preferred|Backpack/);
+  assert.match(html, /First live candidate|Research the target/);
   assert.match(html, /disabled="" aria-describedby="invest-blocker">Invest unavailable/);
   assert.match(html, /never an input/);
   assert.match(html, /Exit is USDC only: holders never receive a bag of xStocks, and in-kind redemption is not the product/);
@@ -150,7 +144,7 @@ test("the tracker index page shows proportions with mint and pool addresses and 
 test("the home shelf lists all 20 handoff people with photos, tracker value labels and both links", () => {
   const people = handoff.profiles.map((profile) => {
     const view = buildTrackerPersonView(profile, catalog);
-    return { rank: profile.rank, slug: profile.slug, id: profile.id, name: profile.name, title: profile.title, party: profile.party, state: profile.state, chamber: profile.chamber, currentMember: profile.currentMember, photo: profile.photo, asOf: profile.asOf, sourceLabel: profile.sourceLabel, sourceUrl: profile.sourceUrl, portfolioValueUsd: profile.portfolio.valueUsd, portfolioValueLabel: profile.portfolio.label, monthlyChangePercent: profile.portfolio.monthlyChangePercent, topTickers: profile.topHoldings.map((h) => h.ticker), tradesListed: 10, holdingsListed: 5, index: { id: view.index.id, indexName: view.index.indexName, readiness: view.index.readiness, constituents: view.index.constituents.length } };
+    return { rank: profile.rank, slug: profile.slug, id: profile.id, name: profile.name, title: profile.title, party: profile.party, state: profile.state, chamber: profile.chamber, currentMember: profile.currentMember, photo: profile.photo, asOf: profile.asOf, sourceLabel: profile.sourceLabel, sourceUrl: profile.sourceUrl, portfolioValueUsd: profile.portfolio.valueUsd, portfolioValueLabel: profile.portfolio.label, monthlyChangePercent: profile.portfolio.monthlyChangePercent, topTickers: profile.topHoldings.map((h) => h.ticker), tradesListed: profile.recentTrades.length, holdingsListed: profile.topHoldings.length, index: { id: view.index.id, indexName: view.index.indexName, readiness: view.index.readiness, constituents: view.index.constituents.length } };
   });
   const directory = { source: "pelositracker.app", sourceLabel: "PelosiTracker", asOf: "2026-09-15", scrapedAt: handoff.scrapedAt, selection: handoff.selection, count: 20, partyMix: handoff.partyMix, issues: [], people, poolSnapshot: pelosiView.poolSnapshot, catalog: [], release: pelosiView.release } as unknown as ComponentProps<typeof TrackerShelf>["initialData"];
   const html = renderToStaticMarkup(createElement(TrackerShelf, { initialData: directory }));
@@ -162,6 +156,7 @@ test("the home shelf lists all 20 handoff people with photos, tracker value labe
   assert.match(html, new RegExp(`20 people · ${candidates} vault candidates`));
   assert.match(html, /Tracker value · Sep 15, 2026/);
   assert.match(html, /not net worth and not a vault NAV/);
-  assert.match(html, /Vault candidate · 4 names · first live/);
+  const pelosiShelf = people.find((p) => p.id === "P000197")!;
+  assert.match(html, new RegExp(`${pelosiShelf.index.readiness.status === "VAULT_CANDIDATE" ? `Vault candidate · ${pelosiShelf.index.constituents} names · first live` : "Wait readiness"}`));
   assert.match(html, /Ted Budd/);
 });

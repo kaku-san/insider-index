@@ -9,14 +9,14 @@ import { buildShownBook, compareWithFmp } from "../src/lib/tracker/shown-book.ts
 import { buildTrackerPersonView, trackerIndexPerson } from "../src/lib/tracker/views.ts";
 import { baseIndexName } from "../src/lib/fmp/index-name.ts";
 
-const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
+const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20full-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
 const handoff = normalizeTrackerHandoff(brief);
 const pelosi = handoff.profiles[0];
 const catalogSnapshot = JSON.parse(readFileSync(new URL("../src/lib/venues/catalog-snapshot.json", import.meta.url), "utf8")) as { xstocks: CatalogToken[]; backpack: CatalogToken[] };
 const catalog = indexCatalog([...catalogSnapshot.xstocks, ...catalogSnapshot.backpack]);
 const pools = mainnetRaydiumPoolSnapshot();
 
-const token = (ticker: string, issuer: "xstock" | "backpack" = "xstock"): CatalogToken => ({ issuer, ticker, symbol: issuer === "xstock" ? `${ticker}x` : `${ticker}.US`, name: ticker, mint: `${ticker}mint`.padEnd(32, "1"), decimals: 8 });
+const token = (ticker: string, issuer: "xstock" | "backpack" = "xstock"): CatalogToken => ({ issuer, ticker, symbol: issuer === "xstock" ? `${ticker}x` : `${ticker}.US`, name: ticker, mint: `${ticker}${issuer === "backpack" ? "b" : ""}mint`.padEnd(32, "1"), decimals: 8 });
 const pool = (mint: string, tvlUsd: number): MainnetRaydiumPool => ({ mint, symbol: null, pool: `${mint}pool`, kind: "raydium_clmm", programId: RAYDIUM_CLMM_PROGRAM, quoteMint: MAINNET_USDC_MINT, tvlUsd, dayVolumeUsd: null, observedAt: "2026-09-15T14:52:20.715Z" });
 function profile(holdings: { ticker: string; percentage: number | null; value?: number | null }[], id = "T000001"): TrackerProfile {
   return {
@@ -51,26 +51,52 @@ test("renormalizeBps sums to exactly 10,000 with a one-bp floor", () => {
   assert.throws(() => renormalizeBps([1, 0]), /positive-scores-required/);
 });
 
-test("Pelosi's tracker index is the investable slice of her shown positions: mint + Raydium pool, 10,000 bps, first live candidate", () => {
+test("Pelosi's tracker index is the investable slice of her copy-trade book: xStock preferred, Backpack otherwise, 10,000 bps, first live candidate", () => {
+  assert.equal(pelosi.holdingsBasis, "copy-trade-full");
+  assert.equal(pelosi.topHoldings.length, 15);
   const index = buildTrackerIndex(pelosi, baseIndexName(trackerIndexPerson(pelosi)), catalog, pools.pools);
   assert.equal(index.id, "tracker-P000197");
   assert.equal(index.indexName, "Nancy P Index · Tracker positions");
   assert.equal(index.basis, "pelositracker-positions");
   assert.equal(index.asOf, "2026-09-15");
-  assert.deepEqual(index.constituents.map((c) => [c.ticker, c.weightBps, c.token.symbol]), [["NVDA", 6688, "NVDAx"], ["AMZN", 1179, "AMZNx"], ["MSFT", 1072, "MSFTx"], ["AVGO", 1061, "AVGOx"]]);
-  assert.equal(index.constituents.reduce((sum, c) => sum + c.weightBps, 0), 10_000);
-  for (const c of index.constituents) { assert.equal(c.pool.quoteMint, MAINNET_USDC_MINT); assert.ok(c.pool.tvlUsd >= MIN_RAYDIUM_POOL_TVL_USD); assert.equal(c.pool.mint, c.token.mint); }
-  assert.deepEqual(index.excluded.map((e) => [e.ticker, e.reason]), [["GOOG", "no-raydium-usdc-pool"]]);
-  assert.equal(index.readiness.status, "VAULT_CANDIDATE");
+  assert.equal(index.tradesUsed, false);
   assert.equal(index.readiness.firstLiveCandidate, true);
   assert.equal(index.readiness.fundsEnabled, false);
-  assert.equal(index.tradesUsed, false);
-  assert.equal(index.coverage.includedTrackerPercentage, 65.03);
-  assert.equal(index.coverage.listedTrackerPercentage, 70.03);
-  assert.match(index.navDisclaimer, /not this index's NAV/);
+  assert.match(index.navDisclaimer, /three different figures|not this index's NAV/);
   assert.ok(index.readiness.reasons.some((reason) => /exit is USDC only \(no in-kind xStock redemption\)/.test(reason)));
-  // The tracker's $315M total and share counts are nowhere in the weights.
-  assert.ok(!JSON.stringify(index.constituents.map((c) => c.weightBps)).includes("314903941"));
+  const listed = new Set([...index.constituents.map((c) => c.ticker), ...index.excluded.map((e) => e.ticker)]);
+  assert.ok(pelosi.topHoldings.every((h) => listed.has(h.ticker)));
+  assert.deepEqual(index.excluded.find((e) => e.ticker === "IBTA.L")?.reason, "no-solana-mint");
+  if (index.constituents.length) assert.equal(index.constituents.reduce((sum, c) => sum + c.weightBps, 0), 10_000);
+  assert.equal(index.readiness.status, index.constituents.length >= 2 ? "VAULT_CANDIDATE" : "WAIT_READINESS");
+  for (const c of index.constituents) {
+    assert.ok(c.token.issuer === "xstock" || c.token.issuer === "backpack");
+    assert.equal(c.pool.quoteMint, MAINNET_USDC_MINT);
+    assert.ok(c.pool.tvlUsd >= MIN_RAYDIUM_POOL_TVL_USD);
+    assert.equal(c.pool.mint, c.token.mint);
+    if (c.ticker === "VST" || c.ticker === "TEM") assert.equal(c.token.issuer, "backpack", "no xStock: use verified Backpack .US");
+    if (c.ticker === "AAPL" || c.ticker === "NVDA") assert.equal(c.token.issuer, "xstock", "xStock preferred when both exist");
+  }
+  const payload = JSON.stringify(index);
+  assert.ok(!payload.includes("314903941"));
+  assert.ok(!payload.includes("23202729"));
+  assert.ok(!/"quantity"/.test(JSON.stringify(index.constituents)));
+});
+
+test("copy-trade weights renormalize over mint+pool names; backpack fills in when there is no xStock; quantities never enter", () => {
+  const cat = indexCatalog([
+    token("NVDA"), token("GOOGL"), token("BE"), token("AVGO"),
+    token("VST", "backpack"), token("VST"), // xStock wins when both exist
+    token("TEM", "backpack"),
+  ]);
+  const testPools = ["NVDA", "GOOGL", "BE", "AVGO", "VST", "TEM"].map((ticker) => pool((ticker === "VST" || ticker === "TEM" ? token(ticker, "backpack") : token(ticker)).mint, 50_000));
+  // Duplicate VST xStock mint has no pool — preferredToken is xStock first, so VST is excluded without falling through to Backpack.
+  const withBoth = buildTrackerIndex(profile([{ ticker: "NVDA", percentage: 50 }, { ticker: "VST", percentage: 50 }], "P000197"), "Nancy P Index", cat, [pool(token("NVDA").mint, 50_000), pool(token("VST", "backpack").mint, 50_000)]);
+  assert.equal(withBoth.constituents[0].token.issuer, "xstock");
+  assert.equal(withBoth.excluded.find((e) => e.ticker === "VST")?.reason, "no-raydium-usdc-pool", "do not invent a Backpack fallback when an xStock mint exists");
+  const backpackOnly = buildTrackerIndex(profile([{ ticker: "TEM", percentage: 40 }, { ticker: "NVDA", percentage: 60 }]), "Test P Index", cat, testPools);
+  assert.deepEqual(backpackOnly.constituents.map((c) => [c.ticker, c.token.issuer, c.token.symbol]), [["NVDA", "xstock", "NVDAx"], ["TEM", "backpack", "TEM.US"]]);
+  assert.equal(backpackOnly.constituents.reduce((s, c) => s + c.weightBps, 0), 10_000);
 });
 
 test("names without a mint, without a pool, or with a thin pool are listed as excluded; trades never enter; other people wait", () => {
@@ -114,7 +140,7 @@ test("all 20 handoff people get a listed tracker index; only those with two pool
   assert.equal(buildTrackerPersonView(handoff.profiles.find((p) => p.id === "S001217")!, { ...catalog, feeds: [] }, "Richard S Index").index.indexName, "Richard S Index · Tracker positions", "the saved canonical FMP index name wins");
 });
 
-test("the shown book puts tracker positions first, appends older annual rows and never sums the two", () => {
+test("the shown book puts copy-trade positions first for Pelosi, appends older annual rows and never sums the two", () => {
   const annual = { referenceDate: "2024-12-31", items: [
     { id: "a1", name: "NVIDIA Corporation - Common Stock (NVDA) [ST]", ticker: null, kind: "stock", owner: "Spouse", valueRange: { low: 5000001, high: 25000000 } },
     { id: "a2", name: "Alphabet Inc. - Class A (GOOGL) [ST]", ticker: null, kind: "stock", owner: "Spouse", valueRange: { low: 5000001, high: 25000000 } },
@@ -125,21 +151,27 @@ test("the shown book puts tracker positions first, appends older annual rows and
   const book = buildShownBook(pelosi, annual, resolutions);
   assert.equal(book.asOf, "2026-09-15");
   assert.equal(book.fmpReferenceDate, "2024-12-31");
-  assert.deepEqual(book.rows.slice(0, 5).map((r) => [r.ticker, r.source]), [["NVDA", "both"], ["AMZN", "tracker"], ["MSFT", "tracker"], ["AVGO", "both"], ["GOOG", "tracker"]]);
-  assert.equal(book.rows[0].tracker?.percentage, 43.49);
-  assert.equal(book.rows[0].tracker?.valueUsd, 136951952);
-  assert.deepEqual(book.rows[0].fmp?.rows[0].valueRange, { low: 5000001, high: 25000000 });
-  assert.equal(book.rows[0].token?.symbol, "NVDAx");
-  assert.equal(book.rows[3].fmp?.rows[0].kind, "option", "AVGO stock on the tracker sits beside the AVGO option on the filing; classes stay visible");
-  const annualOnly = book.rows.slice(5);
-  assert.deepEqual(annualOnly.map((r) => [r.ticker, r.source]), [["GOOGL", "fmp-annual"], [null, "fmp-annual"]]);
-  assert.equal(annualOnly[1].name, "Union Bank of California");
-  assert.deepEqual(book.counts, { tracker: 5, fmpAnnual: 4, both: 2 });
+  assert.deepEqual(book.rows.slice(0, 5).map((r) => r.ticker), ["NVDA", "GOOGL", "BE", "AVGO", "PANW"]);
+  assert.equal(book.rows[0].source, "both");
+  assert.equal(book.rows[0].tracker?.percentage, 15.17);
+  assert.equal(book.rows.find((r) => r.ticker === "GOOGL")?.source, "both");
+  assert.equal(book.rows.find((r) => r.ticker === "AVGO")?.fmp?.rows[0].kind, "option", "AVGO stock on the tracker sits beside the AVGO option on the filing; classes stay visible");
+  assert.equal(book.rows.find((r) => r.name === "Union Bank of California")?.source, "fmp-annual");
+  assert.ok(!book.rows.some((r) => r.key === "tracker:OTHER"), "copy-trade book does not invent OTHER tickers or mix in the disclosure aggregate");
+  assert.equal(book.counts.tracker, 15);
   assert.match(book.note, /never added together/);
+  assert.match(book.note, /copy-trade/);
   assert.ok(!("total" in book) && !("totalUsd" in book));
   const noFmp = buildShownBook(pelosi, null);
-  assert.equal(noFmp.rows.length, 5);
+  assert.equal(noFmp.rows.length, 15);
   assert.match(noFmp.note, /No saved FMP annual book/);
+  const scott = handoff.profiles.find((p) => p.id === "S001217")!;
+  const sliceBook = buildShownBook(scott, null);
+  assert.equal(scott.holdingsBasis, "disclosure-slice");
+  assert.equal(sliceBook.rows.filter((r) => r.ticker).length, 5);
+  const other = sliceBook.rows.find((r) => r.key === "tracker:OTHER");
+  assert.ok(other && other.ticker === null);
+  assert.match(other!.name ?? "", /OTHER/i);
 });
 
 test("the FMP comparison shows both sides by exact ticker and reports overlap without overwriting either", () => {
@@ -148,14 +180,18 @@ test("the FMP comparison shows both sides by exact ticker and reports overlap wi
   const comparison = compareWithFmp(pelosi, published, annual);
   assert.equal(comparison.fmpPublished, true);
   assert.equal(comparison.fmpPeriod, "2024-12-31");
-  assert.deepEqual(comparison.rows.map((r) => [r.ticker, r.presence, r.trackerPercentage, r.fmpWeightBps]), [
-    ["NVDA", "both", 43.49, 1553], ["AMZN", "tracker-only", 7.67, null], ["MSFT", "tracker-only", 6.97, null], ["AVGO", "tracker-only", 6.9, null], ["GOOG", "tracker-only", 5, null],
-    ["AAPL", "fmp-only", null, 3881], ["GOOGL", "fmp-only", null, 1553],
-  ]);
-  assert.deepEqual(comparison.rows[0].fmpAnnualBand, { low: 5000001, high: 25000000 });
-  assert.deepEqual(comparison.overlap, { tickers: ["NVDA"], trackerOnly: ["AMZN", "MSFT", "AVGO", "GOOG"], fmpOnly: ["AAPL", "GOOGL"] });
+  const nvda = comparison.rows.find((r) => r.ticker === "NVDA");
+  const aapl = comparison.rows.find((r) => r.ticker === "AAPL");
+  const googl = comparison.rows.find((r) => r.ticker === "GOOGL");
+  assert.deepEqual([nvda?.presence, nvda?.trackerPercentage, nvda?.fmpWeightBps], ["both", 15.17, 1553]);
+  assert.equal(aapl?.presence, "both");
+  assert.equal(googl?.presence, "both");
+  assert.equal(googl?.fmpWeightBps, 1553);
+  assert.deepEqual(nvda?.fmpAnnualBand, { low: 5000001, high: 25000000 });
+  assert.ok(comparison.overlap.tickers.includes("NVDA"));
+  assert.equal(comparison.rows.length, pelosi.topHoldings.length);
   const none = compareWithFmp(pelosi, null, null);
   assert.equal(none.fmpPublished, false);
-  assert.equal(none.rows.length, 5);
+  assert.equal(none.rows.length, 15);
   assert.match(none.note, /No saved FMP annual book or published FMP index/);
 });

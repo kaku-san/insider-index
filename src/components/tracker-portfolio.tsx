@@ -24,9 +24,9 @@ export function TrackerHeroStats({ profile, index }: { profile: TrackerProfile; 
   const value = profile.portfolio.valueUsd;
   const change = profile.portfolio.monthlyChangePercent;
   return <dl className={styles.stats} aria-label="PelosiTracker portfolio statistics">
-    <div><dt>PelosiTracker portfolio value</dt><dd>{value !== null ? usdCompact(value) : "—"}</dd><small>Third-party estimate as of {longDate(profile.asOf)}. Not net worth, not a vault NAV.</small></div>
+    <div><dt>PelosiTracker portfolio value</dt><dd>{value !== null ? usdCompact(value) : "—"}</dd><small>Politician-API third-party estimate as of {longDate(profile.asOf)}. Not net worth, not a vault NAV{profile.copyTrade?.totalValueUsd != null ? `, and not the copy-trade book (${usdCompact(profile.copyTrade.totalValueUsd)})` : ""}.</small></div>
     <div><dt>PelosiTracker 30-day change</dt><dd data-tone={change === null ? undefined : change < 0 ? "negative" : "positive"}>{change === null ? "—" : `${change > 0 ? "+" : ""}${change.toFixed(2)}%`}</dd><small>Tracker model figure, not a verified return.</small></div>
-    <div><dt>Tracker positions shown</dt><dd>{profile.topHoldings.length}</dd><small>Top {profile.coverage.holdingsSlice} slice, not every lot filed.</small></div>
+    <div><dt>Tracker positions shown</dt><dd>{profile.topHoldings.length}</dd><small>{profile.holdingsBasis === "copy-trade-full" ? `Copy-trade book, ${profile.topHoldings.length} itemized names. Different $ total from the disclosure estimate. Not a NAV.` : `Top ${profile.coverage.holdingsSlice} slice + OTHER aggregate, not every lot filed. Tickers are not invented for OTHER.`}</small></div>
     <div><dt>Vault-ready names</dt><dd>{index.constituents.length}</dd><small>{index.readiness.status === "VAULT_CANDIDATE" ? "Composition candidate · funds disabled" : "Waiting on readiness"}</small></div>
   </dl>;
 }
@@ -42,7 +42,7 @@ export function ShownBookPanel({ book, view, fmpReferenceLabel }: { book: ShownB
   const tokens = new Map(view.holdingTokens.map((entry) => [entry.ticker, entry.token]));
   return <section id="shown-book" className={styles.panel} aria-labelledby="shown-book-title">
     <div className={styles.sectionHead}>
-      <div><h2 id="shown-book-title">Current positions · shown book</h2><p>PelosiTracker positions first (current as of {longDate(book.asOf)}), then the older FMP annual disclosure rows{fmpReferenceLabel ? ` (${fmpReferenceLabel})` : ""}. Two readings, never one total.</p></div>
+      <div><h2 id="shown-book-title">Current positions · shown book</h2><p>{view.profile.holdingsBasis === "copy-trade-full" ? `PelosiTracker copy-trade book first (${view.profile.topHoldings.length} names, current as of ${longDate(book.asOf)}; different $ total from the politician-API disclosure estimate)` : `PelosiTracker positions first (top ${view.profile.coverage.holdingsSlice} + OTHER as of ${longDate(book.asOf)})`}, then the older FMP annual disclosure rows{fmpReferenceLabel ? ` (${fmpReferenceLabel})` : ""}. Readings are never one total.</p></div>
       <TrackerTag asOf={book.asOf} />
     </div>
     <p className={styles.caption}>{book.note}</p>
@@ -56,9 +56,9 @@ export function ShownBookPanel({ book, view, fmpReferenceLabel }: { book: ShownB
           return <tr key={row.key}>
             <td><div className={styles.tickerCell}><span className={styles.tickerMark}>{(row.ticker ?? row.name ?? "?").slice(0, 2)}</span><span><strong>{row.ticker ?? row.name ?? "Unnamed disclosure"}</strong>{row.ticker && row.name && <small>{row.name}</small>}</span></div></td>
             <td>{row.source === "both" ? <TrackerTag asOf={book.asOf} variant="both">Tracker {longDate(book.asOf)} + annual filing</TrackerTag> : row.source === "tracker" ? <TrackerTag asOf={book.asOf} /> : <TrackerTag asOf={book.asOf} variant="fmp">FMP annual filing{row.fmp?.referenceDate ? ` · ${row.fmp.referenceDate}` : ""}</TrackerTag>}</td>
-            <td className={styles.number}>{row.tracker ? <><strong>{row.tracker.percentage !== null ? pct(row.tracker.percentage) : "—"}</strong><small>{row.tracker.valueUsd !== null ? `${usd(row.tracker.valueUsd)} tracker est.` : "No tracker value"}</small></> : <><strong>—</strong><small>Not in tracker top {view.profile.coverage.holdingsSlice}</small></>}</td>
+            <td className={styles.number}>{row.tracker ? <><strong>{row.tracker.percentage !== null ? pct(row.tracker.percentage) : "—"}</strong><small>{row.tracker.valueUsd !== null ? `${usd(row.tracker.valueUsd)} ${view.profile.holdingsBasis === "copy-trade-full" && row.ticker ? "copy-trade MTM" : "tracker est."}` : "No tracker value"}</small></> : <><strong>—</strong><small>Not in tracker {view.profile.holdingsBasis === "copy-trade-full" ? "copy-trade book" : `top ${view.profile.coverage.holdingsSlice}`}</small></>}</td>
             <td className={styles.number}>{row.fmp ? row.fmp.rows.map((item) => <div key={item.id}><strong>{disclosedRange(item.valueRange)}</strong><small>{item.kind}{item.owner ? ` · ${item.owner}` : ""}</small></div>) : <><strong>—</strong><small>Not on the saved annual filing</small></>}</td>
-            <td>{mapped ? <><strong>{mapped}</strong><PoolCell mint={mint} pools={view.pools} /></> : <PoolCell mint={null} pools={view.pools} />}</td>
+            <td>{row.key === "tracker:OTHER" ? <><strong>Unitemized OTHER</strong><small>No tickers invented</small></> : mapped ? <><strong>{mapped}</strong><PoolCell mint={mint} pools={view.pools} /></> : <PoolCell mint={null} pools={view.pools} />}</td>
           </tr>;
         })}</tbody>
       </table>

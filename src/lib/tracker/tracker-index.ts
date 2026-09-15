@@ -7,12 +7,12 @@ import type { TrackerProfile } from "./tracker-parse.ts";
 /**
  * Vault-ready index from PelosiTracker *positions*: the investable slice of the shown current book.
  *
- * Membership: a tracker top holding that resolves to a Solana catalog mint (xStock first, Backpack
- * otherwise) AND has an observed mainnet Raydium USDC pool above the thin-pool floor. Everything
- * else is listed as excluded with its reason. Weights are the tracker's own position percentages
- * renormalized over the included names to exactly 10,000 bps — proportions only. The tracker's
- * dollar total is never a NAV, share counts are never used, and the recent-trade tape is never an
- * input.
+ * Membership: a shown tracker holding that resolves to a Solana catalog mint (xStock first,
+ * verified Backpack on-chain `.US` when there is no xStock) AND has an observed mainnet Raydium
+ * USDC pool above the thin-pool floor. No DEX lookalikes are invented. Everything else is listed
+ * as excluded with its reason. Weights are the tracker's own position percentages renormalized
+ * over the included names to exactly 10,000 bps — proportions only. Copy-trade share counts, the
+ * copy-trade dollar total, the politician-API dollar total, and the recent-trade tape never enter.
  */
 export const TRACKER_INDEX_BASIS = "pelositracker-positions" as const;
 export const TRACKER_INDEX_METHODOLOGY = "tracker-position-percentages-renormalized" as const;
@@ -107,11 +107,15 @@ export function buildTrackerIndex(
   return {
     id: trackerIndexId(profile.id), personId: profile.id, indexName: trackerIndexName(baseIndexName),
     basis: TRACKER_INDEX_BASIS, methodology: TRACKER_INDEX_METHODOLOGY, asOf: profile.asOf, sourceLabel: profile.sourceLabel,
-    label: `PelosiTracker top ${profile.topHoldings.length} positions as of ${profile.asOf}: names with a Solana catalog mint and an observed Raydium USDC pool, weighted by the tracker's position percentages renormalized to 10,000 bps.`,
+    label: profile.holdingsBasis === "copy-trade-full"
+      ? `PelosiTracker copy-trade portfolio (${profile.topHoldings.length} names) as of ${profile.asOf}: names with a Solana catalog mint (xStock preferred, Backpack .US otherwise) and an observed Raydium USDC pool, weighted by the copy-trade position percentages renormalized to 10,000 bps. Copy-trade dollars are not the disclosure book and not this index's NAV.`
+      : `PelosiTracker top ${profile.topHoldings.length} positions as of ${profile.asOf}: names with a Solana catalog mint (xStock preferred, Backpack .US otherwise) and an observed Raydium USDC pool, weighted by the tracker's position percentages renormalized to 10,000 bps. The unitemized OTHER aggregate is not a ticker and is not weighted.`,
     constituents, excluded,
     coverage: { includedTrackerPercentage: Math.round(includedPct * 100) / 100, listedTrackerPercentage: Math.round(listedPct * 100) / 100, holdingsListed: profile.topHoldings.length, holdingsSlice: profile.coverage.holdingsSlice },
     readiness: { status, firstLiveCandidate, reasons, fundsEnabled: false },
     tradesUsed: false,
-    navDisclaimer: "PelosiTracker's dollar total is a third-party estimate of the member's book, not this index's NAV. Weights are proportions of the investable slice only.",
+    navDisclaimer: profile.holdingsBasis === "copy-trade-full"
+      ? "The copy-trade dollar total, the politician-API disclosure estimate, and this index's NAV are three different figures. Weights are proportions of the investable slice only. Share counts never enter."
+      : "PelosiTracker's dollar total is a third-party estimate of the member's book, not this index's NAV. Weights are proportions of the investable slice only.",
   };
 }

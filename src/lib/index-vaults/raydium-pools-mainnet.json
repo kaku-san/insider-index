@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-09-15T14:52:20.715Z",
+  "fetchedAt": "2026-09-15T16:47:08.773Z",
   "source": "https://api-v3.raydium.io/pools/info/mint",
   "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
   "pools": [
@@ -10,9 +10,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 4.33,
+      "tvlUsd": 4.34,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "Xs151QeqTCiuKtinzfRATnUESM2xTU6V9Wy8Vy538ci",
@@ -21,9 +21,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 7934.36,
-      "dayVolumeUsd": 1583.66,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 7066.14,
+      "dayVolumeUsd": 1389.69,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
@@ -32,9 +32,20 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 302148.06,
-      "dayVolumeUsd": 357925.75,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 295168.54,
+      "dayVolumeUsd": 359104.33,
+      "observedAt": "2026-09-15T16:47:08.773Z"
+    },
+    {
+      "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+      "symbol": "BRK.Bx",
+      "pool": "B4UdLnvzCrnfRndLdgGTYZjcKTDsaFKB54cmKb2GoSne",
+      "kind": "raydium_clmm",
+      "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+      "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "tvlUsd": 102644.35,
+      "dayVolumeUsd": 127066.58,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "Xs8drBWy3Sd5QY3aifG9kt9KFs2K3PGZmx7jWrsrk57",
@@ -45,7 +56,7 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 50.71,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ",
@@ -54,20 +65,31 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2170634.67,
-      "dayVolumeUsd": 667418.42,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 2170115.18,
+      "dayVolumeUsd": 589746.28,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
-      "symbol": "META (xstock)",
+      "symbol": "METAx",
       "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 269457.83,
-      "dayVolumeUsd": 805839.96,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 295276.9,
+      "dayVolumeUsd": 821202,
+      "observedAt": "2026-09-15T16:47:08.773Z"
+    },
+    {
+      "mint": "XsaBXg8dU5cPM6ehmVctMkVqoiRG2ZjMo1cyBJ3AykQ",
+      "symbol": "KOx",
+      "pool": "7HNwUP5rSUo9GfdDthJn4UCdw2Px6h2aprSedD7r7J3C",
+      "kind": "raydium_clmm",
+      "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+      "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "tvlUsd": 49910.44,
+      "dayVolumeUsd": 17492.95,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
@@ -76,9 +98,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 289158.45,
-      "dayVolumeUsd": 326206.92,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 285105.56,
+      "dayVolumeUsd": 368283.23,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
@@ -87,20 +109,20 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2142794.04,
-      "dayVolumeUsd": 1513665.34,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 2138853.87,
+      "dayVolumeUsd": 1490542.86,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
-      "symbol": "GOOGL (xstock)",
+      "symbol": "GOOGLx",
       "pool": "B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw",
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 409220.36,
-      "dayVolumeUsd": 324612.89,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 421643.76,
+      "dayVolumeUsd": 297041.92,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
@@ -110,19 +132,19 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 117,
-      "dayVolumeUsd": 3.29,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "dayVolumeUsd": 2.59,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
-      "symbol": "TSLA (xstock)",
+      "symbol": "TSLAx",
       "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2094003.24,
-      "dayVolumeUsd": 1254688.33,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 2105892.5,
+      "dayVolumeUsd": 1340166.03,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsEH7wWfJJu2ZT3UCFeVfALnVA6CP5ur7Ee11KmzVpL",
@@ -131,9 +153,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 10720.92,
-      "dayVolumeUsd": 4497.72,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 10712.15,
+      "dayVolumeUsd": 4115.08,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
@@ -142,9 +164,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 139191.37,
-      "dayVolumeUsd": 6698.83,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 137121.03,
+      "dayVolumeUsd": 10604.1,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
@@ -154,8 +176,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 33.49,
-      "dayVolumeUsd": 1.15,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "dayVolumeUsd": 0.91,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
@@ -164,9 +186,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 42106.51,
-      "dayVolumeUsd": 11021.34,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 41899.74,
+      "dayVolumeUsd": 10389.97,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsHtf5RpxsQ7jeJ9ivNewouZKJHbPxhPoEy6yYvULr7",
@@ -176,8 +198,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 1719.3,
-      "dayVolumeUsd": 11.29,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "dayVolumeUsd": 8.91,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
@@ -186,31 +208,31 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 1787.5,
-      "dayVolumeUsd": 82.09,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 1787.49,
+      "dayVolumeUsd": 75.19,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsNNMt7WTNA2sV3jrb1NNfNgapxRF5i4i6GcnTRRHts",
-      "symbol": "CVX (xstock)",
+      "symbol": "CVXx",
       "pool": "5v5prv4UMT8fhzYjYwxUmvFuSQiGqF45vuNcmTkHTmi",
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 3841.27,
-      "dayVolumeUsd": 105.93,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 3842.13,
+      "dayVolumeUsd": 99.2,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
-      "symbol": "LLY (xstock)",
+      "symbol": "LLYx",
       "pool": "D6qd9W868h6Jw318vhLSYyymDycydYPEkfsCGDKSzf34",
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 5318.38,
-      "dayVolumeUsd": 271.54,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 5321.46,
+      "dayVolumeUsd": 289.67,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsoBhf2ufR8fTyNSjqfU71DYGaE6Z3SUGAidpzriAA4",
@@ -219,9 +241,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 56733.36,
-      "dayVolumeUsd": 5737.14,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 56847.6,
+      "dayVolumeUsd": 5468.21,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
@@ -230,9 +252,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2596426.37,
-      "dayVolumeUsd": 4860352.32,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 2941941.22,
+      "dayVolumeUsd": 4705089.4,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
@@ -241,20 +263,20 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 381834.6,
-      "dayVolumeUsd": 934557.1,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 384375.91,
+      "dayVolumeUsd": 882768.04,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
-      "symbol": "V (xstock)",
+      "symbol": "Vx",
       "pool": "7ViDiiS2jjhLvorRgxtSmY434LBgrPVzXrud1zidyYwo",
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 3511.23,
-      "dayVolumeUsd": 232.51,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 3511.14,
+      "dayVolumeUsd": 187.53,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XsQLZycSZ7QnBBdBXQaTbQdiUcbRqjNJgyBGAMzhHav",
@@ -265,7 +287,18 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 0.43,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "observedAt": "2026-09-15T16:47:08.773Z"
+    },
+    {
+      "mint": "XsYdjDjNUygZ7yGKfQaB6TxLh2gC6RRjzLtLAGJrhzV",
+      "symbol": "PGx",
+      "pool": "2ENFJDyjcPC2jAtGkiZEoNNswxNE9kwTvGVbndZkV2RP",
+      "kind": "raydium_clmm",
+      "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+      "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "tvlUsd": 2835.65,
+      "dayVolumeUsd": 47.99,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     },
     {
       "mint": "XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe",
@@ -274,9 +307,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 13289.92,
-      "dayVolumeUsd": 1345.58,
-      "observedAt": "2026-09-15T14:52:20.715Z"
+      "tvlUsd": 13289.76,
+      "dayVolumeUsd": 1071,
+      "observedAt": "2026-09-15T16:47:08.773Z"
     }
   ],
   "unresolved": [
@@ -301,6 +334,11 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "BHPvCxg3KpMcooSkpCrm6A3sgvUgLXLRFHKJXTrVsBW9",
+      "symbol": "BHP.US",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "BNDXLvsN2N48inLgiULeJd9HAfJi3rHTmLbiiSWkHAG6",
       "symbol": "BNDX (backpack)",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
@@ -308,6 +346,11 @@
     {
       "mint": "BtZy11yDM76fkku4bgyivbfMpgrdfn7TTdV9WVRKDZeP",
       "symbol": "IBIT.US",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "CRSP2SFJjcifgJJQjHtLrb7KsCNSM4XBtEuMskEUnkLh",
+      "symbol": "CRSP.US",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -326,6 +369,11 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "GSK5j86zXUqfk6PoF1ckMa4Ej4EDQ4y8TKmgy7jYeY5n",
+      "symbol": "GSK.US",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
       "symbol": "GOOG.US",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
@@ -333,6 +381,11 @@
     {
       "mint": "JHmkX2z8R7ak2uWJZSkfzmDGPpb4msABpGUbakvBbuq",
       "symbol": "IJH (backpack)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "LULUmT9VMttkfAJE236LXJcYJ2tTP7nunrSWR5G1BdS",
+      "symbol": "LULU.US",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -366,8 +419,18 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "STX7XSiJYcu1psacWLBjdxJrieiMW2uMwB46TRauy97",
+      "symbol": "STX.US",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "T48Qsk7MjNGaWXoTmuVSGJXYMmNuwrQ39hvyhw1nyzt",
-      "symbol": "T (backpack)",
+      "symbol": "T.US",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "TEMNmrsRhBgnYTnBTQB2hKNEULBotLW7ABiZDvr7up8",
+      "symbol": "TEM.US",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -388,6 +451,11 @@
     {
       "mint": "VNQQhJE1KDED6FM2nn6ni8Ho3agVoEfkNSs45T8WUdT",
       "symbol": "VNQ (backpack)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "VST744yvWsHsE7oLLj1x6rcogMvC9HiPbEVpaURqdRR",
+      "symbol": "VST.US",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -436,13 +504,28 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "Xs3yrczxLidKAArdTKepU5NV8KUmwFM11NMyYbGqWDZ",
+      "symbol": "BDXx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
-      "symbol": "NEE (xstock)",
+      "symbol": "NEEx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "Xs4UsCDQKKJqHjidgoZBHUW9emLD4njpLPsYesp4ZpZ",
+      "symbol": "NSCx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
       "mint": "Xs54CrhmpVp6uxZXwgSTegrRH2kShh88XFPzgf4BExu",
       "symbol": "XLEx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "Xs5nNLYnMuwBTMQ7KnfCgfsDBa9WehDa1EZqzicarZm",
+      "symbol": "SOx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -476,8 +559,18 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XsAsZLF4MmsvS1sDxRMrUz7REjHfwbC9UAMXSRBqgEB",
+      "symbol": "UBERx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XsAtbqkAP1HJxy7hFDeq7ok6yM43DQ9mQ1Rh861X8rw",
       "symbol": "PFE (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsAtnoftgxL6kJErDeCL8m2e364mAYgEbSfSKxi4ctJ",
+      "symbol": "VMCx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -492,12 +585,27 @@
     },
     {
       "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
-      "symbol": "NOW (xstock)",
+      "symbol": "NOWx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
       "mint": "XsBNJXGu68cBH5hgFxdqZkeh8cMQv32jeEtZtYTYvfS",
       "symbol": "F (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsCBDrb61PyQqTJp7uHhD4vj1MkD5UK6jpxUBbgG7i1",
+      "symbol": "ADPx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XscCMVe1Qu2rk1YoCDJGwMLZkfVnd69xcPER4DJ8tpB",
+      "symbol": "DKNGx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XscEuBenD5X7CMVdh6MKzTSBQLsKNqmsoLiXHrQMitH",
+      "symbol": "HSYx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -526,8 +634,18 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XsDgw22qRLTv5Uwuzn6T63cW69exG41T6gwQhEK22u2",
+      "symbol": "MDTx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XsdzBn1wxCibSdDZgaaWqGtdvo2JSFueo2CwHnA69Lf",
       "symbol": "SAIA (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsDZMGEU8zadWFCkTtPBoPWYcUX3JHVmghnwf2Mve2q",
+      "symbol": "ADBEx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -571,8 +689,23 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "Xsg3UgvjxpUgV3WZx9Wt9deLx7qvKYp6ZLY6xMY2Dfq",
+      "symbol": "GLWx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XsG6o69zE7mQCeFf6utyMx9Q89cJjGV4vTwi3wFHrkN",
       "symbol": "ICE (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "Xsg93jDV656ULQ5u9yT2x5DS9b4xGD8aDCtfESSW6Bb",
+      "symbol": "DISx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+      "symbol": "GSx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -583,6 +716,16 @@
     {
       "mint": "XsgCWpLUC3pv6JmNAFtkYmuwSaikShy8QZRuripgBzn",
       "symbol": "VRTX (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsGea4488p7ydWQTQMYxtvCXDJiAJwgt4HsoKiKrGa3",
+      "symbol": "ALBx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsgKwBMbv8LDzEYRgbKtyqsub6QB56PQVzgTGbiGaNe",
+      "symbol": "AMGNx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -601,8 +744,18 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XshmkFbMrRMtVb2HoJw1nc9jGMKNjTWcutT86YpMbKi",
+      "symbol": "CLXx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XshuHQ6o6SVpUNawvnnTMxsZ4tacZsNgVCLorv7TkFq",
+      "symbol": "ASMLx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XshWQWYVp5ff8CrAEsGmLVKD47nBWi3Ygn5v8wXK27G",
-      "symbol": "PYPL (xstock)",
+      "symbol": "PYPLx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -616,6 +769,11 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XsK5U9qwT9ErPXnpgDzV9voTGASZbZnNTYTGVxCqPii",
+      "symbol": "SCHWx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XsKq6Ac27X857u18jH8MrWQ3bEA5ZfUSGriawpyu8xw",
       "symbol": "UAL (xstock)",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
@@ -626,8 +784,23 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XsmAFboVqfDwGPgXfd7oCunvYAYSzzkuKE2BDRzwjGy",
+      "symbol": "GILDx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsmGSEqT6VXpVis3aVBDxaNwPgHNXbkjkVUCncsLkNB",
+      "symbol": "BEx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XsN53tgjZA4QU8iuedPNHxxCbDqKcJqbrT1f8jBXzdC",
       "symbol": "RTXx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsnqNkeDhvaK8C5B3Z4D1ciCupVAgkw1AdS3U2uEn26",
+      "symbol": "UPSx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -661,13 +834,33 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XsQ2JJPzG5EMvkRPSshA1mmpVvGPKBNYQmvuEnzpJhZ",
+      "symbol": "AFLx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
-      "symbol": "PANW (xstock)",
+      "symbol": "PANWx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsQD8itHh5CdrWMiH8cZPB55KSATjdXsxcSJJ14YCFD",
+      "symbol": "SCCOx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
       "mint": "XsQoxoLVogLGYRRRcFwjdcFQVLxFpCuYfDtvh3vJ2Ft",
       "symbol": "GEHC (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsqtzaHCKV2zsgRYitGJtcecfmBkdJsdrpSXZgQryHE",
+      "symbol": "SJMx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsQxeWjN2M3Spr5YHRQiM1oQ8fgpJWtdBdg1E2ZrjFg",
+      "symbol": "KMIx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -686,6 +879,11 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XsRNiTxDeRvxTEMTV5BC98N7cTZXxjNdLnudR8YeB2b",
+      "symbol": "OXYx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XsRPgsEQ3dFR84DhMv18jtob5D77FivAsTTsv1jCYmv",
       "symbol": "ZTS (xstock)",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
@@ -693,6 +891,11 @@
     {
       "mint": "XsrsM2RgtYxXqxmy4iWgxQJUkkHG1U5wzi74sVNUW8m",
       "symbol": "ANET (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsrstNGy7STAR22txNru2ahbEwdBadFJwYRCBNEQYBS",
+      "symbol": "CAHx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -708,6 +911,21 @@
     {
       "mint": "Xss5RAku5EH6UViFdvW7ss9xQjwQLsrs2opPMhb3k43",
       "symbol": "RBLX (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsS6AVyq5YpDA5yCUYuwxvkk5hvKvFxAt5tUJik9Y5H",
+      "symbol": "IPx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsSN912SN4Whn2xn59vWZHt1uLbw9WnoNGp5MigmHFf",
+      "symbol": "LRCXx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XssULacY8D3z3a8HoQuLid8wdJHcZLGpSST9MkNFzox",
+      "symbol": "LMTx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -728,6 +946,11 @@
     {
       "mint": "XsTnXvRqrDisLoYpLDUowPx2HLhd6p44ZAbEKyGsL3g",
       "symbol": "PFGC (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "Xstp4CYu1181rhhi7w32Lj6wQZ2VDjFhQNKZwZARk5G",
+      "symbol": "DLRx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -757,7 +980,7 @@
     },
     {
       "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
-      "symbol": "QCOM (xstock)",
+      "symbol": "QCOMx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -787,7 +1010,7 @@
     },
     {
       "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
-      "symbol": "ABBV (xstock)",
+      "symbol": "ABBVx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -801,8 +1024,13 @@
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
+      "mint": "XswsQk4duEQmCbGzfqUUWYmi7pV7xpJ9eEmLHXCaEQP",
+      "symbol": "BACx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
       "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
-      "symbol": "DUK (xstock)",
+      "symbol": "DUKx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -847,7 +1075,12 @@
     },
     {
       "mint": "XsYMTZRVKs9he9redAPMhaBbCbmZvUxMTApsfCZsKzt",
-      "symbol": "TSCO (xstock)",
+      "symbol": "TSCOx",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XsYtTeabUTJnkxWrHZUChwcKpNq6BbqPbWs9ZgLk4Xa",
+      "symbol": "BXx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {
@@ -863,6 +1096,11 @@
     {
       "mint": "XsZCRtj2wRfksr19c4Bf4L2WBB5EYPmr1nBQS1yXApD",
       "symbol": "ORLY (xstock)",
+      "reason": "no-raydium-usdc-clmm-cpmm-pool"
+    },
+    {
+      "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+      "symbol": "HDx",
       "reason": "no-raydium-usdc-clmm-cpmm-pool"
     },
     {

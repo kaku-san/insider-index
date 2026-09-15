@@ -5,10 +5,13 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { normalizeTrackerHandoff, trackerAmountBand, trackerSummary, TRACKER_AS_OF } from "../src/lib/tracker/tracker-parse.ts";
 
-const BUCKET = new URL("../data/insiderindex-source-buckets/pelositracker-top20-handoff/", import.meta.url);
-const bucketPath = (name: string) => new URL(name, BUCKET).pathname;
+const SLICE_BUCKET = new URL("../data/insiderindex-source-buckets/pelositracker-top20-handoff/", import.meta.url);
+const FULL_BUCKET = new URL("../data/insiderindex-source-buckets/pelositracker-top20full-handoff/", import.meta.url);
+const slicePath = (name: string) => new URL(name, SLICE_BUCKET).pathname;
+const fullPath = (name: string) => new URL(name, FULL_BUCKET).pathname;
 const sha256 = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
-const brief = JSON.parse(readFileSync(bucketPath("top20-agent-brief.json"), "utf8"));
+const sliceBrief = JSON.parse(readFileSync(slicePath("top20-agent-brief.json"), "utf8"));
+const brief = JSON.parse(readFileSync(fullPath("top20-agent-brief.json"), "utf8"));
 
 function walk(dir: string, prefix = ""): string[] {
   return readdirSync(dir).sort().flatMap((name) => {
@@ -17,18 +20,26 @@ function walk(dir: string, prefix = ""): string[] {
   });
 }
 
-test("the source bucket is itemized: MANIFEST.json matches every extracted handoff file byte for byte", () => {
-  const manifest = JSON.parse(readFileSync(bucketPath("MANIFEST.json"), "utf8"));
-  const files = walk(BUCKET.pathname).filter((name) => name !== "MANIFEST.json");
-  assert.equal(files.length, 24, "24 files came out of the zip: README, brief, directory, Pelosi JSON and 20 photos");
+function assertManifest(root: string, pathFor: (name: string) => string, fileCount: number, scrapedAt: string) {
+  const manifest = JSON.parse(readFileSync(pathFor("MANIFEST.json"), "utf8"));
+  const files = walk(root).filter((name) => name !== "MANIFEST.json");
+  assert.equal(files.length, fileCount);
   assert.deepEqual(manifest.files.map((f: { path: string }) => f.path).sort(), files);
   for (const entry of manifest.files) {
-    assert.equal(sha256(bucketPath(entry.path)), entry.sha256, `${entry.path} changed since the handoff`);
-    assert.equal(statSync(bucketPath(entry.path)).size, entry.bytes);
+    assert.equal(sha256(pathFor(entry.path)), entry.sha256, `${entry.path} changed since the handoff`);
+    assert.equal(statSync(pathFor(entry.path)).size, entry.bytes);
   }
   assert.equal(manifest.count, 20);
   assert.equal(manifest.photos, 20);
-  assert.equal(manifest.scrapedAt, brief.scrapedAt);
+  assert.equal(manifest.scrapedAt, scrapedAt);
+}
+
+test("the slice-only source bucket is itemized: MANIFEST.json matches every extracted handoff file byte for byte", () => {
+  assertManifest(SLICE_BUCKET.pathname, slicePath, 24, sliceBrief.scrapedAt);
+});
+
+test("the full-handoff source bucket is itemized: MANIFEST.json matches every extracted file byte for byte", () => {
+  assertManifest(FULL_BUCKET.pathname, fullPath, 26, JSON.parse(readFileSync(fullPath("holdings-completeness.json"), "utf8")).scrapedAt);
 });
 
 test("all 20 profiles normalize with photos mirrored into public/, unique bioguide IDs and full slices", () => {
@@ -45,8 +56,27 @@ test("all 20 profiles normalize with photos mirrored into public/, unique biogui
   assert.equal(handoff.profiles[0].name, "Nancy Pelosi");
   for (const profile of handoff.profiles) {
     const publicPhoto = new URL(`../public${profile.photo.local}`, import.meta.url).pathname;
-    assert.equal(sha256(publicPhoto), sha256(bucketPath(`photos/${profile.slug}.jpg`)), `${profile.slug} photo mirrored verbatim`);
-    assert.equal(profile.topHoldings.length, 5);
+    assert.equal(sha256(publicPhoto), sha256(fullPath(`photos/${profile.slug}.jpg`)), `${profile.slug} photo mirrored verbatim`);
+    assert.equal(sha256(fullPath(`photos/${profile.slug}.jpg`)), sha256(slicePath(`photos/${profile.slug}.jpg`)), `${profile.slug} photo identical across both zips`);
+    if (profile.id === "P000197") {
+      assert.equal(profile.holdingsBasis, "copy-trade-full");
+      assert.equal(profile.topHoldings.length, 15);
+      assert.equal(profile.disclosureSlice.length, 5);
+      assert.equal(profile.copyTrade?.holdingsCount, 15);
+      assert.ok(!profile.topHoldings.some((h) => Object.keys(h).includes("quantity")), "copy-trade share counts are not a holding field");
+    } else if (profile.id === "G000596") {
+      assert.equal(profile.holdingsBasis, "copy-trade-full");
+      assert.equal(profile.topHoldings.length, 76);
+      assert.equal(profile.disclosureSlice.length, 5);
+      assert.equal(profile.copyTrade?.holdingsCount, 76);
+    } else {
+      assert.equal(profile.holdingsBasis, "disclosure-slice");
+      assert.equal(profile.topHoldings.length, 5);
+      assert.equal(profile.disclosureSlice.length, 5);
+      assert.equal(profile.copyTrade, null);
+      assert.ok(profile.unitemizedOther, `${profile.slug} keeps OTHER as an aggregate, not invented tickers`);
+      assert.match(profile.unitemizedOther!.label, /OTHER/i);
+    }
     assert.equal(profile.recentTrades.length, 10);
     assert.ok(profile.sectors.length >= 1);
     assert.ok(profile.performance.points.length > 300);
@@ -68,9 +98,14 @@ test("all 20 profiles normalize with photos mirrored into public/, unique biogui
   const greene = handoff.profiles.find((p) => p.id === "G000596")!;
   assert.equal(greene.currentMember, false);
   const summary = trackerSummary(pelosi);
-  assert.deepEqual(summary.topTickers, ["NVDA", "AMZN", "MSFT", "AVGO", "GOOG"]);
+  assert.deepEqual(summary.topTickers.slice(0, 5), ["NVDA", "GOOGL", "BE", "AVGO", "PANW"]);
+  assert.equal(summary.holdingsListed, 15);
   assert.equal(summary.portfolioValueUsd, 314903941);
   assert.match(summary.portfolioValueLabel, /PelosiTracker/);
+  assert.equal(pelosi.copyTrade?.totalValueUsd, 23202729);
+  assert.notEqual(pelosi.copyTrade?.totalValueUsd, pelosi.portfolio.valueUsd);
+  const sliceOnly = normalizeTrackerHandoff(sliceBrief);
+  assert.ok(sliceOnly.profiles.every((p) => p.holdingsBasis === "disclosure-slice" && p.topHoldings.length === 5));
 });
 
 test("trade amounts decode to disclosure bands; anomalies are flagged, kept and never repaired", () => {

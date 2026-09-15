@@ -5,6 +5,9 @@ import type { Band, TrackerProfile } from "./tracker-parse.ts";
  *
  *  - PelosiTracker positions (current as of the scrape date) are the display source of truth for
  *    a name whenever the tracker lists it; they carry the tracker's percentage and dollar estimate.
+ *    When a copy-trade full book exists (Pelosi 15, MTG 76) that book is the shown tracker side;
+ *    otherwise the politician-API top-5 slice plus an unitemized OTHER aggregate (no invented tickers).
+ *    Copy-trade dollars are a different PelosiTracker product from the disclosure estimate.
  *  - FMP annual disclosure rows (older; usually the 2024-12-31 filing) fill in every other
  *    disclosed name as a dollar band, exactly as filed.
  *
@@ -83,6 +86,15 @@ export function buildShownBook(
       token: tokenFor(holding.ticker, annualRows),
     });
   }
+  if (profile.holdingsBasis !== "copy-trade-full" && profile.unitemizedOther) {
+    const other = profile.unitemizedOther;
+    rows.push({
+      key: "tracker:OTHER", ticker: null, name: other.label,
+      source: "tracker",
+      tracker: { ordinal: profile.topHoldings.length, percentage: other.percentage, valueUsd: other.valueUsd, asOf: profile.asOf },
+      fmp: null, token: null,
+    });
+  }
   const annualOnly: ShownBookRow[] = [];
   for (const [ticker, items] of annualByTicker) {
     if (claimed.has(ticker)) continue;
@@ -105,8 +117,14 @@ export function buildShownBook(
   return {
     asOf: profile.asOf, fmpReferenceDate: annual?.referenceDate ?? null, rows,
     counts: { tracker: rows.filter((r) => r.source !== "fmp-annual").length, fmpAnnual: rows.filter((r) => r.source !== "tracker").length, both: rows.filter((r) => r.source === "both").length },
-    note: annual ? `PelosiTracker positions are current as of ${profile.asOf}; the FMP rows are the older annual disclosure (reference ${annual.referenceDate ?? "date unknown"}). The two readings sit side by side and are never added together.`
-      : `PelosiTracker positions are current as of ${profile.asOf}. No saved FMP annual book exists for this person, so no older disclosure rows are shown.`,
+    note: (() => {
+      const trackerSide = profile.holdingsBasis === "copy-trade-full"
+        ? `PelosiTracker copy-trade positions (${profile.topHoldings.length} names) are current as of ${profile.asOf} and are a different PelosiTracker product from the politician disclosure estimate (top ${profile.disclosureSlice.length} + OTHER)`
+        : `PelosiTracker positions are the top ${profile.coverage.holdingsSlice} slice plus an unitemized OTHER aggregate as of ${profile.asOf}; tickers are not invented for OTHER`;
+      return annual
+        ? `${trackerSide}; the FMP rows are the older annual disclosure (reference ${annual.referenceDate ?? "date unknown"}). The readings sit side by side and are never added together.`
+        : `${trackerSide}. No saved FMP annual book exists for this person, so no older disclosure rows are shown.`;
+    })(),
   };
 }
 
@@ -157,8 +175,8 @@ export function compareWithFmp(
     asOf: profile.asOf, fmpPeriod: published?.period ?? annual?.referenceDate ?? null, fmpPublished: Boolean(published), rows,
     overlap: { tickers: both, trackerOnly: rows.filter((r) => r.presence === "tracker-only").map((r) => r.ticker), fmpOnly: rows.filter((r) => r.presence === "fmp-only").map((r) => r.ticker) },
     note: published
-      ? `Tracker top ${profile.topHoldings.length} as of ${profile.asOf} beside the published FMP target (annual reference ${published.period}). Share classes are matched exactly; GOOG and GOOGL are different rows.`
-      : annual ? `Tracker top ${profile.topHoldings.length} as of ${profile.asOf} beside the saved FMP annual filing (reference ${annual.referenceDate ?? "unknown"}); no FMP index is published for this person.`
-        : `Tracker top ${profile.topHoldings.length} as of ${profile.asOf}. No saved FMP annual book or published FMP index exists for this person.`,
+      ? `Tracker ${profile.holdingsBasis === "copy-trade-full" ? "copy-trade" : "top"} ${profile.topHoldings.length} as of ${profile.asOf} beside the published FMP target (annual reference ${published.period}). Share classes are matched exactly; GOOG and GOOGL are different rows.`
+      : annual ? `Tracker ${profile.holdingsBasis === "copy-trade-full" ? "copy-trade" : "top"} ${profile.topHoldings.length} as of ${profile.asOf} beside the saved FMP annual filing (reference ${annual.referenceDate ?? "unknown"}); no FMP index is published for this person.`
+        : `Tracker ${profile.holdingsBasis === "copy-trade-full" ? "copy-trade" : "top"} ${profile.topHoldings.length} as of ${profile.asOf}. No saved FMP annual book or published FMP index exists for this person.`,
   };
 }

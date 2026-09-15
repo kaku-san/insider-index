@@ -156,8 +156,10 @@ function TrackerPerson({ id, tracker, resource }: { id: string; tracker: Tracker
   const context = [profile.chamber === "house" ? "House" : profile.chamber === "senate" ? "Senate" : "Chamber unknown", profile.state, profile.party].filter(Boolean).join(" · ");
 
   return <PortfolioLayout id={id} name={profile.name} indexName={tracker.index.indexName} image={profile.photo.local} context={context}
-    strategy={`The shown book is PelosiTracker’s current positions (third-party model, scraped ${savedDate(`${profile.asOf}T00:00:00Z`)}). The FMP rows beside it are the older annual disclosure${annual?.referenceDate ? ` (as of ${annual.referenceDate})` : ""}. Trades are information only.`}
-    count={profile.topHoldings.length} countNote={`PelosiTracker top ${profile.coverage.holdingsSlice} positions`}
+    strategy={profile.holdingsBasis === "copy-trade-full"
+      ? `The shown book is PelosiTracker’s copy-trade portfolio (${profile.topHoldings.length} names, scraped ${savedDate(`${profile.asOf}T00:00:00Z`)}), a different product from the politician-API disclosure estimate. The FMP rows beside it are the older annual disclosure${annual?.referenceDate ? ` (as of ${annual.referenceDate})` : ""}. Trades are information only.`
+      : `The shown book is PelosiTracker’s current positions (top ${profile.coverage.holdingsSlice} + OTHER, third-party model, scraped ${savedDate(`${profile.asOf}T00:00:00Z`)}). The FMP rows beside it are the older annual disclosure${annual?.referenceDate ? ` (as of ${annual.referenceDate})` : ""}. Trades are information only.`}
+    count={profile.topHoldings.length} countNote={profile.holdingsBasis === "copy-trade-full" ? `PelosiTracker copy-trade book · ${profile.topHoldings.length} names` : `PelosiTracker top ${profile.coverage.holdingsSlice} + OTHER`}
     mappedCount={tracker.index.constituents.length} activityCount={profile.recentTrades.length}
     latestFiling={savedDate(`${profile.asOf}T00:00:00Z`)}
     indexHref={`/indexes/${tracker.index.id}`} indexLabel="Tracker index"
