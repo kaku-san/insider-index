@@ -6,7 +6,7 @@ import type { PublishedIndexResponse } from "@/lib/frontend/research-contract";
 import { useResource } from "@/lib/frontend/use-resource";
 import { shortDate } from "@/lib/frontend/research-format";
 import { getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
-import { portraitFor } from "@/lib/frontend/portraits";
+import { portraitFor } from "@/lib/fomo/portraits";
 import { VaultFlow } from "./vault-flow";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
@@ -30,7 +30,7 @@ function IndexModel({hash}:{hash:string}){
   return <div className={styles.page}>
     <div className={styles.breadcrumb}><Link href={`/p/${encodeURIComponent(index.person_id)}`}><Icon name="arrow" size={13} style={{transform:"rotate(180deg)"}}/>Person portfolio</Link><span>Published model</span></div>
     <section className={styles.hero}>
-      <div className={styles.portrait}>{personImage?<img src={personImage} alt=""/>:<span>{index.indexName?.slice(0,2)??"SL"}</span>}<b>INDEX</b></div>
+      <div className={styles.portrait}>{personImage?<img src={personImage} alt=""/>:<span>{index.indexName?.slice(0,2)??"II"}</span>}<b>INDEX</b></div>
       <div className={styles.heroCopy}><span>{index.status||"Published"} · public disclosure model</span><h1>{index.indexName||index.definition?.label||"Person index"}</h1><p>One target made from the mapped part of a public disclosure book. Unmapped names stay visible below instead of being quietly dropped.</p><div className={styles.meta}><b>{holdings.length}</b><span>mapped names</span>{index.period?<><i/><b>{index.period}</b><span>period</span></>:null}{index.published_at?<><i/><span>published {shortDate(index.published_at)}</span></>:null}</div><div className={styles.actions}><button className={styles.invest} onClick={()=>setInvestOpen(true)}>{live?"Invest in index":preview?"Preview index flow":"See index status"}<Icon name="arrow" size={14}/></button><Link href="/feed">Copy a single move</Link></div></div>
       <aside className={styles.state}><small>VAULT STATE</small><strong>{live?"Live":preview?"Preview":"Not live"}</strong><p>{live?"Deposit preparation can return real validated transactions.":preview?"The vault is observable, but signing stays off until prepare returns real transactions.":"This is a research model. No basket Buy is fabricated."}</p>{vault?.observedSlot?<span>Observed slot {vault.observedSlot.toLocaleString()}</span>:null}</aside>
     </section>

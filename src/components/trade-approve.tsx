@@ -10,7 +10,7 @@ import {PersonAvatar} from "./person-avatar";
 import {AmountField,EligibilityCheck,OrderSafety} from "./social/order-fields";
 import {Icon} from "./social/icon";
 import {Button} from "./ui/button";
-import {portraitFor} from "@/lib/frontend/portraits";
+import {portraitFor} from "@/lib/fomo/portraits";
 import type {Disclosure} from "@/lib/disclosures/types";
 import type {JupiterOrder} from "@/lib/frontend/contracts";
 import {formatUsd,formatDate} from "@/lib/format";

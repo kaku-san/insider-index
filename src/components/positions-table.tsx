@@ -12,7 +12,7 @@ import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { WalletButton } from "./wallet-button";
 import { formatDate, shortenAddress } from "@/lib/format";
-import { portraitFor } from "@/lib/frontend/portraits";
+import { portraitFor } from "@/lib/fomo/portraits";
 import styles from "./consumer-positions.module.css";
 
 type CopyReceipts = { positions: TrackedPosition[] };

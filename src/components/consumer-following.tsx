@@ -7,7 +7,7 @@ import type { FomoProfile } from "@/lib/disclosures/types";
 import type { PeopleDirectoryResponse, ResearchPerson } from "@/lib/frontend/research-contract";
 import { useDeviceFollows } from "@/lib/frontend/device-follows";
 import { personContext, slugifyPerson } from "@/lib/frontend/research-format";
-import { portraitFor } from "@/lib/frontend/portraits";
+import { portraitFor } from "@/lib/fomo/portraits";
 import { PersonAvatar } from "./person-avatar";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton } from "./social/shared";

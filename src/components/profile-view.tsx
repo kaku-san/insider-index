@@ -6,7 +6,7 @@ import { useResource } from "@/lib/frontend/use-resource";
 import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
 import type { PersonPortfolioResponse, ResearchActivity, ResearchItem } from "@/lib/frontend/research-contract";
 import { moneyBand, personContext, shortDate, slugifyPerson } from "@/lib/frontend/research-format";
-import { portraitFor } from "@/lib/frontend/portraits";
+import { portraitFor } from "@/lib/fomo/portraits";
 import { useDeviceFollows } from "@/lib/frontend/device-follows";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { AllocationBreakdown } from "./allocation-breakdown";
@@ -107,7 +107,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
 
    <section className={styles.compactHero}>
      <div className={styles.compactIdentity}>
-       <div className={styles.heroPortrait}><Portrait name={name} image={image}/><span className={styles.personNumber}>SL / {id.slice(-6).toUpperCase()}</span></div>
+       <div className={styles.heroPortrait}><Portrait name={name} image={image}/><span className={styles.personNumber}>INSIDERINDEX / {id.slice(-6).toUpperCase()}</span></div>
        <div className={styles.identityCopy}><span className={styles.eyebrow}>{context}</span><h1>{name}</h1><p>{indexName}</p><div className={styles.compactReturn}>{historicalReturn!=null?<><strong>{historicalReturn>=0?"+":""}{historicalReturn.toFixed(1)}%</strong><span>{PREVIEW_MODE?"design preview · 1Y":"historical model · 1Y"}</span></>:<><strong>{holdings.length||"—"}</strong><span>visible holdings</span></>}</div><div className={styles.heroMeta}><span>{latestFiling?`Filed ${shortDate(latestFiling)}`:"Filing date unavailable"}</span><i/><span>{mappedCount||"No"} mapped</span></div>
        <div className={styles.heroActions}><button className={`${styles.followButton} ${following?styles.following:""}`} onClick={()=>follows.toggle(id)}><Icon name={following?"check":"people"} size={15}/>{following?"Following":"Follow"}</button><button className={styles.shareButton} onClick={()=>setShareOpen(true)}><Icon name="share" size={15}/>Share</button>{indexId?<button className={styles.indexButton} onClick={()=>setInvestOpen(true)}>{investLabel}<Icon name="arrow" size={14}/></button>:null}</div></div>
      </div>

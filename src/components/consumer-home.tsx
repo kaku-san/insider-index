@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useResource } from "@/lib/frontend/use-resource";
-import { useUI } from "./providers/ui-provider";
 import { Icon } from "./social/icon";
-import { portraitFor } from "@/lib/frontend/portraits";
+import { portraitFor } from "@/lib/fomo/portraits";
 import { slugifyPerson, personContext, shortDate } from "@/lib/frontend/research-format";
 import type { PeopleDirectoryResponse, PublishedIndexResponse, ResearchPerson } from "@/lib/frontend/research-contract";
 import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
@@ -96,20 +95,16 @@ function FilingTape({ disclosures }: { disclosures: CopySignal[] }) {
 
 export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryResponse }) {
   const params = useSearchParams();
-  const ui = useUI();
-  const [localQuery, setLocalQuery] = useState(params.get("q") ?? "");
+  const urlQuery = params.get("q") ?? "";
+  const [queryDraft, setQueryDraft] = useState({ urlQuery, value: urlQuery });
+  const localQuery = queryDraft.urlQuery === urlQuery ? queryDraft.value : urlQuery;
+  const setLocalQuery = (value: string) => setQueryDraft({ urlQuery, value });
   const [visible, setVisible] = useState(10);
   const peopleResult = useResource<PeopleDirectoryResponse>("/api/people", initialData);
   const legacyResult = useResource<LegacyProfiles>("/api/profiles");
   const disclosureResult = useResource<DisclosureResponse>("/api/disclosures");
   const people = useMemo(() => normalizedPeople(peopleResult.data ?? undefined, legacyResult.data ?? undefined), [peopleResult.data, legacyResult.data]);
   const disclosures = disclosureResult.data?.disclosures ?? disclosureResult.data?.signals ?? [];
-
-  useEffect(() => {
-    const q = params.get("q") ?? "";
-    setLocalQuery(q);
-    if (q) ui.setQuery(q);
-  }, [params, ui]);
 
   const sorted = useMemo(() => [...people].sort((a, b) => {
     const ap = /nancy pelosi/i.test(a.name) ? -20 : 0;
