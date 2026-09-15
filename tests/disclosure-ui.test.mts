@@ -35,6 +35,7 @@ test("home renders index-first discovery, portraits, honest empty models and a b
   assert.match(html, /portrait.jpg/);
   assert.match(html, /No targets have been published yet/);
   assert.doesNotMatch(html, /Capitol Buys|Form-4 CEO|Sign &amp; buy/);
+  assert.doesNotMatch(html, />Index</);
 });
 
 test("published models use saved publication links, never legacy crowd baskets", () => {
@@ -74,6 +75,7 @@ test("person with no saved book does not claim zero holdings or permit a deposit
   assert.match(html, /href="\/feed">Copy one print from the feed/);
   assert.doesNotMatch(html, /Preview devnet deposit|Sign devnet deposit|Invest in this index/);
   assert.doesNotMatch(html, /\$0|Deposit successful|privy-stub:/);
+  assert.doesNotMatch(html, /Index not published/);
   assert.ok(html.indexOf("Portfolio performance") < html.indexOf("Current holdings"));
   assert.ok(html.indexOf("Current holdings") < html.indexOf("Holdings distribution"));
   assert.ok(html.indexOf("Holdings distribution") < html.indexOf("Allocation history / trades"));

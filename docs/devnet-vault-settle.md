@@ -38,6 +38,6 @@ Every step re-reads the intent and refuses unless the SDK-derived next action ma
 - The Symmetry instruction layout includes two fixed WSOL/USDC custody reference accounts as program constants. They are not vault oracles and this tool never updates them; on devnet the USDC leg (pool quote side priced in WSOL) therefore reads ~1.23 because the pool's ratio differs from the program's stale WSOL reference. Deposit valuation and vault TVL use the same prices, so the mint ratio stays fair; on mainnet with live pools the leg prices converge to market.
 - The pool only records observations on swaps; with no organic devnet volume the price goes stale after the installed 3600 s.
 - Devnet oracle thresholds (9999 bps confidence/volatility/slippage, min liquidity 0) are test values. Production listing needs a deep Raydium pool per mint and real thresholds.
-- No flash-swap settlement, automated rebalance, redemption, share transfer or fee claim is run by this tool; the vault stays 100% USDC against a 50/50 target until a keeper rebalances.
+- No flash-swap settlement, automated rebalance, redemption, share transfer or fee claim is run by this tool. The vault stays 100% USDC against a 50/50 target; keeper rebalance is not live.
 
 Authoritative receipts and dated readback: [`evidence/vaults/DEVNET_TEST_VAULT.md`](../evidence/vaults/DEVNET_TEST_VAULT.md) (Raydium-only settlement section).

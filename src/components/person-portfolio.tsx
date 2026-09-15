@@ -6,31 +6,19 @@ import { PersonAvatar } from "./person-avatar";
 import { EquityCurve, PortfolioDonut } from "./portfolio-charts";
 import { Icon } from "./social/icon";
 import type { BacktestPoint } from "@/lib/disclosures/types";
+import { isPersonFollowed, personFollowKey, PERSON_FOLLOW_EVENT, subscribeToPersonFollows } from "@/lib/frontend/watchlist";
 import styles from "./person-portfolio.module.css";
 
 export { styles as portfolioStyles };
 
-const followEvent = "stocklana:person-follow-changed";
-function subscribeToFollows(callback: () => void) {
-  window.addEventListener("storage", callback);
-  window.addEventListener(followEvent, callback);
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(followEvent, callback);
-  };
-}
-
 /** A device-local watch, not an account subscription or a promise of alerts. */
 function PersonFollow({ id }: { id: string }) {
-  const key = `stocklana:person-follow:${id}`;
-  const following = useSyncExternalStore(subscribeToFollows, () => {
-    try { return localStorage.getItem(key) === "true"; } catch { return false; }
-  }, () => false);
+  const following = useSyncExternalStore(subscribeToPersonFollows, () => isPersonFollowed(id), () => false);
   const [error, setError] = useState<string | null>(null);
   function toggle() {
     try {
-      localStorage.setItem(key, String(!following));
-      window.dispatchEvent(new Event(followEvent));
+      localStorage.setItem(personFollowKey(id), String(!following));
+      window.dispatchEvent(new Event(PERSON_FOLLOW_EVENT));
       setError(null);
     } catch { setError("This browser could not save your watch."); }
   }
@@ -67,7 +55,7 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
   indexHref?: string; children: ReactNode; notice?: ReactNode;
 }) {
   const hasFilingMetadata = latestFiling !== undefined || activityCount !== undefined;
-  const hasIndexMetadata = mappedCount !== undefined;
+  const hasIndexMetadata = mappedCount != null;
 
   return <div className={styles.page}>
     <Link href="/#directory" className={styles.back}><Icon name="arrow" size={15} style={{ transform: "rotate(180deg)" }} />People &amp; indexes</Link>
@@ -89,8 +77,7 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
         <div className={styles.heroActions}>
           <PersonFollow id={id} />
           <ShareButton />
-          {indexHref ? <Link className={styles.primaryAction} href={indexHref}>View index <Icon name="arrow" size={15} /></Link> :
-            hasIndexMetadata ? <button type="button" className={styles.primaryAction} disabled>Index not published</button> : null}
+          {indexHref ? <Link className={styles.primaryAction} href={indexHref}>View index <Icon name="arrow" size={15} /></Link> : null}
         </div>
       </div>
 

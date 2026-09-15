@@ -29,12 +29,12 @@ export function IndexTicket({ id }: { id: string }) {
     <Breadcrumb label={index.name} />
     <section className="index-page-header">
       <PersonAvatar name={index.name} imageUrl={index.imageUrl} size="xl" />
-      <div><span className="eyebrow">ONE INDEX. ONE NATIVE SHARE MINT.</span><h1>{index.name}<span className="accent-dot">.</span></h1>
+      <div><span className="eyebrow">RESEARCH MODEL. NOT A FUNDED VAULT.</span><h1>{index.name}<span className="accent-dot">.</span></h1>
         <div className="inline-meta">{crowd ? <span className="index-kind">{indexKindLabel(index)}</span> : <PartyBadge party={index.party} kind={index.kind} />}<span>{index.constituents.length} model names</span></div>
-        <p>Disclosure-derived model weights, not a verified current brokerage account or actual vault allocation. Native vault investing is not open yet.</p>
+        <p>Disclosure-derived model weights, not a verified current brokerage account or actual vault allocation. The USDC+WSOL execution-test vault is not this index.</p>
       </div>
     </section>
-    <div className="notice building-notice" role="status"><Icon name="clock" size={20} /><div><strong>Native vault verification in progress.</strong><p>No deposits, share issuance or rebalances are being submitted. Catalog coverage alone does not prove native mint, oracle or claim readiness.</p></div></div>
+    <div className="notice building-notice" role="status"><Icon name="clock" size={20} /><div><strong>Native vault investing is not open.</strong><p>No deposits, share issuance, keeper rebalances or USDC-only exits are live. Catalog coverage alone does not prove native mint, oracle or claim readiness.</p></div></div>
     <div className="order-layout"><div className="order-information">
       <section className="panel"><div className="panel-heading"><h2>Model allocation</h2><span className="outlined-pill">{PREVIEW_MODE ? "Example weights" : "Estimated target weights"}</span></div>
         <PortfolioDonut holdings={index.constituents.map(h => ({ ticker: h.ticker, weightPct: h.weightPct, venueSymbol: h.venueSymbol, valueUsd: h.valueUsd }))} title={index.name} unit="names" />
@@ -44,7 +44,7 @@ export function IndexTicket({ id }: { id: string }) {
       <section className="how-it-works"><span className="mini-label">NATIVE VAULT LIFECYCLE · NOT YET ENABLED</span>
         <div><span>01</span><p><strong>Deployer-created index</strong>Only the deployer initializes and names each listed vault. Investors cannot create vaults.</p></div>
         <div><span>02</span><p><strong>Authorize native entry</strong>USDC enters the native settlement flow; native shares represent ownership. Multiple approvals and unused contribution returns may be required.</p></div>
-        <div><span>03</span><p><strong>Targets and redemption</strong>Policy-valid targets and eligible normal rebalances do not require holder signatures. Redemption returns underlying tokens first. Optional wallet-authorized USDC conversion remains disabled.</p></div>
+        <div><span>03</span><p><strong>Targets and redemption</strong>Keeper rebalance and guaranteed USDC-only exit are not live. Redemption, when enabled, returns underlying tokens first. Sign stays closed until a USDC-only exit is proven.</p></div>
       </section>
       {latest.length ? <section className="panel"><div className="panel-heading"><h3>Copy one trade instead</h3></div><p className="small-text muted">Separate individual-trade feature, not index-share ownership.</p><div className="filer-list compact">{latest.map(d => <div key={d.id} className="filer-row"><Link href={`/p/${encodeURIComponent(d.profileId)}`} className="filer-identity"><strong>{d.insiderName}</strong><span>{d.ticker} · {formatDate(d.filedAt)}</span></Link><CopyButton signalId={d.id} enabled venue={d.venue} label="Copy this buy" /></div>)}</div></section> : null}
     </div><aside className="order-panel"><div className="order-panel-heading"><h2>Index investing unavailable</h2></div>

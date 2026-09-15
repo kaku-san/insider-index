@@ -1,4 +1,4 @@
-# Tiny devnet vault attempt
+# Devnet execution-test vault
 
 Creation, **0.1 SDK-devnet-USDC contribution**, deposit lock, price update and share mint **finalized**, twice: the first deposit settled through the creation-time Pyth-type oracle accounts (no Hermes), the vault's oracles were then edited to **Raydium CPMM only**, and a second 0.1 SDK-USDC deposit settled end to end with **Raydium-only prices** (see [Raydium-only settlement — September 15, 2026](#raydium-only-settlement--september-15-2026)). Share supply is **199990**; the wallet holds **198494**. This is an execution-test vault, not a Pelosi basket, production index, or audited public-funds release. Earlier sections keep their original observations.
 

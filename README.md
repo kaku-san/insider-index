@@ -66,7 +66,7 @@ API routes:
 - `GET /api/disclosures` — insider + congress tape with per-lane provenance in `lanes.{insiders,congress}` (`source`, `live`, `count`, `note`) and `catalog` feed status; every row carries `venue` / `venueSymbol` / `mint` / `mintDecimals` / `tradeEligible`
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
 - `GET /api/disclosures/[id]` — inspect payload
-- `GET /api/signals` · `GET /api/profiles` · `GET /api/follows`
+- `GET /api/signals` · `GET /api/profiles`
 - `GET /api/indexes` lists model indexes (crowd first) and explicit unavailable native-position status. Legacy `POST /api/indexes/quote` and `/execute` now return `503` with native release blockers; no fabricated transaction or receipt
 - `POST /api/quote` — Jupiter `/order` for at least 1 USDC notional, catalog-enforced (`403` for a mint outside the catalog); a signable order requires a valid wallet and saved server context
 - `POST /api/execute` — verify the server-saved quote context, call Jupiter `/execute`, then save a copy receipt; see the [W0 receipt contract](docs/track-a-w0.md#receipt-contract)
