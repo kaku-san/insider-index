@@ -5,6 +5,7 @@ import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { SymmetryCore } from "@symmetry-hq/sdk";
 import type { TxPayloadBatchSequence, UIRebalanceIntent, Vault } from "@symmetry-hq/sdk";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { RaydiumCpmmPoolState } from "@symmetry-hq/sdk/dist/states/oracles/raydiumCpmmOracle.js";
 import { DEVNET_TEST_VAULT } from "./devnet-contract.ts";
 import { devnetTestIdentity } from "./devnet-deposit.ts";
 import { GENESIS, NativeVaultBuilders } from "./symmetry-adapter.ts";
@@ -235,9 +236,17 @@ export function assertRaydiumLogs(logs: readonly string[], expectedMints: readon
   if (missing.length) throw new Error(`RAYDIUM_LOG_MISSING for priced mint: ${missing.join(", ")}`);
 }
 
-export function assertSolDebitBudget(spent: bigint, expectedFee: number | null, budget: bigint, label: string): void {
+export function simulatedWalletDebit(before: bigint, simulatedAfter: number | null | undefined): bigint | null {
+  if (simulatedAfter === null || simulatedAfter === undefined || !Number.isSafeInteger(simulatedAfter) || simulatedAfter < 0) return null;
+  const delta = before - BigInt(simulatedAfter);
+  return delta > 0n ? delta : 0n;
+}
+
+export function assertSolDebitBudget(spent: bigint, expectedDebit: bigint | null, expectedFee: number | null, budget: bigint, label: string): void {
+  if (expectedDebit === null) throw new Error(`SOL wallet debit unavailable before ${label}; refusing to send`);
   if (expectedFee === null) throw new Error(`SOL fee unavailable before ${label}; refusing to send`);
-  if (spent + BigInt(expectedFee) > budget) throw new Error(`SOL budget would be exceeded before ${label}; refusing to send`);
+  const requiredDebit = expectedDebit > BigInt(expectedFee) ? expectedDebit : BigInt(expectedFee);
+  if (spent + requiredDebit > budget) throw new Error(`SOL budget would be exceeded before ${label}; refusing to send`);
 }
 
 export interface StepReceipt {
@@ -274,29 +283,35 @@ export async function runSettleStep(settler: DevnetSettler, options: SettleOptio
       if (!message.staticAccountKeys[0].equals(wallet)) throw new Error("Transaction payer is not the authorized wallet");
       if (!options.execute && batchIndex > 0) { result.notes.push(`batch ${batchIndex} depends on earlier batch state; not simulated in dry-run`); continue; }
       // Later batches are simulated only once earlier batches are finalized; each send uses a fresh blockhash.
-      const simulation = await settler.connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true, commitment: "confirmed" });
+      const payerBalance = options.execute ? await settler.connection.getBalanceAndContext(wallet, "confirmed") : null;
+      const simulation = await settler.connection.simulateTransaction(tx, {
+        sigVerify: false,
+        replaceRecentBlockhash: true,
+        commitment: "confirmed",
+        ...(payerBalance ? { minContextSlot: payerBalance.context.slot, accounts: { encoding: "base64" as const, addresses: [wallet.toBase58()] } } : {}),
+      });
       const logs = simulation.value.logs ?? [];
       result.simulated.push({ messageHash: sha256(message.serialize()), unitsConsumed: simulation.value.unitsConsumed ?? null, instructions: summarizeInstructions(tx), logsTail: logs.slice(-6) });
       if (simulation.value.err) throw new Error(`Simulation failed for ${built.label}: ${JSON.stringify(simulation.value.err)} :: ${logs.filter(l => /Error|error/.test(l)).join(" | ")}`);
       assertRaydiumLogs(logs, expectedOracleMints);
       if (!options.execute) continue;
-      const before = BigInt(await settler.connection.getBalance(wallet, "confirmed"));
+      const expectedDebit = simulatedWalletDebit(BigInt(payerBalance!.value), simulation.value.accounts?.[0]?.lamports);
       const latest = await settler.connection.getLatestBlockhash("confirmed");
       message.recentBlockhash = latest.blockhash;
       const fee = await settler.connection.getFeeForMessage(message, "confirmed");
-      assertSolDebitBudget(debit, fee.value, budget, built.label);
+      assertSolDebitBudget(debit, expectedDebit, fee.value, budget, built.label);
       const messageHash = sha256(message.serialize());
       tx.sign([signer!]);
       const signature = await settler.connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 3 });
       const confirmation = await settler.connection.confirmTransaction({ signature, blockhash: latest.blockhash, lastValidBlockHeight: latest.lastValidBlockHeight }, "confirmed");
       if (confirmation.value.err) throw new Error(`Transaction ${signature} failed: ${JSON.stringify(confirmation.value.err)}`);
       const receipt = await waitFinalized(settler.connection, signature);
-      const after = BigInt(await settler.connection.getBalance(wallet, "confirmed"));
-      debit += before - after;
+      const walletDebit = BigInt(receipt.meta!.preBalances[0]) - BigInt(receipt.meta!.postBalances[0]);
+      debit += walletDebit;
       const receiptLogs = receipt.meta?.logMessages ?? [];
       assertRaydiumLogs(receiptLogs, expectedOracleMints);
       result.receipts.push({ step: built.label, signature, slot: receipt.slot, blockTime: receipt.blockTime ?? null, feeLamports: receipt.meta?.fee ?? 0,
-        walletDebitLamports: (before - after).toString(), messageHash, oracleTypes: oracleTypesFromLogs(receiptLogs),
+        walletDebitLamports: walletDebit.toString(), messageHash, oracleTypes: oracleTypesFromLogs(receiptLogs),
         explorer: `https://explorer.solana.com/tx/${signature}?cluster=devnet` });
       if (debit > budget) throw new Error(`SOL budget ${options.maxSolDebit} exceeded after ${built.label}; stopping`);
     }

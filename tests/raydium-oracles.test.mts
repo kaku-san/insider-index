@@ -4,12 +4,14 @@ import { AddressLookupTableAccount, Connection, PublicKey, TransactionMessage, V
 import { MintLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { AddOrEditTokenInput, Vault } from "@symmetry-hq/sdk";
 import { PYTHNET_CUSTODY_PRICE_USDC_ACCOUNT, PYTHNET_CUSTODY_PRICE_WSOL_ACCOUNT, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
+import { RaydiumCpmmPoolState } from "@symmetry-hq/sdk/dist/states/oracles/raydiumCpmmOracle.js";
 import {
   assertNoPythEnvironment, assertRaydiumOnlyToken, assertRaydiumOnlyVault, DEVNET_RAYDIUM_POOLS, planRaydiumPriceUpdate,
   raydiumCpmmObservationTimestamp, raydiumPoolFor, WSOL_MINT,
 } from "../src/lib/index-vaults/raydium-oracles.ts";
 import {
-  assertRaydiumLogs, assertSolDebitBudget, fromPayload, intentNextAction, oracleTypesFromLogs, parseSettleArgs, settleConnection, solToLamports, summarizeInstructions,
+  assertRaydiumLogs, assertSolDebitBudget, DevnetSettler, fromPayload, intentNextAction, oracleTypesFromLogs, parseSettleArgs, SETTLE_TEST_VAULT,
+  settleConnection, simulatedWalletDebit, solToLamports, summarizeInstructions,
 } from "../src/lib/index-vaults/devnet-settle.ts";
 import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import { devnetTestIdentity } from "../src/lib/index-vaults/devnet-deposit.ts";
@@ -113,6 +115,28 @@ test("Raydium CPMM observation ring decodes the current observation timestamp", 
   assert.throws(() => raydiumCpmmObservationTimestamp(Buffer.alloc(10)), /Malformed/);
 });
 
+test("settlement pool observation decodes the installed Raydium CPMM state", async () => {
+  const observationKey = new PublicKey("7LnqjXdqJEdccWZQs5YJobQ8MDmcK4sG2oo4Ty4LBC8c");
+  const observationData = Buffer.alloc(8 + 1 + 2 + 32 + 100 * 40 + 32);
+  observationData.writeUInt8(1, 8);
+  observationData.writeUInt16LE(0, 9);
+  observationData.writeBigUInt64LE(BigInt(Math.floor(Date.now() / 1000)), 8 + 1 + 2 + 32);
+  const originalDecode = RaydiumCpmmPoolState.decode;
+  RaydiumCpmmPoolState.decode = (() => ({ observationKey })) as typeof RaydiumCpmmPoolState.decode;
+  const connection = {
+    getAccountInfo: async (key: PublicKey) => key.equals(observationKey)
+      ? { data: observationData, owner: PublicKey.default }
+      : { data: Buffer.alloc(1), owner: new PublicKey(SETTLE_TEST_VAULT.raydiumCpmmProgram) },
+  } as unknown as Connection;
+  try {
+    const result = await new DevnetSettler(connection).pool(fixtureVault());
+    assert.equal(result.binding.pool, POOL);
+    assert.equal(result.summary.fresh, true);
+  } finally {
+    RaydiumCpmmPoolState.decode = originalDecode;
+  }
+});
+
 test("program logs prove the oracle type per token; a Pyth (type 0) read fails settlement closed", () => {
   const logs = [
     "Program log: Instruction: UpdateTokenPricesHandler",
@@ -128,10 +152,13 @@ test("program logs prove the oracle type per token; a Pyth (type 0) read fails s
   assert.doesNotThrow(() => assertRaydiumLogs(["Program log: Instruction: MintBasketHandler"]));
 });
 
-test("SOL debit authorization rejects an unavailable or over-budget fee before broadcast", () => {
-  assert.doesNotThrow(() => assertSolDebitBudget(20_000n, 5_000, 25_000n, "mint"));
-  assert.throws(() => assertSolDebitBudget(20_000n, 5_001, 25_000n, "mint"), /would be exceeded.*refusing to send/);
-  assert.throws(() => assertSolDebitBudget(0n, null, 25_000n, "mint"), /fee unavailable.*refusing to send/);
+test("SOL debit authorization uses the simulated payer delta before broadcast", () => {
+  assert.equal(simulatedWalletDebit(100_000n, 69_378), 30_622n);
+  assert.equal(simulatedWalletDebit(100_000n, null), null);
+  assert.doesNotThrow(() => assertSolDebitBudget(0n, 30_622n, 30_000, 30_622n, "deposit"));
+  assert.throws(() => assertSolDebitBudget(0n, 30_622n, 30_000, 30_000n, "deposit"), /would be exceeded.*refusing to send/);
+  assert.throws(() => assertSolDebitBudget(0n, null, 5_000, 25_000n, "mint"), /wallet debit unavailable.*refusing to send/);
+  assert.throws(() => assertSolDebitBudget(0n, 5_000n, null, 25_000n, "mint"), /fee unavailable.*refusing to send/);
 });
 
 test("settlement CLI: strict flags, required intent, devnet-only RPC that rejects sends in dry-run", () => {
