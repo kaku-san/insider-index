@@ -10,6 +10,7 @@ import { slugifyPerson, personContext, shortDate } from "@/lib/frontend/research
 import type { PeopleDirectoryResponse, PublishedIndexResponse, ResearchPerson } from "@/lib/frontend/research-contract";
 import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
 import { useUI } from "./providers/ui-provider";
+import { PageError } from "./social/shared";
 import styles from "./consumer-home.module.css";
 
 type LegacyProfiles = { profiles: FomoProfile[] };
@@ -81,8 +82,9 @@ function PersonCover({ person, featured = false }: { person: ResearchPerson; fea
   </article>;
 }
 
-function FilingTape({ disclosures }: { disclosures: CopySignal[] }) {
+export function FilingTape({ disclosures, error, retry }: { disclosures: CopySignal[]; error: string | null; retry: () => void }) {
   const rows = disclosures.slice(0, 5);
+  if (error && !rows.length) return <PageError error={error} retry={retry}/>;
   if (!rows.length) return <div className={styles.tapeEmpty}><strong>Nothing new on the tape.</strong><span>Fresh sourced disclosures appear here when the feed is connected.</span></div>;
   return <div className={styles.tape}>{rows.map((row, index) => <Link href={row.tradeEligible ? `/trade/${encodeURIComponent(row.id)}?copy=1` : `/disclosures/${encodeURIComponent(row.id)}`} className={styles.tapeRow} key={row.id}>
     <span className={styles.tapeIndex}>{String(index + 1).padStart(2, "0")}</span>
@@ -107,6 +109,10 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
   const disclosureResult = useResource<DisclosureResponse>("/api/disclosures");
   const people = useMemo(() => normalizedPeople(peopleResult.data ?? undefined, legacyResult.data ?? undefined), [peopleResult.data, legacyResult.data]);
   const disclosures = disclosureResult.data?.disclosures ?? disclosureResult.data?.signals ?? [];
+  const directoryError = !people.length && !peopleResult.loading && !legacyResult.loading
+    ? [peopleResult.error, legacyResult.error].filter((error, index, errors): error is string => Boolean(error) && errors.indexOf(error) === index).join(" ") || null
+    : null;
+  const retryDirectory = () => { peopleResult.reload(); legacyResult.reload(); };
 
   const sorted = useMemo(() => [...people].sort((a, b) => {
     const ap = /nancy pelosi/i.test(a.name) ? -20 : 0;
@@ -153,17 +159,17 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
         <div><span>PEOPLE ARE THE INDEX</span><h2>Pick a person.<br/>See the portfolio.</h2></div>
         <p>Less screener, more discovery. Start with the person you already know, then go as deep into the filings as you want.</p>
       </header>
-      {loading ? <div className={styles.loadingGrid}>{[0,1,2,3].map((i)=><div key={i}/>)}</div> : <div className={styles.coverGrid}>
+      {loading ? <div className={styles.loadingGrid}>{[0,1,2,3].map((i)=><div key={i}/>)}</div> : directoryError ? <PageError error={directoryError} retry={retryDirectory}/> : <div className={styles.coverGrid}>
         {(spotlight.length ? spotlight : sorted.slice(0,4)).map((person, index) => <PersonCover key={person.id} person={person} featured={index === 0}/>) }
       </div>}
     </section>
 
     <section className={styles.tapeSection}>
       <div className={styles.tapeIntro}><span>THE TAPE</span><h2>What moved<br/>this week.</h2><p>Recent public filings, translated from paperwork into something you can scan in ten seconds.</p><Link href="/feed">Open full feed <Icon name="arrow" size={14}/></Link></div>
-      <FilingTape disclosures={disclosures}/>
+      <FilingTape disclosures={disclosures} error={!disclosures.length ? disclosureResult.error : null} retry={disclosureResult.reload}/>
     </section>
 
-    <section className={styles.directorySection}>
+    {!directoryError ? <section className={styles.directorySection}>
       <div className={styles.directoryTop}>
         <div><span>THE DIRECTORY</span><h2>Everyone we&apos;re watching.</h2></div>
         <label className={styles.directorySearch}><Icon name="search" size={16}/><input value={localQuery} onChange={(e)=>setLocalQuery(e.target.value)} placeholder="Search people…"/></label>
@@ -176,7 +182,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
         <span className={styles.directoryArrow}><Icon name="arrow" size={16}/></span>
       </Link>)}</div>}
       {directory.length > visible ? <button className={styles.moreButton} type="button" onClick={()=>setVisible(v=>v+10)}>Show more people</button> : null}
-    </section>
+    </section> : null}
 
     <section className={styles.manifesto}>
       <span>THE POINT</span>

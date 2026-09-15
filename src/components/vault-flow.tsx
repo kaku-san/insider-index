@@ -6,7 +6,7 @@ import { WalletConnectSheet } from "./wallet-connect-sheet";
 import { Icon } from "./social/icon";
 import { errorText } from "@/lib/frontend/api";
 import {
-  DEPOSIT_PHASES, WITHDRAW_PHASES, creditHasRemainingAmount, getOperation, prepareConversion, prepareDeposit,
+  DEPOSIT_PHASES, WITHDRAW_PHASES, creditHasRemainingAmount, depositIsEnabled, getOperation, prepareConversion, prepareDeposit,
   prepareNext, prepareWithdrawal, submitReceipts,
   type IndexSharePosition, type ObservedOperation, type PreparedStep, type VaultReadiness,
 } from "@/lib/frontend/vault-api";
@@ -50,7 +50,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
   const [error,setError]=useState<string|null>(null);
   const [connectOpen,setConnectOpen]=useState(false);
   useEffect(()=>{if(open){setScreen("amount");setPrepared(null);setOperation(null);setError(null);setAmount(mode==="deposit"?"1000":(position?.sharesText??"0"));}},[open,mode,indexId,position?.sharesText]);
-  const live=Boolean(mode==="deposit"?(readiness?.ready||readiness?.depositEnabled):readiness?.redeemEnabled);
+  const live=mode==="deposit"?depositIsEnabled(readiness):Boolean(readiness?.redeemEnabled);
   const blocked=(readiness?.blockers??[]).length>0 && !live;
   const phase=operation?.phase??prepared?.phase??"DRAFT";
   const withdrawBase=["DRAFT","AWAITING_SIGNATURE","SUBMITTED","REDEMPTION_CLAIM","CLAIM_PENDING","TOKENS_RECEIVED"] as const;

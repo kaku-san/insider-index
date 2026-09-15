@@ -147,11 +147,15 @@ export const WITHDRAW_PHASES = [
   "DRAFT","AWAITING_SIGNATURE","SUBMITTED","REDEMPTION_CLAIM","CLAIM_PENDING","TOKENS_RECEIVED","CONVERTING","COMPLETE_IN_KIND","PARTIAL_USDC","COMPLETE_USDC"
 ] as const;
 
+export function depositIsEnabled(readiness?: VaultReadiness | null): boolean {
+  return readiness?.depositEnabled !== false && Boolean(readiness?.depositEnabled || readiness?.ready);
+}
+
 export function uiStateFrom(readiness: VaultReadiness | null, position?: IndexSharePosition | null, operation?: ObservedOperation | null): VaultUiState {
   if (operation && !operation.complete) return "PENDING";
   if (position) { try { if (BigInt(position.sharesRaw || "0") > 0n) return "HAS_SHARES"; } catch {} }
   if (!readiness?.identity && !readiness?.vault) return "NO_VAULT";
-  if (readiness.depositEnabled || readiness.ready) return "LIVE_DEPOSIT";
+  if (depositIsEnabled(readiness)) return "LIVE_DEPOSIT";
   if ((readiness.phase || readiness.status || "").toUpperCase().includes("BLOCK")) return "PREPARE_BLOCKED";
   return "PREVIEW_ONLY";
 }

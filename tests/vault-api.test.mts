@@ -3,8 +3,8 @@ import { register } from "node:module";
 import test from "node:test";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { creditHasRemainingAmount, validatePreparedStep } = await import("../src/lib/frontend/vault-api.ts");
-const { markedDollars } = await import("../src/lib/frontend/research-format.ts");
+const { creditHasRemainingAmount, depositIsEnabled, uiStateFrom, validatePreparedStep } = await import("../src/lib/frontend/vault-api.ts");
+const { markedDollars, moneyBand } = await import("../src/lib/frontend/research-format.ts");
 
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 function preparedPayload(requires: "user-signature" | "wait" = "user-signature") {
@@ -36,4 +36,19 @@ test("unavailable marked values never render as zero", () => {
   assert.equal(markedDollars(""), "—");
   assert.equal(markedDollars("  "), "—");
   assert.equal(markedDollars("0"), "$0.00");
+});
+
+test("undisclosed and invalid money bands never render zero", () => {
+  assert.equal(moneyBand({ low: 0, high: 0 }), "Range unavailable");
+  assert.equal(moneyBand({ low: 0, high: 50_000 }), "≤$50K");
+  assert.equal(moneyBand({ low: 15_000, high: 0 }), "$15K+");
+  assert.equal(moneyBand({ low: 50_000, high: 15_000 }), "Range unavailable");
+});
+
+test("explicitly disabled deposits override generic vault readiness", () => {
+  const disabled = { indexId: "test", ready: true, depositEnabled: false, identity: { vaultAccount: owner, shareMint: owner } };
+  assert.equal(depositIsEnabled(disabled), false);
+  assert.equal(uiStateFrom(disabled), "PREVIEW_ONLY");
+  assert.equal(depositIsEnabled({ ...disabled, depositEnabled: true }), true);
+  assert.equal(uiStateFrom({ ...disabled, depositEnabled: true }), "LIVE_DEPOSIT");
 });

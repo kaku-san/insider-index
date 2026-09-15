@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { PublishedIndexResponse } from "@/lib/frontend/research-contract";
 import { useResource } from "@/lib/frontend/use-resource";
 import { shortDate } from "@/lib/frontend/research-format";
-import { getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { depositIsEnabled, getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { VaultFlow } from "./vault-flow";
 import { IndexTicket } from "./index-ticket";
@@ -27,7 +27,7 @@ function IndexModel({hash}:{hash:string}){
   if(resource.error)return <PageError error={resource.error} retry={resource.reload}/>;
   if(!index)return null;
   const excluded=index.definition?.excluded??[];const personImage=portraitFor(index.person_id);
-  const live=Boolean(vault?.depositEnabled||vault?.ready);const preview=Boolean(vault?.identity||vault?.vault);
+  const live=depositIsEnabled(vault);const preview=Boolean(vault?.identity||vault?.vault);
   return <div className={styles.page}>
     <div className={styles.breadcrumb}><Link href={`/p/${encodeURIComponent(index.person_id)}`}><Icon name="arrow" size={13} style={{transform:"rotate(180deg)"}}/>Person portfolio</Link><span>Published model</span></div>
     <section className={styles.hero}>

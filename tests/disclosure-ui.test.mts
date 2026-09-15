@@ -7,12 +7,12 @@ import { bookStatus, disclosedRange, filterPeople, personContext } from "../src/
 import type { StoredPerson } from "../src/lib/fmp/store.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { ConsumerHome } = await import("../src/components/consumer-home.tsx");
+const { ConsumerHome, FilingTape } = await import("../src/components/consumer-home.tsx");
 const { FmpPerson, PublishedTarget } = await import("../src/components/fmp-person.tsx");
 const { PrivySolanaProvider, usePrivySolana } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 function renderPerson(book: NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>) {
-  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(FmpPerson, { id: person.id, initialData: book })));
+  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(FmpPerson, { id: person.id, initialData: book }))));
 }
 function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }) {
   return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData }))));
@@ -46,6 +46,14 @@ test("published models use person-index discovery, never legacy crowd baskets", 
   assert.match(html, /PERSON INDEX|INDEX/);
   assert.match(html, /Example F Index/);
   assert.doesNotMatch(html, /Capitol Buys|crowd basket|Sign &amp; buy/);
+});
+
+test("a failed disclosure tape renders a retryable error instead of an empty tape", () => {
+  const html = renderToStaticMarkup(createElement(FilingTape, { disclosures: [], error: "Disclosure service unavailable", retry: () => undefined }));
+  assert.match(html, /role="alert"/);
+  assert.match(html, /Disclosure service unavailable/);
+  assert.match(html, /Try again/);
+  assert.doesNotMatch(html, /Nothing new on the tape/);
 });
 
 test("search includes names outside the first page and combines chamber filters without mutating data", () => {

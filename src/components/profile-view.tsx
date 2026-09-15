@@ -14,7 +14,7 @@ import { FilingLink } from "./person-portfolio";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { Icon } from "./social/icon";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import { getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { depositIsEnabled, getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { VaultFlow } from "./vault-flow";
 import styles from "./consumer-person.module.css";
 
@@ -107,7 +107,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const activity=researchBook?.activity?.length?researchActivity(researchBook):legacyActivity(legacy.data?.trades??[]);const snapshot=researchBook?[...researchBook.snapshots].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0]:null;const fullItems=snapshot?.items??[];const mappedCount=researchBook?.publishedIndex?.constituents.length??holdings.filter(x=>x.mint).length;const following=ui.deviceFollows.includes(id);const latestFiling=snapshot?.filingDate??snapshot?.referenceDate??activity[0]?.filedDate??null;
  const indexHref=indexId?`/indexes/${encodeURIComponent(indexId)}`:null;
  const curve=legacyProfile?.curve??[];const historicalReturn=curve.length>1&&curve[0].equity?((curve.at(-1)!.equity-curve[0].equity)/Math.abs(curve[0].equity))*100:null;
- const investLabel=vault?.depositEnabled||vault?.ready?"Invest":vault?.identity||vault?.vault?"Preview index":"View index";
+ const investLabel=depositIsEnabled(vault)?"Invest":vault?.identity||vault?.vault?"Preview index":"View index";
  return <div className={styles.page}>
    <div className={styles.topline}><Link href="/"><Icon name="arrow" size={14} style={{transform:"rotate(180deg)"}}/>Explore</Link><span>Public disclosures · delayed, not live positions</span></div>
 

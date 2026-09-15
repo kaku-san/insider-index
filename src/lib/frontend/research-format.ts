@@ -1,14 +1,15 @@
 import type { MoneyBand, ResearchPerson } from "./research-contract";
 
 export function moneyBand(value?: MoneyBand | null) {
-  const low = value?.low;
-  const high = value?.high;
+  const validBound = (bound?: number | null) => typeof bound === "number" && Number.isFinite(bound) && bound > 0 ? bound : null;
+  const low = validBound(value?.low);
+  const high = validBound(value?.high);
   const money = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toLocaleString("en-US", { maximumFractionDigits: 1 })}M`
     : n >= 1_000 ? `$${(n / 1_000).toLocaleString("en-US", { maximumFractionDigits: 0 })}K`
       : `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-  if (typeof low === "number" && typeof high === "number") return low === high ? money(low) : `${money(low)}–${money(high)}`;
-  if (typeof low === "number") return `${money(low)}+`;
-  if (typeof high === "number") return `≤${money(high)}`;
+  if (low !== null && high !== null) return low > high ? "Range unavailable" : low === high ? money(low) : `${money(low)}–${money(high)}`;
+  if (low !== null) return `${money(low)}+`;
+  if (high !== null) return `≤${money(high)}`;
   return "Range unavailable";
 }
 
