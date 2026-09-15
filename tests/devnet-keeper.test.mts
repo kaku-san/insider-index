@@ -100,7 +100,8 @@ test("legacy journals establish one new hash baseline before enforcing drift", (
     ...planKeeperObservation({ ...snapshot(), configHash: "f".repeat(64), intents: [] }),
     blocked: ["BROADCAST_DISABLED", "NATIVE_RELEASE_TESTS_NOT_RUN", "CONFIG_CHANGED_REATTEST_REQUIRED"],
   };
-  const { configHashVersion: _legacyVersion, ...unversioned } = legacy;
+  const unversioned: Partial<typeof legacy> = { ...legacy };
+  delete unversioned.configHashVersion;
   await writeFile(path, JSON.stringify({ observations: [unversioned] }));
 
   const migrated = await runDevnetKeeperTick(reader(), path);

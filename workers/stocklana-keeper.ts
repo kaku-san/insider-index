@@ -25,6 +25,7 @@ export interface KeeperObservation extends KeeperSnapshot {
 }
 type NativeFeeSnapshot = ReturnType<typeof feeSnapshot>;
 export function keeperConfigurationHash(vault: Pick<Vault, "settings" | "composition" | "numTokens">, fees: NativeFeeSnapshot): string {
+  /* eslint-disable @typescript-eslint/no-unused-vars -- rest destructuring intentionally excludes runtime accounting state */
   const {
     bountyBalance, highWaterMark, activeRebalance, activeWithdraws, activeManagements,
     lastAutomationExecutionTimestamp, managersLastUpdateTimestamp, feesLastUpdateTimestamp,
@@ -34,6 +35,7 @@ export function keeperConfigurationHash(vault: Pick<Vault, "settings" | "composi
     creationTimestamp, ...settings
   } = vault.settings;
   const { accruedNativeUnits, representation, ...feeConfiguration } = fees;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
   return hashObject({
     fees: feeConfiguration,
     settings: JSON.parse(JSON.stringify(settings)),
