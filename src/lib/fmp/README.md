@@ -33,7 +33,7 @@ Publication uses a stable content hash and an atomic service-only owner RPC: val
 
 ## Layers and public reads
 
-- `client.ts`: Node-only bounded FMP transport, key-file fallback and injectable raw archive. Without an injected archive, capture persistence is skipped; there is no filesystem archive or disk fallback. Operator ingestion/search injects `ingest.ts`’s Supabase raw capture. `server.ts` protects runtime credentials with `server-only`.
+- `client.ts`: Node-only bounded FMP transport, key-file fallback and injectable raw capture; persistence and failure behavior are defined under [Transport and completeness](#transport-and-completeness). `server.ts` protects runtime credentials with `server-only`.
 - `types.ts` / `fmp-parse.ts`: pure source normalization and annual document versions; no env/fetch/aliases in parsers. Legacy `indexInput` still exposes the latest **complete** annual equity/ETF source input, not the published model. `publishedIndex` is the authoritative latest observed holdings target.
 - `service.ts`: injectable FMP source service; `portfolio(id, { holdingsOnly: true })` skips optional sources. `ingest.ts`: raw capture plus save adapter that preserves optional histories.
 - `holding-resolution.ts` / `holdings-index.ts` / `publish.ts`: evidenced identity, holdings target builder, atomic publication. `trade-index.ts` remains a historical/legacy utility, not the live product or default CLI.
