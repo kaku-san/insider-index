@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AddressLookupTableAccount, Connection, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { AddressLookupTableAccount, Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { MintLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { AddOrEditTokenInput, Vault } from "@symmetry-hq/sdk";
 import { PYTHNET_CUSTODY_PRICE_USDC_ACCOUNT, PYTHNET_CUSTODY_PRICE_WSOL_ACCOUNT, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
@@ -11,7 +11,7 @@ import {
 } from "../src/lib/index-vaults/raydium-oracles.ts";
 import {
   assertRaydiumLogs, assertSolDebitBudget, DevnetSettler, fromPayload, intentNextAction, oracleTypesFromLogs, parseSettleArgs, SETTLE_TEST_VAULT,
-  settleConnection, simulatedWalletDebit, solToLamports, summarizeInstructions,
+  settleConnection, simulatedWalletDebit, solToLamports, summarizeInstructions, systemPayerLamportDebit,
 } from "../src/lib/index-vaults/devnet-settle.ts";
 import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import { devnetTestIdentity } from "../src/lib/index-vaults/devnet-deposit.ts";
@@ -162,10 +162,19 @@ test("program logs prove the oracle type per token; a Pyth (type 0) read fails s
 test("SOL debit authorization uses the simulated payer delta before broadcast", () => {
   assert.equal(simulatedWalletDebit(100_000n, 69_378), 30_622n);
   assert.equal(simulatedWalletDebit(100_000n, null), null);
-  assert.doesNotThrow(() => assertSolDebitBudget(0n, 30_622n, 30_000, 30_622n, "deposit"));
-  assert.throws(() => assertSolDebitBudget(0n, 30_622n, 30_000, 30_000n, "deposit"), /would be exceeded.*refusing to send/);
-  assert.throws(() => assertSolDebitBudget(0n, null, 5_000, 25_000n, "mint"), /wallet debit unavailable.*refusing to send/);
-  assert.throws(() => assertSolDebitBudget(0n, 5_000n, null, 25_000n, "mint"), /fee unavailable.*refusing to send/);
+  assert.doesNotThrow(() => assertSolDebitBudget(0n, 30_622n, 30_000, 0n, 30_622n, "deposit"));
+  assert.throws(() => assertSolDebitBudget(0n, 30_622n, 30_000, 0n, 30_000n, "deposit"), /would be exceeded.*refusing to send/);
+  assert.throws(() => assertSolDebitBudget(0n, null, 5_000, 0n, 25_000n, "mint"), /wallet debit unavailable.*refusing to send/);
+  assert.throws(() => assertSolDebitBudget(0n, 5_000n, null, 0n, 25_000n, "mint"), /fee unavailable.*refusing to send/);
+});
+
+test("an intervening credit cannot hide a payer-funded transfer from the SOL ceiling", () => {
+  const payer = new PublicKey(KEEPER);
+  const instruction = SystemProgram.transfer({ fromPubkey: payer, toPubkey: new PublicKey(INTENT), lamports: 622 });
+  const message = new TransactionMessage({ payerKey: payer, recentBlockhash: PublicKey.default.toBase58(), instructions: [instruction] }).compileToV0Message();
+  const directDebit = systemPayerLamportDebit(new VersionedTransaction(message), payer);
+  assert.equal(directDebit, 622n);
+  assert.throws(() => assertSolDebitBudget(0n, 29_400n, 30_000, directDebit, 30_000n, "deposit"), /would be exceeded.*refusing to send/);
 });
 
 test("settlement CLI: strict flags, required intent, devnet-only RPC that rejects sends in dry-run", () => {

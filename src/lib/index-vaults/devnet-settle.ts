@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { Connection, Keypair, PublicKey, VersionedTransaction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemInstruction, SystemProgram, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { SymmetryCore } from "@symmetry-hq/sdk";
 import type { TxPayloadBatchSequence, UIRebalanceIntent, Vault } from "@symmetry-hq/sdk";
@@ -242,10 +242,43 @@ export function simulatedWalletDebit(before: bigint, simulatedAfter: number | nu
   return delta > 0n ? delta : 0n;
 }
 
-export function assertSolDebitBudget(spent: bigint, expectedDebit: bigint | null, expectedFee: number | null, budget: bigint, label: string): void {
+export function systemPayerLamportDebit(tx: VersionedTransaction, payer: PublicKey): bigint {
+  let debit = 0n;
+  for (const compiled of tx.message.compiledInstructions) {
+    const program = tx.message.staticAccountKeys[compiled.programIdIndex];
+    if (!program?.equals(SystemProgram.programId)) continue;
+    const instruction = new TransactionInstruction({
+      programId: program,
+      keys: compiled.accountKeyIndexes.map(index => ({
+        pubkey: tx.message.staticAccountKeys[index] ?? PublicKey.default,
+        isSigner: tx.message.isAccountSigner(index),
+        isWritable: tx.message.isAccountWritable(index),
+      })),
+      data: Buffer.from(compiled.data),
+    });
+    const type = SystemInstruction.decodeInstructionType(instruction);
+    if (type === "Transfer") {
+      const decoded = SystemInstruction.decodeTransfer(instruction);
+      if (decoded.fromPubkey.equals(payer)) debit += BigInt(decoded.lamports);
+    } else if (type === "TransferWithSeed") {
+      const decoded = SystemInstruction.decodeTransferWithSeed(instruction);
+      if (decoded.fromPubkey.equals(payer)) debit += BigInt(decoded.lamports);
+    } else if (type === "Create") {
+      const decoded = SystemInstruction.decodeCreateAccount(instruction);
+      if (decoded.fromPubkey.equals(payer)) debit += BigInt(decoded.lamports);
+    } else if (type === "CreateWithSeed") {
+      const decoded = SystemInstruction.decodeCreateWithSeed(instruction);
+      if (decoded.fromPubkey.equals(payer)) debit += BigInt(decoded.lamports);
+    }
+  }
+  return debit;
+}
+
+export function assertSolDebitBudget(spent: bigint, expectedDebit: bigint | null, expectedFee: number | null, payerSystemDebit: bigint, budget: bigint, label: string): void {
   if (expectedDebit === null) throw new Error(`SOL wallet debit unavailable before ${label}; refusing to send`);
   if (expectedFee === null) throw new Error(`SOL fee unavailable before ${label}; refusing to send`);
-  const requiredDebit = expectedDebit > BigInt(expectedFee) ? expectedDebit : BigInt(expectedFee);
+  const directDebit = BigInt(expectedFee) + payerSystemDebit;
+  const requiredDebit = expectedDebit > directDebit ? expectedDebit : directDebit;
   if (spent + requiredDebit > budget) throw new Error(`SOL budget would be exceeded before ${label}; refusing to send`);
 }
 
@@ -283,23 +316,36 @@ export async function runSettleStep(settler: DevnetSettler, options: SettleOptio
       if (!message.staticAccountKeys[0].equals(wallet)) throw new Error("Transaction payer is not the authorized wallet");
       if (!options.execute && batchIndex > 0) { result.notes.push(`batch ${batchIndex} depends on earlier batch state; not simulated in dry-run`); continue; }
       // Later batches are simulated only once earlier batches are finalized; each send uses a fresh blockhash.
-      const payerBalance = options.execute ? await settler.connection.getBalanceAndContext(wallet, "confirmed") : null;
-      const simulation = await settler.connection.simulateTransaction(tx, {
-        sigVerify: false,
-        replaceRecentBlockhash: true,
-        commitment: "confirmed",
-        ...(payerBalance ? { minContextSlot: payerBalance.context.slot, accounts: { encoding: "base64" as const, addresses: [wallet.toBase58()] } } : {}),
+      let matchedExecutionSimulation;
+      if (options.execute) {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const payerBalance = await settler.connection.getBalanceAndContext(wallet, "confirmed");
+          const simulation = await settler.connection.simulateTransaction(tx, {
+            sigVerify: false, replaceRecentBlockhash: true, commitment: "confirmed", minContextSlot: payerBalance.context.slot,
+            accounts: { encoding: "base64", addresses: [wallet.toBase58()] },
+          });
+          if (simulation.context.slot === payerBalance.context.slot) {
+            matchedExecutionSimulation = { payerBalance, simulation };
+            break;
+          }
+        }
+        if (!matchedExecutionSimulation) throw new Error(`SOL wallet debit context unavailable before ${built.label}; refusing to send`);
+      }
+      const simulation = matchedExecutionSimulation?.simulation ?? await settler.connection.simulateTransaction(tx, {
+        sigVerify: false, replaceRecentBlockhash: true, commitment: "confirmed",
       });
       const logs = simulation.value.logs ?? [];
       result.simulated.push({ messageHash: sha256(message.serialize()), unitsConsumed: simulation.value.unitsConsumed ?? null, instructions: summarizeInstructions(tx), logsTail: logs.slice(-6) });
       if (simulation.value.err) throw new Error(`Simulation failed for ${built.label}: ${JSON.stringify(simulation.value.err)} :: ${logs.filter(l => /Error|error/.test(l)).join(" | ")}`);
       assertRaydiumLogs(logs, expectedOracleMints);
       if (!options.execute) continue;
-      const expectedDebit = simulatedWalletDebit(BigInt(payerBalance!.value), simulation.value.accounts?.[0]?.lamports);
+      const expectedDebit = matchedExecutionSimulation
+        ? simulatedWalletDebit(BigInt(matchedExecutionSimulation.payerBalance.value), simulation.value.accounts?.[0]?.lamports)
+        : null;
       const latest = await settler.connection.getLatestBlockhash("confirmed");
       message.recentBlockhash = latest.blockhash;
       const fee = await settler.connection.getFeeForMessage(message, "confirmed");
-      assertSolDebitBudget(debit, expectedDebit, fee.value, budget, built.label);
+      assertSolDebitBudget(debit, expectedDebit, fee.value, systemPayerLamportDebit(tx, wallet), budget, built.label);
       const messageHash = sha256(message.serialize());
       tx.sign([signer!]);
       const signature = await settler.connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 3 });
