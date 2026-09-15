@@ -29,7 +29,8 @@ export function IndexHome({ initialData }: { initialData?: SavedDirectory }) {
         <h1 id="welcome-title">Everyone is<br />an insider.</h1>
         <p>Follow the filings. Explore the indexes. See what public figures disclose, without losing sight of the receipts.</p>
         <div className={styles.actions}>
-          <a className={styles.primaryButton} href="#published">Explore indexes <Icon name="grid" size={17} /></a>
+          <Link className={styles.primaryButton} href="/feed">Copy one print <Icon name="bolt" size={17} /></Link>
+          <a className={styles.quietButton} href="#published">Research indexes</a>
           <a className={styles.quietButton} href="#directory">Find a person</a>
         </div>
       </div>
@@ -46,13 +47,13 @@ export function IndexHome({ initialData }: { initialData?: SavedDirectory }) {
 
     <div className={styles.sourceStrip}><span><Icon name="eye" size={16} /> Public disclosures, not live positions</span><span>Built for Solana</span></div>
     <section id="published" className={styles.section} aria-labelledby="indexes-title">
-      <div className={styles.sectionHead}><div><h2 id="indexes-title">The index desk</h2><p>Trade activity, turned into transparent target weights.</p></div>{directory && <span className={styles.count}>{published.length} published</span>}</div>
+      <div className={styles.sectionHead}><div><h2 id="indexes-title">The index desk</h2><p>Saved annual holdings, turned into research target weights.</p></div>{directory && <span className={styles.count}>{published.length} published</span>}</div>
       <div className={styles.modelNote}><Icon name="shield" size={18} /><p><strong>Research first.</strong> These are published models, not live holdings or funded vaults. Buying is not available for these targets.</p></div>
       {!directory ? resource.error ? <div className={styles.empty} role="alert"><h3>The index desk couldn’t load.</h3><p>Saved disclosures are temporarily unavailable. Try loading them again.</p><button className={styles.secondaryButton} onClick={resource.reload}>Try again</button></div> : <Skeleton cards={2} /> : published.length ? <>
         <div className={styles.indexShelf}>{published.slice(0, allIndexes ? undefined : 6).map((person) => <article key={person.id} className={styles.indexTile}>
           <div className={styles.tileTop}><PersonAvatar name={person.name} imageUrl={person.image} size="lg" /><span className={styles.modelBadge}>Model index</span></div>
           <h3>{person.indexName ?? person.name}</h3><p className={styles.personMeta}>{person.name} · {personContext(person)}</p>
-          <div className={styles.tileBottom}><Link className={styles.indexLink} href={`/indexes/fmp-${person.publishedIndexHash}`}>Explore index <Icon name="arrow" size={17} /></Link><Link className={styles.bookLink} href={`/p/${person.id}`}>Disclosed book</Link></div>
+          <div className={styles.tileBottom}><Link className={styles.indexLink} href={`/indexes/fmp-${person.publishedIndexHash}`}>Research index <Icon name="arrow" size={17} /></Link><Link className={styles.bookLink} href={`/p/${person.id}`}>Disclosed book</Link></div>
         </article>)}</div>
         {published.length > 6 && <button className={styles.moreButton} aria-expanded={allIndexes} onClick={() => setAllIndexes(!allIndexes)}>{allIndexes ? "Show fewer indexes" : `See all ${published.length} indexes`} <Icon name={allIndexes ? "up" : "grid"} size={16} /></button>}
       </> : <div className={styles.empty}><h3>The next index starts with a filing.</h3><p>No targets have been published yet. You can still explore the saved disclosure books below.</p><a className={styles.secondaryButton} href="#directory">Browse people</a></div>}

@@ -12,6 +12,7 @@ export async function resolve(specifier, context, nextResolve) {
     }
   }
   if (specifier === "next/link") return nextResolve("next/link.js", context);
+  if (specifier === "next/server") return nextResolve("next/server.js", context);
   try { return await nextResolve(specifier, context); } catch (error) {
     if (specifier.startsWith(".")) {
       for (const suffix of [".ts", ".tsx"]) {

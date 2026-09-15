@@ -1,85 +1,52 @@
-import { createServiceSupabase } from "@/lib/supabase";
+import { createServiceSupabase } from "./supabase.ts";
+import { globalState } from "./cache.ts";
+import { isProduction } from "./runtime.ts";
+import { positionFromRow, positionToRow, type PositionRow, type TrackedPosition } from "./position-contract.ts";
+export type { TrackedPosition } from "./position-contract.ts";
 
-export type TrackedPosition = {
-  id: string;
-  wallet: string;
-  disclosureId: string | null;
-  ticker: string;
-  /** Token symbol bought: `NVDAx` or `NVDA.US`. */
-  tokenSymbol: string;
-  venue: "xstock" | "backpack";
-  mint: string;
-  usdcIn: number;
-  tokensOut: number;
-  requestId: string;
-  signature: string;
-  stub: boolean;
-  createdAt: string;
-};
-
-type GlobalPositions = typeof globalThis & {
-  __stocklanaPositions?: TrackedPosition[];
-};
-
-function memoryStore(): TrackedPosition[] {
-  const globalRef = globalThis as GlobalPositions;
-  if (!globalRef.__stocklanaPositions) {
-    globalRef.__stocklanaPositions = [];
-  }
-  return globalRef.__stocklanaPositions;
+export class PositionStoreError extends Error {
+  constructor() { super("Copy receipt storage unavailable. Supabase service role and the copy storage migrations are required."); }
 }
 
-export async function listPositions(wallet?: string): Promise<TrackedPosition[]> {
-  const supabase = createServiceSupabase();
-  if (supabase) {
-    let query = supabase
-      .from("positions")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (wallet) {
-      query = query.eq("wallet", wallet);
-    }
-    const { data, error } = await query;
-    if (!error && data) {
-      return data as TrackedPosition[];
-    }
-  }
+export function positionClient() {
+  const client = createServiceSupabase();
+  if (!client && isProduction()) throw new PositionStoreError();
+  return client;
+}
+const memory = () => globalState("copy_positions", () => new Map<string, TrackedPosition>());
 
-  const rows = memoryStore();
-  return wallet ? rows.filter((row) => row.wallet === wallet) : [...rows];
+/** Check the actual table before sending a signed transaction upstream. */
+export async function assertPositionStoreReady(): Promise<void> {
+  const client = positionClient();
+  if (!client) return;
+  const { error: positionsError } = await client.from("positions").select("id").limit(1);
+  const { error: ordersError } = await client.from("copy_orders").select("request_id").limit(1);
+  const { error: pruneError } = await client.rpc("prune_expired_copy_orders");
+  if (positionsError || ordersError || pruneError) throw new PositionStoreError();
 }
 
-export async function recordPosition(
-  position: Omit<TrackedPosition, "id" | "createdAt">,
-): Promise<TrackedPosition> {
-  const row: TrackedPosition = {
-    ...position,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-  };
+export async function listPositions(wallet: string): Promise<TrackedPosition[]> {
+  const client = positionClient();
+  if (!client) return [...memory().values()].filter(p => p.wallet === wallet).reverse();
+  const { data, error } = await client.from("positions").select("*").eq("wallet", wallet).order("created_at", { ascending: false }).limit(100);
+  if (error || !data) throw new PositionStoreError();
+  return (data as PositionRow[]).map(positionFromRow);
+}
 
-  const supabase = createServiceSupabase();
-  if (supabase) {
-    const { error } = await supabase.from("positions").insert({
-      id: row.id,
-      wallet: row.wallet,
-      disclosure_id: row.disclosureId,
-      ticker: row.ticker,
-      token_symbol: row.tokenSymbol,
-      venue: row.venue,
-      mint: row.mint,
-      usdc_in: row.usdcIn,
-      tokens_out: row.tokensOut,
-      request_id: row.requestId,
-      signature: row.signature,
-      stub: row.stub,
-      created_at: row.createdAt,
-    });
-    if (!error) {
-      return row;
-    }
+export async function recordPosition(position: Omit<TrackedPosition, "id" | "createdAt">): Promise<TrackedPosition> {
+  if (isProduction() && position.stub) throw new PositionStoreError();
+  const row = { ...position, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+  const client = positionClient();
+  if (!client) {
+    const previous = memory().get(position.requestId);
+    if (previous) return previous;
+    memory().set(position.requestId, row);
+    return row;
   }
-
-  memoryStore().unshift(row);
-  return row;
+  // Replayed Jupiter responses must not multiply receipts or overwrite the original fill.
+  const { error } = await client.from("positions").upsert(positionToRow(row), { onConflict: "request_id", ignoreDuplicates: true });
+  if (error) throw new PositionStoreError();
+  const { data, error: readError } = await client.from("positions").select("*").eq("request_id", position.requestId).single();
+  if (readError || !data) throw new PositionStoreError();
+  return positionFromRow(data as PositionRow);
 }

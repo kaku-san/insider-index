@@ -13,7 +13,7 @@ Everyone is an insider. Public disclosures are the invitation, not privileged in
 [existing navigation] [current location / wallet]
                       Everyone is    [Insider pass]
                       an insider.
-                      [Explore indexes] [Find a person]
+                      [Copy one print] [Research indexes] [Find a person]
                       Published indexes / model-only notice
                       [name + index] [name + index] [name + index]
                       People / search / chamber filter
@@ -28,7 +28,7 @@ Rejected a full lime hero with floating politician headshots: it repeats the pre
 
 - Keep `/api/people` and saved portfolio contracts unchanged. Client display limits never truncate the underlying directory; search covers every returned person.
 - Annual books preserve all source rows and nullable ranges, including unmapped assets. Trade targets are separately labeled and never represented as current holdings.
-- Published targets are models, not execution-approved products. The investment explanation is USDC to one index share token; do not connect these models to legacy multi-leg basket execution.
+- Published targets are models, not execution-approved products. Track A W0 disables basket investment controls on home, person and index surfaces and links their trading CTA to `/feed` for a separate one-print copy. Do not connect these models to legacy multi-leg basket execution.
 - Motion: 160ms CSS press feedback using Emil Kowalski's `cubic-bezier(0.23, 1, 0.32, 1)`. No animated data, list filtering, keyboard interactions or section entrances. Reduced motion disables movement.
 - Use component-scoped `disclosure-workspace.module.css` for home, saved person and published index surfaces. Shared chrome remains in `globals.css`.
 

@@ -5,7 +5,6 @@ import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { PersonAvatar } from "./person-avatar";
 import { EquityCurve, PortfolioDonut } from "./portfolio-charts";
 import { Icon } from "./social/icon";
-import { VaultInvest } from "./vault-invest";
 import type { BacktestPoint } from "@/lib/disclosures/types";
 import styles from "./person-portfolio.module.css";
 
@@ -112,17 +111,15 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
     {notice}
     <aside id="invest" className={`${styles.panel} ${styles.invest}`} aria-labelledby="invest-title">
       <div>
-        <div className={styles.sectionHead}><h2 id="invest-title">Invest in this index</h2><span className={styles.badge}><Icon name="clock" size={13} />Vault not live</span></div>
-        <p className={styles.caption}>One investment. A share of the index.</p>
-        <div className={styles.flow}><span>USDC</span><Icon name="arrow" size={18} /><span>Index shares</span></div>
-        <p className={styles.caption}>When a vault launches, USDC will buy its share token—not individual stock tokens in your wallet. No funds move here today.</p>
+        <div className={styles.sectionHead}><h2 id="invest-title">Research this book</h2><span className={styles.badge}><Icon name="eye" size={13} />Research only</span></div>
+        <p className={styles.caption}>Disclosed holdings and model targets are not executable baskets. Basket buying, deposits and signing are unavailable.</p>
       </div>
       <div className={styles.investAction}>
-        <p id="invest-blocker" className={styles.caption}>No live, execution-approved share-token vault is connected. Deposits and signing are unavailable.</p>
-        <button type="button" className={styles.investButton} disabled aria-describedby="invest-blocker">Invest in this index</button>
+        <p id="invest-blocker" className={styles.caption}>A copy trade buys or sells one catalog-listed stock token from the separate disclosure feed, not this model or index shares.</p>
+        <button type="button" className={styles.investButton} disabled aria-describedby="invest-blocker">Basket buying unavailable</button>
+        <Link className={styles.sourceLink} href="/feed">Copy one print from the feed</Link>
       </div>
     </aside>
-    <VaultInvest />
     <div className={styles.content}>{children}</div>
     <p className={styles.disclaimer}>Public disclosures are delayed and may be incomplete. Tracking does not imply affiliation or endorsement.</p>
   </div>;
@@ -160,7 +157,7 @@ export function AllocationPanel({ allocations = [], children }: {
         <PortfolioDonut title="Published index target" unit="holdings" holdings={allocations.map((item) => ({ ticker: item.ticker, weightPct: item.weightBps / 10000, venueSymbol: null, valueUsd: 0 }))} />
         {children}
       </div>
-      <p className={styles.caption}>Published model weights over mapped equities / ETFs, using disclosed value bands or a labelled equal-weight fallback. They are not the person’s live brokerage weights.</p>
+      <p className={styles.caption}>Published model weights over mapped equities / ETFs, using disclosed value bands or a labelled equal-weight fallback. They are not the person’s current ownership or live brokerage weights, and trades never rewrite saved annual holdings.</p>
     </> : <div className={styles.emptyAllocation}><div className={styles.emptyRing} aria-hidden="true" /><div><h3>No published allocation yet</h3><p>The disclosed book can still be inspected below. A pie is not drawn until an explicit model exists.</p></div></div>}
   </section>;
 }

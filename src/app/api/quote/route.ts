@@ -5,6 +5,9 @@ import { JupiterError, STUB_TOKEN_USD_PRICE, fetchJupiterOrder } from "@/lib/jup
 import { jupiterMode } from "@/lib/runtime";
 import { fetchMintPrices } from "@/lib/venues/prices";
 import { isStubWallet } from "@/lib/wallet";
+import { saveCopyOrder } from "@/lib/copy-orders";
+import { assertPositionStoreReady, PositionStoreError } from "@/lib/positions";
+import { PublicKey } from "@solana/web3.js";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +18,22 @@ type QuoteBody = {
   side?: "buy" | "sell";
   /** Token quantity for sells (UI units). When absent we cannot size a live sell. */
   tokenAmount?: number;
+  disclosureId?: string;
 };
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as QuoteBody;
+  let body: QuoteBody;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON." }, { status: 400 }); }
+  if (!body || typeof body.outputMint !== "string" || (body.taker != null && typeof body.taker !== "string") || (body.disclosureId != null && typeof body.disclosureId !== "string")) {
+    return NextResponse.json({ error: "Invalid quote fields." }, { status: 400 });
+  }
   const outputMint = body.outputMint?.trim();
   const usdcAmount = Number(body.usdcAmount);
   const side = body.side === "sell" ? "sell" : "buy";
 
-  if (!outputMint || !Number.isFinite(usdcAmount) || usdcAmount <= 0) {
+  if (!outputMint || !Number.isFinite(usdcAmount) || usdcAmount < 1) {
     return NextResponse.json(
-      { error: "outputMint and a positive usdcAmount are required." },
+      { error: "outputMint and at least 1 USDC notional are required." },
       { status: 400 },
     );
   }
@@ -46,6 +54,10 @@ export async function POST(request: Request) {
     jupiterMode() === "stub" || !isStubWallet(requestedTaker) ? requestedTaker : undefined;
 
   try {
+    if (taker && !isStubWallet(taker)) {
+      try { new PublicKey(taker); } catch { return NextResponse.json({ error: "Invalid Solana wallet." }, { status: 400 }); }
+    }
+    await assertPositionStoreReady();
     let order;
     if (side === "sell") {
       // Sells are sized in tokens. Prefer an explicit token quantity; otherwise
@@ -76,6 +88,7 @@ export async function POST(request: Request) {
       });
     }
 
+    await saveCopyOrder(order, token, side, body.disclosureId ?? null);
     return NextResponse.json(
       {
         flow: "jupiter-swap-v2-order",
@@ -88,7 +101,7 @@ export async function POST(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    const status = error instanceof JupiterError ? error.status : 502;
+    const status = error instanceof PositionStoreError ? 503 : error instanceof JupiterError ? error.status : 502;
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Jupiter quote failed." },
       { status },

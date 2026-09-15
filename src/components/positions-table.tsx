@@ -7,20 +7,23 @@ import type { DevnetVaultPosition } from "@/lib/index-vaults/positions-contract"
 import { Icon } from "./social/icon";
 import { PageError, Skeleton } from "./social/shared";
 import { WalletButton } from "./wallet-button";
+import { CopyPositions } from "./copy-positions";
+import { useState } from "react";
 import { shortenAddress } from "@/lib/format";
 import styles from "./disclosure-workspace.module.css";
 
 export function PositionsTable() {
   const wallet = usePrivySolana();
+  const [showDevnet, setShowDevnet] = useState(false);
   const connected = wallet.mode === "live" && wallet.authenticated && wallet.solanaAddress;
   return <div className={styles.workspace}>
-    <header className={styles.indexHero}><span className={styles.kicker}>Devnet · On-chain shares</span><h1>My positions</h1><p>Your wallet’s shares in the existing devnet test vault. Not trade receipts.</p></header>
-    {connected ? <WalletPositions key={connected} address={connected} /> : <section className={styles.empty}>
-      <Icon name="wallet" size={38} /><h2 className={styles.connectTitle}>Connect to read your shares.</h2>
-      <p>{wallet.mode === "unavailable" ? "Wallet connection is unavailable. Retry to reload Privy. We won’t substitute a demo wallet." : "Connect a live Solana wallet through Privy to read its devnet vault share balance. Preview wallets are not used for positions."}</p>
+    <header className={styles.indexHero}><span className={styles.kicker}>User-signed · Copy one print</span><h1>My positions</h1><p>Saved single-trade receipts. No invented balances or NAV.</p></header>
+    {connected ? <><CopyPositions key={connected} address={connected} /><button className={styles.refreshButton} aria-expanded={showDevnet} onClick={() => setShowDevnet(!showDevnet)}>Separate devnet share diagnostic</button>{showDevnet && <WalletPositions key={connected} address={connected} />}</> : <section className={styles.empty}>
+      <Icon name="wallet" size={38} /><h2 className={styles.connectTitle}>Connect to read your copy receipts.</h2>
+      <p>{wallet.mode === "unavailable" ? "Wallet connection is unavailable. Retry to reload Privy. We won’t substitute a demo wallet." : "Connect a live Solana wallet through Privy to read its saved copy receipts. Preview wallets are not used for positions."}</p>
       <WalletButton /><p className={styles.finePrint}>Connecting doesn’t move funds or approve a trade.</p>
     </section>}
-    <p className={styles.finePrint}>Devnet test assets only. Share balances are not a dollar valuation. NAV, portfolio value and profit-and-loss are unavailable. Pending deposits and Jupiter fills are not counted as shares. Deposits and withdrawals remain disabled.</p>
+    <p className={styles.finePrint}>Copy receipts do not track transfers or remaining balances. NAV, portfolio value and profit-and-loss are unavailable. The separate devnet diagnostic counts only test-vault shares, never Jupiter fills. Basket deposits and withdrawals remain disabled.</p>
   </div>;
 }
 

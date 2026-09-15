@@ -21,7 +21,7 @@ export type RuntimeModes = {
   congress: "ainvest" | "form4" | "mock" | "off";
   jupiter: "live-keyed" | "live-keyless" | "stub";
   rpc: "helius" | "public";
-  wallet: "privy" | "stub";
+  wallet: "privy" | "unavailable";
   mocksAllowed: boolean;
 };
 
@@ -39,7 +39,7 @@ export function getAdapterStatus(): AdapterStatus {
     privy: present(process.env.NEXT_PUBLIC_PRIVY_APP_ID) || present(process.env.NEXT_PUBLIC_PRIVY_APPID),
     supabase:
       present(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-      present(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      present(process.env.SUPABASE_SERVICE_ROLE_KEY),
   };
 }
 
@@ -53,7 +53,7 @@ export function getRuntimeModes(): RuntimeModes {
     congress: adapters.ainvest ? "ainvest" : adapters.form4 ? "form4" : mocks ? "mock" : "off",
     jupiter: mode === "stub" ? "stub" : adapters.jupiter ? "live-keyed" : "live-keyless",
     rpc: adapters.helius ? "helius" : "public",
-    wallet: adapters.privy ? "privy" : "stub",
+    wallet: adapters.privy ? "privy" : "unavailable",
     mocksAllowed: mocks,
   };
 }
