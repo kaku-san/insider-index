@@ -1,9 +1,8 @@
 import type { IndexConstituent, PersonIndex, Venue } from "@/lib/disclosures/types";
 
 /**
- * One leg of a basket: a user-signed Jupiter swap from USDC into the leg's
- * Solana mint (xStock or Backpack token). `tokens` is an estimate from the
- * last price; the wallet shows the real fill.
+ * Legacy display-only allocation DTO. Not a swap plan or native ownership.
+ * Native index execution lives in index-vaults/adapter-contract.ts.
  */
 export type IndexAllocation = {
   ticker: string;
@@ -30,18 +29,6 @@ export type IndexPosition = {
   signature: string;
 };
 
-type GlobalIndexes = typeof globalThis & {
-  __stocklanaIndexPositions?: IndexPosition[];
-};
-
-function memoryStore(): IndexPosition[] {
-  const globalRef = globalThis as GlobalIndexes;
-  if (!globalRef.__stocklanaIndexPositions) {
-    globalRef.__stocklanaIndexPositions = [];
-  }
-  return globalRef.__stocklanaIndexPositions;
-}
-
 export function allocateIndex(index: PersonIndex, usdcAmount: number): IndexAllocation[] {
   return index.constituents.map((row) => ({
     ticker: row.ticker,
@@ -63,51 +50,6 @@ export function withTokenEstimates(
     ...row,
     tokens: prices[row.mint] ? Number((row.usdc / prices[row.mint]).toFixed(4)) : null,
   }));
-}
-
-export function listIndexPositions(wallet?: string): IndexPosition[] {
-  const rows = memoryStore();
-  return wallet ? rows.filter((row) => row.wallet === wallet) : [...rows];
-}
-
-export function recordIndexPosition(
-  input: Omit<IndexPosition, "id" | "lastRebalancedAt" | "needsRebalance">,
-): IndexPosition {
-  const row: IndexPosition = {
-    ...input,
-    id: crypto.randomUUID(),
-    lastRebalancedAt: new Date().toISOString(),
-    needsRebalance: false,
-  };
-  memoryStore().unshift(row);
-  return row;
-}
-
-export function markRebalanceFlags(indexes: PersonIndex[]): IndexPosition[] {
-  const rows = memoryStore();
-  for (const row of rows) {
-    const live = indexes.find((index) => index.id === row.indexId);
-    if (live && live.lastDisclosureId && live.lastDisclosureId !== row.lastDisclosureId) {
-      row.needsRebalance = true;
-    }
-  }
-  return rows;
-}
-
-export function applyRebalance(
-  wallet: string,
-  indexId: string,
-  next: Pick<IndexPosition, "allocations" | "lastDisclosureId" | "signature" | "usdcIn">,
-): IndexPosition | null {
-  const row = memoryStore().find((item) => item.wallet === wallet && item.indexId === indexId);
-  if (!row) return null;
-  row.allocations = next.allocations;
-  row.lastDisclosureId = next.lastDisclosureId;
-  row.signature = next.signature;
-  row.usdcIn = next.usdcIn;
-  row.lastRebalancedAt = new Date().toISOString();
-  row.needsRebalance = false;
-  return row;
 }
 
 export function constituentLabel(row: IndexConstituent): string {

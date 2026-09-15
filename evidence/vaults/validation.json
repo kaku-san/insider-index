@@ -1,0 +1,31 @@
+{
+  "scope": "Local application and pinned-SDK builder tests, not native contract execution",
+  "appTests": { "command": "npm test", "passed": 73, "failed": 0 },
+  "handoffReferenceTests": { "command": "python3 -B -m unittest discover (handoff reference package on PYTHONPATH)", "passed": 77, "failed": 0 },
+  "typecheck": "PASS",
+  "productionBuild": "PASS",
+  "changedFileEslint": "PASS",
+  "repositoryEslint": {
+    "status": "FAIL_EXISTING_UNCHANGED_FILES",
+    "errors": 5,
+    "warnings": 13,
+    "errorFiles": [
+      "src/components/portfolio-charts.tsx",
+      "src/components/positions-table.tsx",
+      "src/components/providers/ui-provider.tsx",
+      "src/components/trade-approve.tsx"
+    ]
+  },
+  "dependencyAudit": { "moderate": 31, "high": 6, "critical": 0, "note": "Pinned SDK/SPL transitive advisories require review before funds; no audit-force downgrade applied" },
+  "nativeRoundtrip": "NOT_RUN",
+  "nativeClaimRecovery": "NOT_RUN",
+  "nativeMintReadiness": "UNTESTED",
+  "deployerCreationReceipts": [],
+  "feeClaimReceipts": [],
+  "broadcastCount": 0,
+  "spentLamportsRaw": "0",
+  "publicFundsEnabled": false,
+  "nativeUsdcExitVerified": false,
+  "productionDeployment": "NOT_PERFORMED",
+  "noMistakesPipeline": "NOT_STARTED_AWAITING_FIRSTMATE_DELIVERY_GATE"
+}
