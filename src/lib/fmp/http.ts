@@ -25,3 +25,9 @@ export function createPeopleHandlers(service: PeopleService | StoredPeopleServic
     },
   };
 }
+export function createTopProfilesHandler(service: { topProfiles: () => Promise<unknown> }) {
+  return async function GET(): Promise<Response> {
+    try { return Response.json(await service.topProfiles(), { headers }); }
+    catch (error) { return failure(error); }
+  };
+}

@@ -4,6 +4,10 @@ import { personId } from "./fmp-parse.ts";
 import type { Person } from "./types.ts";
 import type { PublishedHoldingsIndex } from "./holdings-index.ts";
 import { indexNames } from "./index-name.ts";
+import {
+  NO_NET_WORTH_SERIES, NO_SP_OVERLAY_SERIES, NO_YOY_SERIES, PINNED_PERSON_ID,
+  type PoliticianProfile, type TopProfilesDocument,
+} from "./top-profiles.ts";
 
 export type StoredPortfolio = Awaited<ReturnType<PeopleService["portfolio"]>>;
 export type StoredPerson = Person & { bookState: string; publishedIndexHash: string | null; indexName?: string };
@@ -83,6 +87,25 @@ export function createStoredPeopleService(db: SupabaseClient) {
         snapshots: (data.portfolio?.snapshots ?? []) as StoredPortfolio["snapshots"],
         activity: (data.portfolio?.activity ?? []) as StoredPortfolio["activity"],
         publishedIndex: index, indexName,
+      };
+    },
+    async topProfiles() {
+      const [rows, meta] = await Promise.all([
+        readRows<{ list_order: number; person_id: string; payload: PoliticianProfile }>((from, to) =>
+          db.from("top_politician_profiles").select("list_order,person_id,payload").order("list_order").range(from, to)),
+        db.from("fmp_store_state").select("payload,saved_at").eq("id", "top-politician-profiles").maybeSingle(),
+      ]);
+      if (meta.error) throw new PeopleError(502, "saved-data-unavailable");
+      const saved = (meta.data?.payload ?? {}) as Partial<TopProfilesDocument>;
+      return {
+        source: "fmp" as const, storage: "supabase" as const, methodology: "holding-band-midpoints" as const,
+        universeSize: saved.universeSize ?? 0, listed: rows.length,
+        pelosiPinned: rows.some((row) => row.person_id === PINNED_PERSON_ID),
+        published: Boolean(meta.data) || rows.length > 0, savedAt: meta.data?.saved_at ?? null,
+        profiles: rows.map((row) => row.payload),
+        netWorth: null, netWorthReason: saved.netWorthReason ?? NO_NET_WORTH_SERIES,
+        yearOverYearReturn: null, yearOverYearReturnReason: saved.yearOverYearReturnReason ?? NO_YOY_SERIES,
+        sp500Overlay: null, sp500OverlayReason: saved.sp500OverlayReason ?? NO_SP_OVERLAY_SERIES,
       };
     },
   };
