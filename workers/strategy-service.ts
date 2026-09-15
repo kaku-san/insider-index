@@ -8,6 +8,15 @@ export interface StrategyPolicy {
   admitted: { mint: string; oracleAccount: string; tokenProgram: string; decimals: number }[];
   maxTurnoverBps: number; maxWeightChangeBps: number; activationDelaySeconds: number; maxSourceAgeMs: number;
 }
+export interface StrategyTickInput {
+  current: PolicyValidatedComposition; published: PublishedComposition; policy: StrategyPolicy;
+}
+/** Missing publication is a real wait, not a fabricated zero-weight/current-version model. */
+export function evaluateExecutionTestStrategyTick(input: StrategyTickInput | undefined, indexId: string, now: number, nativeConflict: boolean) {
+  if (!input) return { decision: "WAIT" as const, reasons: ["NO_PUBLISHED_EXECUTION_ENVELOPE: preserve native targets"] };
+  if (input.current.indexId !== indexId || input.published.source !== "execution-test") return { decision: "BLOCKED" as const, reasons: ["Wrong execution-test strategy identity/source"] };
+  return evaluateComposition(input.current, input.published, input.policy, now, nativeConflict);
+}
 /** Deterministic decision only. Separate strategy signing is DISABLED pending native role negative tests. */
 export function evaluateComposition(current: PolicyValidatedComposition, published: PublishedComposition, policy: StrategyPolicy, now: number, nativeConflict: boolean): AutomationDecision {
   const result = (decision: AutomationDecision["decision"], reasons: string[]): AutomationDecision => ({ decision, indexId: policy.indexId, policyHash: policy.policyHash, sourceHash: published.composition.sourceDisclosureHash, previousCompositionVersion: current.version, nextCompositionVersion: published.composition.version, reasons, enforcedBy: [{ rule: "source/admission/turnover/delay", strength: "app-policy" }], evidence: [] });
