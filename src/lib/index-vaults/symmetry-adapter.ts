@@ -3,6 +3,7 @@ import type { AddOrEditTokenInput, TaskContext, TxPayloadBatchSequence, UIRebala
 import { MINTS, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import { getGlobalConfigPda, getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { Connection, PublicKey } from "@solana/web3.js";
+import type { FetchFn } from "@solana/web3.js";
 import { getMint, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
 import type { IndexVaultAdapter, NativeCapabilities, Network, ObservedOperation, PreparedStep, VaultIdentity } from "./adapter-contract.ts";
 import { address, hashObject, rawAmount, sdkRawAmount, sha256, weightsValid } from "./amounts.ts";
@@ -19,13 +20,14 @@ export const GENESIS: Record<Network, string> = { devnet: "EtWTRABZaYq6iMfeYKouR
 export const networkUsdc = (network: Network) => MINTS[network === "mainnet-beta" ? "mainnet" : "devnet"].USDC.toBase58();
 
 /** Reject broadcast/airdrop/signing even if accidentally called by an upstream builder. */
-export function readOnlyConnection(url: string): Connection {
-  return new Connection(url, { commitment: "confirmed", fetchMiddleware: (info, init, next) => {
+export function readOnlyConnection(url: string, signal?: AbortSignal, fetch?: FetchFn): Connection {
+  return new Connection(url, { commitment: "confirmed", fetch, fetchMiddleware: (info, init, next) => {
+    if (signal?.aborted) throw signal.reason;
     const body = JSON.parse(String(init?.body));
     for (const call of Array.isArray(body) ? body : [body]) {
       if (typeof call.method !== "string" || (!call.method.startsWith("get") && !["simulateTransaction", "isBlockhashValid"].includes(call.method))) throw new Error(`Read-only RPC rejects ${call.method}`);
     }
-    next(info, init);
+    next(info, signal ? { ...init, signal } : init);
   } });
 }
 

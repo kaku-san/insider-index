@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PublicKey } from "@solana/web3.js";
+import type { FetchFn } from "@solana/web3.js";
 import { DEVNET_TEST_VAULT, devnetUsdcRaw, canSignDevnetDeposit } from "../src/lib/index-vaults/devnet-contract.ts";
 import type { DevnetDepositPreview, DevnetDepositRequest } from "../src/lib/index-vaults/devnet-contract.ts";
 import { parseDevnetDepositRequest, previewDevnetDeposit, handleDevnetDeposit } from "../src/lib/index-vaults/devnet-deposit.ts";
 import { signPreparedDevnetDeposit, requestDevnetDeposit } from "../src/lib/frontend/devnet-deposit.ts";
-import type { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
+import { NativeVaultBuilders, readOnlyConnection } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import { POST as prepareRoute } from "../src/app/api/vaults/devnet/prepare/route.ts";
 import { POST as previewRoute } from "../src/app/api/vaults/devnet/preview/route.ts";
 
@@ -66,26 +67,39 @@ test("pending intent and changed native state require recovery/repreview; mainne
 });
 
 test("HTTP preview is no-store; prepare is 503 with no signing payload; read failure never becomes zero holdings", async () => {
-  const preview = await handleDevnetDeposit(request(input), false, reader());
+  const preview = await handleDevnetDeposit(request(input), false, () => reader());
   assert.equal(preview.status, 200); assert.equal(preview.headers.get("Cache-Control"), "no-store");
-  const response = await handleDevnetDeposit(request({ ...input, expectedStateHash: stateHash }), true, reader());
+  const response = await handleDevnetDeposit(request({ ...input, expectedStateHash: stateHash }), true, () => reader());
   assert.equal(response.status, 503);
   const body = await response.json(); assert.deepEqual(body.prepared.transactions, []);
   const broken = reader(); broken.read = async () => { throw new Error("RPC private details"); };
-  const unavailable = await handleDevnetDeposit(request(input), false, broken);
+  const unavailable = await handleDevnetDeposit(request(input), false, () => broken);
   assert.equal(unavailable.status, 503);
   assert.deepEqual(Object.keys(await unavailable.json()), ["error"]);
   for (const route of [prepareRoute, previewRoute]) {
     assert.equal((await route(request({ ...input, network: "mainnet-beta" }))).status, 400);
   }
-  assert.equal((await handleDevnetDeposit(request(input), true, reader())).status, 400);
+  assert.equal((await handleDevnetDeposit(request(input), true, () => reader())).status, 400);
 });
 
-test("HTTP preview returns unavailable when native observation exceeds its deadline", async () => {
-  const stalled = reader(); stalled.read = async () => new Promise(() => {});
-  const response = await handleDevnetDeposit(request(input), false, stalled, 10);
+test("HTTP preview aborts stalled native RPC transport when its deadline expires", async () => {
+  let aborted = false;
+  const stalledFetch: FetchFn = async (_info, init) => new Promise<Response>((_resolve, reject) => {
+    const signal = init?.signal;
+    assert.ok(signal);
+    const onAbort = () => {
+      aborted = true;
+      reject(signal.reason);
+    };
+    if (signal.aborted) onAbort();
+    else signal.addEventListener("abort", onAbort, { once: true });
+  });
+  const response = await handleDevnetDeposit(request(input), false, signal => (
+    new NativeVaultBuilders(readOnlyConnection("http://rpc.invalid", signal, stalledFetch), "devnet")
+  ), 10);
   assert.equal(response.status, 503);
   assert.deepEqual(Object.keys(await response.json()), ["error"]);
+  assert.equal(aborted, true);
 });
 
 test("frontend respects blocked prepare response and rejects substituted vault or HTTP errors", async t => {
