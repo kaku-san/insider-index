@@ -54,11 +54,17 @@ function fixtureVault(types: [number, number] = [2, 2]): Vault {
 
 test("oracle inputs: pyth and every non-Raydium type are rejected before reaching the native builder", () => {
   assert.doesNotThrow(() => assertRaydiumOnlyToken(tokenInput("raydium_cpmm")));
-  assert.doesNotThrow(() => assertRaydiumOnlyToken(tokenInput("raydium_clmm", "raydium_cpmm")));
   for (const type of ["pyth", "lst", "overpass", "byreal_clmm", "meteora_dlmm", "example", "PYTH", "", "constructor", "__proto__", "toString", "hasOwnProperty"]) assert.throws(() => assertRaydiumOnlyToken(tokenInput(type)), /ORACLE_TYPE_FORBIDDEN/);
   assert.throws(() => assertRaydiumOnlyToken(tokenInput(2 as unknown as string)), /ORACLE_TYPE_FORBIDDEN/);
   assert.throws(() => assertRaydiumOnlyToken(tokenInput("raydium_cpmm", "pyth")), /ORACLE_TYPE_FORBIDDEN/);
   assert.throws(() => assertRaydiumOnlyToken(tokenInput()), /ORACLE_REQUIRED/);
+});
+
+test("token configuration must match the documented Raydium pool and kind", () => {
+  assert.throws(() => assertRaydiumOnlyToken(tokenInput("raydium_clmm")), /ORACLE_KIND_MISMATCH/);
+  const wrongPool = tokenInput("raydium_cpmm");
+  wrongPool.oracles[0].account = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+  assert.throws(() => assertRaydiumOnlyToken(wrongPool), /RAYDIUM_POOL_MISMATCH/);
 });
 
 test("pool bindings name only mint → Raydium pool + kind; unknown mints block listing instead of inventing a pool", () => {
@@ -72,7 +78,7 @@ test("installed native oracles must all be Raydium; a Pyth slot fails the vault 
   assert.deepEqual(assertRaydiumOnlyVault(fixtureVault()), [{ mint: WSOL_MINT, oracleTypes: [2] }, { mint: USDC, oracleTypes: [2] }]);
   assert.throws(() => assertRaydiumOnlyVault(fixtureVault([2, 0])), /ORACLE_TYPE_FORBIDDEN.*type 0/);
   assert.throws(() => assertRaydiumOnlyVault(fixtureVault([3, 2])), /ORACLE_TYPE_FORBIDDEN/);
-  assert.doesNotThrow(() => assertRaydiumOnlyVault(fixtureVault([1, 2])));
+  assert.throws(() => assertRaydiumOnlyVault(fixtureVault([1, 2])), /ORACLE_KIND_MISMATCH/);
   const wrongPool = fixtureVault();
   wrongPool.lutPubkeys![0].state.addresses[10] = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
   assert.throws(() => assertRaydiumOnlyVault(wrongPool), /RAYDIUM_POOL_MISMATCH/);

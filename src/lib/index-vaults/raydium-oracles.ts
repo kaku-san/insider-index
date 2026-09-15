@@ -48,7 +48,13 @@ export function assertRaydiumOracleInput(oracle: OracleInput): void {
 /** Token add/edit: at least one oracle, every oracle a Raydium pool. */
 export function assertRaydiumOnlyToken(token: AddOrEditTokenInput): void {
   if (!Array.isArray(token.oracles) || token.oracles.length === 0) throw new Error("ORACLE_REQUIRED: a token needs at least one Raydium oracle");
-  for (const oracle of token.oracles) assertRaydiumOracleInput(oracle);
+  const binding = raydiumPoolFor(token.token_mint);
+  for (const oracle of token.oracles) {
+    assertRaydiumOracleInput(oracle);
+    const pool = address(oracle.account);
+    if (pool !== binding.pool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${token.token_mint} configures ${pool}, expected ${binding.pool}`);
+    if (oracle.oracle_type !== binding.kind) throw new Error(`ORACLE_KIND_MISMATCH: ${token.token_mint} configures ${oracle.oracle_type}, expected ${binding.kind}`);
+  }
 }
 
 export type VaultOracleView = Pick<Vault, "composition" | "numTokens" | "lutPubkeys">;
@@ -63,12 +69,14 @@ export function assertRaydiumOnlyVault(vault: VaultOracleView): VaultOracleSumma
     if (types.length === 0) throw new Error(`ORACLE_REQUIRED: ${asset.mint.toBase58()} has no installed oracle`);
     const forbidden = types.filter(type => !RAYDIUM_TYPE_CODES.has(type));
     if (forbidden.length) throw new Error(`ORACLE_TYPE_FORBIDDEN: ${asset.mint.toBase58()} installs oracle type ${forbidden.join(",")}; Raydium CLMM/CPMM only`);
-    const expectedPool = raydiumPoolFor(asset.mint.toBase58()).pool;
+    const binding = raydiumPoolFor(asset.mint.toBase58());
+    const expectedType = RAYDIUM_ORACLE_KINDS[binding.kind];
     for (const oracle of installed) {
+      if (oracle.oracleSettings.oracleType !== expectedType) throw new Error(`ORACLE_KIND_MISMATCH: ${asset.mint.toBase58()} installs oracle type ${oracle.oracleSettings.oracleType}, expected ${expectedType}`);
       const table = vault.lutPubkeys?.[oracle.accountsToLoadLutIds[0]];
       const pool = table?.state.addresses[oracle.accountsToLoadLutIndices[0]]?.toBase58();
       if (!pool) throw new Error(`ORACLE_ACCOUNT_MISSING: ${asset.mint.toBase58()} has no installed Raydium pool account`);
-      if (pool !== expectedPool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${asset.mint.toBase58()} installs ${pool}, expected ${expectedPool}`);
+      if (pool !== binding.pool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${asset.mint.toBase58()} installs ${pool}, expected ${binding.pool}`);
     }
     summary.push({ mint: asset.mint.toBase58(), oracleTypes: types });
   }
