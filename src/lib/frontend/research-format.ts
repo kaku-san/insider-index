@@ -14,6 +14,9 @@ export function moneyBand(value?: MoneyBand | null) {
 }
 
 const STOCK_ACT_BANDS: ReadonlyArray<readonly [number, number]> = [
+  [1_001, 2_500],
+  [2_501, 5_000],
+  [5_001, 15_000],
   [1_001, 15_000],
   [15_001, 50_000],
   [50_001, 100_000],
