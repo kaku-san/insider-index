@@ -85,6 +85,11 @@ export function createStoredPeopleService(db: SupabaseClient) {
         publishedIndex: index, indexName,
       };
     },
+    async topProfiles() {
+      const { data, error } = await db.rpc("read_top_politician_profiles");
+      if (error || !data || typeof data !== "object" || Array.isArray(data)) throw new PeopleError(502, "saved-data-unavailable");
+      return data;
+    },
   };
 }
 export type StoredPeopleService = ReturnType<typeof createStoredPeopleService>;

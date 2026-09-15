@@ -13,4 +13,5 @@ export const peopleService = {
   directory: () => store().directory(),
   portfolio: (id: string) => store().portfolio(id),
   publishedIndex: (hash: string) => store().publishedIndex(hash),
+  topProfiles: () => store().topProfiles(),
 };

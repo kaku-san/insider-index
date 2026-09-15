@@ -13,9 +13,11 @@ npm run holdings:ingest -- --save --person=P000197
 npm run indexes:publish                     # resolve/dry-run; archives FMP search observations, no index writes
 npm run indexes:publish -- --publish        # atomically publish holdings-based targets
 npm run indexes:publish -- --publish --person=P000197
+npm run profiles:publish                    # rank saved books into a top-20 dry-run; no FMP/AInvest
+npm run profiles:publish -- --publish       # persist durable top-20 including pinned P000197
 ```
 
-For a new database apply migrations `202609140001` through `202609140004` in order. Existing stores apply **`supabase/migrations/202609140004_holdings_indexes.sql` as owner** (Supabase service credentials cannot do DDL). It adds `publish_fmp_holdings_index`, marks trade-only versions `BLOCKED`, clears their live pointers, and revokes the legacy publishers from `service_role`. Historical definitions, raw rows, snapshots and transactions remain intact. Public reads filter `CANDIDATE` plus `basis: disclosed-holdings`, never trade-only models. No public refresh/publish endpoint exists.
+For a new database apply migrations `202609140001` through `202609140004` in order, then `202609150003_top_politician_profiles.sql`. Existing stores apply **`supabase/migrations/202609140004_holdings_indexes.sql` as the holdings-publication owner**, followed by **`supabase/migrations/202609150003_top_politician_profiles.sql` as the top-profile publication owner**; Supabase service credentials cannot do DDL. The holdings owner adds `publish_fmp_holdings_index`, marks trade-only versions `BLOCKED`, clears their live pointers, and revokes the legacy publishers from `service_role`. The profile owner adds the durable top-20 table and `publish_top_politician_profiles`. Historical definitions, raw rows, snapshots and transactions remain intact. Public reads filter `CANDIDATE` plus `basis: disclosed-holdings`, never trade-only models. No public refresh/publish endpoint exists.
 
 Ingestion uses existing `save_fmp_portfolio` and `raw_batches` plumbing. It calls profile and annual endpoints only; aggregates and histories are `not-requested`. Existing saved activity/aggregate observations are preserved. Missing snapshots do not imply missing trades, and neither trades nor a mint are prerequisites for saving the book. People with empty provider annual responses stay explicitly `no-annual-book`; there is no famous-person mock fallback. The CLI fills the full saved directory, including `P000197` Nancy Pelosi, with bounded concurrency.
 
@@ -43,6 +45,8 @@ Publication uses a stable content hash and an atomic service-only owner RPC: val
 
 `GET /api/people/[id]/portfolio` returns saved `person`, `snapshots`, `indexInput`, `activity`, `annualAggregates`, per-source `ingestion`, completeness/state, catalog observations and `publishedIndex`. Uningested people stay `not-ingested`. Home links to `/p/[stable FMP ID]` and `/indexes/fmp-[hash]`; the person page displays the full saved book including unresolved names and separate derived mappings. `GET /api/published-indexes/[hash]` returns a currently published holdings target; retired trade-only or superseded versions are not live targets.
 
+`GET /api/politician-profiles` reads the persisted top-20 publication through one database snapshot (`top-profiles.ts` ranks latest annual closed band midpoints, pins `P000197`, and never invents net-worth, YoY or S&P series). `stale` becomes true when a saved annual book is newer than the ranking; public reads do not recompute or auto-republish rankings and never call FMP. Operator publication is `npm run profiles:publish -- --publish` after applying `202609150003`.
+
 ## Person portfolio presentation
 
 `src/components/fmp-portfolio.tsx` keeps the Pelosi Tracker layout on `/p/[id]`: identity, statistics, historical-performance area, all disclosed holdings, published allocation, and dated trade history beside a fail-closed Invest panel. Annual rows render independently of publication and activity. The filing selector keeps all years/versions accessible without adding them together. Tickers and xStock/Backpack venues come from published holding-ID evidence as a presentation overlay; mutual funds and no-mint names remain disclosed-only. The pie and target weights use persisted constituents, never invented annual-row weights. No quotes or verified simulation/benchmark series are supplied, so those areas remain explicitly unavailable.
@@ -59,4 +63,4 @@ Completeness describes endpoint termination and normalized metadata, not verific
 
 ## Tests
 
-`npm test`: `tests/fmp*.test.mts`, `tests/holdings-index.test.mts`, historical `tests/trade-index.test.mts`. Holdings tests execute both the pure builder and the actual migrations/owner RPC in PGlite (PostgreSQL), covering no-trade ingestion, exact/ambiguous identity, issuer preference, partial books, unknown bands, immutable source rows, atomic weights and disabled legacy publication.
+`npm test`: `tests/fmp*.test.mts`, `tests/holdings-index.test.mts`, `tests/top-profiles.test.mts`, historical `tests/trade-index.test.mts`. Holdings tests execute both the pure builder and the actual migrations/owner RPC in PGlite (PostgreSQL), covering no-trade ingestion, exact/ambiguous identity, issuer preference, partial books, unknown bands, immutable source rows, atomic weights and disabled legacy publication. Top-profile tests rank band midpoints, pin Pelosi, persist through the owner RPC, and keep omitted performance series null.
