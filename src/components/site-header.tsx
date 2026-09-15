@@ -13,7 +13,7 @@ const nav: { label: string; short: string; icon: string; view: Lane | null; href
   { label: "My positions", short: "Positions", icon: "wallet", view: null, href: "/positions" },
 ];
 function crumb(path: string) {
-  return path === "/" ? "The index desk" : path === "/feed" ? "Disclosure feed" : path.startsWith("/p/") ? "Public record" : path.startsWith("/indexes/") ? "Index research" : path.startsWith("/positions") ? "My positions" : path.startsWith("/trade/") ? "Copy one trade" : "Source filing";
+  return path === "/" ? "The index desk" : path === "/feed" ? "Disclosure feed" : path.startsWith("/p/") ? "Public record" : path.startsWith("/indexes/") ? "Index research" : path.startsWith("/positions") ? "My positions" : path.startsWith("/trade/") ? "Copy one trade" : path === "/kaku-admin" ? "Execution test" : "Source filing";
 }
 
 export function SiteHeader() {
