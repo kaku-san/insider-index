@@ -8,6 +8,7 @@ import { shortDate } from "@/lib/frontend/research-format";
 import { getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { VaultFlow } from "./vault-flow";
+import { IndexTicket } from "./index-ticket";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { AllocationBreakdown } from "./allocation-breakdown";
@@ -44,6 +45,4 @@ function IndexModel({hash}:{hash:string}){
   </div>;
 }
 
-function LegacyIndex({id}:{id:string}){const[investOpen,setInvestOpen]=useState(false);return <div className={styles.legacy}><span>LEGACY RESEARCH ROUTE</span><h1>This basket is read-only.</h1><p>The current contract does not expose a safe multi-asset Buy for legacy baskets. Copy an eligible disclosure or open a published person index instead.</p><div><Link href="/">Explore people</Link><Link href="/feed">Open Feed</Link></div><button onClick={()=>setInvestOpen(true)}>See why investing is unavailable</button><VaultFlow open={investOpen} onClose={()=>setInvestOpen(false)} indexId={id} indexName="Legacy basket" readiness={null}/></div>}
-
-export function ConsumerIndex({id}:{id:string}){return id.startsWith("fmp-")?<IndexModel hash={id.slice(4)}/>:<LegacyIndex id={id}/>}
+export function ConsumerIndex({id}:{id:string}){return id.startsWith("fmp-")?<IndexModel hash={id.slice(4)}/>:<IndexTicket id={id}/>}

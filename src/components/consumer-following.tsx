@@ -26,7 +26,7 @@ export function ConsumerFollowing(){
     return (legacy.data?.profiles ?? []).map((p)=>({id:p.id,name:p.name,position:p.title,chamber:p.chamber,party:p.party,state:p.state,imageUrl:p.imageUrl ?? portraitFor(slugifyPerson(p.name)),publishedIndexHash:null,indexName:p.index?.name,bookState:"legacy",mapped:p.index?.constituents?.length ?? 0}));
   },[people.data,legacy.data]);
   const selected = all.filter((p)=>follows.ids.includes(p.id));
-  if(people.loading && legacy.loading) return <Skeleton/>;
+  if((people.loading || legacy.loading) && !all.length) return <Skeleton/>;
   if(people.error && legacy.error) return <PageError error={people.error} retry={()=>{people.reload();legacy.reload();}}/>;
   return <div className={styles.page}>
     <header className={styles.hero}><span>YOUR WATCHLIST</span><h1>Following</h1><p>People you want to keep an eye on. New public moves surface in Feed; following never enables automatic trading.</p><Link href="/feed">Open Feed <Icon name="arrow" size={14}/></Link></header>

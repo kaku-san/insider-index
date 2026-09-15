@@ -202,19 +202,16 @@ Congress rows are STOCK Act PTRs: they disclose a dollar range (`amountLow`/`amo
 
 ## Deploy
 
-**Barely Stable / Hetzner host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev). The current live product URL is listed at the top of this README.
+**Production:** [https://insiderindex.xyz](https://insiderindex.xyz).
 
 | Where | How |
 | --- | --- |
 | Local | `cp .env.example .env.local`, fill keys, `npm run dev` |
-| Server | gitignored `.env` at `/srv/projects/stocklana` — the deploy script never rsyncs `.env` / `.env.local` |
-| Traefik | Compose router rule is locked in `docker-compose.yml`. Barely Stable’s network is `edge` (default). Override with `TRAEFIK_NETWORK=edge` if you need to set it explicitly; do not switch the host. |
+| Production | Configure the deployment environment, build, and route `insiderindex.xyz` to the resulting service |
 | Health | Check `/api/health` using the [W0 launch checklist](docs/track-a-w0.md#production-launch-checklist-operator) |
-| Congress | Set `AINVEST_API_KEY` in the server `.env` or the congress lane stays empty in production (no invented politicians) |
+| Congress | Set `AINVEST_API_KEY` or the congress lane stays empty in production (no invented politicians) |
 
-```
-Host(`stocklana.barelystable.dev`)
-```
+`NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present at image **build** time so the client bundle can initialize Privy. Rebuild after changing them.
 
 ```bash
 # Barely Stable Traefik network (default in docker-compose.yml):
@@ -223,8 +220,6 @@ Host(`stocklana.barelystable.dev`)
 ./scripts/deploy.sh
 ```
 
-rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.*`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. Wildcard DNS already points at the Barely Stable / Hetzner host. The image build never `COPY`s `.env*` — `NEXT_PUBLIC_*` is injected only as Docker build args.
+rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.*`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. This Hetzner host is a demo/internal deployment, not the canonical production URL. The image build never `COPY`s `.env*` — `NEXT_PUBLIC_*` is injected only as Docker build args.
 
-`NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present in the server `.env` at image **build** time so the client bundle can initialize Privy. On Vercel, set these for the deployment environment and rebuild after changes.
-
-**Privy dashboard:** allow `https://insiderindex.xyz`, `https://stocklana.barelystable.dev`, and `http://localhost:3000` as appropriate in allowed origins. Without that origin, the live wallet client will not finish loading. Do not commit real keys.
+**Privy dashboard:** allow `https://insiderindex.xyz`, `https://stocklana.barelystable.dev`, and `http://localhost:3000` as appropriate in allowed origins. Without the matching origin, the live wallet client will not finish loading. Do not commit real keys.

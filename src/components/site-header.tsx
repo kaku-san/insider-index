@@ -18,12 +18,15 @@ const nav = [
 export function SiteHeader() {
   const path = usePathname();
   const router = useRouter();
-  const params = useSearchParams();
-  const ui = useUI();
+  const searchParams = useSearchParams();
+  const { query, setQuery, setTheme, theme } = useUI();
   const input = useRef<HTMLInputElement>(null);
   const [mobileSearch, setMobileSearch] = useState(false);
-  const urlQuery = path === "/" ? (params.get("q") ?? "") : "";
-  const searchValue = path === "/" ? urlQuery : ui.query;
+  const urlQuery = searchParams.get("q") ?? "";
+
+  useEffect(() => {
+    setQuery(urlQuery);
+  }, [setQuery, urlQuery]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -44,7 +47,7 @@ export function SiteHeader() {
   const active = (href: string) => href === "/" ? path === "/" : path.startsWith(href);
   function submitSearch(event: FormEvent) {
     event.preventDefault();
-    const q = searchValue.trim();
+    const q = query.trim();
     router.push(q ? `/?q=${encodeURIComponent(q)}` : "/");
     setMobileSearch(false);
   }
@@ -63,13 +66,13 @@ export function SiteHeader() {
 
         <form className={`consumer-search ${mobileSearch ? "open" : ""}`} role="search" onSubmit={submitSearch}>
           <Icon name="search" size={16} />
-          <input ref={input} value={searchValue} onChange={(event) => ui.setQuery(event.target.value)} placeholder="Search people" aria-label="Search people" />
+          <input ref={input} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people" aria-label="Search people" />
           <kbd>/</kbd>
         </form>
 
         <div className="consumer-header-actions">
           <button type="button" className="consumer-icon-button mobile-search-toggle" aria-label="Search" aria-expanded={mobileSearch} onClick={() => { setMobileSearch((value) => !value); requestAnimationFrame(() => input.current?.focus()); }}><Icon name="search" size={18} /></button>
-          <button type="button" className="consumer-icon-button" aria-label="Toggle color theme" onClick={() => ui.setTheme(document.documentElement.classList.contains("dark") ? "light" : "dark")}><Icon name={ui.theme === "dark" ? "sun" : "moon"} size={18} /></button>
+          <button type="button" className="consumer-icon-button" aria-label="Toggle color theme" onClick={() => setTheme(document.documentElement.classList.contains("dark") ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={18} /></button>
           <WalletButton />
         </div>
       </div>

@@ -115,7 +115,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
   const spotlight = sorted.slice(1, 5);
   const query = localQuery.trim().toLowerCase();
   const directory = useMemo(() => people.filter((person) => !query || `${person.name} ${person.office ?? ""} ${person.position ?? ""} ${person.state ?? ""}`.toLowerCase().includes(query)), [people, query]);
-  const loading = peopleResult.loading && legacyResult.loading && !people.length;
+  const loading = (peopleResult.loading || legacyResult.loading) && !people.length;
 
   return <div className={styles.home}>
     <section className={styles.hero}>
@@ -161,7 +161,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
     <section className={styles.directorySection}>
       <div className={styles.directoryTop}>
         <div><span>THE DIRECTORY</span><h2>Everyone we're watching.</h2></div>
-        <label className={styles.directorySearch}><Icon name="search" size={16}/><input value={localQuery} onChange={(e)=>setLocalQuery(e.target.value)} placeholder="Search Pelosi, Huang, NVDA…"/></label>
+        <label className={styles.directorySearch}><Icon name="search" size={16}/><input value={localQuery} onChange={(e)=>setLocalQuery(e.target.value)} placeholder="Search people…"/></label>
       </div>
       {!directory.length ? <div className={styles.noResults}>No matching people yet.</div> : <div className={styles.directoryList}>{directory.slice(0, visible).map((person, index) => <Link href={`/p/${encodeURIComponent(person.id)}`} className={styles.directoryRow} key={person.id}>
         <span className={styles.directoryIndex}>{String(index + 1).padStart(2,"0")}</span>

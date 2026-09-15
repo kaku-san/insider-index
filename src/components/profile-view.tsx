@@ -92,7 +92,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const researchBook=research.data,legacyProfile=legacy.data?.profile??null;
  const indexId=researchBook?.publishedIndex?`fmp-${researchBook.publishedIndex.hash}`:legacyProfile?.index?.id??null;
  useEffect(()=>{let live=true;if(!indexId){setVault(null);return;}getVaultReadiness(indexId).then(v=>{if(live)setVault(v)}).catch(()=>{if(live)setVault(null)});return()=>{live=false}},[indexId]);
- const loading=research.loading&&legacy.loading&&!researchBook&&!legacyProfile;
+ const loading=(research.loading||legacy.loading)&&!researchBook&&!legacyProfile;
  if(loading)return <Skeleton cards={3}/>;
  if(!researchBook&&!legacyProfile&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{research.reload();legacy.reload()}}/>;
  if(!researchBook&&!legacyProfile)return <div className={styles.emptyPage}><strong>Portfolio not found.</strong><Link href="/">Back to Explore</Link></div>;
