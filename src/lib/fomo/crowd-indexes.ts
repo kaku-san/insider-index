@@ -1,7 +1,7 @@
 // Crowd indexes: one basket built from many filers' buys on tradable names.
 // Weight = share of distinct filers who bought that name in the window.
-// These reuse the PersonIndex shape so /api/indexes/[id] and /api/indexes/quote
-// work unchanged; `profileId` is a synthetic group id and has no profile page.
+// These reuse the PersonIndex shape so /api/indexes/[id] can display them as
+// research models; `profileId` is a synthetic group id and has no profile page.
 import type { ActorKind, Disclosure, IndexConstituent, PersonIndex } from "@/lib/disclosures/types";
 import { CROWD_INDEX_PREFIX, isCountableBuy } from "@/lib/fomo/index-readiness";
 

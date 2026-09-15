@@ -31,6 +31,7 @@ test("a 65-row annual book renders without a published index, independently of z
   assert.match(html, /No trade activity saved/);
   assert.match(html, /No published allocation yet/);
   assert.doesNotMatch(html, /No annual book saved|Disclosed asset older-|Copy latest|19\.5%|\$0|<circle /);
+  assert.doesNotMatch(html, /Index not published/);
   assert.deepEqual(snapshots, original);
 });
 
