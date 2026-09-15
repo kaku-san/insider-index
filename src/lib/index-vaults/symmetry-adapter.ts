@@ -114,17 +114,21 @@ export class NativeVaultBuilders {
     return this.sdk.rebalanceVaultTx({ keeper: address(keeper), vault_mint: identity.shareMint, rebalance_slippage_bps: 100, per_trade_rebalance_slippage_bps: 50 });
   }
   /** Raydium-only `update_token_prices`: never the SDK's Hermes-backed batch builder. */
-  async priceUpdate(identity: VaultIdentity, keeper: string, intent: string): Promise<TxPayloadBatchSequence> {
+  async priceUpdate(identity: VaultIdentity, keeper: string, intent: string) {
     const { vault } = await this.read(identity);
+    return this.priceUpdateFromVault(vault, keeper, intent);
+  }
+  async priceUpdateFromVault(vault: Vault, keeper: string, intent: string) {
     const plan = planRaydiumPriceUpdate({ vault, keeper, rebalanceIntent: intent });
     const payer = new PublicKey(address(keeper));
     const batch = { batches: [plan.instructions.map(ix => ({ payer, lookupTables: plan.lookupTables,
       instructions: [ix, ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 25_000 })] }))] };
-    return prepareTxPayloadBatchSequence(batch, await prepareVersionedTxs(this.connection, batch));
+    const payload = prepareTxPayloadBatchSequence(batch, await prepareVersionedTxs(this.connection, batch));
+    return { payload, plan };
   }
-  settle(kind: "prices" | "mint" | "redeem" | "cleanup", keeper: string, identity: VaultIdentity, intent: string) {
+  async settle(kind: "prices" | "mint" | "redeem" | "cleanup", keeper: string, identity: VaultIdentity, intent: string): Promise<TxPayloadBatchSequence> {
     const params = { keeper: address(keeper), rebalance_intent: address(intent) };
-    if (kind === "prices") return this.priceUpdate(identity, keeper, intent);
+    if (kind === "prices") return (await this.priceUpdate(identity, keeper, intent)).payload;
     if (kind === "mint") return this.sdk.mintTx(params);
     if (kind === "redeem") return this.sdk.redeemTokensTx(params);
     return this.sdk.claimBountyTx(params);

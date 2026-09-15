@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { AddressLookupTableAccount, Connection, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { MintLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { AddOrEditTokenInput, Vault } from "@symmetry-hq/sdk";
 import { PYTHNET_CUSTODY_PRICE_USDC_ACCOUNT, PYTHNET_CUSTODY_PRICE_WSOL_ACCOUNT, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import {
@@ -11,6 +12,7 @@ import {
   assertRaydiumLogs, assertSolDebitBudget, fromPayload, intentNextAction, oracleTypesFromLogs, parseSettleArgs, settleConnection, solToLamports, summarizeInstructions,
 } from "../src/lib/index-vaults/devnet-settle.ts";
 import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
+import { devnetTestIdentity } from "../src/lib/index-vaults/devnet-deposit.ts";
 import type { UIRebalanceIntent } from "@symmetry-hq/sdk";
 
 /** Minimal BN stand-in for the SDK fields the planner reads. */
@@ -44,7 +46,7 @@ function fixtureVault(types: [number, number] = [2, 2]): Vault {
     ],
     lookupTables: { active: [new PublicKey("64g9E6EcsuvbJD5Rk1z3cc8AUWcPDi2LDCSMB2mMWNQQ"), new PublicKey("CDYTLBNR874M9yN6mAbFefrho3byDajMpKpNat7TbaRg")] },
     lutPubkeys: [{ state: { addresses: lut } }, { state: { addresses: [] } }],
-    settings: { activeRebalance: BN(0), fees: { hostPerformanceFeeBps: 0, creatorPerformanceFeeBps: 0, managersPerformanceFeeBps: 0 } },
+    settings: { creator: new PublicKey(KEEPER), host: new PublicKey(KEEPER), activeRebalance: BN(0), fees: { hostPerformanceFeeBps: 0, creatorPerformanceFeeBps: 0, managersPerformanceFeeBps: 0 } },
   } as unknown as Vault;
 }
 
@@ -68,6 +70,9 @@ test("installed native oracles must all be Raydium; a Pyth slot fails the vault 
   assert.throws(() => assertRaydiumOnlyVault(fixtureVault([2, 0])), /ORACLE_TYPE_FORBIDDEN.*type 0/);
   assert.throws(() => assertRaydiumOnlyVault(fixtureVault([3, 2])), /ORACLE_TYPE_FORBIDDEN/);
   assert.doesNotThrow(() => assertRaydiumOnlyVault(fixtureVault([1, 2])));
+  const wrongPool = fixtureVault();
+  wrongPool.lutPubkeys[0].state.addresses[10] = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+  assert.throws(() => assertRaydiumOnlyVault(wrongPool), /RAYDIUM_POOL_MISMATCH/);
 });
 
 test("HERMES_*/PYTH_* environment fails the settlement path closed", () => {
@@ -170,11 +175,62 @@ test("payload batches deserialize to reviewable versioned transactions", () => {
   assert.equal(summary.staticAccounts[0], KEEPER);
 });
 
-test("settle prices executes the native Raydium price-update interface", async () => {
-  const expected = { batches: [] };
-  const builder = Object.create(NativeVaultBuilders.prototype) as NativeVaultBuilders;
-  let invocation: unknown[] | undefined;
-  Object.defineProperty(builder, "priceUpdate", { value: async (...args: unknown[]) => { invocation = args; return expected; } });
-  assert.equal(await builder.settle("prices", KEEPER, { vaultAccount: VAULT } as never, INTENT), expected);
-  assert.deepEqual(invocation, [{ vaultAccount: VAULT }, KEEPER, INTENT]);
+test("settle prices builds the real native Raydium transaction without non-devnet network access", async () => {
+  const vault = fixtureVault();
+  const lookupTableData = (addresses: PublicKey[]) => {
+    const data = Buffer.alloc(56 + addresses.length * 32);
+    data.writeUInt32LE(1, 0);
+    data.writeBigUInt64LE(0xffffffffffffffffn, 4);
+    addresses.forEach((key, index) => key.toBuffer().copy(data, 56 + index * 32));
+    return data;
+  };
+  const mintData = Buffer.alloc(MintLayout.span);
+  MintLayout.encode({ mintAuthorityOption: 0, mintAuthority: PublicKey.default, supply: 0n, decimals: 6, isInitialized: true,
+    freezeAuthorityOption: 0, freezeAuthority: PublicKey.default }, mintData);
+  const rpcAccount = (data: Buffer, owner: PublicKey) => ({ data: [data.toString("base64"), "base64"], executable: false, lamports: 1, owner: owner.toBase58(), rentEpoch: 0, space: data.length });
+  const rpcFetch = async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    if (url !== "https://api.devnet.solana.com") throw new Error(`NON_DEVNET_NETWORK_FORBIDDEN: ${url}`);
+    const body = JSON.parse(String(init?.body));
+    const response = (call: { id: number; method: string; params: unknown[] }) => {
+      let result: unknown;
+      if (call.method === "getGenesisHash") result = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
+      else if (call.method === "getAccountInfo") {
+        const key = String(call.params[0]);
+        const account = key === VAULT ? rpcAccount(Buffer.alloc(8), VAULTS_V3_PROGRAM_ID) : key === devnetTestIdentity.shareMint ? rpcAccount(mintData, TOKEN_PROGRAM_ID) : null;
+        result = { context: { slot: 1 }, value: account };
+      } else if (call.method === "getLatestBlockhash") result = { context: { slot: 1 }, value: { blockhash: PublicKey.default.toBase58(), lastValidBlockHeight: 10 } };
+      else if (call.method === "getMultipleAccounts") {
+        const keys = call.params[0] as string[];
+        result = { context: { slot: 1 }, value: keys.map(key => {
+          const index = vault.lookupTables.active.findIndex(table => table.toBase58() === key);
+          return index < 0 ? null : rpcAccount(lookupTableData(vault.lutPubkeys[index].state.addresses), PublicKey.default);
+        }) };
+      } else throw new Error(`Unexpected RPC method ${call.method}`);
+      return { jsonrpc: "2.0", id: call.id, result };
+    };
+    const payload = Array.isArray(body) ? body.map(response) : response(body);
+    return new Response(JSON.stringify(payload), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = rpcFetch as typeof fetch;
+  try {
+    const builder = new NativeVaultBuilders(new Connection("https://api.devnet.solana.com", { fetch: rpcFetch as typeof fetch }), "devnet");
+    Object.defineProperty(builder.sdk, "fetchVault", { value: async () => vault });
+    const payload = await builder.settle("prices", KEEPER, devnetTestIdentity, INTENT);
+    assert.equal(payload.batches.length, 1);
+    assert.equal(payload.batches[0].transactions.length, 1);
+    const transaction = VersionedTransaction.deserialize(Buffer.from(payload.batches[0].transactions[0].tx_b64, "base64"));
+    const lookupTables = vault.lookupTables.active.map((key, index) => new AddressLookupTableAccount({ key, state: {
+      deactivationSlot: 0xffffffffffffffffn, lastExtendedSlot: 0, lastExtendedSlotStartIndex: 0, authority: undefined,
+      addresses: vault.lutPubkeys[index].state.addresses,
+    } }));
+    const accountKeys = transaction.message.getAccountKeys({ addressLookupTableAccounts: lookupTables });
+    const native = transaction.message.compiledInstructions.filter(ix => accountKeys.get(ix.programIdIndex)?.equals(VAULTS_V3_PROGRAM_ID));
+    assert.equal(native.length, 1);
+    assert.equal(Buffer.from(native[0].data.subarray(0, 8)).toString("hex"), "93578c21d6bdb5f2");
+    assert.deepEqual(native[0].accountKeyIndexes.slice(9).map(index => accountKeys.get(index)?.toBase58()), [...poolAccounts, POOL, poolAccounts[2], poolAccounts[1], poolAccounts[3]]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

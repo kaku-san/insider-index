@@ -49,17 +49,25 @@ export function assertRaydiumOnlyToken(token: AddOrEditTokenInput): void {
   for (const oracle of token.oracles) assertRaydiumOracleInput(oracle);
 }
 
-export type VaultOracleView = Pick<Vault, "composition" | "numTokens">;
+export type VaultOracleView = Pick<Vault, "composition" | "numTokens" | "lutPubkeys">;
 export interface VaultOracleSummary { mint: string; oracleTypes: number[] }
 /** Installed native oracles must all be Raydium; otherwise settlement refuses to price. */
 export function assertRaydiumOnlyVault(vault: VaultOracleView): VaultOracleSummary[] {
   const summary: VaultOracleSummary[] = [];
   for (const asset of vault.composition.slice(0, vault.numTokens)) {
     const aggregator = asset.oracleAggregator;
-    const types = aggregator.oracles.slice(0, aggregator.numOracles).map(o => o.oracleSettings.oracleType);
+    const installed = aggregator.oracles.slice(0, aggregator.numOracles);
+    const types = installed.map(o => o.oracleSettings.oracleType);
     if (types.length === 0) throw new Error(`ORACLE_REQUIRED: ${asset.mint.toBase58()} has no installed oracle`);
     const forbidden = types.filter(type => !RAYDIUM_TYPE_CODES.has(type));
     if (forbidden.length) throw new Error(`ORACLE_TYPE_FORBIDDEN: ${asset.mint.toBase58()} installs oracle type ${forbidden.join(",")}; Raydium CLMM/CPMM only`);
+    const expectedPool = raydiumPoolFor(asset.mint.toBase58()).pool;
+    for (const oracle of installed) {
+      const table = vault.lutPubkeys?.[oracle.accountsToLoadLutIds[0]];
+      const pool = table?.state.addresses[oracle.accountsToLoadLutIndices[0]]?.toBase58();
+      if (!pool) throw new Error(`ORACLE_ACCOUNT_MISSING: ${asset.mint.toBase58()} has no installed Raydium pool account`);
+      if (pool !== expectedPool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${asset.mint.toBase58()} installs ${pool}, expected ${expectedPool}`);
+    }
     summary.push({ mint: asset.mint.toBase58(), oracleTypes: types });
   }
   return summary;

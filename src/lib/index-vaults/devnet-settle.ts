@@ -8,7 +8,7 @@ import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js
 import { DEVNET_TEST_VAULT } from "./devnet-contract.ts";
 import { devnetTestIdentity } from "./devnet-deposit.ts";
 import { GENESIS, NativeVaultBuilders } from "./symmetry-adapter.ts";
-import { assertNoPythEnvironment, assertRaydiumOnlyVault, planRaydiumPriceUpdate, raydiumCpmmObservationTimestamp, raydiumPoolFor, WSOL_MINT } from "./raydium-oracles.ts";
+import { assertNoPythEnvironment, assertRaydiumOnlyVault, raydiumCpmmObservationTimestamp, raydiumPoolFor, WSOL_MINT } from "./raydium-oracles.ts";
 import { rawAmount, sdkRawAmount, sha256 } from "./amounts.ts";
 
 /** One existing devnet execution-test vault; the only identities this runner will ever touch. */
@@ -184,9 +184,9 @@ export class DevnetSettler {
       const { vault } = await this.vault();
       const pool = await this.pool(vault);
       if (!pool.summary.fresh) throw new Error(`RAYDIUM_OBSERVATION_STALE: ${pool.summary.observationAgeSeconds}s >= ${pool.summary.maxStalenessSeconds}s`);
-      const plan = planRaydiumPriceUpdate({ vault, keeper, rebalanceIntent: options.intent! });
+      const { payload, plan } = await this.native.priceUpdateFromVault(vault, keeper, options.intent!);
       notes.push(`oracle accounts: ${plan.oracleAccounts.map(a => a.join(",")).join(" | ")}`);
-      return { label: "update-prices", batches: fromPayload(await this.native.priceUpdate(devnetTestIdentity, keeper, options.intent!)), notes,
+      return { label: "update-prices", batches: fromPayload(payload), notes,
         expectedOracleMints: plan.tokenIndices.map(indices => indices.map(index => plan.oracles[index].mint)) };
     }
     if (options.step === "mint") {
