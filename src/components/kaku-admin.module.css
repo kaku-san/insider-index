@@ -14,3 +14,9 @@
 .refuse { padding: 12px; background: #f8ece6; border-radius: 6px; color: #6a2b12; }
 .success { padding: 12px; background: #f2f4ed; border-radius: 6px; }
 .success strong { display: block; margin-bottom: 6px; }
+.fields { display: grid; gap: 8px; }
+.fields label { display: grid; gap: 4px; font-weight: 600; }
+.fields input { font: inherit; padding: 8px; border: 1px solid #dce1da; border-radius: 6px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.drift { width: 100%; border-collapse: collapse; font-size: 12px; }
+.drift th, .drift td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #dce1da; overflow-wrap: anywhere; }

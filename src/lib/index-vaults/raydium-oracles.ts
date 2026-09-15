@@ -59,8 +59,8 @@ export function assertRaydiumOnlyToken(token: AddOrEditTokenInput, bindings: rea
 
 export type VaultOracleView = Pick<Vault, "composition" | "numTokens" | "lutPubkeys">;
 export interface VaultOracleSummary { mint: string; oracleTypes: number[] }
-/** Installed native oracles must all be Raydium; otherwise settlement refuses to price. */
-export function assertRaydiumOnlyVault(vault: VaultOracleView): VaultOracleSummary[] {
+/** Installed native oracles must all be Raydium; otherwise settlement refuses to price. Pass documented bindings; never invent a pool. */
+export function assertRaydiumOnlyVault(vault: VaultOracleView, bindings: readonly RaydiumPoolBinding[] = DEVNET_RAYDIUM_POOLS): VaultOracleSummary[] {
   const summary: VaultOracleSummary[] = [];
   for (const asset of vault.composition.slice(0, vault.numTokens)) {
     const aggregator = asset.oracleAggregator;
@@ -69,7 +69,7 @@ export function assertRaydiumOnlyVault(vault: VaultOracleView): VaultOracleSumma
     if (types.length === 0) throw new Error(`ORACLE_REQUIRED: ${asset.mint.toBase58()} has no installed oracle`);
     const forbidden = types.filter(type => !RAYDIUM_TYPE_CODES.has(type));
     if (forbidden.length) throw new Error(`ORACLE_TYPE_FORBIDDEN: ${asset.mint.toBase58()} installs oracle type ${forbidden.join(",")}; Raydium CLMM/CPMM only`);
-    const binding = raydiumPoolFor(asset.mint.toBase58());
+    const binding = raydiumPoolFor(asset.mint.toBase58(), bindings);
     const expectedType = RAYDIUM_ORACLE_KINDS[binding.kind];
     for (const oracle of installed) {
       if (oracle.oracleSettings.oracleType !== expectedType) throw new Error(`ORACLE_KIND_MISMATCH: ${asset.mint.toBase58()} installs oracle type ${oracle.oracleSettings.oracleType}, expected ${expectedType}`);
@@ -96,9 +96,9 @@ export interface RaydiumPriceUpdatePlan {
  * Native `update_token_prices` for every allocated token, grouped by the program's account limit,
  * mirroring the SDK's token-index grouping but with no Pyth feed lookup and no Hermes/VAA batches.
  */
-export function planRaydiumPriceUpdate(input: { vault: PriceUpdateVault; keeper: string; rebalanceIntent: string }): RaydiumPriceUpdatePlan {
+export function planRaydiumPriceUpdate(input: { vault: PriceUpdateVault; keeper: string; rebalanceIntent: string; bindings?: readonly RaydiumPoolBinding[] }): RaydiumPriceUpdatePlan {
   const { vault } = input;
-  const oracles = assertRaydiumOnlyVault(vault);
+  const oracles = assertRaydiumOnlyVault(vault, input.bindings);
   const keeper = new PublicKey(address(input.keeper));
   const rebalanceIntent = new PublicKey(address(input.rebalanceIntent));
   const instructions: TransactionInstruction[] = [];

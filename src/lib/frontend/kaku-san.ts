@@ -1,7 +1,7 @@
 import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER } from "../index-vaults/kaku-san.ts";
 import { PREVIEW_MODE } from "./api.ts";
 
-export type KakuSanStep = "create" | "add-token" | "weights";
+export type KakuSanStep = "create" | "add-token" | "weights" | "prices" | "rebalance";
 export interface KakuSanPreparedTx { txBase64: string; messageHash: string; payer: string }
 export interface KakuSanPrepared {
   step: KakuSanStep;
@@ -17,6 +17,9 @@ export interface KakuSanPrepared {
   shareMint: string | null;
   mint?: string;
   transactions: KakuSanPreparedTx[];
+  eligible?: boolean;
+  reason?: string;
+  keeperNext?: string;
 }
 export interface KakuSanSubmitResult {
   step: KakuSanStep;
@@ -24,6 +27,31 @@ export interface KakuSanSubmitResult {
   shareMint: string;
   signatures: string[];
   slot: number | null;
+}
+export interface KakuSanDriftRow {
+  ticker: string | null;
+  mint: string;
+  targetWeightBps: number;
+  onchainWeightBps: number | null;
+  amountRaw: string;
+  driftBps: number | null;
+}
+export interface KakuSanStatus {
+  network: "mainnet-beta";
+  name: string;
+  symbol: string;
+  label: string;
+  deployer: string;
+  hostEntryFeeBps: number;
+  hostExitFeeBps: number;
+  nativeTokenCap: number;
+  vault: string;
+  shareMint: string;
+  shareSupplyRaw: string;
+  drift: KakuSanDriftRow[];
+  eligibility: { required: boolean | null; reason: string };
+  keeper: { next: string; intents: { address: string; action: string; type: string }[]; normalRebalanceRequired: boolean | null };
+  estimatedOnly: true;
 }
 
 type Wallet = {
@@ -69,6 +97,33 @@ export async function signPreparedKakuSan(prepared: KakuSanPrepared, wallet: Wal
     signed.push(await wallet.signTransaction(tx.txBase64, "mainnet-beta"));
   }
   return signed;
+}
+
+export async function observeKakuSan(body: { creator: string; vault: string; shareMint: string }): Promise<KakuSanStatus> {
+  if (PREVIEW_MODE) throw new Error("UI preview only. No transactions or server-side changes are submitted.");
+  const response = await fetch("/api/vaults/kaku-san/status", {
+    method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const result = await response.json() as KakuSanStatus & { error?: string };
+  if (!response.ok) throw new Error(result.error ?? "Kaku San status unavailable.");
+  if (result.network !== KAKU_SAN.network || result.deployer !== KAKU_SAN_DEPLOYER || result.label !== KAKU_SAN.label) throw new Error("Kaku San status identity mismatch.");
+  if (result.estimatedOnly !== true) throw new Error("Status must be estimated-only.");
+  if (!Array.isArray(result.drift)) throw new Error("Status did not return drift versus target weights.");
+  return result;
+}
+
+export async function prepareKakuSanKeeper(body: { creator: string; step: "prices" | "rebalance"; vault: string; shareMint: string }): Promise<KakuSanPrepared> {
+  if (PREVIEW_MODE) throw new Error("UI preview only. No transactions or server-side changes are submitted.");
+  const response = await fetch("/api/vaults/kaku-san/prepare", {
+    method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const result = await response.json() as KakuSanPrepared & { error?: string };
+  if (!response.ok) throw new Error(result.error ?? "Kaku San keeper prepare unavailable.");
+  if (result.network !== KAKU_SAN.network || result.deployer !== KAKU_SAN_DEPLOYER || result.label !== KAKU_SAN.label) throw new Error("Kaku San prepare identity mismatch.");
+  if (!Array.isArray(result.transactions)) throw new Error("Prepare returned no transaction list.");
+  if (body.step === "rebalance" && result.eligible === false) return result;
+  if (result.transactions.length === 0) throw new Error("Prepare returned no unsigned transactions.");
+  return result;
 }
 
 export { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER };

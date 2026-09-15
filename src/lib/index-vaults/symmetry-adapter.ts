@@ -12,7 +12,7 @@ import { feeSnapshot } from "./fees.ts";
 import { VAULT_RELEASE } from "./release.ts";
 import type { OperationStore } from "./operations.ts";
 import type { VaultRegistry } from "./registry.ts";
-import { assertRaydiumOnlyToken, planRaydiumPriceUpdate } from "./raydium-oracles.ts";
+import { assertRaydiumOnlyToken, planRaydiumPriceUpdate, type RaydiumPoolBinding } from "./raydium-oracles.ts";
 
 export const SYMMETRY_SDK_VERSION = "1.0.22";
 export const SYMMETRY_PROGRAM_ID = VAULTS_V3_PROGRAM_ID.toBase58();
@@ -118,8 +118,8 @@ export class NativeVaultBuilders {
     const { vault } = await this.read(identity);
     return this.priceUpdateFromVault(vault, keeper, intent);
   }
-  async priceUpdateFromVault(vault: Vault, keeper: string, intent: string) {
-    const plan = planRaydiumPriceUpdate({ vault, keeper, rebalanceIntent: intent });
+  async priceUpdateFromVault(vault: Vault, keeper: string, intent: string, bindings?: readonly RaydiumPoolBinding[]) {
+    const plan = planRaydiumPriceUpdate({ vault, keeper, rebalanceIntent: intent, bindings });
     const payer = new PublicKey(address(keeper));
     const batch = { batches: [plan.instructions.map(ix => ({ payer, lookupTables: plan.lookupTables,
       instructions: [ix, ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 25_000 })] }))] };

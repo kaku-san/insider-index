@@ -45,10 +45,13 @@ export function kakuSanTokenInput(asset: KakuSanAsset): AddOrEditTokenInput {
 }
 
 const READ_METHODS = /^(get|simulateTransaction$|isBlockhashValid$)/;
-const headers = { "Cache-Control": "no-store" };
-const PREPARE_TIMEOUT_MS = 20_000;
+export const KAKU_SAN_HEADERS = { "Cache-Control": "no-store" };
+export const PREPARE_TIMEOUT_MS = 20_000;
+const headers = KAKU_SAN_HEADERS;
 
-export type KakuSanStep = "create" | "add-token" | "weights";
+export type KakuSanCreateStep = "create" | "add-token" | "weights";
+export type KakuSanKeeperStep = "prices" | "rebalance";
+export type KakuSanStep = KakuSanCreateStep | KakuSanKeeperStep;
 export interface KakuSanPreparedTx { txBase64: string; messageHash: string; payer: string }
 export interface KakuSanPrepared {
   step: KakuSanStep;
@@ -64,6 +67,9 @@ export interface KakuSanPrepared {
   shareMint: string | null;
   mint?: string;
   transactions: KakuSanPreparedTx[];
+  eligible?: boolean;
+  reason?: string;
+  keeperNext?: string;
 }
 export interface KakuSanSubmitResult {
   step: KakuSanStep;
@@ -80,7 +86,7 @@ export function parseKakuSanPrepareRequest(body: unknown): { creator: string; st
   if (typeof input.creator !== "string") throw new Error("Creator public key required");
   const creator = assertKakuSanDeployer(address(input.creator));
   const step = input.step === undefined ? "create" : input.step;
-  if (step !== "create" && step !== "add-token" && step !== "weights") throw new Error("Unknown create step");
+  if (step !== "create" && step !== "add-token" && step !== "weights" && step !== "prices" && step !== "rebalance") throw new Error("Unknown create step");
   if (step === "create") return { creator, step };
   if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Existing vault and share mint required");
   const vault = address(input.vault);
@@ -101,7 +107,7 @@ export function parseKakuSanSubmitRequest(body: unknown): { creator: string; ste
   if (typeof input.creator !== "string") throw new Error("Creator public key required");
   const creator = assertKakuSanDeployer(address(input.creator));
   const step = input.step;
-  if (step !== "create" && step !== "add-token" && step !== "weights") throw new Error("Unknown create step");
+  if (step !== "create" && step !== "add-token" && step !== "weights" && step !== "prices" && step !== "rebalance") throw new Error("Unknown create step");
   if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Vault and share mint required");
   if (!Array.isArray(input.signedTransactions) || input.signedTransactions.length === 0 || input.signedTransactions.length > 16 ||
       input.signedTransactions.some(tx => typeof tx !== "string" || tx.length === 0 || tx.length > 20_000)) throw new Error("Signed transactions required");
@@ -154,7 +160,7 @@ export function assertSignedByDeployer(txBase64: string, expected: string = KAKU
   return assertSignedBy(txBase64, assertKakuSanDeployer(expected));
 }
 
-async function simulateUnsigned(connection: Connection, txBase64: string): Promise<void> {
+export async function simulateUnsigned(connection: Connection, txBase64: string): Promise<void> {
   const tx = VersionedTransaction.deserialize(Buffer.from(txBase64, "base64"));
   const result = await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true, commitment: "confirmed" });
   if (result.value.err) throw new Error(`Simulation failed: ${JSON.stringify(result.value.err)}`);
@@ -202,6 +208,10 @@ export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPr
     if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
     return prepared("add-token", input.vault!, input.shareMint!, transactions, asset.mint);
   }
+  if (input.step === "prices" || input.step === "rebalance") {
+    const { prepareKakuSanKeeperStep } = await import("./kaku-san-rebalance.ts");
+    return prepareKakuSanKeeperStep(input, native, simulate);
+  }
   const payload = await native.weights({ vault: input.vault!, manager: creator }, KAKU_SAN_ASSETS.map(asset => ({ mint: asset.mint, targetWeightBps: asset.targetWeightBps })));
   const transactions = payloadTransactions(payload, creator);
   if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
@@ -225,7 +235,7 @@ export async function submitKakuSanStep(input: ReturnType<typeof parseKakuSanSub
   return { step: input.step, vault: input.vault, shareMint: input.shareMint, signatures, slot };
 }
 
-async function withTimeout<T>(work: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
+export async function withKakuSanTimeout<T>(work: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
@@ -249,7 +259,7 @@ export async function handleKakuSanPrepare(request: Request, nativeBuilder: (sig
     return Response.json({ error: error instanceof Error ? error.message : "Invalid Kaku San prepare request" }, { status: 400, headers });
   }
   try {
-    const preparedStep = await withTimeout(() => prepareKakuSanStep(input, nativeBuilder()), timeoutMs);
+    const preparedStep = await withKakuSanTimeout(() => prepareKakuSanStep(input, nativeBuilder()), timeoutMs);
     return Response.json(preparedStep, { status: 200, headers });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Kaku San prepare unavailable" }, { status: 503, headers });
@@ -266,7 +276,7 @@ export async function handleKakuSanSubmit(request: Request, connectionBuilder: (
     return Response.json({ error: error instanceof Error ? error.message : "Invalid Kaku San submit request" }, { status: 400, headers });
   }
   try {
-    const result = await withTimeout(() => submitKakuSanStep(input, connectionBuilder()), timeoutMs);
+    const result = await withKakuSanTimeout(() => submitKakuSanStep(input, connectionBuilder()), timeoutMs);
     return Response.json(result, { status: 200, headers });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Kaku San submit unavailable" }, { status: 503, headers });
