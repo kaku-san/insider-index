@@ -1,0 +1,16 @@
+.panel { display: grid; gap: 12px; max-width: 52rem; margin: 24px auto; padding: 20px; border: 1px solid #dce1da; border-radius: 10px; font-size: 13px; line-height: 1.55; }
+.panel h1, .panel h2, .panel p { margin: 0; }
+.panel h1 { font-size: 28px; }
+.badge { color: #7a3b12; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.panel button { border: 1px solid #59664b; border-radius: 6px; padding: 11px; background: #34462c; color: #fff; cursor: pointer; width: fit-content; }
+.panel button:disabled { cursor: not-allowed; opacity: .5; }
+.panel :is(button, a):focus-visible { outline: 2px solid #607943; outline-offset: 3px; }
+.panel dl { margin: 8px 0; }
+.panel dt { font-weight: 600; }
+.panel dd { margin: 0 0 8px; overflow-wrap: anywhere; }
+.panel ul { padding-left: 18px; }
+.panel li { margin-bottom: 6px; overflow-wrap: anywhere; }
+.panel code { font-size: 11px; }
+.refuse { padding: 12px; background: #f8ece6; border-radius: 6px; color: #6a2b12; }
+.success { padding: 12px; background: #f2f4ed; border-radius: 6px; }
+.success strong { display: block; margin-bottom: 6px; }

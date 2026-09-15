@@ -98,8 +98,8 @@ export class NativeVaultBuilders {
     return this.sdk.sellVaultTx({ seller: owner, vault_mint: identity.shareMint, withdraw_amount: sdkRawAmount(sharesRaw), keep_tokens: completeKeepTokens(vault), rebalance_slippage_bps: 100, per_trade_rebalance_slippage_bps: 50 });
   }
   lock(identity: VaultIdentity, owner: string) { return this.sdk.lockDepositsTx({ buyer: address(owner), vault_mint: identity.shareMint }); }
-  addToken(context: TaskContext, token: AddOrEditTokenInput) {
-    assertRaydiumOnlyToken(token); // Pyth/other oracle types never reach the native builder.
+  addToken(context: TaskContext, token: AddOrEditTokenInput, bindings?: Parameters<typeof assertRaydiumOnlyToken>[1]) {
+    assertRaydiumOnlyToken(token, bindings); // Pyth/other oracle types never reach the native builder.
     return this.sdk.addOrEditTokenTx(context, token);
   }
   weights(context: TaskContext, assets: { mint: string; targetWeightBps: number }[]) {

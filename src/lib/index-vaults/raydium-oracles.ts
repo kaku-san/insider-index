@@ -45,10 +45,10 @@ export function assertRaydiumOracleInput(oracle: OracleInput): void {
   if (typeof oracle.oracle_type !== "string" || !RAYDIUM_KIND_NAMES.has(oracle.oracle_type)) throw new Error(`ORACLE_TYPE_FORBIDDEN: ${String(oracle.oracle_type)} (Raydium CLMM/CPMM only)`);
   address(oracle.account);
 }
-/** Token add/edit: at least one oracle, every oracle a Raydium pool. */
-export function assertRaydiumOnlyToken(token: AddOrEditTokenInput): void {
+/** Token add/edit: at least one oracle, every oracle a Raydium pool. Pass documented bindings; never invent a pool. */
+export function assertRaydiumOnlyToken(token: AddOrEditTokenInput, bindings: readonly RaydiumPoolBinding[] = DEVNET_RAYDIUM_POOLS): void {
   if (!Array.isArray(token.oracles) || token.oracles.length === 0) throw new Error("ORACLE_REQUIRED: a token needs at least one Raydium oracle");
-  const binding = raydiumPoolFor(token.token_mint);
+  const binding = raydiumPoolFor(token.token_mint, bindings);
   for (const oracle of token.oracles) {
     assertRaydiumOracleInput(oracle);
     const pool = address(oracle.account);
