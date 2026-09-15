@@ -185,9 +185,9 @@ test("bounded RPC abort releases the keeper lease", () => temporary(async path =
   assert.equal((await runDevnetKeeperTick(reader(), path)).broadcasts, 0);
 }));
 
-test("CLI rejects execution, force, mainnet and vault overrides without networking", () => {
-  for (const arg of ["--execute", "--force-rebalance", "--network=mainnet-beta", "--vault=other"]) {
-    const result = spawnSync(process.execPath, ["--experimental-strip-types", "scripts/devnet-keeper-tick.mts", arg], { encoding: "utf8" });
+test("CLI requires dry-run and rejects execution, force, mainnet and vault overrides without networking", () => {
+  for (const args of [[], ["--execute"], ["--force-rebalance"], ["--network=mainnet-beta"], ["--vault=other"]]) {
+    const result = spawnSync(process.execPath, ["--experimental-strip-types", "scripts/devnet-keeper-tick.mts", ...args], { encoding: "utf8" });
     assert.equal(result.status, 1);
     assert.match(result.stderr, /Unsupported arguments/);
     assert.equal(result.stdout, "");

@@ -8,8 +8,8 @@ Runs the vault-native keeper observer and strategy decision service once against
 `Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8`. It uses only the fixed public
 **devnet** RPC and checks genesis before vault/balance reads. There is no mainnet,
 RPC override, wallet/keyfile, execute, force-rebalance, new-vault or looping option.
-Omitting `--dry-run` has identical no-send behavior. Unknown arguments fail before
-networking. JSON is printed to stdout; process failures exit nonzero.
+The explicit `--dry-run` flag is required; omitting it or passing unknown arguments
+fails before networking. JSON is printed to stdout; process failures exit nonzero.
 
 The CLI deliberately does **not** build or simulate transactions: SDK price
 builders can involve multi-stage oracle updates and outside feed services. A
@@ -35,7 +35,10 @@ signed/sent and no airdrop is requested. The tick's spend cap is zero.
   target/readiness attestation. The CLI does not accept an envelope or sign it.
 - An existing intent or changed configuration prevents a new strategy submission.
   Configuration drift stays latched across subsequent ticks; no automatic baseline
-  acceptance or reattestation is installed.
+  acceptance or reattestation is installed. As a one-time journal migration,
+  an unversioned legacy observation is rehashed into the current administrator-only
+  baseline without carrying forward its legacy drift latch; versioned observations
+  enforce drift normally thereafter.
 
 The private journal `.data/index-vaults/devnet-keeper-tick.json` holds the latest
 100 observations under an exclusive single-host lease. Concurrent ticks fail
