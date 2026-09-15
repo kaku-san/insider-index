@@ -15,6 +15,8 @@ import { address } from "./amounts.ts";
 export const RAYDIUM_ORACLE_KINDS = Object.freeze({ raydium_clmm: OracleType.RaydiumClmm, raydium_cpmm: OracleType.RaydiumCpmm });
 export type RaydiumOracleKind = keyof typeof RAYDIUM_ORACLE_KINDS;
 const RAYDIUM_TYPE_CODES = new Set<number>(Object.values(RAYDIUM_ORACLE_KINDS));
+/** Explicit membership: `in` would also accept inherited keys such as "constructor". */
+const RAYDIUM_KIND_NAMES = new Set<string>(Object.keys(RAYDIUM_ORACLE_KINDS));
 
 /** Config shape: mint → Raydium pool pubkey + kind. Never a Pyth price-account id. */
 export interface RaydiumPoolBinding { mint: string; pool: string; kind: RaydiumOracleKind }
@@ -40,7 +42,7 @@ export function assertNoPythEnvironment(env: NodeJS.ProcessEnv = process.env): v
 }
 
 export function assertRaydiumOracleInput(oracle: OracleInput): void {
-  if (!(oracle.oracle_type in RAYDIUM_ORACLE_KINDS)) throw new Error(`ORACLE_TYPE_FORBIDDEN: ${String(oracle.oracle_type)} (Raydium CLMM/CPMM only)`);
+  if (typeof oracle.oracle_type !== "string" || !RAYDIUM_KIND_NAMES.has(oracle.oracle_type)) throw new Error(`ORACLE_TYPE_FORBIDDEN: ${String(oracle.oracle_type)} (Raydium CLMM/CPMM only)`);
   address(oracle.account);
 }
 /** Token add/edit: at least one oracle, every oracle a Raydium pool. */

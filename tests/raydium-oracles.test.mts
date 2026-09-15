@@ -55,7 +55,8 @@ function fixtureVault(types: [number, number] = [2, 2]): Vault {
 test("oracle inputs: pyth and every non-Raydium type are rejected before reaching the native builder", () => {
   assert.doesNotThrow(() => assertRaydiumOnlyToken(tokenInput("raydium_cpmm")));
   assert.doesNotThrow(() => assertRaydiumOnlyToken(tokenInput("raydium_clmm", "raydium_cpmm")));
-  for (const type of ["pyth", "lst", "overpass", "byreal_clmm", "meteora_dlmm", "example", "PYTH", ""]) assert.throws(() => assertRaydiumOnlyToken(tokenInput(type)), /ORACLE_TYPE_FORBIDDEN/);
+  for (const type of ["pyth", "lst", "overpass", "byreal_clmm", "meteora_dlmm", "example", "PYTH", "", "constructor", "__proto__", "toString", "hasOwnProperty"]) assert.throws(() => assertRaydiumOnlyToken(tokenInput(type)), /ORACLE_TYPE_FORBIDDEN/);
+  assert.throws(() => assertRaydiumOnlyToken(tokenInput(2 as unknown as string)), /ORACLE_TYPE_FORBIDDEN/);
   assert.throws(() => assertRaydiumOnlyToken(tokenInput("raydium_cpmm", "pyth")), /ORACLE_TYPE_FORBIDDEN/);
   assert.throws(() => assertRaydiumOnlyToken(tokenInput()), /ORACLE_REQUIRED/);
 });
@@ -73,7 +74,7 @@ test("installed native oracles must all be Raydium; a Pyth slot fails the vault 
   assert.throws(() => assertRaydiumOnlyVault(fixtureVault([3, 2])), /ORACLE_TYPE_FORBIDDEN/);
   assert.doesNotThrow(() => assertRaydiumOnlyVault(fixtureVault([1, 2])));
   const wrongPool = fixtureVault();
-  wrongPool.lutPubkeys[0].state.addresses[10] = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+  wrongPool.lutPubkeys![0].state.addresses[10] = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
   assert.throws(() => assertRaydiumOnlyVault(wrongPool), /RAYDIUM_POOL_MISMATCH/);
 });
 
@@ -122,7 +123,7 @@ test("settlement pool observation decodes the installed Raydium CPMM state", asy
   observationData.writeUInt16LE(0, 9);
   observationData.writeBigUInt64LE(BigInt(Math.floor(Date.now() / 1000)), 8 + 1 + 2 + 32);
   const originalDecode = RaydiumCpmmPoolState.decode;
-  RaydiumCpmmPoolState.decode = (() => ({ observationKey })) as typeof RaydiumCpmmPoolState.decode;
+  RaydiumCpmmPoolState.decode = (() => ({ observationKey })) as unknown as typeof RaydiumCpmmPoolState.decode;
   const connection = {
     getAccountInfo: async (key: PublicKey) => key.equals(observationKey)
       ? { data: observationData, owner: PublicKey.default }
@@ -231,7 +232,7 @@ test("settle prices builds the real native Raydium transaction without non-devne
         const keys = call.params[0] as string[];
         result = { context: { slot: 1 }, value: keys.map(key => {
           const index = vault.lookupTables.active.findIndex(table => table.toBase58() === key);
-          return index < 0 ? null : rpcAccount(lookupTableData(vault.lutPubkeys[index].state.addresses), PublicKey.default);
+          return index < 0 ? null : rpcAccount(lookupTableData(vault.lutPubkeys?.[index].state.addresses ?? []), PublicKey.default);
         }) };
       } else throw new Error(`Unexpected RPC method ${call.method}`);
       return { jsonrpc: "2.0", id: call.id, result };
@@ -250,7 +251,7 @@ test("settle prices builds the real native Raydium transaction without non-devne
     const transaction = VersionedTransaction.deserialize(Buffer.from(payload.batches[0].transactions[0].tx_b64, "base64"));
     const lookupTables = vault.lookupTables.active.map((key, index) => new AddressLookupTableAccount({ key, state: {
       deactivationSlot: 0xffffffffffffffffn, lastExtendedSlot: 0, lastExtendedSlotStartIndex: 0, authority: undefined,
-      addresses: vault.lutPubkeys[index].state.addresses,
+      addresses: vault.lutPubkeys?.[index].state.addresses ?? [],
     } }));
     const accountKeys = transaction.message.getAccountKeys({ addressLookupTableAccounts: lookupTables });
     const native = transaction.message.compiledInstructions.filter(ix => accountKeys.get(ix.programIdIndex)?.equals(VAULTS_V3_PROGRAM_ID));
