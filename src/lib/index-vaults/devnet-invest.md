@@ -26,6 +26,6 @@ Host entry/exit bps are observed separately from unquoted protocol, network, ren
 
 ## Verification
 
-- `tests/devnet-deposit.test.mts`: executable request validation, exact amounts, native-reader fixture observations, missing/current-owner/state blockers, endpoint status/no-store behavior, failed reads, and zero wallet calls under unreadiness/fixture/stale/forged-ready cases. Fixtures are not native funding evidence.
+- `tests/devnet-deposit.test.mts`: executable request validation, exact amounts, native-reader fixture observations, missing/current-owner/state blockers, endpoint status/no-store behavior, failed reads, deterministic deadline cancellation of stalled RPC transport, and zero wallet calls under unreadiness/fixture/stale/forged-ready cases. Fixtures are not native funding evidence.
 - Existing person/holdings rendering tests run inside the wallet provider and preserve all disclosed rows; generated HTML checks the separate test-vault label and disabled signing.
 - `evidence/vaults/invest-devnet-preview.json`: real read-only native preview from this wiring task. At the recorded slot the existing test vault had zero raw share supply and zero recorded backing; this historical observation does not assert the outcome of a later parallel funded deposit.
