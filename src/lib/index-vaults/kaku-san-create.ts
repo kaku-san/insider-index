@@ -86,7 +86,8 @@ export function parseKakuSanPrepareRequest(body: unknown): { creator: string; st
   if (typeof input.creator !== "string") throw new Error("Creator public key required");
   const creator = assertKakuSanDeployer(address(input.creator));
   const step = input.step === undefined ? "create" : input.step;
-  if (step !== "create" && step !== "add-token" && step !== "weights" && step !== "prices" && step !== "rebalance") throw new Error("Unknown create step");
+  if (step === "prices" || step === "rebalance") throw new Error("Rebalance is the local keeper CLI, not a wallet-signed web action");
+  if (step !== "create" && step !== "add-token" && step !== "weights") throw new Error("Unknown create step");
   if (step === "create") return { creator, step };
   if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Existing vault and share mint required");
   const vault = address(input.vault);
@@ -107,7 +108,8 @@ export function parseKakuSanSubmitRequest(body: unknown): { creator: string; ste
   if (typeof input.creator !== "string") throw new Error("Creator public key required");
   const creator = assertKakuSanDeployer(address(input.creator));
   const step = input.step;
-  if (step !== "create" && step !== "add-token" && step !== "weights" && step !== "prices" && step !== "rebalance") throw new Error("Unknown create step");
+  if (step === "prices" || step === "rebalance") throw new Error("Rebalance is the local keeper CLI, not a wallet-signed web action");
+  if (step !== "create" && step !== "add-token" && step !== "weights") throw new Error("Unknown create step");
   if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Vault and share mint required");
   if (!Array.isArray(input.signedTransactions) || input.signedTransactions.length === 0 || input.signedTransactions.length > 16 ||
       input.signedTransactions.some(tx => typeof tx !== "string" || tx.length === 0 || tx.length > 20_000)) throw new Error("Signed transactions required");
@@ -207,10 +209,6 @@ export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPr
     const transactions = payloadTransactions(payload, creator);
     if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
     return prepared("add-token", input.vault!, input.shareMint!, transactions, asset.mint);
-  }
-  if (input.step === "prices" || input.step === "rebalance") {
-    const { prepareKakuSanKeeperStep } = await import("./kaku-san-rebalance.ts");
-    return prepareKakuSanKeeperStep(input, native, simulate);
   }
   const payload = await native.weights({ vault: input.vault!, manager: creator }, KAKU_SAN_ASSETS.map(asset => ({ mint: asset.mint, targetWeightBps: asset.targetWeightBps })));
   const transactions = payloadTransactions(payload, creator);

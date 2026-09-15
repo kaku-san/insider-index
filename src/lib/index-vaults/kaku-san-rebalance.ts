@@ -1,5 +1,5 @@
 import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, type Connection } from "@solana/web3.js";
 import { isRebalanceRequired } from "@symmetry-hq/sdk";
 import type { Vault } from "@symmetry-hq/sdk";
 import { MAX_SUPPORTED_TOKENS_PER_VAULT } from "@symmetry-hq/sdk/dist/constants.js";
@@ -9,13 +9,13 @@ import Decimal from "decimal.js";
 import { address } from "./amounts.ts";
 import { feeSnapshot, HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
 import type { VaultIdentity } from "./adapter-contract.ts";
-import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_INDEX_ID, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanDeployer } from "./kaku-san.ts";
+import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_INDEX_ID, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanDeployer, assertKakuSanKeeper } from "./kaku-san.ts";
 import {
-  KAKU_SAN_HEADERS, PREPARE_TIMEOUT_MS, parseKakuSanPrepareRequest, payloadTransactions, simulateUnsigned,
+  KAKU_SAN_HEADERS, PREPARE_TIMEOUT_MS, assertSignedBy, payloadTransactions, simulateUnsigned,
   withKakuSanTimeout, type KakuSanPrepared,
 } from "./kaku-san-create.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyVault } from "./raydium-oracles.ts";
-import { NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
+import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
 import { keeperConfigurationHash, planKeeperObservation } from "../../../workers/stocklana-keeper.ts";
 import type { KeeperIntentObservation, KeeperObservation } from "../../../workers/stocklana-keeper.ts";
 
@@ -250,20 +250,19 @@ function preparedKeeper(step: "prices" | "rebalance", status: KakuSanStatus, tra
 }
 
 export async function prepareKakuSanKeeperStep(
-  input: ReturnType<typeof parseKakuSanPrepareRequest>,
+  input: { keeper: string; step: "prices" | "rebalance"; vault: string; shareMint: string },
   native: NativeVaultBuilders,
   simulate = true,
 ): Promise<KakuSanPrepared> {
   if (input.step !== "prices" && input.step !== "rebalance") throw new Error("Unknown keeper step");
-  if (!input.vault || !input.shareMint) throw new Error("Existing vault and share mint required");
-  const creator = assertKakuSanDeployer(input.creator);
-  const status = await observeKakuSanVault({ creator, vault: input.vault, shareMint: input.shareMint }, native);
+  const keeper = assertKakuSanKeeper(address(input.keeper));
+  const status = await observeKakuSanVault({ creator: KAKU_SAN_DEPLOYER, vault: input.vault, shareMint: input.shareMint }, native);
   const identity = await kakuSanIdentity(native, input.vault, input.shareMint);
   const { vault } = await native.read(identity);
   if (input.step === "prices") {
     const intent = status.keeper.intents[0]?.address ?? getRebalanceIntentPda(new PublicKey(identity.vaultAccount), new PublicKey(identity.vaultAccount)).toBase58();
-    const { payload } = await native.priceUpdateFromVault(vault, creator, intent, KAKU_SAN_RAYDIUM_POOLS);
-    const transactions = payloadTransactions(payload, creator);
+    const { payload } = await native.priceUpdateFromVault(vault, keeper, intent, KAKU_SAN_RAYDIUM_POOLS);
+    const transactions = payloadTransactions(payload, keeper);
     if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
     return preparedKeeper("prices", status, transactions, {
       eligible: true, reason: status.keeper.intents.length ? `Updating prices for existing intent ${intent}` : "Updating Raydium prices",
@@ -272,7 +271,7 @@ export async function prepareKakuSanKeeperStep(
   }
   if (status.keeper.intents.length) {
     return preparedKeeper("rebalance", status, [], {
-      eligible: false, reason: "Existing intents take priority; sign update_prices if that is the current action. Do not force a new rebalance.",
+      eligible: false, reason: "Existing intents take priority; run update_prices if that is the current action. Do not force a new rebalance.",
       keeperNext: status.keeper.next,
     });
   }
@@ -282,13 +281,34 @@ export async function prepareKakuSanKeeperStep(
     });
   }
   const payload = await native.sdk.rebalanceVaultTx({
-    keeper: creator, vault_mint: identity.shareMint, rebalance_slippage_bps: 100, per_trade_rebalance_slippage_bps: 50,
+    keeper, vault_mint: identity.shareMint, rebalance_slippage_bps: 100, per_trade_rebalance_slippage_bps: 50,
   });
-  const transactions = payloadTransactions(payload, creator);
+  const transactions = payloadTransactions(payload, keeper);
   if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
   return preparedKeeper("rebalance", status, transactions, {
     eligible: true, reason: status.eligibility.reason, keeperNext: status.keeper.next,
   });
+}
+
+export async function submitKakuSanKeeperSigned(
+  input: { keeper: string; vault: string; shareMint: string; signedTransactions: string[] },
+  connection: Connection,
+): Promise<{ vault: string; shareMint: string; signatures: string[]; slot: number | null }> {
+  assertNoPythEnvironment();
+  const keeper = assertKakuSanKeeper(address(input.keeper));
+  if (await connection.getGenesisHash() !== GENESIS["mainnet-beta"]) throw new Error("RPC genesis/network mismatch");
+  const signatures: string[] = [];
+  let slot: number | null = null;
+  for (const signed of input.signedTransactions) {
+    const tx = assertSignedBy(signed, keeper);
+    const latest = await connection.getLatestBlockhash("confirmed");
+    const signature = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 3 });
+    const confirmation = await connection.confirmTransaction({ signature, blockhash: latest.blockhash, lastValidBlockHeight: latest.lastValidBlockHeight }, "confirmed");
+    if (confirmation.value.err) throw new Error(`Transaction ${signature} failed: ${JSON.stringify(confirmation.value.err)}`);
+    signatures.push(signature);
+    slot = confirmation.context.slot;
+  }
+  return { vault: address(input.vault), shareMint: address(input.shareMint), signatures, slot };
 }
 
 export function parseKakuSanStatusRequest(body: unknown): { creator: string; vault: string; shareMint: string } {
@@ -299,11 +319,11 @@ export function parseKakuSanStatusRequest(body: unknown): { creator: string; vau
   return { creator: assertKakuSanDeployer(address(input.creator)), vault: address(input.vault), shareMint: address(input.shareMint) };
 }
 
-export function parseKakuSanKeeperArgs(argv: string[]): { mode: "dry-run" | "execute"; vault: string; shareMint: string; keypath?: string } {
+export function parseKakuSanKeeperArgs(argv: string[]): { mode: "dry-run" | "execute"; vault: string; shareMint: string; keypair?: string } {
   let mode: "dry-run" | "execute" = "dry-run";
   let vault: string | undefined;
   let shareMint: string | undefined;
-  let keypath: string | undefined;
+  let keypair: string | undefined;
   let sawDryRun = false;
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
@@ -316,15 +336,16 @@ export function parseKakuSanKeeperArgs(argv: string[]): { mode: "dry-run" | "exe
     else if (flag === "--execute") mode = "execute";
     else if (flag === "--vault") vault = address(value());
     else if (flag === "--share-mint") shareMint = address(value());
-    else if (flag === "--keypath") keypath = value();
+    else if (flag === "--keypair") keypair = value();
+    else if (flag === "--keypath") throw new Error("Use --keypair PATH; the web app never holds a keeper keypair");
     else if (flag === "--force-rebalance" || flag === "--force") throw new Error("Force-rebalance is not permitted");
     else throw new Error(`Unsupported argument ${flag}`);
   }
   if (sawDryRun && mode === "execute") throw new Error("Pass --dry-run or --execute, not both");
-  if (!vault || !shareMint) throw new Error("Usage: --dry-run --vault <addr> --share-mint <addr>  |  --execute --keypath <file> --vault <addr> --share-mint <addr>");
-  if (mode === "execute" && !keypath) throw new Error("--execute requires --keypath; the web app never holds a keeper keypair");
-  if (mode === "dry-run" && keypath) throw new Error("--keypath is only valid with --execute");
-  return { mode, vault, shareMint, ...(keypath ? { keypath } : {}) };
+  if (!vault || !shareMint) throw new Error("Usage: --dry-run --vault <addr> --share-mint <addr>  |  --execute --keypair <file> --vault <addr> --share-mint <addr>");
+  if (mode === "execute" && !keypair) throw new Error("--execute requires --keypair PATH on the operator machine; fail-closed until that dedicated keeper key exists");
+  if (mode === "dry-run" && keypair) throw new Error("--keypair is only valid with --execute");
+  return { mode, vault, shareMint, ...(keypair ? { keypair } : {}) };
 }
 
 export async function handleKakuSanStatus(

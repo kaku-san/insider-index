@@ -51,3 +51,9 @@ export function assertKakuSanDeployer(pubkey: string): string {
   if (pubkey !== KAKU_SAN_DEPLOYER) throw new Error("Only the approved deployer wallet may create this execution-test vault");
   return pubkey;
 }
+
+/** Rebalance keeper is a dedicated hot wallet. The deployer Phantom does not sign ticks. */
+export function assertKakuSanKeeper(pubkey: string): string {
+  if (pubkey === KAKU_SAN_DEPLOYER) throw new Error("Keeper must be a dedicated hot wallet, not the deployer");
+  return pubkey;
+}

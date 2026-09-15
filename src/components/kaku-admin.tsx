@@ -5,7 +5,7 @@ import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE, errorText } from "@/lib/frontend/api";
 import {
   KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, canCreateKakuSan, observeKakuSan, prepareKakuSan,
-  prepareKakuSanKeeper, signPreparedKakuSan, submitKakuSan, type KakuSanStatus, type KakuSanSubmitResult,
+  signPreparedKakuSan, submitKakuSan, type KakuSanStatus, type KakuSanSubmitResult,
 } from "@/lib/frontend/kaku-san";
 import styles from "./kaku-admin.module.css";
 
@@ -82,53 +82,6 @@ export function KakuAdmin() {
     }
   }
 
-  async function runKeeper() {
-    if (!allowed || busy || PREVIEW_MODE || !wallet.solanaAddress || !vaultReady) return;
-    const token = ++version.current;
-    const isCurrent = () => token === version.current;
-    setBusy(true); setStatus("Reading keeper eligibility…");
-    try {
-      const creator = wallet.solanaAddress;
-      const observed = await observeKakuSan({ creator, vault: vaultAddress, shareMint });
-      if (!isCurrent()) return;
-      setReport(observed);
-      if (observed.keeper.intents.length) {
-        setStatus(`Existing intent ${observed.keeper.intents[0].action}. Signing Raydium update_prices…`);
-        const prices = await prepareKakuSanKeeper({ creator, step: "prices", vault: vaultAddress, shareMint });
-        const signed = await signPreparedKakuSan(prices, wallet, isCurrent);
-        await submitKakuSan({ creator, step: "prices", vault: vaultAddress, shareMint, signedTransactions: signed });
-        if (!isCurrent()) return;
-        const next = await observeKakuSan({ creator, vault: vaultAddress, shareMint });
-        if (isCurrent()) { setReport(next); setStatus(`Prices submitted. Keeper next: ${next.keeper.next}. Existing intents still take priority; a new rebalance was not forced.`); }
-        return;
-      }
-      if (observed.eligibility.required !== true) {
-        setStatus(`Not eligible to rebalance: ${observed.eligibility.reason}`);
-        return;
-      }
-      setStatus("Native eligibility says rebalance. Waiting for your signature…");
-      const rebalance = await prepareKakuSanKeeper({ creator, step: "rebalance", vault: vaultAddress, shareMint });
-      if (rebalance.eligible === false || rebalance.transactions.length === 0) {
-        setStatus(`Not eligible to rebalance: ${rebalance.reason ?? observed.eligibility.reason}`);
-        return;
-      }
-      const rebalanceSigned = await signPreparedKakuSan(rebalance, wallet, isCurrent);
-      await submitKakuSan({ creator, step: "rebalance", vault: vaultAddress, shareMint, signedTransactions: rebalanceSigned });
-      if (!isCurrent()) return;
-      setStatus("Rebalance intent created. Signing Raydium update_prices…");
-      const prices = await prepareKakuSanKeeper({ creator, step: "prices", vault: vaultAddress, shareMint });
-      const priceSigned = await signPreparedKakuSan(prices, wallet, isCurrent);
-      await submitKakuSan({ creator, step: "prices", vault: vaultAddress, shareMint, signedTransactions: priceSigned });
-      if (!isCurrent()) return;
-      const next = await observeKakuSan({ creator, vault: vaultAddress, shareMint });
-      if (isCurrent()) { setReport(next); setStatus(`Keeper tick submitted. Next: ${next.keeper.next}.`); }
-    } catch (error) {
-      if (isCurrent()) setStatus(errorText(error));
-    } finally {
-      if (isCurrent()) setBusy(false);
-    }
-  }
-
   return <section className={styles.panel} aria-labelledby={`${id}-title`}>
     <span className={styles.badge}>Execution test · not a politician filing</span>
     <h1 id={`${id}-title`}>{KAKU_SAN.name}</h1>
@@ -137,7 +90,7 @@ export function KakuAdmin() {
     <h2>Basket</h2>
     <ul>{KAKU_SAN_ASSETS.map(asset => <li key={asset.mint}><strong>{asset.ticker}</strong> · {asset.targetWeightBps} bps · <code>{asset.mint}</code> · CLMM <code>{asset.pool}</code></li>)}</ul>
     {wallet.mode === "live" && !owner && <button type="button" disabled={!wallet.ready || busy || PREVIEW_MODE} onClick={() => void wallet.connect().catch(error => setStatus(errorText(error)))}>Connect wallet</button>}
-    {refused && <p className={styles.refuse} role="alert">Connected wallet {owner} is refused. Only {KAKU_SAN_DEPLOYER} may create or rebalance this execution-test vault.</p>}
+    {refused && <p className={styles.refuse} role="alert">Connected wallet {owner} is refused. Only {KAKU_SAN_DEPLOYER} may create this execution-test vault.</p>}
     {!owner && wallet.mode !== "live" && <p className={styles.refuse} role="alert">A live Solana wallet is required. Fixture wallets cannot create this vault.</p>}
     <button type="button" disabled={!allowed || busy || PREVIEW_MODE} onClick={() => void run()}>{busy ? "Working…" : "Create Kaku San vault"}</button>
     {PREVIEW_MODE && <p>UI preview mode cannot create a vault or sign.</p>}
@@ -150,15 +103,14 @@ export function KakuAdmin() {
         <dd><a href={`https://explorer.solana.com/address/${created.shareMint}`} target="_blank" rel="noreferrer"><code>{created.shareMint}</code></a></dd>
       </dl>
     </div>}
-    <h2>Rebalance</h2>
-    <p>After a vault and share mint exist, this page shows on-chain weight drift versus the equal 2000 bps targets. The connected deployer wallet signs Raydium <code>update_prices</code>, then a native rebalance only if keeper eligibility says so. Existing intents win; this never force-rebalances.</p>
+    <h2>Drift</h2>
+    <p>After a vault and share mint exist, this page shows on-chain weight drift versus the equal 2000 bps targets. Rebalance is an automated keeper with a dedicated hot wallet, not a Phantom click. Run <code>npm run keeper:kaku-san -- --dry-run</code>; <code>--execute --keypair PATH</code> only on the operator machine. This page does not sign rebalance. The server never holds that key.</p>
     <div className={styles.fields}>
       <label htmlFor={`${id}-vault`}>Vault<input id={`${id}-vault`} value={vaultAddress} onChange={event => setVaultAddress(event.target.value.trim())} autoComplete="off" spellCheck={false} /></label>
       <label htmlFor={`${id}-mint`}>Share mint<input id={`${id}-mint`} value={shareMint} onChange={event => setShareMint(event.target.value.trim())} autoComplete="off" spellCheck={false} /></label>
     </div>
     <div className={styles.actions}>
       <button type="button" disabled={!allowed || busy || PREVIEW_MODE || !vaultReady} onClick={() => void loadDrift()}>Show drift</button>
-      <button type="button" disabled={!allowed || busy || PREVIEW_MODE || !vaultReady} onClick={() => void runKeeper()}>Sign update_prices / rebalance</button>
     </div>
     {report && <div className={styles.success} role="status">
       <strong>Drift versus 2000 bps targets</strong>

@@ -112,18 +112,4 @@ export async function observeKakuSan(body: { creator: string; vault: string; sha
   return result;
 }
 
-export async function prepareKakuSanKeeper(body: { creator: string; step: "prices" | "rebalance"; vault: string; shareMint: string }): Promise<KakuSanPrepared> {
-  if (PREVIEW_MODE) throw new Error("UI preview only. No transactions or server-side changes are submitted.");
-  const response = await fetch("/api/vaults/kaku-san/prepare", {
-    method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  const result = await response.json() as KakuSanPrepared & { error?: string };
-  if (!response.ok) throw new Error(result.error ?? "Kaku San keeper prepare unavailable.");
-  if (result.network !== KAKU_SAN.network || result.deployer !== KAKU_SAN_DEPLOYER || result.label !== KAKU_SAN.label) throw new Error("Kaku San prepare identity mismatch.");
-  if (!Array.isArray(result.transactions)) throw new Error("Prepare returned no transaction list.");
-  if (body.step === "rebalance" && result.eligible === false) return result;
-  if (result.transactions.length === 0) throw new Error("Prepare returned no unsigned transactions.");
-  return result;
-}
-
 export { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER };

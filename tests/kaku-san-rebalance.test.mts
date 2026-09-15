@@ -9,7 +9,7 @@ import { PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } fr
 import { MintLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { isRebalanceRequired } from "@symmetry-hq/sdk";
 import type { Vault } from "@symmetry-hq/sdk";
-import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS } from "../src/lib/index-vaults/kaku-san.ts";
+import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanKeeper } from "../src/lib/index-vaults/kaku-san.ts";
 import { parseKakuSanPrepareRequest } from "../src/lib/index-vaults/kaku-san-create.ts";
 import {
   KAKU_SAN_NATIVE_TOKEN_CAP, assertNativeTokenCap, forbidPythNetwork, handleKakuSanStatus, kakuSanDrift,
@@ -74,8 +74,8 @@ function mintAccount() {
   return { data, owner: TOKEN_PROGRAM_ID, lamports: 1, executable: false };
 }
 
-function builders(vault: Vault, intents: unknown[] = []): NativeVaultBuilders {
-  const payload = { batches: [{ transactions: [unsignedPayload()] }] };
+function builders(vault: Vault, intents: unknown[] = [], payer = OTHER): NativeVaultBuilders {
+  const payload = { batches: [{ transactions: [unsignedPayload(payer)] }] };
   return {
     network: "mainnet-beta",
     connection: {
@@ -162,14 +162,15 @@ test("Kaku San Raydium CLMM bindings price the installed pools; default devnet b
   assert.equal(plan.oracleAccounts.flat()[0], KAKU_SAN_ASSETS[0].pool);
 });
 
-test("status and keeper parsers refuse other wallets, extra fields, force, and keypair-on-prepare", () => {
+test("status and keeper parsers refuse other wallets, extra fields, force, and web-signed rebalance", () => {
   assert.throws(() => parseKakuSanStatusRequest({ creator: OTHER, vault: VAULT, shareMint: MINT }), /approved deployer/);
-  assert.throws(() => parseKakuSanStatusRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT, keypath: "/tmp/id.json" }));
-  assert.deepEqual(parseKakuSanPrepareRequest({ creator: KAKU_SAN_DEPLOYER, step: "prices", vault: VAULT, shareMint: MINT }), {
-    creator: KAKU_SAN_DEPLOYER, step: "prices", vault: VAULT, shareMint: MINT,
-  });
+  assert.throws(() => parseKakuSanStatusRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT, keypair: "/tmp/id.json" }));
+  assert.throws(() => parseKakuSanPrepareRequest({ creator: KAKU_SAN_DEPLOYER, step: "prices", vault: VAULT, shareMint: MINT }), /local keeper CLI/);
+  assert.throws(() => parseKakuSanPrepareRequest({ creator: KAKU_SAN_DEPLOYER, step: "rebalance", vault: VAULT, shareMint: MINT }), /local keeper CLI/);
+  assert.throws(() => assertKakuSanKeeper(KAKU_SAN_DEPLOYER), /dedicated hot wallet/);
+  assert.equal(assertKakuSanKeeper(OTHER), OTHER);
   assert.throws(() => parseKakuSanKeeperArgs(["--force-rebalance", "--vault", VAULT, "--share-mint", MINT]), /Force-rebalance/);
-  assert.throws(() => parseKakuSanKeeperArgs(["--execute", "--vault", VAULT, "--share-mint", MINT]), /--keypath/);
+  assert.throws(() => parseKakuSanKeeperArgs(["--execute", "--vault", VAULT, "--share-mint", MINT]), /--keypair/);
   assert.deepEqual(parseKakuSanKeeperArgs(["--vault", VAULT, "--share-mint", MINT]), { mode: "dry-run", vault: VAULT, shareMint: MINT });
   assert.equal(parseKakuSanKeeperArgs(["--dry-run", "--vault", VAULT, "--share-mint", MINT]).mode, "dry-run");
 });
@@ -185,7 +186,7 @@ test("observe shows 2000 bps drift and prepare rebalance returns no txs when not
   assert.ok(status.drift.every(row => row.targetWeightBps === 2000));
   assert.equal(status.eligibility.required, false);
   assert.equal(status.keeper.next, "TARGET_ACTIVE_WAITING");
-  const prepared = await prepareKakuSanKeeperStep({ creator: KAKU_SAN_DEPLOYER, step: "rebalance", vault: VAULT, shareMint: MINT }, builders(vault), false);
+  const prepared = await prepareKakuSanKeeperStep({ keeper: OTHER, step: "rebalance", vault: VAULT, shareMint: MINT }, builders(vault), false);
   assert.equal(prepared.eligible, false);
   assert.equal(prepared.transactions.length, 0);
   assert.match(prepared.reason ?? "", /Automation is disabled|bounty/i);
@@ -198,7 +199,7 @@ test("existing intents take priority over a new rebalance", async () => {
     formatted_data: { rebalance_type: "vault", current_action: "update_prices" },
   }];
   const prepared = await prepareKakuSanKeeperStep(
-    { creator: KAKU_SAN_DEPLOYER, step: "rebalance", vault: VAULT, shareMint: MINT },
+    { keeper: OTHER, step: "rebalance", vault: VAULT, shareMint: MINT },
     builders(vault, intents),
     false,
   );
@@ -221,15 +222,16 @@ test("HTTP status is no-store and refuses a non-deployer; HERMES env fails close
   await assert.rejects(forbidPythNetwork(() => fetch("https://hermes.pyth.network/v2/updates/price/latest")), /PYTH_NETWORK_FORBIDDEN/);
 });
 
-test("kaku-admin can show drift and a rebalance control without enabling Invest Sign or other wallets", () => {
+test("kaku-admin can show drift without signing rebalance or enabling Invest Sign", () => {
   const refused = renderAdmin(wallet({ solanaAddress: OTHER }));
-  assert.match(refused, /Sign update_prices \/ rebalance/);
+  assert.match(refused, /Show drift/);
   assert.match(refused, /2000 bps/);
-  assert.match(refused, /disabled=""/);
+  assert.doesNotMatch(refused, /Sign update_prices/);
   assert.doesNotMatch(refused, /Nancy|Pelosi|Invest Sign/);
   assert.match(refused, /does not enable public Invest signing/i);
+  assert.match(refused, /does not sign rebalance/i);
   const allowed = renderAdmin(wallet({ solanaAddress: KAKU_SAN_DEPLOYER }));
-  assert.match(allowed, /Show drift/);
+  assert.match(allowed, /automated keeper/i);
   assert.equal(canCreateKakuSan({ mode: "stub", authenticated: true, solanaAddress: STUB_WALLET_ADDRESS }), false);
 });
 
@@ -243,9 +245,10 @@ test("server rebalance paths never load a keypair; only the optional CLI script 
   }
   assert.match(readFileSync("scripts/kaku-san-keeper-tick.mts", "utf8"), /fromSecretKey/);
   assert.match(readFileSync("scripts/kaku-san-keeper-tick.mts", "utf8"), /must not live in the web app tree/);
+  assert.match(readFileSync("scripts/kaku-san-keeper-tick.mts", "utf8"), /assertKakuSanKeeper/);
 });
 
-test("CLI defaults to dry-run and rejects force/execute-without-keypath without networking", () => {
+test("CLI defaults to dry-run and rejects force/execute-without-keypair without networking", () => {
   for (const args of [["--force-rebalance"], ["--execute", "--vault", VAULT, "--share-mint", MINT], ["--network=mainnet-beta"]]) {
     const result = spawnSync(process.execPath, ["--experimental-strip-types", "scripts/kaku-san-keeper-tick.mts", ...args], { encoding: "utf8" });
     assert.equal(result.status, 1);
