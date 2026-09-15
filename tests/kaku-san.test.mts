@@ -254,6 +254,27 @@ test("discard refuses once the create has been broadcast, even before any on-cha
   assert.equal(createCalls, 1, "a broadcast draft must resume, never re-derive via createVaultTx");
 }));
 
+test("a submit racing a concurrent discard must abort before broadcasting, never re-derive a second vault", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const native = builders(null);
+  let createCalls = 0;
+  native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
+  const prepared = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(createCalls, 1);
+
+  // A concurrent discard wins the race while a submit for the same draft is still in flight (e.g. a
+  // reloaded tab discards a draft the original request is about to broadcast).
+  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: prepared.vault!, shareMint: prepared.shareMint! });
+  assert.equal((await discardKakuSanCreateDraft(discardInput, native, journal)).discarded, true);
+
+  // The in-flight submit's latch call must now fail loudly, aborting submitKakuSanStep before it ever
+  // calls sendRawTransaction, instead of silently no-opping and letting the transaction broadcast.
+  await assert.rejects(markKakuSanCreateBroadcast(prepared.vault!, prepared.shareMint!, journal), /discarded before it could be broadcast/);
+
+  await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+  assert.equal(createCalls, 2, "discard must allow exactly one fresh createVaultTx, not zero and not more");
+}));
+
 test("HTTP discard is no-store and refuses a non-deployer", async () => temp(async dir => {
   const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(null), true, journal);
