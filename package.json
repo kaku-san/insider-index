@@ -12,7 +12,8 @@
     "holdings:ingest": "node --env-file=.env.local --experimental-strip-types scripts/ingest-holdings.mts",
     "indexes:publish": "node --env-file=.env.local --experimental-strip-types scripts/publish-holdings-indexes.mts",
     "catalog:snapshot": "node --experimental-strip-types scripts/snapshot-catalog.mts",
-    "vault:redeem:preflight": "node --experimental-strip-types scripts/redeem-devnet-vault.mts"
+    "vault:redeem:preflight": "node --experimental-strip-types scripts/redeem-devnet-vault.mts",
+    "keeper:devnet": "node --experimental-strip-types scripts/devnet-keeper-tick.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
