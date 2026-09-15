@@ -4,10 +4,11 @@
 
 ## Source bucket (kept verbatim)
 
-Two zips, both kept verbatim:
+Three zips, all kept verbatim:
 
 - `data/insiderindex-source-buckets/pelositracker-top20-handoff/` — original slice-only zip (top 5 + trades).
-- `data/insiderindex-source-buckets/pelositracker-top20full-handoff/` — product dataset: same 20 people plus copy-trade full holdings where PelosiTracker publishes them (Pelosi 15, MTG 76), `holdings-completeness.json`, and `all-copy-portfolios-full-holdings.json`. Everyone else stays top 5 + OTHER; tickers are never invented for OTHER.
+- `data/insiderindex-source-buckets/pelositracker-top20full-handoff/` — copy-trade completeness zip (Pelosi 15, MTG 76).
+- `data/insiderindex-source-buckets/pelositracker-top20rere-handoff/` — person-page source of truth: full ledgers + allTickersTraded where PelosiTracker has filings, copy-trade books only for Pelosi 15 and MTG 76, disclosure still top 5 + OTHER (no invented tickers).
 
 Each bucket has `MANIFEST.json`; `tests/tracker-handoff.test.mts` fails if any byte changes or a file goes missing. Photos (20/20, identical across zips) are mirrored byte-for-byte to `public/tracker/photos/<slug>.jpg`.
 

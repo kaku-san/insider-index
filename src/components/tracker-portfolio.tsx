@@ -103,6 +103,29 @@ export function TrackerTrades({ profile }: { profile: TrackerProfile }) {
   </section>;
 }
 
+export function TrackerLedger({ profile }: { profile: TrackerProfile }) {
+  return <section id="tracker-ledger" className={styles.panel} aria-labelledby="tracker-ledger-title">
+    <div className={styles.sectionHead}>
+      <div><h2 id="tracker-ledger-title">Transaction ledger · information only</h2><p>Full PelosiTracker filings ledger when present. Shown for context; never an input to any index weight. Copy-trade books stay separate.</p></div>
+      <TrackerTag asOf={profile.asOf} />
+    </div>
+    <p className={styles.caption}>{profile.tickersTraded.length ? `${profile.tickersTraded.length} unique tickers traded across ${profile.ledger.length.toLocaleString("en-US")} ledger lines and ${profile.filings.length.toLocaleString("en-US")} filings.` : "PelosiTracker published no filings ledger for this member. That is missing tracker coverage, not evidence of no trading."} Amounts are disclosure bands as published; tickers are not invented.</p>
+    {profile.tickersTraded.length ? <p className={styles.caption}><strong>Tickers traded:</strong> {profile.tickersTraded.join(" · ")}</p> : null}
+    {profile.ledger.length ? <TableRegion label="PelosiTracker transaction ledger, information only">
+      <table className={styles.table}>
+        <thead><tr><th scope="col">Date</th><th scope="col">Ticker</th><th scope="col">Type</th><th scope="col">Amount</th><th scope="col">Filing</th></tr></thead>
+        <tbody>{profile.ledger.map((row) => <tr key={`${row.ordinal}-${row.dateLabel}-${row.ticker ?? row.asset}`}>
+          <td>{row.date ? longDate(row.date) : row.dateLabel}</td>
+          <td><strong>{row.ticker ?? "—"}</strong>{row.asset && row.ticker !== row.asset ? <small> {row.asset}</small> : null}</td>
+          <td><span className={styles.event} data-side={row.side}>{row.sourceType ?? "Trade"}</span></td>
+          <td>{row.amountBand ? disclosedRange(row.amountBand) : row.amountLabel ?? "Amount not given"}</td>
+          <td><small>{[row.filingStatus, row.filingDate].filter(Boolean).join(" · ") || "—"}</small></td>
+        </tr>)}</tbody>
+      </table>
+    </TableRegion> : null}
+  </section>;
+}
+
 export function TrackerFilingStats({ profile }: { profile: TrackerProfile }) {
   const stats = profile.filingStats;
   const days = (value: number | null) => (value === null ? "—" : `${value}d`);

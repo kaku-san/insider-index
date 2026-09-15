@@ -15,7 +15,7 @@ const { TrackerShelf } = await import("../src/components/tracker-shelf.tsx");
 const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 type Portfolio = NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
 
-const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20full-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
+const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20rere-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
 const handoff = normalizeTrackerHandoff(brief);
 const catalogSnapshot = JSON.parse(readFileSync(new URL("../src/lib/venues/catalog-snapshot.json", import.meta.url), "utf8")) as { xstocks: CatalogToken[]; backpack: CatalogToken[] };
 const catalog = { ...indexCatalog([...catalogSnapshot.xstocks, ...catalogSnapshot.backpack]), feeds: [] };
@@ -38,14 +38,14 @@ test("the tracker-first person page labels every tracker figure PelosiTracker ·
   assert.match(html, /<h1>Nancy P Index · Tracker positions<\/h1>/);
   assert.match(html, /src="\/tracker\/photos\/nancy-pelosi\.jpg"/);
   assert.ok((html.match(/PelosiTracker · as of Sep 15, 2026/g) ?? []).length >= 6, "every tracker section carries the source and scrape date");
-  assert.match(html, /PelosiTracker portfolio value<\/dt><dd>\$314\.9M<\/dd><small>Politician-API third-party estimate as of Sep 15, 2026\. Not net worth, not a vault NAV, and not the copy-trade book \(\$23\.2M\)/);
-  assert.match(html, /PelosiTracker 30-day change<\/dt><dd data-tone="negative">-3\.05%/);
+  assert.match(html, /PelosiTracker portfolio value<\/dt><dd>\$312\.1M<\/dd><small>Politician-API third-party estimate as of Sep 15, 2026\. Not net worth, not a vault NAV, and not the copy-trade book \(\$23\.2M\)/);
+  assert.match(html, /PelosiTracker 30-day change<\/dt><dd data-tone="negative">-3\.03%/);
   // Shown book: tracker positions first with their percentage, then the older annual rows.
   const shown = html.slice(html.indexOf('id="shown-book-title"'), html.indexOf('id="tracker-index-title"'));
   assert.match(shown, /Current positions · shown book/);
   assert.match(shown, /copy-trade book/);
   assert.match(shown, /never one total|never added together/);
-  assert.match(shown, /15\.17%/);
+  assert.match(shown, /15\.16%/);
   assert.match(shown, /copy-trade MTM/);
   assert.match(shown, /NVDA<\/strong>/);
   assert.match(shown, /GOOGL<\/strong>/);
@@ -66,13 +66,16 @@ test("the tracker-first person page labels every tracker figure PelosiTracker ·
   // FMP comparison on the same bioguide: both sides present.
   const compare = html.slice(html.indexOf('id="compare-title"'), html.indexOf('id="sectors-title"'));
   assert.match(compare, /FMP target · annual 2024-12-31/);
-  assert.match(compare, /NVDA<\/strong>.*?Both.*?15\.17%/s);
+  assert.match(compare, /NVDA<\/strong>.*?Both.*?15\.16%/s);
   assert.match(compare, /AAPL<\/strong>.*?Both/s);
   assert.match(compare, /href="\/indexes\/fmp-c{64}"/);
   // Sectors, trades (info only, decoded bands), filing stats, series.
-  assert.match(html, /Technology<\/span>.*?67\.39%/s);
+  assert.match(html, /Technology<\/span>.*?67\.21%/s);
   assert.match(html, /Uninvested cash/);
-  const trades = html.slice(html.indexOf('id="tracker-trades-title"'), html.indexOf('id="filing-stats-title"'));
+  const trades = html.slice(html.indexOf('id="tracker-trades-title"'), html.indexOf('id="tracker-ledger-title"'));
+  assert.match(html, /Transaction ledger · information only/);
+  assert.match(html, /49 unique tickers traded across 921 ledger lines/);
+  assert.match(html, /Tickers traded:/);
   assert.match(trades, /Recent trades · information only/);
   assert.match(trades, /never an input to any index weight/);
   assert.match(trades, /BE<\/strong>/);
@@ -83,8 +86,8 @@ test("the tracker-first person page labels every tracker figure PelosiTracker ·
   assert.equal((trades.match(/data-side="buy"/g) ?? []).length, 10);
   assert.match(html, /Total filings<\/dt><dd>65<\/dd>/);
   assert.match(html, /Total transactions<\/dt><dd>921<\/dd>/);
-  assert.match(html, /2,425 daily points/);
-  assert.match(html, /Latest tracker estimate <strong>\$314,903,937<\/strong>/);
+  assert.match(html, /2,426 daily points/);
+  assert.match(html, /Latest tracker estimate <strong>\$312,070,255<\/strong>/);
   assert.match(html, /125 leading zero-value points/);
   assert.match(html, /draws no S&amp;P 500 overlay/);
   assert.doesNotMatch(html, /Historical simulation|\+[0-9.]+% since/);

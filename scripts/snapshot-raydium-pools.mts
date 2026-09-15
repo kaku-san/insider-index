@@ -14,7 +14,7 @@ import { indexCatalog, preferredToken, type CatalogToken } from "../src/lib/venu
 import { MAINNET_USDC_MINT, RAYDIUM_CLMM_PROGRAM, RAYDIUM_CPMM_PROGRAM, type MainnetRaydiumPool, type MainnetRaydiumPoolSnapshot } from "../src/lib/index-vaults/raydium-pools-mainnet.ts";
 
 const RAYDIUM_API = "https://api-v3.raydium.io/pools/info/mint";
-const HANDOFF = new URL("../data/insiderindex-source-buckets/pelositracker-top20full-handoff/top20-agent-brief.json", import.meta.url);
+const HANDOFF = new URL("../data/insiderindex-source-buckets/pelositracker-top20rere-handoff/top20-agent-brief.json", import.meta.url);
 const CATALOG = new URL("../src/lib/venues/catalog-snapshot.json", import.meta.url);
 const OUT = new URL("../src/lib/index-vaults/raydium-pools-mainnet.json", import.meta.url);
 

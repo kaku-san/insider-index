@@ -7,11 +7,13 @@ import { normalizeTrackerHandoff, trackerAmountBand, trackerSummary, TRACKER_AS_
 
 const SLICE_BUCKET = new URL("../data/insiderindex-source-buckets/pelositracker-top20-handoff/", import.meta.url);
 const FULL_BUCKET = new URL("../data/insiderindex-source-buckets/pelositracker-top20full-handoff/", import.meta.url);
+const RERE_BUCKET = new URL("../data/insiderindex-source-buckets/pelositracker-top20rere-handoff/", import.meta.url);
 const slicePath = (name: string) => new URL(name, SLICE_BUCKET).pathname;
 const fullPath = (name: string) => new URL(name, FULL_BUCKET).pathname;
+const rerePath = (name: string) => new URL(name, RERE_BUCKET).pathname;
 const sha256 = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
 const sliceBrief = JSON.parse(readFileSync(slicePath("top20-agent-brief.json"), "utf8"));
-const brief = JSON.parse(readFileSync(fullPath("top20-agent-brief.json"), "utf8"));
+const brief = JSON.parse(readFileSync(rerePath("top20-agent-brief.json"), "utf8"));
 
 function walk(dir: string, prefix = ""): string[] {
   return readdirSync(dir).sort().flatMap((name) => {
@@ -42,6 +44,10 @@ test("the full-handoff source bucket is itemized: MANIFEST.json matches every ex
   assertManifest(FULL_BUCKET.pathname, fullPath, 26, JSON.parse(readFileSync(fullPath("holdings-completeness.json"), "utf8")).scrapedAt);
 });
 
+test("the rere-handoff source bucket is itemized: MANIFEST.json matches every extracted file byte for byte", () => {
+  assertManifest(RERE_BUCKET.pathname, rerePath, 43, JSON.parse(readFileSync(rerePath("completeness-summary.json"), "utf8")).scrapedAt);
+});
+
 test("all 20 profiles normalize with photos mirrored into public/, unique bioguide IDs and full slices", () => {
   const handoff = normalizeTrackerHandoff(brief);
   assert.equal(handoff.count, 20);
@@ -56,19 +62,24 @@ test("all 20 profiles normalize with photos mirrored into public/, unique biogui
   assert.equal(handoff.profiles[0].name, "Nancy Pelosi");
   for (const profile of handoff.profiles) {
     const publicPhoto = new URL(`../public${profile.photo.local}`, import.meta.url).pathname;
-    assert.equal(sha256(publicPhoto), sha256(fullPath(`photos/${profile.slug}.jpg`)), `${profile.slug} photo mirrored verbatim`);
-    assert.equal(sha256(fullPath(`photos/${profile.slug}.jpg`)), sha256(slicePath(`photos/${profile.slug}.jpg`)), `${profile.slug} photo identical across both zips`);
+    assert.equal(sha256(publicPhoto), sha256(rerePath(`photos/${profile.slug}.jpg`)), `${profile.slug} photo mirrored verbatim`);
+    assert.equal(sha256(rerePath(`photos/${profile.slug}.jpg`)), sha256(slicePath(`photos/${profile.slug}.jpg`)), `${profile.slug} photo identical across zips`);
     if (profile.id === "P000197") {
       assert.equal(profile.holdingsBasis, "copy-trade-full");
       assert.equal(profile.topHoldings.length, 15);
       assert.equal(profile.disclosureSlice.length, 5);
       assert.equal(profile.copyTrade?.holdingsCount, 15);
+      assert.equal(profile.ledger.length, 921);
+      assert.equal(profile.tickersTraded.length, 49);
+      assert.equal(profile.filings.length, 83);
       assert.ok(!profile.topHoldings.some((h) => Object.keys(h).includes("quantity")), "copy-trade share counts are not a holding field");
     } else if (profile.id === "G000596") {
       assert.equal(profile.holdingsBasis, "copy-trade-full");
       assert.equal(profile.topHoldings.length, 76);
       assert.equal(profile.disclosureSlice.length, 5);
       assert.equal(profile.copyTrade?.holdingsCount, 76);
+      assert.ok(profile.ledger.length > 0);
+      assert.ok(profile.tickersTraded.length > 0);
     } else {
       assert.equal(profile.holdingsBasis, "disclosure-slice");
       assert.equal(profile.topHoldings.length, 5);
@@ -76,6 +87,7 @@ test("all 20 profiles normalize with photos mirrored into public/, unique biogui
       assert.equal(profile.copyTrade, null);
       assert.ok(profile.unitemizedOther, `${profile.slug} keeps OTHER as an aggregate, not invented tickers`);
       assert.match(profile.unitemizedOther!.label, /OTHER/i);
+      assert.ok(!profile.topHoldings.some((h) => /OTHER/i.test(h.ticker)), "OTHER is not invented as a ticker");
     }
     assert.equal(profile.recentTrades.length, 10);
     assert.ok(profile.sectors.length >= 1);
@@ -94,16 +106,18 @@ test("all 20 profiles normalize with photos mirrored into public/, unique biogui
   assert.equal(pelosi.filingStats.tracked, true);
   assert.equal(pelosi.filingStats.totalFilings, 65);
   assert.equal(pelosi.performance.leadingZeroPoints, 125);
-  assert.equal(pelosi.performance.points.length, 2550);
+  assert.equal(pelosi.performance.points.length, 2551);
   const greene = handoff.profiles.find((p) => p.id === "G000596")!;
   assert.equal(greene.currentMember, false);
   const summary = trackerSummary(pelosi);
   assert.deepEqual(summary.topTickers.slice(0, 5), ["NVDA", "GOOGL", "BE", "AVGO", "PANW"]);
   assert.equal(summary.holdingsListed, 15);
-  assert.equal(summary.portfolioValueUsd, 314903941);
+  assert.equal(summary.portfolioValueUsd, 312070251);
   assert.match(summary.portfolioValueLabel, /PelosiTracker/);
-  assert.equal(pelosi.copyTrade?.totalValueUsd, 23202729);
+  assert.equal(pelosi.copyTrade?.totalValueUsd, 23215340);
   assert.notEqual(pelosi.copyTrade?.totalValueUsd, pelosi.portfolio.valueUsd);
+  assert.ok(pelosi.tickersTraded.includes("BE"));
+  assert.ok(pelosi.ledger.every((row) => row.amountBand === null || (row.amountBand.low !== 0 && row.amountBand.high !== 0)));
   const sliceOnly = normalizeTrackerHandoff(sliceBrief);
   assert.ok(sliceOnly.profiles.every((p) => p.holdingsBasis === "disclosure-slice" && p.topHoldings.length === 5));
 });

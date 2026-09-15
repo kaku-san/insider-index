@@ -72,6 +72,35 @@ export type TrackerFilingStats = {
   totalTransactions: number | null;
 };
 export type TrackerNewsItem = { title: string; date: string | null; source: string | null; url: string | null; description: string | null };
+export type TrackerLedgerEntry = {
+  ordinal: number;
+  date: string | null;
+  dateLabel: string;
+  ticker: string | null;
+  asset: string | null;
+  side: "buy" | "sell" | "other";
+  sourceType: string | null;
+  amountBand: Band | null;
+  amountLabel: string | null;
+  filingStatus: string | null;
+  notificationDate: string | null;
+  filingDate: string | null;
+  details: string | null;
+  flags: TrackerTradeFlag[];
+};
+export type TrackerFiling = { id: string; filingDate: string | null; filingType: string | null; pdfUrl: string | null; transactionCount: number | null };
+
+/** Parse a PTR-style "$100,001 - $250,000" label into a band. Unknown text stays null, never `$0`. */
+export function ptrAmountBand(label: unknown): Band | null {
+  const text = typeof label === "string" && label.trim() ? label.trim() : null;
+  if (!text) return null;
+  const match = /\$?([0-9][0-9,]*)\s*[-–]\s*\$?([0-9][0-9,]*)/.exec(text);
+  if (!match) return null;
+  const low = Number(match[1].replaceAll(",", ""));
+  const high = Number(match[2].replaceAll(",", ""));
+  if (!Number.isFinite(low) || !Number.isFinite(high) || low <= 0 || high <= 0) return null;
+  return { low, high };
+}
 
 export type TrackerProfile = {
   source: typeof TRACKER_SOURCE;
@@ -106,6 +135,10 @@ export type TrackerProfile = {
   holdingsBasis: HoldingsBasis;
   copyTrade: CopyTradeMeta | null;
   recentTrades: TrackerTrade[];
+  /** Full PelosiTracker transaction ledger when present. Information only — never an index input. */
+  ledger: TrackerLedgerEntry[];
+  filings: TrackerFiling[];
+  tickersTraded: string[];
   performance: { points: TrackerPerformancePoint[]; leadingZeroPoints: number; firstDate: string | null; lastDate: string | null };
   news: TrackerNewsItem[];
   coverage: { holdingsSlice: number; tradesSlice: number; note: string };
@@ -153,6 +186,43 @@ function copyTradeHolding(raw: unknown, ordinal: number): TrackerHolding | null 
   const ticker = str(row.symbol)?.toUpperCase() ?? str(row.ticker)?.toUpperCase() ?? null;
   if (!ticker) return null;
   return { ordinal, ticker, name: str(row.name), valueUsd: num(row.marketValue), percentage: num(row.weight) };
+}
+
+function ledgerEntry(raw: unknown, ordinal: number, asOf: string): TrackerLedgerEntry | null {
+  const row = rec(raw);
+  const ticker = str(row.ticker)?.toUpperCase() ?? null;
+  const asset = str(row.asset);
+  const amountLabel = str(row.amount);
+  const details = str(row.details);
+  const filingDate = isoDate(row.filingDate);
+  if (!ticker && !asset && !amountLabel && !details && !filingDate) return null;
+  const flags: TrackerTradeFlag[] = [];
+  const dateText = str(row.transactionDate) ?? str(row.date) ?? "Date not given";
+  const date = isoDate(row.transactionDate) ?? isoDate(row.date);
+  if (!date) flags.push("non-date-label");
+  else if (date > asOf) flags.push("after-scrape-date");
+  const amountBand = ptrAmountBand(amountLabel) ?? trackerAmountBand(num(row.amount));
+  if (!amountBand) flags.push("unknown-band");
+  const filingStatus = str(row.filingStatus);
+  if (!filingStatus) flags.push("filing-status-missing");
+  const sourceType = str(row.transactionType) ?? str(row.type);
+  const side: TrackerLedgerEntry["side"] = /^(P|buy|purchase)/i.test(sourceType ?? "") ? "buy" : /^(S|sell|sale)/i.test(sourceType ?? "") ? "sell" : "other";
+  return {
+    ordinal, date, dateLabel: dateText, ticker, asset, side, sourceType, amountBand, amountLabel,
+    filingStatus, notificationDate: isoDate(row.notificationDate), filingDate: isoDate(row.filingDate),
+    details, flags,
+  };
+}
+
+function filing(raw: unknown): TrackerFiling | null {
+  const row = rec(raw);
+  const id = str(row.id);
+  if (!id) return null;
+  const pdf = str(row.pdfUrl);
+  return {
+    id, filingDate: isoDate(row.filingDate), filingType: str(row.filingType),
+    pdfUrl: pdf && /^https:\/\//i.test(pdf) ? pdf : null, transactionCount: num(row.transactionCount),
+  };
 }
 
 function unitemizedOther(raw: unknown): UnitemizedOther | null {
@@ -230,7 +300,7 @@ export function normalizeTrackerProfile(raw: unknown, rank: number, scrapedAt: s
   const disclosureSlice = list(row.topHoldings).flatMap((entry, i) => { const h = holding(entry, i); return h ? [h] : []; });
   const disclosure = rec(row.disclosureHoldings);
   const other = unitemizedOther(disclosure.unitemizedOther);
-  const copyRaw = rec(row.copyTradePortfolioHoldings);
+  const copyRaw = Object.keys(rec(row.copyTradePortfolioHoldings)).length ? rec(row.copyTradePortfolioHoldings) : rec(row.copyTradePortfolio);
   const copyHoldings = list(copyRaw.holdings).flatMap((entry, i) => { const h = copyTradeHolding(entry, i); return h ? [h] : []; })
     .sort((a, b) => (b.percentage ?? -1) - (a.percentage ?? -1) || a.ticker.localeCompare(b.ticker))
     .map((h, i) => ({ ...h, ordinal: i }));
@@ -242,7 +312,11 @@ export function normalizeTrackerProfile(raw: unknown, rank: number, scrapedAt: s
   } : null;
   return {
     source: TRACKER_SOURCE, sourceLabel: TRACKER_SOURCE_LABEL, asOf: TRACKER_AS_OF, scrapedAt,
-    sourceUrl: (() => { const url = str(row.sourceUrl); return url && /^https:\/\/pelositracker\.app\//.test(url) ? url : null; })(),
+    sourceUrl: (() => {
+      const urls = rec(row.sourceUrls);
+      const url = str(row.sourceUrl) ?? str(urls.politician);
+      return url && /^https:\/\/pelositracker\.app\//.test(url) ? url : null;
+    })(),
     rank, slug, id, name, title, party: str(row.party), state: str(row.state),
     district: row.district === null || row.district === undefined ? null : String(row.district),
     chamber: chamberOf(title),
@@ -255,14 +329,17 @@ export function normalizeTrackerProfile(raw: unknown, rank: number, scrapedAt: s
     sectors: list(row.sectorDistribution).flatMap((entry) => { const s = rec(entry); const sector = str(s.sector), percentage = num(s.percentage); return sector && percentage !== null ? [{ sector, percentage }] : []; }),
     topHoldings, disclosureSlice, unitemizedOther: other, holdingsBasis, copyTrade,
     recentTrades: list(row.recentTrades).flatMap((entry, i) => { const t = trade(entry, i, TRACKER_AS_OF); return t ? [t] : []; }),
+    ledger: list(row.allTransactions).flatMap((entry, i) => { const t = ledgerEntry(entry, i, TRACKER_AS_OF); return t ? [t] : []; }),
+    filings: list(row.allFilings).flatMap((entry) => { const f = filing(entry); return f ? [f] : []; }),
+    tickersTraded: [...new Set(list(row.allTickersTraded).flatMap((value) => { const ticker = str(value)?.toUpperCase(); return ticker ? [ticker] : []; }))],
     performance: performance(row.performanceHistory),
     news: news(row.news),
     coverage: {
       holdingsSlice: holdingsBasis === "copy-trade-full" ? topHoldings.length : TRACKER_HOLDINGS_SLICE,
       tradesSlice: TRACKER_TRADES_SLICE,
       note: holdingsBasis === "copy-trade-full"
-        ? `PelosiTracker copy-trade portfolio: ${topHoldings.length} itemized holdings as scraped ${TRACKER_AS_OF}. Different dollar total from the politician disclosure estimate (top ${TRACKER_HOLDINGS_SLICE} + OTHER). Neither is a vault NAV. Trades remain the politician-API recent slice and are never index weights.`
-        : `PelosiTracker top ${TRACKER_HOLDINGS_SLICE} positions plus an unitemized OTHER aggregate as scraped ${TRACKER_AS_OF}; not every lot ever filed. Tickers are not invented for OTHER. ~${TRACKER_TRADES_SLICE} most recent trades are information only.`,
+        ? `PelosiTracker copy-trade portfolio: ${topHoldings.length} itemized holdings as scraped ${TRACKER_AS_OF}. Different dollar total from the politician disclosure estimate (top ${TRACKER_HOLDINGS_SLICE} + OTHER). Neither is a vault NAV. The transaction ledger and allTickersTraded are information only and never index weights.`
+        : `PelosiTracker top ${TRACKER_HOLDINGS_SLICE} positions plus an unitemized OTHER aggregate as scraped ${TRACKER_AS_OF}; not every lot ever filed. Tickers are not invented for OTHER. The transaction ledger (when PelosiTracker has filings) is information only.`,
     },
   };
 }
@@ -294,6 +371,7 @@ export function normalizeTrackerHandoff(raw: unknown): TrackerHandoff {
   if (count !== profiles.length) issues.push(`handoff count ${count} but ${profiles.length} profiles parsed`);
   const partyMix: Record<string, number> = {};
   for (const [party, value] of Object.entries(rec(brief.partyMix))) { const n = num(value); if (n !== null) partyMix[party] = n; }
+  if (!Object.keys(partyMix).length) for (const profile of profiles) { const party = profile.party ?? "Unknown"; partyMix[party] = (partyMix[party] ?? 0) + 1; }
   return { source: TRACKER_SOURCE, sourceLabel: TRACKER_SOURCE_LABEL, asOf: TRACKER_AS_OF, scrapedAt, selection: str(brief.selection), count: profiles.length, partyMix, profiles, issues };
 }
 

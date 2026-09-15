@@ -9,7 +9,7 @@ import { buildShownBook, compareWithFmp } from "../src/lib/tracker/shown-book.ts
 import { buildTrackerPersonView, trackerIndexPerson } from "../src/lib/tracker/views.ts";
 import { baseIndexName } from "../src/lib/fmp/index-name.ts";
 
-const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20full-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
+const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20rere-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
 const handoff = normalizeTrackerHandoff(brief);
 const pelosi = handoff.profiles[0];
 const catalogSnapshot = JSON.parse(readFileSync(new URL("../src/lib/venues/catalog-snapshot.json", import.meta.url), "utf8")) as { xstocks: CatalogToken[]; backpack: CatalogToken[] };
@@ -153,7 +153,7 @@ test("the shown book puts copy-trade positions first for Pelosi, appends older a
   assert.equal(book.fmpReferenceDate, "2024-12-31");
   assert.deepEqual(book.rows.slice(0, 5).map((r) => r.ticker), ["NVDA", "GOOGL", "BE", "AVGO", "PANW"]);
   assert.equal(book.rows[0].source, "both");
-  assert.equal(book.rows[0].tracker?.percentage, 15.17);
+  assert.equal(book.rows[0].tracker?.percentage, 15.16);
   assert.equal(book.rows.find((r) => r.ticker === "GOOGL")?.source, "both");
   assert.equal(book.rows.find((r) => r.ticker === "AVGO")?.fmp?.rows[0].kind, "option", "AVGO stock on the tracker sits beside the AVGO option on the filing; classes stay visible");
   assert.equal(book.rows.find((r) => r.name === "Union Bank of California")?.source, "fmp-annual");
@@ -183,7 +183,7 @@ test("the FMP comparison shows both sides by exact ticker and reports overlap wi
   const nvda = comparison.rows.find((r) => r.ticker === "NVDA");
   const aapl = comparison.rows.find((r) => r.ticker === "AAPL");
   const googl = comparison.rows.find((r) => r.ticker === "GOOGL");
-  assert.deepEqual([nvda?.presence, nvda?.trackerPercentage, nvda?.fmpWeightBps], ["both", 15.17, 1553]);
+  assert.deepEqual([nvda?.presence, nvda?.trackerPercentage, nvda?.fmpWeightBps], ["both", 15.16, 1553]);
   assert.equal(aapl?.presence, "both");
   assert.equal(googl?.presence, "both");
   assert.equal(googl?.fmpWeightBps, 1553);

@@ -14,7 +14,7 @@ import {
 } from "./person-portfolio";
 import {
   ShownBookPanel, TrackerCompare, TrackerFilingStats, TrackerHeroStats, TrackerIdentity,
-  TrackerIndexPanel, TrackerSectors, TrackerSeries, TrackerSourceStrip, TrackerTag, TrackerTrades,
+  TrackerIndexPanel, TrackerLedger, TrackerSectors, TrackerSeries, TrackerSourceStrip, TrackerTag, TrackerTrades,
 } from "./tracker-portfolio";
 
 export type SavedPortfolio = Awaited<ReturnType<StoredPeopleService["portfolio"]>>;
@@ -175,6 +175,7 @@ function TrackerPerson({ id, tracker, resource }: { id: string; tracker: Tracker
     <TrackerCompare comparison={comparison} fmpIndexHref={fmpIndexHref} fmpAvailable={Boolean(book)} />
     <TrackerSectors profile={profile} />
     <TrackerTrades profile={profile} />
+    <TrackerLedger profile={profile} />
     <TrackerFilingStats profile={profile} />
     <TrackerSeries profile={profile} />
     <TrackerIdentity profile={profile} />
