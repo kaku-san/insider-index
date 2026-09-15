@@ -22,7 +22,7 @@ import {
   prepareKakuSanStep,
 } from "../src/lib/index-vaults/kaku-san-create.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "../src/lib/index-vaults/raydium-oracles.ts";
-import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
+import { NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import {
   applyKakuSanSubmit, canCreateKakuSan, clearKakuSanReceipt, loadKakuSanReceipt, mergeKakuSanObservation,
   nextKakuSanStep, parseKakuSanReceipt, reconcileKakuSanCreateDraft, saveKakuSanReceipt, signPreparedKakuSan,
@@ -90,7 +90,7 @@ function unsignedPayload(payer = KAKU_SAN_DEPLOYER) {
   return { tx_b64: Buffer.from(tx.serialize()).toString("base64"), payer, message_version: "0" as const, recent_blockhash: "", lookup_tables: [] as string[], instructions: [] };
 }
 
-function builders(vaultAccount: { data?: Uint8Array } | null = { data: new Uint8Array(1) }, fetched: Vault | null = null): NativeVaultBuilders {
+function builders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null = { data: new Uint8Array(1) }, fetched: Vault | null = null): NativeVaultBuilders {
   const payload = { batches: [{ transactions: [unsignedPayload()] }] };
   return {
     network: "mainnet-beta",
@@ -227,8 +227,20 @@ test("discard clears an unconfirmed draft and permits exactly one new createVaul
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
   assert.equal(createCalls, 2, "discard must allow exactly one fresh createVaultTx");
 
-  const confirmed = builders({ data: new Uint8Array(1) });
+  const confirmed = builders({ data: new Uint8Array(1), owner: new PublicKey(SYMMETRY_PROGRAM_ID) });
   await assert.rejects(discardKakuSanCreateDraft(discardInput, confirmed, journal), /exists on-chain/);
+}));
+
+test("discard is not fooled by a stray-funded address at the derived vault PDA that is not a real Symmetry vault", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  const native = builders(null);
+  await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
+
+  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT });
+  // An unrelated System-Program-owned address that merely received a stray balance at the derived vault
+  // PDA must never be mistaken for a created Symmetry vault.
+  const strayFunded = builders({ data: new Uint8Array(0), owner: SystemProgram.programId });
+  assert.equal((await discardKakuSanCreateDraft(discardInput, strayFunded, journal)).discarded, true);
 }));
 
 test("discard refuses once the create has been broadcast, even before any on-chain confirmation is observable", async () => temp(async dir => {
