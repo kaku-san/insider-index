@@ -4,7 +4,7 @@ The September 14, 2026 revision-3 contract handoff selects **one existing Symmet
 
 ## Current release boundary
 
-**No transactions broadcast, no funds spent, no wallet key loaded.** Public funds, native-USDC exit, optional wallet conversion, automatic signing and native recovery actions remain disabled. There is no environment variable that silently enables them. The native seed/deposit/share-transfer/redemption/fee roundtrip is **NOT_RUN**, not PASS. This is integration infrastructure, not a launch-ready or audited vault.
+The initial integration was read-only. A separately authorized devnet-only test has since created one unseeded vault; its 0.1-USDC deposit stopped before broadcasting because the wallet had no SDK-USDC. See [receipt, addresses and continuation prerequisites](../../../evidence/vaults/DEVNET_TEST_VAULT.md). No runtime signing path was added. Public funds, native-USDC exit, optional wallet conversion, automatic signing and native recovery actions remain disabled. There is no environment variable that silently enables them. The native seed/deposit/share-transfer/redemption/fee roundtrip is **NOT_RUN**, not PASS. This is integration infrastructure, not a launch-ready or audited vault.
 
 Legacy `/api/indexes/quote` and `/api/indexes/execute` return `503` without payloads/signatures. The old `STUBIDX`/in-memory index position writer is removed. Index pages display model allocations separately from unavailable actual native holdings. Existing single-trade Jupiter execution and full disclosed books remain separate and intact.
 
@@ -75,4 +75,4 @@ The handoff's 77 Python reference tests passed locally using its reference packa
 5. Implement/test persistent claim/fee reconciliation and stage-specific cancellation, bounded normal keeper execution and delayed strategy activation, without holders signing rebalances or force-mode fallback. Test actual native AND thresholds, cooldown/window/bounty, concurrent keeper races and post-send timeouts.
 6. Integrate published FMP models, share-mint position and operation auth APIs (wallet nonce/session/CSRF/rate limits), actual net-of-fee NAV history and claim-resume UX. Only then consider optional exact-credit user-authorized USDC conversion. Native guaranteed-USDC exit stays OFF absent separate proof.
 
-No deployer funding authorization, funded test, production deployment or public-funds approval is included in this delivery.
+The integration itself confers no funding authorization. The separate devnet creation receipt is not a successful funded deposit roundtrip, production deployment or public-funds approval.
