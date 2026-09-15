@@ -1,0 +1,43 @@
+{
+  "status": "BLOCKED_MISSING_BASE_INTEGRATION",
+  "rpc": "https://api.devnet.solana.com",
+  "commitment": "finalized",
+  "slot": 498562791,
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "wallet": "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+  "walletLamports": 5000000000,
+  "authorizedSpendCapLamports": 5000000000,
+  "programId": "BASKT7aKd8n7ibpUbwLP3Wiyxyi3yoiXsxBk4Hpumate",
+  "programExecutable": true,
+  "programOwner": "BPFLoaderUpgradeab1e11111111111111111111111",
+  "programDataAddress": "5U2UnJKWK8woHwzud2soiJoD7nXxitNRLXBCAojeaETc",
+  "sdkReferenceVersion": "1.0.22",
+  "sdkDevnetUsdc": {
+    "mint": "USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT",
+    "initialized": true,
+    "decimals": 6,
+    "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "mintAuthority": "DRaynTEgz5kt9oXvPxN5jhkFxvJZAd1kNy4TeABcinck",
+    "freezeAuthority": "DRaynTEgz5kt9oXvPxN5jhkFxvJZAd1kNy4TeABcinck",
+    "walletTokenBalance": "NOT_QUERIED",
+    "depositCompatibility": "NOT_TESTED"
+  },
+  "vault": null,
+  "shareMint": null,
+  "signatures": [],
+  "transactionsBroadcast": 0,
+  "lamportsSpent": 0,
+  "keypairLoaded": false,
+  "mainnetRpcUsed": false,
+  "create": "NOT_RUN",
+  "deposit": "NOT_RUN",
+  "blocker": "Launch base 1ee9239 does not contain src/lib/index-vaults, deployer scripts, or the Symmetry SDK dependency. Existing read-only integration is on fm/stocklana-vault-native-f1 at f86af32, not on this task base. Await supervisor integration guidance rather than import another lane's unpublished change set or bypass its release gates.",
+  "handoff": "Revision-3 handoff found in supervisor data/stocklana-contract-handoff, not in this checkout. Read START_HERE.md, DEPLOYER_RUNBOOK.md, STATUS.md and inspected existing branch adapter/read-only evidence.",
+  "limitations": [
+    "Read-only direct JSON-RPC observations; no SDK execution yet.",
+    "Program existence does not attest its binary, global configuration, mint oracle support, or security.",
+    "SDK-specific devnet USDC exists; this does not establish this wallet holds it or has faucet authority.",
+    "No Pelosi or other securities mint was verified; no basket or funded vault is claimed.",
+    "Public funds and application deposit controls were not changed."
+  ]
+}
