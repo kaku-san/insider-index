@@ -10,7 +10,7 @@ npm run vault:redeem:preflight -- --shares-raw 1
 
 The amount is an exact positive integer in native share base units (6 decimals); `1` means 0.000001 shares, not one share. Values above JavaScript's safe integer limit are rejected because the pinned SDK accepts a number. Exit **2** means an observed safe stop; exit **1** means invalid input/RPC/identity/encoding failure. Neither means redemption succeeded. There are no wallet, network, vault or broadcast flags.
 
-[`devnet-redeem.ts`](../src/lib/index-vaults/devnet-redeem.ts) owns the fixed RPC/genesis, program, vault, share mint and test-wallet identity. The CLI offers no override for them, and it checks the devnet genesis before native reads.
+The preflight derives the vault/share identity from [`devnet-contract.ts`](../src/lib/index-vaults/devnet-contract.ts), the program/test-wallet identity from [`devnet-deposit.ts`](../src/lib/index-vaults/devnet-deposit.ts), and the devnet genesis plus complete keep-token rule from [`symmetry-adapter.ts`](../src/lib/index-vaults/symmetry-adapter.ts). [`devnet-redeem.ts`](../src/lib/index-vaults/devnet-redeem.ts) fixes the RPC endpoint and offers no identity override; it checks the canonical devnet genesis before native reads.
 
 The observer checks native program/existing vault identity, creator/host, initialized classic SPL share mint, authority and decimals. It sums actual owner share accounts separately from unfrozen associated-account shares (the SDK burns from the ATA). Any existing owner intent blocks another burn, even if it cannot be decoded. Active vault rebalances are conservatively blocked.
 
