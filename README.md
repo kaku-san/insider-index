@@ -96,7 +96,7 @@ A profile does not guarantee an annual book. `npm run holdings:ingest -- --save`
 
 ## Devnet vault settlement (Raydium-only prices)
 
-Symmetry vault pricing is **Raydium pools only**: no Pyth oracle type, no Hermes client, no `HERMES_*`/`PYTH_*` environment, nothing paid. `npm run vault:settle:devnet -- --step observe` reads the one existing execution-test vault; the other steps (`deposit`, `lock`, `update-prices`, `mint`, `claim-bounty`, `refresh-pool`) dry-run by default and only sign with the authorized devnet keypair under `--execute`. A full deposit → lock → Raydium `update_prices` → mint → claim roundtrip is recorded in [`evidence/vaults/DEVNET_TEST_VAULT.md`](evidence/vaults/DEVNET_TEST_VAULT.md); procedure and caveats in [docs/devnet-vault-settle.md](docs/devnet-vault-settle.md). This is an operator tool; it does not enable app deposits or change public investment gates.
+Symmetry vault pricing is **Raydium pools only**: no Pyth oracle type, no Hermes client, no `HERMES_*`/`PYTH_*` environment, nothing paid. `npm run vault:settle:devnet -- --step observe` reads the one existing execution-test vault; the other steps (`deposit`, `lock`, `update-prices`, `mint`, `claim-bounty`) dry-run by default and only sign with the authorized devnet keypair under `--execute`. A full deposit → lock → Raydium `update_prices` → mint → claim roundtrip is recorded in [`evidence/vaults/DEVNET_TEST_VAULT.md`](evidence/vaults/DEVNET_TEST_VAULT.md); procedure and caveats in [docs/devnet-vault-settle.md](docs/devnet-vault-settle.md). This is an operator tool; it does not enable app deposits or change public investment gates.
 
 ## Devnet vault redemption diagnostic
 

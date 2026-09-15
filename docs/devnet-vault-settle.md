@@ -15,7 +15,6 @@ npm run vault:settle:devnet -- --step observe
 npm run vault:settle:devnet -- --step <claim-bounty|update-prices|mint> --intent <PUBKEY> [--execute]
 npm run vault:settle:devnet -- --step deposit --usdc-raw 100000 [--execute]
 npm run vault:settle:devnet -- --step lock [--execute]
-npm run vault:settle:devnet -- --step refresh-pool [--usdc-raw 20000] [--execute]
 ```
 
 - Default is **dry-run**: build, decode and `simulateTransaction` only; no signer is loaded and the RPC wrapper rejects `sendTransaction`.
@@ -27,7 +26,7 @@ npm run vault:settle:devnet -- --step refresh-pool [--usdc-raw 20000] [--execute
 
 1. `deposit` = `buyVaultTx` (init intent + contribute). Refuses if the owner already has an intent.
 2. `lock` = `lockDepositsTx`; the intent moves to `update_prices`.
-3. `update-prices` = Raydium-only native instruction. Refuses when the pool observation is older than the installed staleness threshold; run `refresh-pool` (a small `swap_base_input` on the documented pool, from the wallet's own token accounts) first if needed.
+3. `update-prices` = Raydium-only native instruction. Refuses when the pool observation is older than the installed staleness threshold.
 4. Auctions run for the on-chain window (about 175 s here) — `observe` reports `auction-wait` until they end.
 5. `mint` = `mintTx`; shares arrive in the owner's share account.
 6. `claim-bounty` = `claimBountyTx`; returns the bounty to the keeper and closes the intent. Also the correct step for a post-mint intent that older attempts tried to cancel or re-price.
@@ -37,7 +36,7 @@ Every step re-reads the intent and refuses unless the SDK-derived next action ma
 ## Devnet-specific caveats
 
 - The Symmetry instruction layout includes two fixed WSOL/USDC custody reference accounts as program constants. They are not vault oracles and this tool never updates them; on devnet the USDC leg (pool quote side priced in WSOL) therefore reads ~1.23 because the pool's ratio differs from the program's stale WSOL reference. Deposit valuation and vault TVL use the same prices, so the mint ratio stays fair; on mainnet with live pools the leg prices converge to market.
-- The pool only records observations on swaps; with no organic devnet volume the price goes stale after the installed 3600 s and must be refreshed by a swap.
+- The pool only records observations on swaps; with no organic devnet volume the price goes stale after the installed 3600 s.
 - Devnet oracle thresholds (9999 bps confidence/volatility/slippage, min liquidity 0) are test values. Production listing needs a deep Raydium pool per mint and real thresholds.
 - No flash-swap settlement, automated rebalance, redemption, share transfer or fee claim is run by this tool; the vault stays 100% USDC against a 50/50 target until a keeper rebalances.
 

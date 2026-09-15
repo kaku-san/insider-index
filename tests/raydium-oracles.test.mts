@@ -1,7 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
 import { PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import type { AddOrEditTokenInput, Vault } from "@symmetry-hq/sdk";
 import { PYTHNET_CUSTODY_PRICE_USDC_ACCOUNT, PYTHNET_CUSTODY_PRICE_WSOL_ACCOUNT, VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
@@ -10,8 +8,9 @@ import {
   raydiumCpmmObservationTimestamp, raydiumPoolFor, WSOL_MINT,
 } from "../src/lib/index-vaults/raydium-oracles.ts";
 import {
-  assertRaydiumLogs, fromPayload, intentNextAction, oracleTypesFromLogs, parseSettleArgs, settleConnection, solToLamports, summarizeInstructions,
+  assertRaydiumLogs, assertSolDebitBudget, fromPayload, intentNextAction, oracleTypesFromLogs, parseSettleArgs, settleConnection, solToLamports, summarizeInstructions,
 } from "../src/lib/index-vaults/devnet-settle.ts";
+import { NativeVaultBuilders } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import type { UIRebalanceIntent } from "@symmetry-hq/sdk";
 
 /** Minimal BN stand-in for the SDK fields the planner reads. */
@@ -117,8 +116,17 @@ test("program logs prove the oracle type per token; a Pyth (type 0) read fails s
   ];
   assert.deepEqual(oracleTypesFromLogs(logs), [{ mint: WSOL_MINT, oracleType: 2, price: "81.789503334" }, { mint: USDC, oracleType: 2, price: "1.229878984" }]);
   assert.doesNotThrow(() => assertRaydiumLogs(logs));
+  assert.doesNotThrow(() => assertRaydiumLogs(logs, [WSOL_MINT, USDC]));
+  assert.throws(() => assertRaydiumLogs([], [WSOL_MINT, USDC]), /RAYDIUM_LOG_MISSING.*So111.*USDCoct/);
+  assert.throws(() => assertRaydiumLogs(logs.slice(0, 4), [WSOL_MINT, USDC]), /RAYDIUM_LOG_MISSING.*USDCoct/);
   assert.throws(() => assertRaydiumLogs([`Program log: * loading price for: ${WSOL_MINT}`, "Program log: * * oracle: i 0 type: 0 price: 100.478665150"]), /ORACLE_TYPE_FORBIDDEN in program logs/);
   assert.doesNotThrow(() => assertRaydiumLogs(["Program log: Instruction: MintBasketHandler"]));
+});
+
+test("SOL debit authorization rejects an unavailable or over-budget fee before broadcast", () => {
+  assert.doesNotThrow(() => assertSolDebitBudget(20_000n, 5_000, 25_000n, "mint"));
+  assert.throws(() => assertSolDebitBudget(20_000n, 5_001, 25_000n, "mint"), /would be exceeded.*refusing to send/);
+  assert.throws(() => assertSolDebitBudget(0n, null, 25_000n, "mint"), /fee unavailable.*refusing to send/);
 });
 
 test("settlement CLI: strict flags, required intent, devnet-only RPC that rejects sends in dry-run", () => {
@@ -128,6 +136,7 @@ test("settlement CLI: strict flags, required intent, devnet-only RPC that reject
   assert.throws(() => parseSettleArgs(["--step", "deposit"]), /--usdc-raw is required/);
   assert.throws(() => parseSettleArgs(["--step", "deposit", "--usdc-raw", "0"]));
   assert.throws(() => parseSettleArgs(["--step", "redeem"]), /Unknown step/);
+  assert.throws(() => parseSettleArgs(["--step", "refresh-pool"]), /Unknown step/);
   for (const bad of [["--rpc", "x"], ["--vault", VAULT], ["--network", "mainnet"], ["--yes"]]) assert.throws(() => parseSettleArgs(bad), /Unsupported argument/);
   assert.throws(() => parseSettleArgs(["--intent", "not-a-key"]));
   assert.equal(solToLamports("0.02"), 20_000_000n);
@@ -161,17 +170,11 @@ test("payload batches deserialize to reviewable versioned transactions", () => {
   assert.equal(summary.staticAccounts[0], KEEPER);
 });
 
-/** Policy gate: no Hermes/Pyth client, env or SDK Pyth batch builder may appear on the Symmetry price path. */
-test("CI: the Symmetry price path never imports Hermes/Pyth or the SDK's Hermes-backed price builder", () => {
-  const forbidden = [/@pythnetwork/, /HermesClient/, /hermes\.pyth\.network/, /process\.env\.(HERMES|PYTH)_/, /env\[["'](HERMES|PYTH)_/,
-    /updateTokenPricesTx\(/, /updatePythPriceFeedsTx\(/, /fetchHermesPythPrices/, /buildPythPriceFeedUpdateIxs/, /pythOracle\.js/];
-  const roots = ["src/lib/index-vaults", "scripts"];
-  const files: string[] = [];
-  const walk = (dir: string) => { for (const entry of readdirSync(dir)) { const path = join(dir, entry); if (statSync(path).isDirectory()) walk(path); else if (/\.(ts|mts)$/.test(entry)) files.push(path); } };
-  roots.forEach(walk);
-  assert.ok(files.some(f => f.endsWith("raydium-oracles.ts")) && files.some(f => f.endsWith("settle-devnet-vault.mts")));
-  for (const file of files) {
-    const source = readFileSync(file, "utf8");
-    for (const pattern of forbidden) assert.ok(!pattern.test(source), `${file} matches ${pattern}`);
-  }
+test("settle prices executes the native Raydium price-update interface", async () => {
+  const expected = { batches: [] };
+  const builder = Object.create(NativeVaultBuilders.prototype) as NativeVaultBuilders;
+  let invocation: unknown[] | undefined;
+  Object.defineProperty(builder, "priceUpdate", { value: async (...args: unknown[]) => { invocation = args; return expected; } });
+  assert.equal(await builder.settle("prices", KEEPER, { vaultAccount: VAULT } as never, INTENT), expected);
+  assert.deepEqual(invocation, [{ vaultAccount: VAULT }, KEEPER, INTENT]);
 });

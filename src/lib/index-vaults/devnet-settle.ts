@@ -1,11 +1,10 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { ComputeBudgetProgram, Connection, Keypair, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
+import { Connection, Keypair, PublicKey, VersionedTransaction } from "@solana/web3.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { SymmetryCore } from "@symmetry-hq/sdk";
 import type { TxPayloadBatchSequence, UIRebalanceIntent, Vault } from "@symmetry-hq/sdk";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
-import { RaydiumCpmmPoolState } from "@symmetry-hq/sdk/dist/states/oracles/raydiumCpmmOracle.js";
 import { DEVNET_TEST_VAULT } from "./devnet-contract.ts";
 import { devnetTestIdentity } from "./devnet-deposit.ts";
 import { GENESIS, NativeVaultBuilders } from "./symmetry-adapter.ts";
@@ -26,8 +25,8 @@ export const SETTLE_TEST_VAULT = Object.freeze({
   raydiumCpmmProgram: "DRaycpLY18LhpbydsBWbVJtxpNv9oXPgjRSfpF2bWpYb",
 });
 
-export type SettleStep = "observe" | "claim-bounty" | "refresh-pool" | "deposit" | "lock" | "update-prices" | "mint";
-export const SETTLE_STEPS: readonly SettleStep[] = Object.freeze(["observe", "claim-bounty", "refresh-pool", "deposit", "lock", "update-prices", "mint"]);
+export type SettleStep = "observe" | "claim-bounty" | "deposit" | "lock" | "update-prices" | "mint";
+export const SETTLE_STEPS: readonly SettleStep[] = Object.freeze(["observe", "claim-bounty", "deposit", "lock", "update-prices", "mint"]);
 export interface SettleOptions { step: SettleStep; execute: boolean; intent?: string; usdcRaw?: string; maxSolDebit: string; keypairPath?: string }
 
 /** Strict CLI parsing: unknown flags, mainnet, vault or wallet overrides are rejected. */
@@ -170,7 +169,7 @@ export class DevnetSettler {
   }
 
   /** Transactions for one step, as SDK payload batches (sequential batches, unsigned). */
-  async build(options: SettleOptions): Promise<{ label: string; batches: VersionedTransaction[][]; notes: string[] }> {
+  async build(options: SettleOptions): Promise<{ label: string; batches: VersionedTransaction[][]; notes: string[]; expectedOracleMints?: string[][] }> {
     const keeper = SETTLE_TEST_VAULT.wallet;
     const notes: string[] = [];
     if (options.step === "claim-bounty") {
@@ -184,10 +183,11 @@ export class DevnetSettler {
       if (intent.nextAction !== "update-prices") throw new Error(`Intent stage is ${intent.nextAction}, not update-prices`);
       const { vault } = await this.vault();
       const pool = await this.pool(vault);
-      if (!pool.summary.fresh) throw new Error(`RAYDIUM_OBSERVATION_STALE: ${pool.summary.observationAgeSeconds}s >= ${pool.summary.maxStalenessSeconds}s; run refresh-pool first`);
+      if (!pool.summary.fresh) throw new Error(`RAYDIUM_OBSERVATION_STALE: ${pool.summary.observationAgeSeconds}s >= ${pool.summary.maxStalenessSeconds}s`);
       const plan = planRaydiumPriceUpdate({ vault, keeper, rebalanceIntent: options.intent! });
       notes.push(`oracle accounts: ${plan.oracleAccounts.map(a => a.join(",")).join(" | ")}`);
-      return { label: "update-prices", batches: fromPayload(await this.native.priceUpdate(devnetTestIdentity, keeper, options.intent!)), notes };
+      return { label: "update-prices", batches: fromPayload(await this.native.priceUpdate(devnetTestIdentity, keeper, options.intent!)), notes,
+        expectedOracleMints: plan.tokenIndices.map(indices => indices.map(index => plan.oracles[index].mint)) };
     }
     if (options.step === "mint") {
       const intent = await this.intent(options.intent!, "owner-deposit");
@@ -206,52 +206,7 @@ export class DevnetSettler {
       if (intent.nextAction !== "deposit-tokens") throw new Error(`Intent stage is ${intent.nextAction}, not deposit-tokens`);
       return { label: "lock", batches: fromPayload(await this.native.lock(devnetTestIdentity, keeper)), notes };
     }
-    if (options.step === "refresh-pool") {
-      const { vault } = await this.vault();
-      const pool = await this.pool(vault);
-      const amountIn = BigInt(options.usdcRaw ?? "20000");
-      const ix = await this.raydiumSwapUsdcToWsol(pool.state, pool.binding.pool, amountIn);
-      notes.push(`swap ${amountIn} raw SDK-USDC → WSOL on ${pool.binding.pool} to refresh its observation (age ${pool.summary.observationAgeSeconds}s)`);
-      const payer = new PublicKey(keeper);
-      const { blockhash } = await this.connection.getLatestBlockhash("confirmed");
-      const message = new TransactionMessage({ payerKey: payer, recentBlockhash: blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }), ix] }).compileToV0Message();
-      return { label: "refresh-pool", batches: [[new VersionedTransaction(message)]], notes };
-    }
     throw new Error("observe builds nothing");
-  }
-
-  /** Raydium CPMM `swap_base_input` from the wallet's existing ATAs; min-out is 90% of the constant-product quote. */
-  async raydiumSwapUsdcToWsol(state: RaydiumCpmmPoolState, pool: string, amountIn: bigint): Promise<TransactionInstruction> {
-    if (state.token0Mint.toBase58() !== WSOL_MINT || state.token1Mint.toBase58() !== SETTLE_TEST_VAULT.usdcMint) throw new Error("Documented pool is not WSOL/SDK-USDC");
-    const [vault0, vault1] = await this.connection.getMultipleAccountsInfo([state.token0Vault, state.token1Vault], "confirmed");
-    if (!vault0 || !vault1) throw new Error("Pool vaults missing");
-    const reserveWsol = unpackAccount(state.token0Vault, vault0).amount - BigInt(state.protocolFeesToken0.toString()) - BigInt(state.fundFeesToken0.toString());
-    const reserveUsdc = unpackAccount(state.token1Vault, vault1).amount - BigInt(state.protocolFeesToken1.toString()) - BigInt(state.fundFeesToken1.toString());
-    if (reserveWsol <= 0n || reserveUsdc <= 0n) throw new Error("Pool has no reserves");
-    const quotedOut = reserveWsol * amountIn / (reserveUsdc + amountIn);
-    const minOut = quotedOut * 9n / 10n;
-    if (minOut <= 0n) throw new Error("Swap too small to quote");
-    const wallet = new PublicKey(SETTLE_TEST_VAULT.wallet);
-    const program = new PublicKey(SETTLE_TEST_VAULT.raydiumCpmmProgram);
-    const [authority] = PublicKey.findProgramAddressSync([Buffer.from("vault_and_lp_mint_auth_seed")], program);
-    const data = Buffer.alloc(24);
-    Buffer.from([0x8f, 0xbe, 0x5a, 0xda, 0xc4, 0x1e, 0x33, 0xde]).copy(data, 0); // swap_base_input
-    data.writeBigUInt64LE(amountIn, 8); data.writeBigUInt64LE(minOut, 16);
-    return new TransactionInstruction({ programId: program, data, keys: [
-      { pubkey: wallet, isSigner: true, isWritable: true },
-      { pubkey: authority, isSigner: false, isWritable: false },
-      { pubkey: state.ammConfig, isSigner: false, isWritable: false },
-      { pubkey: new PublicKey(pool), isSigner: false, isWritable: true },
-      { pubkey: getAssociatedTokenAddressSync(state.token1Mint, wallet), isSigner: false, isWritable: true },
-      { pubkey: getAssociatedTokenAddressSync(state.token0Mint, wallet), isSigner: false, isWritable: true },
-      { pubkey: state.token1Vault, isSigner: false, isWritable: true },
-      { pubkey: state.token0Vault, isSigner: false, isWritable: true },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: state.token1Mint, isSigner: false, isWritable: false },
-      { pubkey: state.token0Mint, isSigner: false, isWritable: false },
-      { pubkey: state.observationKey, isSigner: false, isWritable: true },
-    ] });
   }
 }
 
@@ -271,9 +226,18 @@ export function oracleTypesFromLogs(logs: readonly string[]): { mint: string; or
   }
   return out;
 }
-export function assertRaydiumLogs(logs: readonly string[]): void {
-  const forbidden = oracleTypesFromLogs(logs).filter(entry => entry.oracleType !== 1 && entry.oracleType !== 2);
+export function assertRaydiumLogs(logs: readonly string[], expectedMints: readonly string[] = []): void {
+  const entries = oracleTypesFromLogs(logs);
+  const forbidden = entries.filter(entry => entry.oracleType !== 1 && entry.oracleType !== 2);
   if (forbidden.length) throw new Error(`ORACLE_TYPE_FORBIDDEN in program logs: ${forbidden.map(f => `${f.mint}:${f.oracleType}`).join(", ")}`);
+  const raydiumMints = new Set(entries.map(entry => entry.mint));
+  const missing = expectedMints.filter(mint => !raydiumMints.has(mint));
+  if (missing.length) throw new Error(`RAYDIUM_LOG_MISSING for priced mint: ${missing.join(", ")}`);
+}
+
+export function assertSolDebitBudget(spent: bigint, expectedFee: number | null, budget: bigint, label: string): void {
+  if (expectedFee === null) throw new Error(`SOL fee unavailable before ${label}; refusing to send`);
+  if (spent + BigInt(expectedFee) > budget) throw new Error(`SOL budget would be exceeded before ${label}; refusing to send`);
 }
 
 export interface StepReceipt {
@@ -302,8 +266,10 @@ export async function runSettleStep(settler: DevnetSettler, options: SettleOptio
   const wallet = new PublicKey(SETTLE_TEST_VAULT.wallet);
   const budget = solToLamports(options.maxSolDebit);
   let debit = 0n;
+  let transactionIndex = 0;
   for (const [batchIndex, batch] of built.batches.entries()) {
     for (const tx of batch) {
+      const expectedOracleMints = built.expectedOracleMints?.[transactionIndex++];
       const message = tx.message;
       if (!message.staticAccountKeys[0].equals(wallet)) throw new Error("Transaction payer is not the authorized wallet");
       if (!options.execute && batchIndex > 0) { result.notes.push(`batch ${batchIndex} depends on earlier batch state; not simulated in dry-run`); continue; }
@@ -312,12 +278,13 @@ export async function runSettleStep(settler: DevnetSettler, options: SettleOptio
       const logs = simulation.value.logs ?? [];
       result.simulated.push({ messageHash: sha256(message.serialize()), unitsConsumed: simulation.value.unitsConsumed ?? null, instructions: summarizeInstructions(tx), logsTail: logs.slice(-6) });
       if (simulation.value.err) throw new Error(`Simulation failed for ${built.label}: ${JSON.stringify(simulation.value.err)} :: ${logs.filter(l => /Error|error/.test(l)).join(" | ")}`);
-      assertRaydiumLogs(logs);
+      assertRaydiumLogs(logs, expectedOracleMints);
       if (!options.execute) continue;
       const before = BigInt(await settler.connection.getBalance(wallet, "confirmed"));
-      if (debit >= budget) throw new Error(`SOL budget ${options.maxSolDebit} exhausted before ${built.label}`);
       const latest = await settler.connection.getLatestBlockhash("confirmed");
       message.recentBlockhash = latest.blockhash;
+      const fee = await settler.connection.getFeeForMessage(message, "confirmed");
+      assertSolDebitBudget(debit, fee.value, budget, built.label);
       const messageHash = sha256(message.serialize());
       tx.sign([signer!]);
       const signature = await settler.connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 3 });
@@ -327,7 +294,7 @@ export async function runSettleStep(settler: DevnetSettler, options: SettleOptio
       const after = BigInt(await settler.connection.getBalance(wallet, "confirmed"));
       debit += before - after;
       const receiptLogs = receipt.meta?.logMessages ?? [];
-      assertRaydiumLogs(receiptLogs);
+      assertRaydiumLogs(receiptLogs, expectedOracleMints);
       result.receipts.push({ step: built.label, signature, slot: receipt.slot, blockTime: receipt.blockTime ?? null, feeLamports: receipt.meta?.fee ?? 0,
         walletDebitLamports: (before - after).toString(), messageHash, oracleTypes: oracleTypesFromLogs(receiptLogs),
         explorer: `https://explorer.solana.com/tx/${signature}?cluster=devnet` });
