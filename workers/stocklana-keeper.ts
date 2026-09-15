@@ -18,8 +18,10 @@ export interface KeeperSnapshot {
   // Native SDK helper is a hint, not a verified execution predicate. Null when intents take priority.
   normalRebalanceRequired: boolean | null;
 }
+export const KEEPER_CONFIG_HASH_VERSION = "administrator-config-v1";
 export interface KeeperObservation extends KeeperSnapshot {
   at: string; next: string; blocked: string[];
+  configHashVersion: typeof KEEPER_CONFIG_HASH_VERSION;
 }
 type NativeFeeSnapshot = ReturnType<typeof feeSnapshot>;
 export function keeperConfigurationHash(vault: Pick<Vault, "settings" | "composition" | "numTokens">, fees: NativeFeeSnapshot): string {
@@ -41,14 +43,17 @@ export function keeperConfigurationHash(vault: Pick<Vault, "settings" | "composi
     })),
   });
 }
-export function planKeeperObservation(snapshot: KeeperSnapshot, previous?: Pick<KeeperObservation, "configHash"> & { blocked?: string[] }): KeeperObservation {
+export function planKeeperObservation(snapshot: KeeperSnapshot, previous?: Pick<KeeperObservation, "configHash"> & Partial<Pick<KeeperObservation, "blocked" | "configHashVersion">>): KeeperObservation {
   const blocked = ["BROADCAST_DISABLED", "NATIVE_RELEASE_TESTS_NOT_RUN"];
-  if (previous && (previous.configHash !== snapshot.configHash || previous.blocked?.includes("CONFIG_CHANGED_REATTEST_REQUIRED"))) blocked.push("CONFIG_CHANGED_REATTEST_REQUIRED");
+  if (previous?.configHashVersion !== undefined
+    && (previous.configHashVersion !== KEEPER_CONFIG_HASH_VERSION
+      || previous.configHash !== snapshot.configHash
+      || previous.blocked?.includes("CONFIG_CHANGED_REATTEST_REQUIRED"))) blocked.push("CONFIG_CHANGED_REATTEST_REQUIRED");
   const next = snapshot.intents.length ? "RECONCILE_EXISTING_INTENTS"
     : snapshot.retired ? "RETIRED_EXITS_ONLY"
     : snapshot.normalRebalanceRequired === true ? "NORMAL_REBALANCE_CANDIDATE"
     : snapshot.normalRebalanceRequired === false ? "TARGET_ACTIVE_WAITING" : "NATIVE_ELIGIBILITY_UNAVAILABLE";
-  return { ...snapshot, at: new Date().toISOString(), next, blocked };
+  return { ...snapshot, configHashVersion: KEEPER_CONFIG_HASH_VERSION, at: new Date().toISOString(), next, blocked };
 }
 
 /** Read exactly the supplied identity. Caller must supply registry scope or the fixed devnet test identity. */

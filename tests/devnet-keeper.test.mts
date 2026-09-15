@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { PublicKey } from "@solana/web3.js";
@@ -93,6 +93,24 @@ test("configuration drift persists across restart and blocks strategy change", (
   const repeat = await runDevnetKeeperTick(changed, path, strategy());
   assert.ok(repeat.blockers.includes("CONFIG_CHANGED_REATTEST_REQUIRED"));
   assert.equal(repeat.strategy.decision, "WAIT");
+}));
+
+test("legacy journals establish one new hash baseline before enforcing drift", () => temporary(async path => {
+  const legacy = {
+    ...planKeeperObservation({ ...snapshot(), configHash: "f".repeat(64), intents: [] }),
+    blocked: ["BROADCAST_DISABLED", "NATIVE_RELEASE_TESTS_NOT_RUN", "CONFIG_CHANGED_REATTEST_REQUIRED"],
+  };
+  const { configHashVersion: _legacyVersion, ...unversioned } = legacy;
+  await writeFile(path, JSON.stringify({ observations: [unversioned] }));
+
+  const migrated = await runDevnetKeeperTick(reader(), path);
+  assert.ok(!migrated.blockers.includes("CONFIG_CHANGED_REATTEST_REQUIRED"));
+  assert.equal(migrated.keeper.configHashVersion, "administrator-config-v1");
+
+  const changed = reader();
+  changed.observe = async previous => planKeeperObservation({ ...snapshot(), configHash: "b".repeat(64), intents: [] }, previous);
+  const drifted = await runDevnetKeeperTick(changed, path);
+  assert.ok(drifted.blockers.includes("CONFIG_CHANGED_REATTEST_REQUIRED"));
 }));
 
 test("runtime accounting transitions do not latch configuration drift", () => {
