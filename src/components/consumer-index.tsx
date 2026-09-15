@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { PublishedIndexResponse } from "@/lib/frontend/research-contract";
 import { useResource } from "@/lib/frontend/use-resource";
 import { shortDate } from "@/lib/frontend/research-format";
+import { errorText } from "@/lib/frontend/api";
 import { depositIsEnabled, getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { VaultFlow } from "./vault-flow";
@@ -19,21 +20,30 @@ function IndexModel({hash}:{hash:string}){
   const routeId=`fmp-${hash}`;
   const resource=useResource<PublishedIndexResponse>(`/api/published-indexes/${encodeURIComponent(hash)}`);
   const [vault,setVault]=useState<VaultReadiness|null>(null),[investOpen,setInvestOpen]=useState(false);
+  const [vaultLoading,setVaultLoading]=useState(false),[vaultError,setVaultError]=useState<string|null>(null);
   const holdings=useMemo(()=>[...(resource.data?.index.constituents??[])].sort((a,b)=>b.weight_bps-a.weight_bps),[resource.data]);
   const max=Math.max(...holdings.map(h=>h.weight_bps),1);
   const index=resource.data?.index;
-  useEffect(()=>{let alive=true;if(!index)return;getVaultReadiness(routeId).then(v=>{if(alive)setVault(v)}).catch(()=>{if(alive)setVault(null)});return()=>{alive=false}},[index,routeId]);
+  useEffect(()=>{
+    let alive=true;
+    if(!index){setVault(null);setVaultError(null);setVaultLoading(false);return;}
+    setVaultLoading(true);setVaultError(null);
+    getVaultReadiness(routeId).then(v=>{if(alive)setVault(v)}).catch(error=>{if(alive){setVault(null);setVaultError(errorText(error));}}).finally(()=>{if(alive)setVaultLoading(false)});
+    return()=>{alive=false};
+  },[index,routeId]);
   if(resource.loading)return <Skeleton/>;
   if(resource.error)return <PageError error={resource.error} retry={resource.reload}/>;
   if(!index)return null;
   const excluded=index.definition?.excluded??[];const personImage=portraitFor(index.person_id);
   const live=depositIsEnabled(vault);const preview=Boolean(vault?.identity||vault?.vault);
+  const vaultLabel=vaultLoading?"Checking":vaultError?"Unavailable":live?"Live":preview?"Preview":"Not live";
+  const vaultCopy=vaultLoading?"Reading native vault readiness.":vaultError?vaultError:live?"Deposit preparation can return real validated transactions.":preview?"The vault is observable, but signing stays off until prepare returns real transactions.":"This is a research model. No basket Buy is fabricated.";
   return <div className={styles.page}>
     <div className={styles.breadcrumb}><Link href={`/p/${encodeURIComponent(index.person_id)}`}><Icon name="arrow" size={13} style={{transform:"rotate(180deg)"}}/>Person portfolio</Link><span>Published model</span></div>
     <section className={styles.hero}>
       <div className={styles.portrait}>{personImage?<img src={personImage} alt=""/>:<span>{index.indexName?.slice(0,2)??"II"}</span>}<b>INDEX</b></div>
       <div className={styles.heroCopy}><span>{index.status||"Published"} · public disclosure model</span><h1>{index.indexName||index.definition?.label||"Person index"}</h1><p>One target made from the mapped part of a public disclosure book. Unmapped names stay visible below instead of being quietly dropped.</p><div className={styles.meta}><b>{holdings.length}</b><span>mapped names</span>{index.period?<><i/><b>{index.period}</b><span>period</span></>:null}{index.published_at?<><i/><span>published {shortDate(index.published_at)}</span></>:null}</div><div className={styles.actions}><button className={styles.invest} onClick={()=>setInvestOpen(true)}>{live?"Invest in index":preview?"Preview index flow":"See index status"}<Icon name="arrow" size={14}/></button><Link href="/feed">Copy a single move</Link></div></div>
-      <aside className={styles.state}><small>VAULT STATE</small><strong>{live?"Live":preview?"Preview":"Not live"}</strong><p>{live?"Deposit preparation can return real validated transactions.":preview?"The vault is observable, but signing stays off until prepare returns real transactions.":"This is a research model. No basket Buy is fabricated."}</p>{vault?.observedSlot?<span>Observed slot {vault.observedSlot.toLocaleString()}</span>:null}</aside>
+      <aside className={styles.state}><small>VAULT STATE</small><strong>{vaultLabel}</strong><p>{vaultCopy}</p>{vaultError?<button type="button" onClick={()=>{setVaultError(null);setVaultLoading(true);getVaultReadiness(routeId).then(v=>setVault(v)).catch(error=>{setVault(null);setVaultError(errorText(error));}).finally(()=>setVaultLoading(false));}}>Retry vault status</button>:null}{vault?.observedSlot?<span>Observed slot {vault.observedSlot.toLocaleString()}</span>:null}</aside>
     </section>
 
     <div className={styles.layout}><main>
