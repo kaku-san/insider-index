@@ -9,7 +9,7 @@ import { portraitFor } from "@/lib/fomo/portraits";
 import { slugifyPerson, personContext, shortDate } from "@/lib/frontend/research-format";
 import type { PeopleDirectoryResponse, PublishedIndexResponse, ResearchPerson } from "@/lib/frontend/research-contract";
 import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
-import { useDeviceFollows } from "@/lib/frontend/device-follows";
+import { useUI } from "./providers/ui-provider";
 import styles from "./consumer-home.module.css";
 
 type LegacyProfiles = { profiles: FomoProfile[] };
@@ -57,9 +57,9 @@ function Portrait({ person, className }: { person: ResearchPerson; className?: s
 }
 
 function FollowButton({ person }: { person: ResearchPerson }) {
-  const follows = useDeviceFollows();
-  const following = follows.following(person.id);
-  return <button type="button" className={`${styles.followButton} ${following ? styles.isFollowing : ""}`} aria-pressed={following} onClick={(event) => { event.preventDefault(); follows.toggle(person.id); }}>
+  const ui = useUI();
+  const following = ui.deviceFollows.includes(person.id);
+  return <button type="button" className={`${styles.followButton} ${following ? styles.isFollowing : ""}`} aria-pressed={following} onClick={(event) => { event.preventDefault(); ui.toggleDeviceFollow(person.id); }}>
     <Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}
   </button>;
 }
@@ -160,7 +160,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
 
     <section className={styles.directorySection}>
       <div className={styles.directoryTop}>
-        <div><span>THE DIRECTORY</span><h2>Everyone we're watching.</h2></div>
+        <div><span>THE DIRECTORY</span><h2>Everyone we&apos;re watching.</h2></div>
         <label className={styles.directorySearch}><Icon name="search" size={16}/><input value={localQuery} onChange={(e)=>setLocalQuery(e.target.value)} placeholder="Search people…"/></label>
       </div>
       {!directory.length ? <div className={styles.noResults}>No matching people yet.</div> : <div className={styles.directoryList}>{directory.slice(0, visible).map((person, index) => <Link href={`/p/${encodeURIComponent(person.id)}`} className={styles.directoryRow} key={person.id}>
@@ -175,7 +175,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
 
     <section className={styles.manifesto}>
       <span>THE POINT</span>
-      <h2>Influence is concentrated.<br/><em>Information doesn't have to be.</em></h2>
+      <h2>Influence is concentrated.<br/><em>Information doesn&apos;t have to be.</em></h2>
       <p>InsiderIndex reorganizes delayed public disclosures into understandable research and, where the product actually supports it, user-signed access. No secret feed. No pretend fund.</p>
     </section>
   </div>;

@@ -1,5 +1,5 @@
-# Barely Stable / Hetzner + Traefik. Public host is locked.
-# Router rule must stay Host(`stocklana.barelystable.dev`).
+# InsiderIndex production deployment with Traefik.
+# Router rule must stay Host(`insiderindex.xyz`).
 #
 # Traefik attaches to the external Docker network named `edge`
 # (not `proxy`). Override only if your host uses a different name:
@@ -28,7 +28,7 @@ services:
       - "3000"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.stocklana.rule=Host(`stocklana.barelystable.dev`)
+      - traefik.http.routers.stocklana.rule=Host(`insiderindex.xyz`)
       - traefik.http.routers.stocklana.entrypoints=websecure
       - traefik.http.routers.stocklana.tls=true
       - traefik.http.routers.stocklana.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}

@@ -1,5 +1,4 @@
-const previewFlag =
-  (process.env.NEXT_PUBLIC_INSIDERINDEX_PREVIEW ?? process.env.NEXT_PUBLIC_STOCKLANA_PREVIEW) === "1";
+const previewFlag = process.env.NEXT_PUBLIC_INSIDERINDEX_PREVIEW === "1";
 export const PREVIEW_MODE = process.env.NODE_ENV !== "production" && previewFlag;
 
 export class ApiError extends Error {

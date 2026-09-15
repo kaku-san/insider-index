@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { CopySignal } from "@/lib/disclosures/types";
 import { useResource } from "@/lib/frontend/use-resource";
-import { useDeviceFollows } from "@/lib/frontend/device-follows";
+import { useUI } from "./providers/ui-provider";
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { PersonAvatar } from "./person-avatar";
@@ -22,17 +22,17 @@ function rowsOf(data: DisclosureResponse | null): CopySignal[] {
 
 export function ConsumerFeed() {
   const resource = useResource<DisclosureResponse>("/api/disclosures");
-  const follows = useDeviceFollows();
+  const ui = useUI();
   const [filter, setFilter] = useState<"all" | "following" | "buy" | "sell">("all");
   const [query, setQuery] = useState("");
   const rows = useMemo(() => rowsOf(resource.data), [resource.data]);
   const visible = useMemo(() => rows.filter((item) => {
-    if (filter === "following" && !follows.ids.includes(item.profileId)) return false;
+    if (filter === "following" && !ui.deviceFollows.includes(item.profileId)) return false;
     if (filter === "buy" && item.side !== "buy") return false;
     if (filter === "sell" && item.side !== "sell") return false;
     const q = query.trim().toLowerCase();
     return !q || `${item.insiderName} ${item.ticker} ${item.issuerName}`.toLowerCase().includes(q);
-  }), [rows, filter, follows.ids, query]);
+  }), [rows, filter, ui.deviceFollows, query]);
 
   if (resource.loading) return <Skeleton />;
   if (resource.error) return <PageError error={resource.error} retry={resource.reload} />;
@@ -46,7 +46,7 @@ export function ConsumerFeed() {
 
     <section className={styles.toolbar} aria-label="Feed filters">
       <div className={styles.filters}>
-        {([['all','All'],['following','Following'],['buy','Buys'],['sell','Sells']] as const).map(([value,label]) => <button key={value} className={filter === value ? styles.active : undefined} onClick={() => setFilter(value)}>{label}{value === 'following' && follows.ids.length ? <span>{follows.ids.length}</span> : null}</button>)}
+        {([['all','All'],['following','Following'],['buy','Buys'],['sell','Sells']] as const).map(([value,label]) => <button key={value} className={filter === value ? styles.active : undefined} onClick={() => setFilter(value)}>{label}{value === 'following' && ui.deviceFollows.length ? <span>{ui.deviceFollows.length}</span> : null}</button>)}
       </div>
       <label className={styles.search}><Icon name="search" size={16}/><input value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Person or ticker"/></label>
     </section>
@@ -69,7 +69,7 @@ export function ConsumerFeed() {
           <div className={styles.action}>{item.tradeEligible ? <Link className={styles.copyButton} href={`/trade/${encodeURIComponent(item.id)}?copy=1`}>Copy one <Icon name="arrow" size={14}/></Link> : <span className={styles.notMapped}>Research only</span>}</div>
         </article>;
       })}
-      {!visible.length ? <div className={styles.empty}><Icon name="file" size={26}/><h2>No matching disclosures.</h2><p>{filter === "following" && !follows.ids.length ? "Follow people from Explore first, then their public moves will collect here." : "Try a different filter or search."}</p><Link href="/">Explore people <Icon name="arrow" size={14}/></Link></div> : null}
+      {!visible.length ? <div className={styles.empty}><Icon name="file" size={26}/><h2>No matching disclosures.</h2><p>{filter === "following" && !ui.deviceFollows.length ? "Follow people from Explore first, then their public moves will collect here." : "Try a different filter or search."}</p><Link href="/">Explore people <Icon name="arrow" size={14}/></Link></div> : null}
     </section>
 
     <aside className={styles.footerNote}><Icon name="info" size={16}/><p><strong>Public disclosures, not live positions.</strong> Transaction date, filing date and on-chain execution are different clocks. InsiderIndex keeps them separate.</p><Link href="/methodology">How it works</Link></aside>

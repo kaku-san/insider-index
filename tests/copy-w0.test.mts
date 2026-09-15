@@ -29,7 +29,7 @@ const post = (path: string, body: unknown) => new Request(`https://app.test/api/
 test("W0 production quote → signed message → Jupiter fill → durable, wallet-scoped receipt", async t => {
   const previous = { ...process.env };
   t.after(() => { for (const key of Object.keys(process.env)) if (!(key in previous)) delete process.env[key]; Object.assign(process.env, previous); memoClear(); });
-  Object.assign(process.env, { NODE_ENV: "production", STOCKLANA_ALLOW_MOCKS: "1", JUPITER_MODE: "stub", NEXT_PUBLIC_STOCKLANA_PREVIEW: "1", NEXT_PUBLIC_SUPABASE_URL: "https://receipts.example.test", SUPABASE_SERVICE_ROLE_KEY: "test-only-service-role" });
+  Object.assign(process.env, { NODE_ENV: "production", STOCKLANA_ALLOW_MOCKS: "1", JUPITER_MODE: "stub", NEXT_PUBLIC_INSIDERINDEX_PREVIEW: "1", NEXT_PUBLIC_SUPABASE_URL: "https://receipts.example.test", SUPABASE_SERVICE_ROLE_KEY: "test-only-service-role" });
   assert.equal(jupiterMode(), "live");
   assert.equal(mocksAllowed(), false);
   const preview = execFileSync(process.execPath, ["--experimental-strip-types", "--input-type=module", "-e", "import { PREVIEW_MODE } from './src/lib/frontend/api.ts'; process.stdout.write(String(PREVIEW_MODE));"], { env: process.env, encoding: "utf8" });

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rsync this tree to the Barely Stable box. Never copies secrets.
+# Rsync this tree to the production host. Never copies secrets.
 # Server env lives at /srv/projects/stocklana/.env (create it on the host).
 set -euo pipefail
 
@@ -18,5 +18,5 @@ rsync -az --delete \
   ./ "${REMOTE}:${DEST}/"
 
 echo "Synced to ${REMOTE}:${DEST}"
-echo "Demo host: https://stocklana.barelystable.dev"
+echo "Production host: https://insiderindex.xyz"
 echo "Secrets stay on the server .env (not rsynced)."
