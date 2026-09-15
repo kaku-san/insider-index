@@ -1,5 +1,5 @@
 /**
- * Stocklana application contracts, NOT the Symmetry IDL.
+ * InsiderIndex application contracts, NOT the Symmetry IDL.
  * No transaction sender or native accounting is implemented here.
  * Convert to actual SDK types inside symmetry-adapter.ts only after version pinning.
  */

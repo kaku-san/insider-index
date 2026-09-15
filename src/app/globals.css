@@ -119,7 +119,7 @@
 @media (max-width: 370px) {
   .profile-carousel, .lane-tabs { width: calc(100% + 13px); margin-right: -13px; }
 }
-/* INDEX-FIRST HOME (v0.3). Reuses the existing Stocklana tokens; only adds IA blocks. */
+/* INDEX-FIRST HOME (v0.3). Reuses the existing InsiderIndex tokens; only adds IA blocks. */
 .index-home .hero{margin-bottom:26px}
 .home-section{margin:0 0 30px}
 .home-section .section-heading{align-items:flex-start}

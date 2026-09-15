@@ -1,5 +1,5 @@
 /**
- * Buy gate for Stocklana.
+ * Buy gate for InsiderIndex.
  *
  * A swap is permitted only when the output mint is in the live Solana catalog
  * (`src/lib/venues/solana-catalog.ts`): an xStock mint read from xstocks.com or
