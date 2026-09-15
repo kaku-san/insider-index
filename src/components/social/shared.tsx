@@ -8,10 +8,8 @@ export function PartyBadge({party,kind}: {party:PoliticalParty|null;kind?:string
 type StockIconProps = {ticker:string;size?:"sm"|"md"|"lg"};
 function StockIconSource({ticker,normalized,size}: StockIconProps & {normalized:string}) {
  const bundled=COMPANY_LOGOS[normalized]??null;
- const [source,setSource]=useState<"bundled"|"remote"|"fallback">(bundled?"bundled":"remote");
- const remote=`https://companiesmarketcap.com/img/company-logos/64/${encodeURIComponent(normalized)}.png`;
- const src=source==="bundled"?bundled:source==="remote"?remote:null;
- return <span aria-label={`${ticker} company logo`} className={`stock-icon stock-logo stock-${ticker.toLowerCase().replace(/[^a-z0-9-]/g,"-")} stock-size-${size}`}>{src?<img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setSource(source==="bundled"?"remote":"fallback")}/>:<b>{ticker==="OTHER"?"+":ticker.slice(0,2)}</b>}</span>;
+ const [failed,setFailed]=useState(false);
+ return <span aria-label={`${ticker} company logo`} className={`stock-icon stock-logo stock-${ticker.toLowerCase().replace(/[^a-z0-9-]/g,"-")} stock-size-${size}`}>{bundled&&!failed?<img src={bundled} alt="" loading="lazy" onError={()=>setFailed(true)}/>:<b>{ticker==="OTHER"?"+":ticker.slice(0,2)}</b>}</span>;
 }
 export function StockIcon({ticker,size="md"}: StockIconProps) {
  const normalized=ticker.toUpperCase().replace(/\.L$/i,"").replace(/[^A-Z0-9.-]/g,"");
