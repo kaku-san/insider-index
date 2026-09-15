@@ -57,6 +57,15 @@ test("unrecognized tracker amounts fall back to unavailable, not a fabricated fi
   assert.equal(moneyBand(stockActBandFromMidpoint(null)), "Range unavailable");
 });
 
+test("finer OGE-278 sub-$15K bands resolve real disclosed trades instead of dropping them", () => {
+  // 1750.5 is the real snapshot amount for Julia Letlow's CWI buy (src/lib/tracker/top20-snapshot.json).
+  assert.equal(moneyBand(stockActBandFromMidpoint(1750.5)), "$1K–$3K");
+  assert.equal(moneyBand(stockActBandFromMidpoint(3750.5)), "$3K–$5K");
+  assert.equal(moneyBand(stockActBandFromMidpoint(10000.5)), "$5K–$15K");
+  // the coarser 9-band PTR midpoint must still resolve unambiguously alongside the new finer bands.
+  assert.equal(moneyBand(stockActBandFromMidpoint(8000.5)), "$1K–$15K");
+});
+
 test("explicitly disabled deposits override generic vault readiness", () => {
   const disabled = { indexId: "test", ready: true, depositEnabled: false, identity: { vaultAccount: owner, shareMint: owner } };
   assert.equal(depositIsEnabled(disabled), false);
