@@ -24,8 +24,10 @@ const { KakuAdmin } = await import("../src/components/kaku-admin.tsx");
 const { PrivySolanaContext } = await import("../src/components/providers/privy-provider.tsx");
 type TestWallet = {
   ready: boolean; configured: boolean; mode: "live" | "stub" | "unavailable"; authenticated: boolean;
-  solanaAddress: string | null; appId: string | null; connect: () => Promise<void>; disconnect: () => Promise<void>;
+  previewConnection: boolean; solanaAddress: string | null; appId: string | null;
+  connectionMethod: "wallet" | "email" | null; connect: () => Promise<void>; disconnect: () => Promise<void>;
   signTransaction: (transaction: string, network?: "mainnet-beta" | "devnet") => Promise<string>;
+  signAndSendTransaction: (transaction: string, network?: "mainnet-beta" | "devnet") => Promise<string>;
 };
 
 const VAULT = new PublicKey(new Uint8Array(32).fill(2)).toBase58();
@@ -168,9 +170,11 @@ test("live deployer may sign; stub, preview and any other wallet are refused. Pu
 
 function wallet(partial: Partial<TestWallet>): TestWallet {
   return {
-    ready: true, configured: true, mode: "live", authenticated: true, solanaAddress: OTHER, appId: "test",
+    ready: true, configured: true, mode: "live", authenticated: true, previewConnection: false,
+    solanaAddress: OTHER, appId: "test", connectionMethod: null,
     connect: async () => {}, disconnect: async () => {},
     signTransaction: async () => { throw new Error("test wallet does not sign"); },
+    signAndSendTransaction: async () => { throw new Error("test wallet does not sign"); },
     ...partial,
   };
 }
