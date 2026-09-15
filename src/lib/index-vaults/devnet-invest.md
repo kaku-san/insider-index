@@ -4,17 +4,13 @@ The person, published FMP index and legacy index rails share `src/components/vau
 
 ## Fixed existing identity
 
-`devnet-contract.ts` owns the public identity from the finalized creation receipt:
-
-- Vault: `Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8`
-- Shares: `Cdxoni8uv7FrqVfeHJ6YC4DeXs3QQ2uG4nT3BDd9Ny2A`, six decimals
-- Required SDK devnet USDC: `USDCoctVLVnvTXBEuP9s8hntucdJokbo17RwHuNXemT`
+[`devnet-contract.ts`](devnet-contract.ts) owns the exact public network, vault, native share mint and SDK-USDC identity accepted by the app. The finalized creation receipt and historical readback live in [`evidence/vaults/DEVNET_TEST_VAULT.md`](../../../evidence/vaults/DEVNET_TEST_VAULT.md).
 
 No arbitrary network, mint, RPC endpoint, person-to-vault mapping or vault creation is accepted. Reads use the existing `NativeVaultBuilders` on a read-only connection to the public devnet RPC. Genesis, native account owner, creator/host, vault/share addresses and share decimals are checked by the native reader. The mainnet single-trade RPC configuration is never reused for this path.
 
 ## HTTP contract
 
-Both endpoints accept JSON with `network: "devnet"`, the exact `vaultAccount` and `shareMint`, positive canonical `amountUsdcRaw`, and `owner` (an on-curve wallet address or `null`). UI decimal input is converted without floating-point rounding; the SDK's safe-integer limit applies. This read-only surface never authenticates a caller or authorizes funds on the strength of an owner address.
+Both endpoints accept JSON with `network: "devnet"`, the exact `vaultAccount` and `shareMint`, positive canonical `amountUsdcRaw`, and `owner` (an on-curve wallet address or `null`). UI decimal input is converted without floating-point rounding; the SDK's safe-integer limit applies. This read-only surface never authenticates a caller or authorizes funds on the strength of an owner address. Each request aborts the public-RPC transport and fails closed when the eight-second observation deadline expires.
 
 - `POST /api/vaults/devnet/preview`: `200` for a successful native observation, **not** a quote or readiness approval. Returns raw native supply, observed holdings/weights, connected owner's native shares/pending intent, host fee rates and explicit blockers. Estimated shares/NAV remain unavailable. Unavailable reads return `503`, never zero balances. Responses are `no-store`; observations span confirmed reads, not an atomic accounting snapshot.
 - `POST /api/vaults/devnet/prepare`: requires owner plus preview `expectedStateHash`, rereads native state, and currently returns **503** with `requires: "wait"`, blockers and an empty transaction list. Changed state or an existing owner intent are explicit blockers. The response's ephemeral operation ID is diagnostic, not a persisted deposit/ownership row.
@@ -30,7 +26,6 @@ Host entry/exit bps are observed separately from unquoted protocol, network, ren
 
 ## Verification
 
-- `tests/devnet-deposit.test.mts`: executable request validation, exact amounts, native-reader fixture observations, missing/current-owner/state blockers, endpoint status/no-store behavior, failed reads, and zero wallet calls under unreadiness/fixture/stale/forged-ready cases. Fixtures are not native funding evidence.
+- `tests/devnet-deposit.test.mts`: executable request validation, exact amounts, native-reader fixture observations, missing/current-owner/state blockers, endpoint status/no-store behavior, failed reads, deterministic deadline cancellation of stalled RPC transport, and zero wallet calls under unreadiness/fixture/stale/forged-ready cases. Fixtures are not native funding evidence.
 - Existing person/holdings rendering tests run inside the wallet provider and preserve all disclosed rows; generated HTML checks the separate test-vault label and disabled signing.
 - `evidence/vaults/invest-devnet-preview.json`: real read-only native preview from this wiring task. At the recorded slot the existing test vault had zero raw share supply and zero recorded backing; this historical observation does not assert the outcome of a later parallel funded deposit.
-- Local checks: `npm run typecheck`, `npm test` (114 passing), `npm run build`, and targeted ESLint passed. No browser was used. Full no-mistakes delivery is a separate supervisor-requested stage after this branch is committed.

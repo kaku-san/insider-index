@@ -32,8 +32,8 @@ export function parseDevnetDepositRequest(body: unknown): DevnetDepositRequest {
 }
 
 /** Read-only transport, fixed public devnet endpoint; never inherits the single-trade mainnet RPC. */
-export function devnetNativeReader() {
-  return new NativeVaultBuilders(readOnlyConnection("https://api.devnet.solana.com"), "devnet");
+export function devnetNativeReader(signal?: AbortSignal) {
+  return new NativeVaultBuilders(readOnlyConnection("https://api.devnet.solana.com", signal), "devnet");
 }
 export async function previewDevnetDeposit(input: DevnetDepositRequest, native = devnetNativeReader()): Promise<DevnetDepositPreview> {
   parseDevnetDepositRequest(input);
@@ -68,8 +68,25 @@ export async function previewDevnetDeposit(input: DevnetDepositRequest, native =
 }
 
 const headers = { "Cache-Control": "no-store" };
+const PREVIEW_TIMEOUT_MS = 8_000;
+async function withTimeout<T>(work: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error("Devnet preview timed out");
+      controller.abort(error);
+      reject(error);
+    }, timeoutMs);
+  });
+  try { return await Promise.race([work(controller.signal), timeout]); }
+  finally {
+    if (timer) clearTimeout(timer);
+    if (!controller.signal.aborted) controller.abort();
+  }
+}
 /** Both preview and prepare are observations. No auth/session or broadcast surface is enabled. */
-export async function handleDevnetDeposit(request: Request, prepare: boolean, native?: NativeVaultBuilders): Promise<Response> {
+export async function handleDevnetDeposit(request: Request, prepare: boolean, nativeReader: (signal: AbortSignal) => NativeVaultBuilders = devnetNativeReader, timeoutMs = PREVIEW_TIMEOUT_MS): Promise<Response> {
   let input: DevnetDepositRequest;
   try {
     const text = await request.text();
@@ -78,7 +95,7 @@ export async function handleDevnetDeposit(request: Request, prepare: boolean, na
     if (prepare && (!input.owner || !input.expectedStateHash)) throw new Error("Preview with a live wallet before preparing a deposit");
   } catch { return Response.json({ error: "Invalid devnet deposit request" }, { status: 400, headers }); }
   try {
-    const preview = await previewDevnetDeposit(input, native);
+    const preview = await withTimeout(signal => previewDevnetDeposit(input, nativeReader(signal)), timeoutMs);
     return Response.json(preview, { status: prepare ? 503 : 200, headers });
   } catch {
     // Do not leak RPC/configuration errors or mistake unavailability for an empty balance.

@@ -17,7 +17,7 @@ export function evaluateComposition(current: PolicyValidatedComposition, publish
   if (policy.activationDelaySeconds < 300 || !Number.isSafeInteger(policy.activationDelaySeconds) || !Number.isSafeInteger(policy.maxTurnoverBps) || !Number.isSafeInteger(policy.maxWeightChangeBps) || policy.maxTurnoverBps < 0 || policy.maxWeightChangeBps < 0) return result("BLOCKED", ["Invalid signed policy bounds"]);
   if (next.version <= current.version) return result(next.version === current.version && hashObject(next) === hashObject(current) ? "NOOP" : "BLOCKED", ["Already applied or replay/conflicting version"]);
   for (const a of next.assets) {
-    if (a.readiness !== "READY" || a.provider === "ondo" || !policy.admitted.some(p => p.mint === a.mint && p.oracleAccount === a.oracle.account && p.tokenProgram === a.tokenProgram && p.decimals === a.decimals)) return result("BLOCKED", ["Unadmitted mint/oracle or failed readiness; deployer admission required"]);
+    if (a.readiness !== "READY" || !policy.admitted.some(p => p.mint === a.mint && p.oracleAccount === a.oracle.account && p.tokenProgram === a.tokenProgram && p.decimals === a.decimals)) return result("BLOCKED", ["Unadmitted mint/oracle or failed readiness; deployer admission required"]);
   }
   const all = new Set([...current.assets, ...next.assets].map(a => a.mint));
   const changes = [...all].map(m => Math.abs((next.assets.find(a => a.mint === m)?.targetWeightBps ?? 0) - (current.assets.find(a => a.mint === m)?.targetWeightBps ?? 0)));
