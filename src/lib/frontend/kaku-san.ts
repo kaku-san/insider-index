@@ -1,7 +1,7 @@
 import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER } from "../index-vaults/kaku-san.ts";
 import { PREVIEW_MODE } from "./api.ts";
 
-export type KakuSanStep = "create" | "deactivate-default" | "add-token" | "weights";
+export type KakuSanStep = "create" | "deactivate-default" | "add-token" | "weights" | "prices" | "rebalance";
 export interface KakuSanPreparedTx { txBase64: string; messageHash: string; payer: string }
 export interface KakuSanPrepared {
   step: KakuSanStep;
