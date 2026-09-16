@@ -1,0 +1,318 @@
+{
+ "slug": "ted-budd",
+ "bioguideId": "B001305",
+ "name": "Ted Budd",
+ "party": "Republican",
+ "state": "North Carolina",
+ "title": "Senator",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020
+ ],
+ "bookSource": "fmp-annual-latest",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 27,
+ "holdingsWithTickerCount": 1,
+ "holdingsFromTransactionsCount": 0,
+ "holdings": [
+  {
+   "name": "PS1 Rural Hall LLC",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Business Entity Sole Proprietorship",
+   "owner": "Self",
+   "value": 3000000.5,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Budd Family LLC",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Business Entity Limited Liability Company (LLC)",
+   "owner": "Child",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "T Paul Properties, LLC",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Business Entity Limited Liability Company (LLC)",
+   "owner": "Spouse",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Budd Hope LLC",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Business Entity Limited Liability Company (LLC)",
+   "owner": "Spouse",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "College Foundation NC 529 Plan",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Education Savings Plans 529 College Savings Plan",
+   "owner": "Child",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Budd Farm",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Farm",
+   "owner": "Child",
+   "value": 375000.5,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Lincoln Flexible Premium Variable Life Insurance - 351",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Life Insurance Variable",
+   "owner": "Self",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Lincoln Flexible Premium Variable Life Insurance - 613",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Life Insurance Variable",
+   "owner": "Joint",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "AKB - Roth IRA",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Retirement Plans IRA",
+   "owner": "Spouse",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Real Estate",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Real Estate Commercial",
+   "owner": "Child",
+   "value": 375000.5,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Real Estate",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Real Estate Commercial",
+   "owner": "Spouse",
+   "value": 750000.5,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Beach Property",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Real Estate Residential",
+   "owner": "Child",
+   "value": 375000.5,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "DFUS - Dimensional U.S. Equity ETF",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Mutual Funds Exchange Traded Fund/Note",
+   "owner": "Child",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Ally Bank(Philadelphia, Pennsylvania)Type: Savings,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Joint",
+   "value": 75000.5,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Truist Financial(Winston Salem, North Carolina)Type: Checking, Money Market Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Child",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Fidelity Brokerage Services #18",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Brokerage/Managed Account",
+   "owner": "Spouse",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Fidelity - SPRXX(Matthews, NC)Type: Money Market Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Spouse",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "DFAX - Dimensional World Ex U.S. Core Equity 2 ETF",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Mutual Funds Exchange Traded Fund/Note",
+   "owner": "Child",
+   "value": 32500.5,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "DFNM - Dimensional National Municipal Bond ETF",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Mutual Funds Exchange Traded Fund/Note",
+   "owner": "Child",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "MUB - iShares National Muni Bond ETF",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Mutual Funds Exchange Traded Fund/Note",
+   "owner": "Child",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "DFUS - Dimensional U.S. Equity ETF",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Mutual Funds Exchange Traded Fund/Note",
+   "owner": "Spouse",
+   "value": 175000.5,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "DFAS - Dimensional U.S. Small Cap ETF",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Mutual Funds Exchange Traded Fund/Note",
+   "owner": "Spouse",
+   "value": 32500.5,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "DFAX - Dimensional World Ex U.S. Core Equity 2 ETF",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Mutual Funds Exchange Traded Fund/Note",
+   "owner": "Spouse",
+   "value": 75000.5,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Citibank, NA(Sioux Falls, SD)Type: Savings,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Joint",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Budd Hope LLC",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Business Entity Limited Liability Company (LLC)",
+   "owner": "Child",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "TPB - Roth IRA",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Retirement Plans IRA",
+   "owner": "Self",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Amy Kathryn Budd 2017 Irrv Trust FBO (DC3) - Trust",
+   "ticker": "DC3",
+   "section": "Asset",
+   "assetType": "Trust General Trust",
+   "owner": "Child",
+   "value": null,
+   "valueRange": null
+  }
+ ],
+ "holdingsFromTransactions": []
+}

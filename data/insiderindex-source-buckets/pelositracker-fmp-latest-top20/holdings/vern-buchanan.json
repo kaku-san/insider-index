@@ -1,0 +1,1357 @@
+{
+ "slug": "vern-buchanan",
+ "bioguideId": "B001260",
+ "name": "Vern Buchanan",
+ "party": "Republican",
+ "state": "Florida",
+ "title": "Representative",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020,
+  2019,
+  2015
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 67,
+ "holdingsWithTickerCount": 8,
+ "holdingsFromTransactionsCount": 37,
+ "holdings": [
+  {
+   "name": "BMO Harris 2340 [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Jamatt Financial, Inc - Tampa FL (K-1) [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Land - KY [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Orange Park, LLCs, 100% Interest [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "1099 Management Company, LLC ⇒Ellenton Edge [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒Oregon St Hlth & Sci 6% 7/1/20 [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒SPDR S&P 500 ETF Trust [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒UNIV Mississipi MS 5% 10/01/24 [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Investco QQQ Trust Series [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 250000,
+   "valueRange": {
+    "min": 250000,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒New York ST Dorm Auth St Pers 5% 08/15/24 [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Buchanan Automotive Holdings, Inc ⇒Sarasota 500, LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 50000000,
+   "valueRange": {
+    "min": 50000000,
+    "max": 50000000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "CCFU (81) [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Commerce Bank Stock [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Florida Capital Group [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "American Momentum Bank (28) [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Auto Central Services, Inc [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Aircraft Holding & Leasing, LLC [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 37500001,
+   "valueRange": {
+    "min": 25000001,
+    "max": 50000000
+   }
+  },
+  {
+   "name": "Truist - Checking (95) (Frmly SunTrust) [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Wells Fargo Bank - Sarasota, FL (frmrly Wachovia) (01)[BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "1099 Management Company, LLC ⇒600, LC [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "1099 Management Company, LLC ⇒Nissan of Elizabeth City, LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Sarasota Bradenton Aviation, Inc [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒(Frmrly Cash/CRA) [BA]Federated Hermes Government Obligations Fund",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒iShares Core S&P Mid-Cap ETF (IJH) [EF]",
+   "ticker": "IJH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒iShares Russell 1000 Index Fund [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒iShares Russell 2000 ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒iShares S&P Mid-Cap 400 Growth ETF (IJK) [EF]",
+   "ticker": "IJK",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "VB Restaurant Investments, LLC [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "1099 Management Company, LLC ⇒1099 Management Co, LLC [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "BMO Harris 3773 ⇒Vanguard S&P 500 ETF (VOO) [EF]",
+   "ticker": "VOO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Champlain Mid Cap Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Conestega Small Cap Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Federated Hermes Govt Obl Fund [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Fidelity Emerging Markets Index Fund Emerging AllCap [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Global X Funds Global X U.S. InfrastructureDevelopment ETF (PAVE) [EF]",
+   "ticker": "PAVE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒iShares 1-3 Year Treasury Bond ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒iShares Core S&P Mid-Cap Intermediate [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒iShares MSCI Japan Index Fund (EWJ) [EF]",
+   "ticker": "EWJ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒iShares Russell 2000 [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒iShares Select Dividend ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒MFS International Growth Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Stone Ridge High Yield Reinsurance Risk Premium FdCl I (SHRIX) [MF]",
+   "ticker": "SHRIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Tweedy Browne Value Fund (TWEBX) [MF]",
+   "ticker": "TWEBX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Vanguard Dividend Appreciation Index Fund [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Vanguard Institutional Index Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Vanguard Small-Cap Value ETF (VBR) [EF]",
+   "ticker": "VBR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 100000,
+   "valueRange": {
+    "min": 100000,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Country Club Shores, LLC ⇒Country Club Shores II, LLC [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Jamat Realty, Inc ⇒Nissan of Elizabeth City, LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Jamatt Properties, LLC ⇒50 Central Ave [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Jamatt Properties, LLC ⇒Elizabeth City Land [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Jamatt Properties, LLC ⇒Mortgages [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Jamatt Properties, LLC ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 7500001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 10000000
+   }
+  },
+  {
+   "name": "Wood St [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 25000000,
+   "valueRange": {
+    "min": 25000000,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Jamat Realty, Inc ⇒Jamat Realty, Inc [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "MB Acquisitions & Leasing, LLC ⇒RV Lots - MI [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "MB Acquisitions & Leasing, LLC ⇒Snowmass - 1 [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "MB Acquisitions & Leasing, LLC ⇒Useppa - 2 [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Morgan Stanley PWG 10/04947 & 10/05197 ⇒Morgan Stanley Infrastructure Partners [HE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Speed-Wing Investment Co ⇒Rental - Longboat Key FL [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Speed-Wing Investment Co ⇒Rental Harbor Springs [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Speed-Wing Investment Co ⇒Rental St. Regis [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Speed-Wing Investment Co ⇒Rental Torch Lake, MI [OT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "VB Investments, Inc ⇒VB Pointe West Investments, LLC [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Jamat Realty, Inc ⇒Creekwood Hotel, LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "BMO Harris 5247 ⇒Nuance Mid Cap Value Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "APHJX",
+   "name": "BMO Harris 5247 ⇒ Artisan International Small-Mid Fund - Institutional Shares",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "APHYX",
+   "name": "BMO Harris 5247 ⇒ Artisan Developing World Fund - Institutional Shares",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-03-02",
+   "lastDate": "2023-03-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BSIIX",
+   "name": "BMO Harris 3762 ⇒ BlackRock Strategic Income Opportunities Portfolio - Institutional (BSIIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2024-03-07",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DBEF",
+   "name": "BMO Harris 5247 ⇒ Xtrackers MSCI EAFE Hedged Equity ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DLS",
+   "name": "BMO Harris 5247 ⇒ WisdomTree International Smallcap Dividend Fund [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-01-17",
+   "lastDate": "2020-01-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DODFX",
+   "name": "BMO Harris 5247 ⇒ Dodge & Cox International Stock Fund - Class I (DODFX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-08-11",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DVY",
+   "name": "BMO Harris 5247 ⇒ iShares Select Dividend ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2023-03-02",
+   "lastDate": "2023-03-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EWJ",
+   "name": "BMO Harris 5247 ⇒ iShares MSCI Japan Index Fund (EWJ) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-03-07",
+   "lastDate": "2024-03-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FPADX",
+   "name": "BMO Harris 5247 ⇒ Fidelity Emerging Markets Index Fund",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-03-02",
+   "lastDate": "2023-03-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FTTMX",
+   "name": "BMO Harris 3762 ⇒ Franklin Michigan Tax-Free Income Fund Class A1 (FTTMX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-08-11",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOFXX",
+   "name": "BMO Harris 3762 ⇒ Federated Hermes Government Obligations Fund Premier Shares (GOFXX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-01-02",
+   "lastDate": "2024-02-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOIXX",
+   "name": "BMO Harris 5247 ⇒ Federated Hermes Government Obligations Fund IS Shares",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2023-08-09",
+   "lastDate": "2023-12-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IJH",
+   "name": "BMO Harris 3762 (Formerly BNY Mellon 4000) ⇒ iShares Core S&P Mid-Cap ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2020-03-26",
+   "lastDate": "2023-04-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IJK",
+   "name": "BNY Mellon 5000 ⇒ iShares S&P Mid-Cap 400 Growth ETF [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2020-01-13",
+   "lastDate": "2020-03-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IJR",
+   "name": "BNY Mellon 5000 ⇒ iShares TR S&P Smallcap Index Fund [HE]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-03-26",
+   "lastDate": "2020-03-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IWB",
+   "name": "BNY Mellon 5000 ⇒ iShares Russell 1000 Index Fund [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2020-01-08",
+   "lastDate": "2020-03-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IWM",
+   "name": "BMO Harris 3773 (Formerly BNY Mellon 5000) ⇒ iShares Russell 2000 ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2023-01-03",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IYR",
+   "name": "BMO Harris 5247 ⇒ iSHares US Real Estate ETF [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-05-22",
+   "lastDate": "2020-05-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MOTIX",
+   "name": "BMO Harris 3762 (Formerly BNY Mellon 4000) ⇒ BNY Mellon Municipal Opportunities Fund Investor Shares",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-04-28",
+   "lastDate": "2023-04-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MQGIX",
+   "name": "BMO Harris 5247 ⇒ MFS International Growth Fund - Class I",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MTBDX",
+   "name": "BMO Harris 3762 ⇒ NYLI MacKay Tax Free Bond Fund Class R6 (MTBDX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2024-03-07",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PAVE",
+   "name": "BMO Harris 5247 ⇒ Global X Funds Global X U.S. Infrastructure Development ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-03-02",
+   "lastDate": "2023-03-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QQQ",
+   "name": "BMO Harris 5247 ⇒ Investco QQQ Trust Series [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2019-08-16",
+   "lastDate": "2023-03-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SHRIX",
+   "name": "BMO Harris 5247 ⇒ Stone Ridge High Yield Reinsurance Risk Premium Fd Cl I (SHRIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-03-07",
+   "lastDate": "2024-03-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SHY",
+   "name": "BMO Harris 5247 ⇒ iShares 1-3 Year Treasury Bond ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SPY",
+   "name": "BMO Harris 3762 (Formerly BNY Mellon 4000) ⇒ SPDR S&P 500",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2020-01-08",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TBGVX",
+   "name": "BMO Harris 5247 ⇒ Tweedy, Browne International Value Fund",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TIDDX",
+   "name": "BMO Harris 5247 ⇒ T. Rowe Price International Discovery Fund - I Class",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TWEBX",
+   "name": "BMO Harris 5247 ⇒ Tweedy Browne Value Fund (TWEBX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-08-11",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VBR",
+   "name": "BMO Harris 5247 ⇒ Vanguard Small-Cap Value ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VEU",
+   "name": "BMO Harris 5247 ⇒ Vanguard FTSE all-World EX-US ETF [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-05-22",
+   "lastDate": "2020-05-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VIG",
+   "name": "BMO Harris 5247 ⇒ Vanguard Dividend appreciation ETF [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-01-17",
+   "lastDate": "2020-01-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VINIX",
+   "name": "BMO Harris 5247 ⇒ Vanguard Institutional Index",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2020-01-13",
+   "lastDate": "2023-03-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VOO",
+   "name": "BMO Harris 3773 ⇒ Vanguard S&P 500 ETF (VOO) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-03-07",
+   "lastDate": "2024-03-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VWIUX",
+   "name": "BMO Harris 3762 ⇒ Vanguard Intermediate-Term Tax-Exempt Fd Admiral Shs (VWIUX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-08-11",
+   "lastDate": "2025-08-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VWO",
+   "name": "BMO Harris 5247 ⇒ Vanguard FTSE Emerging Markets ETF [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2020-01-10",
+   "lastDate": "2020-04-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VWSUX",
+   "name": "BMO Harris 3762 ⇒ Vanguard Ultra-Short-Term Tax-Exempt Fund Admiral Shares (VWSUX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-03-07",
+   "lastDate": "2024-03-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

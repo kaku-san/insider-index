@@ -1,0 +1,164 @@
+{
+ "slug": "brandon-gill",
+ "bioguideId": "G000603",
+ "name": "Brandon Gill",
+ "party": "Republican",
+ "state": "Texas",
+ "title": "Representative",
+ "fmpYear": null,
+ "yearsAvailable": [],
+ "bookSource": "txn-derived",
+ "annualFetchComplete": true,
+ "annualFetchIssues": [],
+ "holdingsCount": 0,
+ "holdingsWithTickerCount": 0,
+ "holdingsFromTransactionsCount": 9,
+ "holdings": [],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "BTC",
+   "name": "BTC [CT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-01-29",
+   "lastDate": "2025-10-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BTCUSD",
+   "name": "Bitcoin",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-01-29",
+   "lastDate": "2025-05-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIA",
+   "name": "SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-06-20",
+   "lastDate": "2025-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IBIT",
+   "name": "ISHARES BITCOIN TRUST ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-07-17",
+   "lastDate": "2025-10-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QQQ",
+   "name": "Invesco QQQ Trust Series 1",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-06-20",
+   "lastDate": "2025-07-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RSP",
+   "name": "Invesco S&P 500 Equal Weight ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-03-28",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RYT",
+   "name": "Invesco S&P 500 Equal Weight Technology Etf",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2026-08-13",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TOIXX",
+   "name": "FEDERATED TREASURY OBLIGATIONS FUND",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-04-16",
+   "lastDate": "2025-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TTTXX",
+   "name": "BLACKROCK LIQUIDITY FUNDS TREASURY TRUST FUND",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-06-23",
+   "lastDate": "2025-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

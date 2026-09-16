@@ -1,0 +1,936 @@
+{
+ "slug": "angus-s-jr-king",
+ "bioguideId": "K000383",
+ "name": "Angus S. King Jr.",
+ "party": "Independent",
+ "state": "Maine",
+ "title": "Senator",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020,
+  2019,
+  2018,
+  2017,
+  2016,
+  2015,
+  2014,
+  2013
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 11,
+ "holdingsWithTickerCount": 0,
+ "holdingsFromTransactionsCount": 54,
+ "holdings": [
+  {
+   "name": "Loop Road LLC",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Business Entity Limited Liability Company (LLC)",
+   "owner": "Joint",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "TD BANK NA AGGREGATE ACCOUNTS(BRUNSWICK, ME)Type: Checking,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Joint",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "CHARLES SCHWAB(PORTLAND, ME)Type: Brokerage Sweep Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Self",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "SNSXX SCHWAB US TREASURY MONEY FUND(PORTLAND, ME)Type: Money Market Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Self",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "SNVXX-SCHWAB GOV'T MONEY FUND-INVESTOR SHARES(PORTLAND, ME)Type: Money Market Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Self",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "CHARLES SCHWAB(PORTLAND, ME)Type: Brokerage Sweep Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Self",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "SNVXX-SCHWAB GOV'T MONEY FUND-INVESTOR SHARES(PORTLAND, ME)Type: Money Market Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Self",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "CHARLES SCHWAB(PORTLAND, ME)Type: Brokerage Sweep Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Self",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "CHARLES SCHWAB(PORTLAND, ME)Type: Brokerage Sweep Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Spouse",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "SNVXX-SCHWAB GOV'T MONEY FUND-INVESTOR SHARES(SAN FRANCISCO, CA)Type: Money Market Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Spouse",
+   "value": 32500.5,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "CHARLES SCHWAB(PORTLAND, ME)Type: Brokerage Sweep Account,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Spouse",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "ADBE",
+   "name": "Adobe Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-24",
+   "lastDate": "2022-12-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ADSK",
+   "name": "AUTODESK Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMAT",
+   "name": "Applied Materials, Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMD",
+   "name": "Advanced Micro Devices, Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc.",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2019-01-31",
+   "lastDate": "2019-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ANET",
+   "name": "Arista Networks Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AXP",
+   "name": "American Express Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-10",
+   "lastDate": "2019-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BAC",
+   "name": "Bank of America Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BX",
+   "name": "Blackstone Group Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CB",
+   "name": "Chubb Limited",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Exchange",
+    "Sale (Full)"
+   ],
+   "firstDate": "2016-01-19",
+   "lastDate": "2018-08-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMCSA",
+   "name": "Comcast Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-07-23",
+   "lastDate": "2025-12-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COP",
+   "name": "ConocoPhillips",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2017-11-28",
+   "lastDate": "2020-08-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CSCO",
+   "name": "Cisco Systems, Inc.",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2017-10-19",
+   "lastDate": "2017-10-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIS",
+   "name": "The Walt Disney Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2017-05-03",
+   "lastDate": "2017-05-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EA",
+   "name": "Electronic Arts Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2022-12-21",
+   "lastDate": "2023-12-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EMC",
+   "name": "EMC Corporation",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2016-07-14",
+   "lastDate": "2016-07-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GE",
+   "name": "General Electric Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2016-10-19",
+   "lastDate": "2016-10-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GILD",
+   "name": "Gilead Sciences, Inc.",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2018-04-23",
+   "lastDate": "2018-04-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet Inc. - Class A Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HON",
+   "name": "Honeywell International Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-12-29",
+   "lastDate": "2025-12-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IBM",
+   "name": "International Business Machines Corporation",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2017-07-20",
+   "lastDate": "2017-07-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JPM",
+   "name": "JPMorgan Chase & Co",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KEX",
+   "name": "Kirby Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KMI",
+   "name": "Kinder Morgan, Inc.",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2015-12-16",
+   "lastDate": "2015-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LLY",
+   "name": "Eli Lilly and Co",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-12-29",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LOW",
+   "name": "Lowe's Cos Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "META",
+   "name": "Meta Platforms Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MKC",
+   "name": "McCormick & Company, Incorporated",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-10",
+   "lastDate": "2019-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MMM",
+   "name": "3M Company Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-05-19",
+   "lastDate": "2023-05-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MRVL",
+   "name": "Marvell Technology Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NASDAQ",
+   "name": "DENTSPLY International Inc. (NASDAQ)",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2014-04-28",
+   "lastDate": "2014-04-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NFLX",
+   "name": "Netflix Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NKE",
+   "name": "NIKE, Inc.",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2018-08-28",
+   "lastDate": "2018-08-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVDA",
+   "name": "Nvidia Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVS",
+   "name": "Novartis AG",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2017-11-10",
+   "lastDate": "2017-11-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NYSE",
+   "name": "Rayonier Inc. (NYSE)",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2014-04-28",
+   "lastDate": "2014-11-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ONON",
+   "name": "ON HOLDING AG",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PG",
+   "name": "The Procter & Gamble Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2017-11-17",
+   "lastDate": "2017-11-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PWR",
+   "name": "Quanta Services Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PYPL",
+   "name": "PayPal Holdings Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SLB",
+   "name": "Schlumberger Limited",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2017-11-28",
+   "lastDate": "2020-08-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TEVA",
+   "name": "Teva Pharmaceutical Industries Limited",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2016-10-19",
+   "lastDate": "2016-10-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TGT",
+   "name": "Target Corporation",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2017-05-03",
+   "lastDate": "2017-05-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TMO",
+   "name": "Thermo Fisher Scientific Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-24",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UBER",
+   "name": "Uber Technologies Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "Sale"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2026-02-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UNH",
+   "name": "Unitedhealth Group Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-15",
+   "lastDate": "2025-07-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USB",
+   "name": "U.S. Bancorp Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-03-20",
+   "lastDate": "2023-03-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UTX",
+   "name": "United Technologies Corporation",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-10",
+   "lastDate": "2019-01-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VRT",
+   "name": "Vertiv Holdings, LLC Class A Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VZ",
+   "name": "Verizon Communications Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-08-18",
+   "lastDate": "2024-03-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WAT",
+   "name": "Waters Corporation",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-07-23",
+   "lastDate": "2019-07-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WTRG",
+   "name": "Essential Utilities, Inc.",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-03-05",
+   "lastDate": "2020-03-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "XOM",
+   "name": "Exxon Mobil Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-08-18",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

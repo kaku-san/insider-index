@@ -1,0 +1,945 @@
+{
+ "slug": "dan-sullivan",
+ "bioguideId": "S001198",
+ "name": "Dan Sullivan",
+ "party": "Republican",
+ "state": "Alaska",
+ "title": "Senator",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020,
+  2019,
+  2018,
+  2017,
+  2016,
+  2015,
+  2014,
+  2013
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 5,
+ "holdingsWithTickerCount": 0,
+ "holdingsFromTransactionsCount": 60,
+ "holdings": [
+  {
+   "name": "Uniform Transfer to Minors Act College Fund",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "UGMA/UTMA",
+   "owner": "Child",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "529 Education Plan - Child 1",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Education Savings Plans 529 College Savings Plan",
+   "owner": "Spouse",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "529 Education Plan - Child 2",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Education Savings Plans 529 College Savings Plan",
+   "owner": "Spouse",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Wells Fargo(Anchorage, AK)Type: Checking, Savings,",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Bank Deposit",
+   "owner": "Joint",
+   "value": 8000.5,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "IRA",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Retirement Plans IRA",
+   "owner": "Spouse",
+   "value": null,
+   "valueRange": null
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACN",
+   "name": "Accenture Plc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ADBE",
+   "name": "Adobe Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AFTEX",
+   "name": "American Funds Tax-Exempt Bond A",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2015-07-15",
+   "lastDate": "2015-07-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ALGN",
+   "name": "Align Technology, Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AME",
+   "name": "AMETEK, Inc.",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "APH",
+   "name": "Amphenol Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AXP",
+   "name": "American Express Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BAX",
+   "name": "Baxter International Inc. Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BKNG",
+   "name": "Booking Holdings Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BLK",
+   "name": "Blackrock Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BMY",
+   "name": "Bristol-Myers Squibb Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CHD",
+   "name": "Church & Dwight Company, Inc. Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-02-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMCSA",
+   "name": "Comcast Corporation - Class A Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COST",
+   "name": "Costco Wholesale Corporation - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CVS",
+   "name": "CVS Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CVX",
+   "name": "Chevron Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIS",
+   "name": "Walt Disney Company (The) Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2022-11-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ELAN",
+   "name": "Elanco Animal Health Incorporated Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FFIV",
+   "name": "F5, Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FIVE",
+   "name": "Five Below, Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-08-30",
+   "lastDate": "2022-08-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GFAFX",
+   "name": "American Funds Growth Fund of Amer F1",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2018-12-21",
+   "lastDate": "2018-12-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOG",
+   "name": "Alphabet Inc. - Class C Capital Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "Purchase",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GTCSX",
+   "name": "Glenmede Small Cap Equity Portfolio Class Advisor",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2019-07-17",
+   "lastDate": "2019-07-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HON",
+   "name": "Honeywell International Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IWD",
+   "name": "iShares Russell 1000 Value",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2015-01-28",
+   "lastDate": "2015-01-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IWF",
+   "name": "iShares Russell 1000 Growth ETF",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2018-10-02",
+   "lastDate": "2019-07-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JNJ",
+   "name": "Johnson & Johnson",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JPM",
+   "name": "JP Morgan Chase & Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LH",
+   "name": "Laboratory Corp of America Holdings",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LRCX",
+   "name": "Lam Research Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LUV",
+   "name": "Southwest Airlines Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MA",
+   "name": "Mastercard Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MALOX",
+   "name": "BlackRock Global Allocation Fund, Inc. Institution",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2018-12-19",
+   "lastDate": "2019-07-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MDT",
+   "name": "Medtronic plc. Ordinary Shares",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "META",
+   "name": "Meta Platforms, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MLM",
+   "name": "Martin Marietta Materials, Inc. Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MOWI",
+   "name": "MOWI",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-08-02",
+   "lastDate": "2022-08-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NTRS",
+   "name": "Northern Trust Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVDA",
+   "name": "NVIDIA Corporation - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2022-11-22",
+   "lastDate": "2022-11-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PNC",
+   "name": "PNC Financial Services Group, Inc. (The) Common St",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PPG",
+   "name": "PPG Industries",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PXD",
+   "name": "Pioneer Natural Resources Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PYPL",
+   "name": "PayPal Holdings, Inc. - Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RPM",
+   "name": "RPM International Inc. Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "Sale (Partial)"
+   ],
+   "firstDate": "2018-03-28",
+   "lastDate": "2024-01-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SCHW",
+   "name": "The Charles Schwab Corp",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2023-02-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SPY",
+   "name": "SPDR S&P 500 ETF",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2015-01-28",
+   "lastDate": "2015-08-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SYK",
+   "name": "Stryker Corporation Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TJX",
+   "name": "TJX Companies",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TMO",
+   "name": "Thermo Fisher Scientific Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TSCIX",
+   "name": "AMG TimesSquare Small Cap Growth Fund Class Z",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2019-07-17",
+   "lastDate": "2019-07-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TSCO",
+   "name": "Tractor Supply Company",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-22",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ULTA",
+   "name": "Ulta Beauty Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2023-01-10",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VPMAX",
+   "name": "Vanguard PRIMECAP Fund Admiral Shares",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-07-17",
+   "lastDate": "2019-07-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WCMIX",
+   "name": "WCM Focused International Growth Fund Institutiona",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2020-02-27",
+   "lastDate": "2020-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WFC",
+   "name": "Wells Fargo & Company Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-03-17",
+   "lastDate": "2023-03-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "XLI",
+   "name": "Industrial Select Sector SPDR ETF",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2015-01-28",
+   "lastDate": "2015-03-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ZTS",
+   "name": "Zoetis Inc Cl A",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "Purchase",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

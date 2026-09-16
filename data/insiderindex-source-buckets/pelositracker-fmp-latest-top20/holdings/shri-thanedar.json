@@ -1,0 +1,1542 @@
+{
+ "slug": "shri-thanedar",
+ "bioguideId": "T000488",
+ "name": "Shri Thanedar",
+ "party": "Democrat",
+ "state": "Michigan",
+ "title": "Representative",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": true,
+ "annualFetchIssues": [],
+ "holdingsCount": 55,
+ "holdingsWithTickerCount": 12,
+ "holdingsFromTransactionsCount": 62,
+ "holdings": [
+  {
+   "name": "DFA International Small Cap Value PortfolioInstitutional Class [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "DFA U.S. Large Cap Value Portfolio [5F]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "DFA US Core Equity II Portfolio Institutional Class [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "DFA US Large Cap Value Portfolio Institutional Class[MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "DFA US Large Company Portfolio Institutional Class[MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "DFA US Small Cap Value Portfolio Institutional Class[MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Dimensional US Core Equity 2 ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Vanguard LifeStrategy Growth Fund Investor Shares[MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Vanguard Small Cap Value Index Fund Admiral Shares[MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Vanguard Small Cap Value Index Fund ETF [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Aggressive Age-Based Option: Vanguard IncomePortfolio [5F]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Alphabet Inc. - Class A (GOOGL) [ST]",
+   "ticker": "GOOGL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Alphabet Inc. - Class C Capital Stock (GOOG) [ST]",
+   "ticker": "GOOG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Amazon.com, Inc. (AMZN) [ST]",
+   "ticker": "AMZN",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Apple Inc. (AAPL) [ST]",
+   "ticker": "AAPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Berkshire Hathaway Inc. New (BRK.B) [ST]",
+   "ticker": "BRK.B",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Cash - Charles Schwab Investment Accounts [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "Cash - LPL Financial Investment Accounts [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Commercial Property in Detroit, MI (The Shri ThanedarCommunity Center) [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "DFA Emerging Markets Value Portfolio InstitutionalClass [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "DFA Global Allocation 60/40 Portfolio InstitutionalClass [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "International Core Equity 2 Portfolio (DFIEX) [MF]",
+   "ticker": "DFIEX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "iShares Bitcoin Trust ETF - iShares Bitcoin Trust ETF(IBIT) [ET]",
+   "ticker": "IBIT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "iShares Core S&P Total US Stock Market ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "JPMorgan U.S. Government Money Market FundPremier (OGSXX) [MF]",
+   "ticker": "OGSXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Microsoft Corporation (MSFT) [ST]",
+   "ticker": "MSFT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "MicroStrategy Incorporated - Class A Common Stock(MSTR) [ST]",
+   "ticker": "MSTR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Rental Property in Ann Arbor, MI [RE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Rental Property in Oxford, NJ [RE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Schwab Government Money Fund - Investor Shares(SNVXX) [MF]",
+   "ticker": "SNVXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Vangaurd Information Technology Index Fund ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Vanguard 500 Index Fund Admiral Shares [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Vanguard 500 Index Fund ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Vanguard Aggressive Growth Portfolio [5F]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Vanguard Balanced Index Fund Admiral Shares [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Vanguard Total International Stock Index Fund AdmiralShares [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Vanguard Total Stock Market Index Fund AdmiralShares [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Vanguard Total Stock Market Index Portfolio [5F]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Vanguard Total World Stock Index Fund Admiral Shares[MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Vanguard Total World Stock Index Fund ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Vanguard Value Index Fund ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Walmart Inc. (WMT) [ST]",
+   "ticker": "WMT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Bitcoin [CT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Dimensional 2050 Target Date Retirement Income FundInstitutional Class [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Dimensional World ex US Core Equity 2 ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Ethereum [CT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "iShares Gold Trust [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "iShares MSCI EAFE Value ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "JPMorgan US Treasury Plus Money Market Fund-Premier [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Litecoin [CT]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Vanguard Commodity Strategy Fund Admiral Shares[MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Vanguard Emerging Markets Stock Index Fund AdmiralShares [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Vanguard LifeStrategy Moderate Growth Fund InvestorShares [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Vanguard Real Estate Index Fund Admiral Shares [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Vanguard Total Stock Market Index Fund ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-01-25",
+   "lastDate": "2026-01-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-01-25",
+   "lastDate": "2024-04-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "APO",
+   "name": "Apollo Global Management, Inc. (APO) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AXP",
+   "name": "American Express Company (AXP) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BEKE",
+   "name": "KE Holdings Inc American Depositary Shares (BEKE) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-06-24",
+   "lastDate": "2022-06-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BIIB",
+   "name": "Biogen Inc. (BIIB) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BRK.B",
+   "name": "Berkshire Hathaway Inc. New Common Stock",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2024-01-25",
+   "lastDate": "2024-04-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BTC",
+   "name": "Bitcoin [CT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-02-05",
+   "lastDate": "2024-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BTCUSD",
+   "name": "Bitcoin",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-02-05",
+   "lastDate": "2024-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BX",
+   "name": "Blackstone Inc. (BX) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CG",
+   "name": "The Carlyle Group Inc. (CG) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CHRS",
+   "name": "Coherus BioSciences, Inc. (CHRS) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMPS",
+   "name": "COMPASS Pathways Plc - American Depository Shares (CMPS) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COIN",
+   "name": "Coinbase Global, Inc. - Class A (COIN) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-12-20",
+   "lastDate": "2022-12-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFAC",
+   "name": "Dimensional U.S. Core Equity 2 ETF (DFAC) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-02-29",
+   "lastDate": "2025-12-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFAX",
+   "name": "Dimensional World ex U.S. Core Equity 2 ETF (DFAX) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-06-25",
+   "lastDate": "2024-06-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFEVX",
+   "name": "DFA Emerging Markets Value Portfolio (DFEVX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-09-19",
+   "lastDate": "2025-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFIEX",
+   "name": "International Core Equity 2 Portfolio (DFIEX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-09-30",
+   "lastDate": "2025-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFLVX",
+   "name": "DFA U.S. Large Cap Value Portfolio (DFLVX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-09-30",
+   "lastDate": "2025-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFQTX",
+   "name": "DFA U.S. Core Equity 2 Portfolio (DFQTX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-04-02",
+   "lastDate": "2025-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFSVX",
+   "name": "DFA U.S. Small Cap Value Portfolio (DFSVX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-09-30",
+   "lastDate": "2025-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DGSIX",
+   "name": "DFA Global Allocation 60/40 Portfolio Inst Cl (DGSIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-02-29",
+   "lastDate": "2025-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DISVX",
+   "name": "DFA International Small Cap Value Portfolio (DISVX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-09-19",
+   "lastDate": "2025-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DRIJX",
+   "name": "Dimensional 2050 Target Date Retirement Income Fund Institutional Class (DRIJX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-07-11",
+   "lastDate": "2024-07-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EFV",
+   "name": "iShares MSCI EAFE Value ETF (EFV) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-09-19",
+   "lastDate": "2024-09-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ETH",
+   "name": "Ethereum [CT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-02-05",
+   "lastDate": "2024-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ETHA",
+   "name": "iShares Ethereum Trust ETF (ETHA) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-11-26",
+   "lastDate": "2025-11-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ETHUSD",
+   "name": "Ethereum",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-02-05",
+   "lastDate": "2024-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOG",
+   "name": "Alphabet Inc. - Class C Capital Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-01-25",
+   "lastDate": "2024-04-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-01-25",
+   "lastDate": "2024-04-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IAU",
+   "name": "iShares Gold Trust Shares of the iShares Gold Trust (IAU) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-02-29",
+   "lastDate": "2024-02-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IBIT",
+   "name": "iShares Bitcoin Trust ETF (IBIT) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-02-12",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ITOT",
+   "name": "iShares Core S&P Total U.S. Stock Market ETF (ITOT) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-09-30",
+   "lastDate": "2025-12-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JD",
+   "name": "JD.com, Inc. - American Depositary Shares (JD) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-04-22",
+   "lastDate": "2022-04-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KKR",
+   "name": "KKR & Co. Inc. (KKR) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LTC",
+   "name": "Litecoin [CT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-02-05",
+   "lastDate": "2024-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LTCUSD",
+   "name": "Litecoin",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-02-05",
+   "lastDate": "2024-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-01-25",
+   "lastDate": "2024-04-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSTR",
+   "name": "Strategy Inc - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-07-01",
+   "lastDate": "2025-10-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OGSXX",
+   "name": "JPMorgan U.S. Government Money Market Fund Premier (OGSXX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-04-30",
+   "lastDate": "2025-12-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PJTXX",
+   "name": "JPMorgan US Treasury Plus Money Market Fund Premier Shares (PJTXX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-06-12",
+   "lastDate": "2024-06-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SBUX",
+   "name": "Starbucks Corporation (SBUX) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SNVXX",
+   "name": "Schwab Government Money Fund - Investor Shares (SNVXX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-03-01",
+   "lastDate": "2024-12-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TCEHY",
+   "name": "Tencent Holdings Limited Unsponsored ADR Representing B Shares (TCEHY) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-04-22",
+   "lastDate": "2022-04-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TME",
+   "name": "Tencent Music Entertainment Group American Depositary Shares, each representing two Class A Ordinary Shares (TME) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-04-22",
+   "lastDate": "2022-04-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TSLA",
+   "name": "Tesla, Inc. (TSLA) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-08-01",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VASGX",
+   "name": "Vanguard Lifestrategy Growth Fund (VASGX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-07-01",
+   "lastDate": "2025-12-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VBIAX",
+   "name": "Vanguard Balanced Index Fd Admiral Shs (VBIAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-03-22",
+   "lastDate": "2025-12-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VBR",
+   "name": "Vanguard Small-Cap Value ETF (VBR) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-12-26",
+   "lastDate": "2025-12-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VCMDX",
+   "name": "Vanguard Commodity Strategy Fund Admiral Shares (VCMDX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-07-11",
+   "lastDate": "2024-07-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VEMAX",
+   "name": "Vanguard Emerging Markets Stock Index Fund Admiral Shares (VEMAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-09-19",
+   "lastDate": "2024-09-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VFIAX",
+   "name": "Vanguard 500 Index Fd Admiral Shs (VFIAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-04-02",
+   "lastDate": "2025-12-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VGSLX",
+   "name": "Vanguard Real Estate Index Fund Admiral Shares (VGSLX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-09-19",
+   "lastDate": "2024-09-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VOO",
+   "name": "Vanguard S&P 500 ETF (VOO) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-04-02",
+   "lastDate": "2025-12-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VSIAX",
+   "name": "Vanguard Small-Cap Value Index Fd Admiral (VSIAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-09-27",
+   "lastDate": "2025-12-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VSMGX",
+   "name": "Vanguard Lifestrategy Moderate Growth Fund (VSMGX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2024-05-29",
+   "lastDate": "2024-06-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VT",
+   "name": "Vanguard Total World Stock Index ETF (VT) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-12-24",
+   "lastDate": "2025-12-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VTI",
+   "name": "Vanguard Total Stock Market ETF (VTI) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-02-29",
+   "lastDate": "2024-02-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VTIAX",
+   "name": "Vanguard Total International Stock Index Fd Admiral (VTIAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-02-29",
+   "lastDate": "2025-12-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VTSAX",
+   "name": "Vanguard Total Stock Market Index Fd Admiral Shs (VTSAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-02-29",
+   "lastDate": "2025-12-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VTWAX",
+   "name": "Vanguard Total World Stock Index Fund Admiral Shares (VTWAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-04-02",
+   "lastDate": "2025-12-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WMT",
+   "name": "Walmart Inc. (WMT) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

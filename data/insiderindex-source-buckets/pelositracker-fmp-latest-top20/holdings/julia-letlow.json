@@ -1,0 +1,3975 @@
+{
+ "slug": "julia-letlow",
+ "bioguideId": "L000595",
+ "name": "Julia Letlow",
+ "party": "Republican",
+ "state": "Louisiana",
+ "title": "Representative",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": true,
+ "annualFetchIssues": [],
+ "holdingsCount": 94,
+ "holdingsWithTickerCount": 60,
+ "holdingsFromTransactionsCount": 170,
+ "holdings": [
+  {
+   "name": "Bank of America Checking [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Louisiana State Employees Retirement [PE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Bank Deposit [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Principal Residence [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Abbott Laboratories Common Stock (ABT) [ST]",
+   "ticker": "ABT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒AbbVie Inc. Common Stock (ABBV) [ST]",
+   "ticker": "ABBV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Accenture plc Class A Ordinary Shares (ACN) [ST]",
+   "ticker": "ACN",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Alcoa Corporation Common Stock (AA) [ST]",
+   "ticker": "AA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Amazon.com, Inc. - Common Stock (AMZN) [ST]",
+   "ticker": "AMZN",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒American Financial Group, Inc. Common Stock (AFG) [ST]",
+   "ticker": "AFG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Anheuser-Busch Inbev Fin [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Apple Inc. - Common Stock (AAPL) [ST]",
+   "ticker": "AAPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Arthur J. Gallagher & Co. Common Stock (AJG) [ST]",
+   "ticker": "AJG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒AT&T Inc [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒AT&T Inc. (T) [ST]",
+   "ticker": "T",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Blackrock 2038 Enrollment [5F]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒BLACKROCK EQTY DIVIDEND [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒BLACKROCK GLOBAL ALLOCATION FUND [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Boeing Company (BA) [ST]",
+   "ticker": "BA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Bristol-Myers Squibb Company Common Stock (BMY) [ST]",
+   "ticker": "BMY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Broadcom Inc. - Common Stock (AVGO) [ST]",
+   "ticker": "AVGO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒CF Industries Holdings, Inc. Common Stock (CF) [ST]",
+   "ticker": "CF",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Chevron Corporation Common Stock (CVX) [ST]",
+   "ticker": "CVX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Double Line Total Return Bond Fund [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Dover Corporation Common Stock (DOV) [ST]",
+   "ticker": "DOV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Dropbox, Inc. - Class A Common Stock (DBX) [ST]",
+   "ticker": "DBX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Duke Energy Corporation (DUK) [ST]",
+   "ticker": "DUK",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒EDGEWOOD GROWTH FUND CL [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Expand Energy Corporation - Common Stock (EXE) [ST]",
+   "ticker": "EXE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Franklin Templeton Clearbridge Capital Appreciation [FN]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Franklin Templeton Small Cap Value [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Goldman Sachs Group, Inc. (GS) [ST]",
+   "ticker": "GS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒GS GQG PARTNERS [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒HF Sinclair Corporation Common Stock (DINO) [ST]",
+   "ticker": "DINO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Ingersoll Rand Inc. Common Stock (IR) [ST]",
+   "ticker": "IR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Intercontinental Exchange Inc. Common Stock (ICE) [ST]",
+   "ticker": "ICE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Ishares Core Mod Allocated [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒ISHARES RUSSELL 1000 GROWTH FUND [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒ISHARES RUSSELL 1000 VALUE FUND [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒ISHARES TR CORE MSCI ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒ISHARES US TREASURY BOND [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒JP Morgan Chase & Co [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒JP Morgan Chase & Co. Common Stock (JPM) [ST]",
+   "ticker": "JPM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Kenvue Inc. Common Stock (KVUE) [ST]",
+   "ticker": "KVUE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Las Vegas Sands Corp. Common Stock (LVS) [ST]",
+   "ticker": "LVS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Lowe's Companies, Inc. Common Stock (LOW) [ST]",
+   "ticker": "LOW",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Macquarie Small Cap Core Fund Institutional (DCCIX)[MF]",
+   "ticker": "DCCIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒McCormick & Company, Incorporated Common Stock(MKC) [ST]",
+   "ticker": "MKC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Meta Platforms, Inc. - Class A Common Stock (META) [ST]",
+   "ticker": "META",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒[ST]Mettler-Toledo International, Inc. Common Stock (MTD)",
+   "ticker": "MTD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒MFS VALUE FD CL I [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Micron Technology, Inc. - Common Stock (MU) [ST]",
+   "ticker": "MU",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Microsoft Corp [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Microsoft Corporation - Common Stock (MSFT) [ST]",
+   "ticker": "MSFT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒NextEra Energy, Inc. Common Stock (NEE) [ST]",
+   "ticker": "NEE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒NextGen Savings Portfolio [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Nucor Corporation Common Stock (NUE) [ST]",
+   "ticker": "NUE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒NVIDIA Corporation - Common Stock (NVDA) [ST]",
+   "ticker": "NVDA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒OAKMARK INTL FD CL [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Parker-Hannifin Corporation Common Stock (PH) [ST]",
+   "ticker": "PH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Pepsico Inc [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒PIMCO INVESTMENT GRADE [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Pinterest, Inc. Class A Common Stock (PINS) [ST]",
+   "ticker": "PINS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒PNC Financial Services Group, Inc. (PNC) [ST]",
+   "ticker": "PNC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Public Service Enterprise Group Incorporated CommonStock (PEG) [ST]",
+   "ticker": "PEG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒PVH Corp. Common Stock (PVH) [ST]",
+   "ticker": "PVH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Saia, Inc. - Common Stock (SAIA) [ST]",
+   "ticker": "SAIA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Salesforce, Inc. Common Stock (CRM) [ST]",
+   "ticker": "CRM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Schlumberger N.V. Common Stock (SLB) [ST]",
+   "ticker": "SLB",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Schwab U.S. Small-Cap ETF (SCHA) [EF]",
+   "ticker": "SCHA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Stryker Corporation Common Stock (SYK) [ST]",
+   "ticker": "SYK",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Taiwan Semiconductor Manufacturing Company Ltd. (TSM)[ST]",
+   "ticker": "TSM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Tapestry, Inc. Common Stock (TPR) [ST]",
+   "ticker": "TPR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒The Bank of New York Mellon Corporation Common Stock(BK) [ST]",
+   "ticker": "BK",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒The Cigna Group Common Stock (CI) [ST]",
+   "ticker": "CI",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Thermo Fisher Scientific Inc Common Stock (TMO) [ST]",
+   "ticker": "TMO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒UnitedHealth Group Incorporated Common Stock (UNH)[ST]",
+   "ticker": "UNH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Universal Health Services, Inc. Common Stock (UHS) [ST]",
+   "ticker": "UHS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒US Treasury Bond [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒VANGUARD INTERMDIATE-TERM [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒VANGUARD MORTGAGE-BACKED [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Vanguard Russell 1000 Growth ETF (VONG) [EF]",
+   "ticker": "VONG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒VANGUARD TOTAL INTERNATL [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Vertex Pharmaceuticals Incorporated - Common Stock(VRTX) [ST]",
+   "ticker": "VRTX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Visa Inc [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Visa Inc. (V) [ST]",
+   "ticker": "V",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Walmart Inc [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Walt Disney Company [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒(WBD) [ST]Warner Bros. Discovery, Inc. - Series A Common Stock",
+   "ticker": "WBD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Wells Fargo & Company Common Stock (WFC) [ST]",
+   "ticker": "WFC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Welltower Inc. Common Stock (WELL) [ST]",
+   "ticker": "WELL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Williams-Sonoma, Inc. Common Stock (WSM) [ST]",
+   "ticker": "WSM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Merrill Lynch Investment Account ⇒Workday, Inc. - Class A Common Stock (WDAY) [ST]",
+   "ticker": "WDAY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "AA",
+   "name": "Alcoa Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ABBV",
+   "name": "AbbVie Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ABT",
+   "name": "Abbott Laboratories Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACI",
+   "name": "Albertsons Companies, Inc. Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-24",
+   "lastDate": "2025-08-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACN",
+   "name": "Accenture Plc Class A Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ADBE",
+   "name": "Adobe Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-24",
+   "lastDate": "2025-10-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AFG",
+   "name": "American Financial Group, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-11-19",
+   "lastDate": "2025-02-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AIG",
+   "name": "American International Group, Inc. New Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2025-02-24",
+   "lastDate": "2025-07-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AIZ",
+   "name": "Assurant, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-08-26",
+   "lastDate": "2025-08-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AJG",
+   "name": "Arthur J. Gallagher & Co. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMD",
+   "name": "Advanced Micro Devices Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-17",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMGN",
+   "name": "Amgen Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-10-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AVGO",
+   "name": "Broadcom Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AZN",
+   "name": "AstraZeneca PLC - American Depositary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-12-08",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AZPN",
+   "name": "Aspen Technology, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BA",
+   "name": "Boeing Co",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BAH",
+   "name": "Booz Allen Hamilton Holding Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BGSIX",
+   "name": "Merrill Lynch Investment Account #821 ⇒ BlackRock Science & Technology Opportunities Portf Insti Class (BGSIX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-06-04",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BHYIX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock High Yield Portfolio - Institutional (BHYIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BIL",
+   "name": "Merrill Lynch Usufruct Account #404 - Child 1 ⇒ State Street SPDR Bloomberg 1-3 Month T-Bill ETF (BIL) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2022-07-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BK",
+   "name": "The Bank Of New York Mellon Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BMY",
+   "name": "Bristol-Myers Squibb Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-04-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BNDX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ Vanguard Total International Bond ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-01-23",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BSIIX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Strategic Income Opportunities Portfolio - Institutional (BSIIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BUD",
+   "name": "Merrill Lynch Investment Account ⇒ Anheuser-Busch Inbev Fin [CS]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-10-28",
+   "lastDate": "2024-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BUPXX",
+   "name": "Merrill Lynch Investment Account #025 ⇒ BlackRock Liquidity Funds FedFund - Premier (BUPXX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2024-02-13",
+   "lastDate": "2024-06-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BXP",
+   "name": "Boston Properties Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "C",
+   "name": "Citigroup, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-31",
+   "lastDate": "2025-04-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CF",
+   "name": "CF Industries Holdings, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-08-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CI",
+   "name": "The Cigna Group Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-04-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMG",
+   "name": "Chipotle Mexican Grill, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-08-26",
+   "lastDate": "2025-11-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMI",
+   "name": "Cummins Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-02-04",
+   "lastDate": "2026-02-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CNC",
+   "name": "Centene Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-04-14",
+   "lastDate": "2025-08-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRM",
+   "name": "salesforce.com Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CSCO",
+   "name": "Cisco Systems Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-17",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CVS",
+   "name": "CVS Health Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-25",
+   "lastDate": "2024-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CVX",
+   "name": "Chevron Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CWI",
+   "name": "Merrill Lynch Investment Account #025 ⇒ SPDR MSCI ACWI ex-US ETF (CWI)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2024-06-03",
+   "lastDate": "2024-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DBLTX",
+   "name": "Merrill Lynch Usufruct Account #405 - Child 2 ⇒ DoubleLine Total Return Bond Fund Class I (DBLTX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 19,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2021-10-28",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DBX",
+   "name": "Dropbox, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-04-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DCCIX",
+   "name": "Merrill Lynch Usufruct Account #405 - Child 2 ⇒ Macquarie Small Cap Core Fund Institutional (DCCIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DE",
+   "name": "Deere & Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-31",
+   "lastDate": "2025-09-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DGX",
+   "name": "Quest Diagnostics Incorporated Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-04-28",
+   "lastDate": "2025-07-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DHR",
+   "name": "Danaher Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-04-28",
+   "lastDate": "2025-04-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DINO",
+   "name": "HollyFrontier Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIS",
+   "name": "The Walt Disney Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-24",
+   "lastDate": "2025-11-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DLTR",
+   "name": "Dollar Tree, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-09-17",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DOV",
+   "name": "Dover Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-04-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DRS",
+   "name": "Leonardo DRS, Inc. - Common Stock (DRS) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2026-02-02",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DUK",
+   "name": "Duke Energy Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DVN",
+   "name": "Devon Energy Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-12-08",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DY",
+   "name": "Dycom Industries, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-09-22",
+   "lastDate": "2025-09-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DYNF",
+   "name": "Merrill Lynch Investment Account #821 ⇒ iShares U.S. Equity Factor Rotation Active ETF (DYNF)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-06-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EFV",
+   "name": "Merrill Lynch Investment Account #821 ⇒ iShares MSCI EAFE Value ETF (EFV)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-06-05",
+   "lastDate": "2024-06-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EGFIX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ Edgewood Growth Fund Insti (EGFIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 19,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EMXC",
+   "name": "Merrill Lynch Usufruct Account #405 - Child 2 ⇒ iShares MSCI Emerging Markets ex China ETF (EMXC)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-06-27",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EXE",
+   "name": "Chesapeake Energy Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EXR",
+   "name": "Extra Space Storage Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-02-07",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FTHSX",
+   "name": "Merrill Lynch Investment Account #025 ⇒ FullerThaler Behavioral Small-Cap Equity Fund Institutional Shares [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2022-01-03",
+   "lastDate": "2022-05-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GLOB",
+   "name": "Globant S.A. Common Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-02-28",
+   "lastDate": "2025-08-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-07-02",
+   "lastDate": "2025-07-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOVT",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ iShares U.S. Treasury Bond ETF (GOVT) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 30,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2024-10-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GS",
+   "name": "Goldman Sachs Group, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GSIMX",
+   "name": "Merrill Lynch IRA #822 ⇒ Goldman Sachs GQG Partners International Opportunities Fund Institutional Shares (GSIMX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GTES",
+   "name": "Gates Industrial Corporation Plc Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-09-22",
+   "lastDate": "2025-09-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HCN",
+   "name": "Welltower Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HPE",
+   "name": "Hewlett Packard Enterprise Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-24",
+   "lastDate": "2025-03-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HUM",
+   "name": "Humana Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-08-08",
+   "lastDate": "2026-02-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IBM",
+   "name": "International Business Machines Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-10-22",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ICE",
+   "name": "Intercontinental Exchange Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ICLR",
+   "name": "Icon PLC",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2026-02-12",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ICON",
+   "name": "Icon Energy Corp. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-12-08",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IDEV",
+   "name": "Merrill Lynch Investment Account #025 ⇒ iShares Core MSCI International Developed Markets ETF (IDEV)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2023-01-18",
+   "lastDate": "2024-06-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IEFA",
+   "name": "Merrill Lynch Usufruct Account #405 - Child 2 ⇒ iShares Core MSCI EAFE ETF (IEFA) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2023-01-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IEMG",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ iShares Core MSCI Emerging Markets ETF (IEMG) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INTC",
+   "name": "Intel Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-09-22",
+   "lastDate": "2025-09-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INTU",
+   "name": "Intuit Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-10-01",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IR",
+   "name": "Ingersoll Rand Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ITOT",
+   "name": "Merrill Lynch Investment Account #025 ⇒ iShares Core S&P Total U.S. Stock Market ETF (ITOT)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2024-06-03",
+   "lastDate": "2024-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IVV",
+   "name": "Merrill Lynch Investment Account #821 ⇒ iShares Core S&P 500 ETF (IVV)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-06-04",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IVW",
+   "name": "Merrill Lynch Usufruct Account #404 - Child 1 ⇒ iShares S&P 500 Growth ETF (IVW)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-06-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IWD",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ iShares Russell 1000 Value ETF (IWD) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IWF",
+   "name": "Merrill Lynch IRA #822 ⇒ iShares Russell 1000 Growth Fund (IWF) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 19,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JCI",
+   "name": "Johnson Controls International Plc Ordinary Share",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2025-03-19",
+   "lastDate": "2025-10-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JPM",
+   "name": "JP Morgan Chase & Co. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KHC",
+   "name": "The Kraft Heinz Company - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KO",
+   "name": "Coca-Cola Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-11-03",
+   "lastDate": "2025-11-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KVUE",
+   "name": "Kenvue Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-10-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LOW",
+   "name": "Lowe's Companies, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-08-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LVS",
+   "name": "Las Vegas Sands Corp. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-05-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MABAX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Large Cap Focus Value Fund, Inc - Institutional (MABAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MADCX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Emerging Markets Fund Class I (MADCX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MADVX",
+   "name": "Merrill Lynch IRA #822 ⇒ BlackRock Eq Dividend I (MADVX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAFGX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Capital Appreciation Fund Inc. Institutional (MAFGX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAFOX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Large Cap Focus Growth Fund, Inc. - Institutional (MAFOX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAGCX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Advantage Global Fund, Inc. - Institutional (MAGCX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAHQX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Total Return Fund Class I (MAHQX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAILX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock International I (MAILX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2024-06-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MALOX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ BlackRock Global Alloc I (MALOX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-02-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MANLX",
+   "name": "Merrill Lynch Investment Account #821 ⇒ BlackRock National Muni I (MANLX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-06-04",
+   "lastDate": "2024-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MCK",
+   "name": "McKesson Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-12-18",
+   "lastDate": "2024-12-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MEIIX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ MFS Value Fund - Class I (MEIIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "META",
+   "name": "Meta Platforms Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MKC",
+   "name": "McCormick & Co Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MMM",
+   "name": "3M Co",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale"
+   ],
+   "firstDate": "2025-01-17",
+   "lastDate": "2026-02-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MRGRX",
+   "name": "Merrill Lynch Usufruct Account #405 - Child 2 ⇒ MFS Core Equity Fund Class I (MRGRX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-06-04",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MRK",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ Merck & Company, Inc. Common Stock (MRK) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2021-02-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MTD",
+   "name": "Mettler-Toledo International, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-12-18",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MU",
+   "name": "Micron Technology, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-12-18",
+   "lastDate": "2025-10-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NEE",
+   "name": "NextEra Energy, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-01-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NUE",
+   "name": "Nucor Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVDA",
+   "name": "NVIDIA Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OANIX",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ Oakmark International Fund Institutional Class (OANIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2021-08-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OEF",
+   "name": "Merrill Lynch Investment Account #821 ⇒ iShares S&P 100 ETF (OEF)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-06-05",
+   "lastDate": "2024-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PAA",
+   "name": "Merrill Lynch Roth IRA #324 ⇒ Plains All American Pipeline, L.P. - Common Units representing Limited Partner Interests (PAA) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2021-02-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PBDPX",
+   "name": "Merrill Lynch IRA #822 ⇒ PIMCO Investment Grade Credit Bond Fund Class I-2 (PBDPX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PEG",
+   "name": "Public Service Enterprise Group Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PEP",
+   "name": "PepsiCo Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-25",
+   "lastDate": "2026-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PFBPX",
+   "name": "Merrill Lynch Investment Account #025 ⇒ PIMCO International Bond Fund (PFBPX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2022-01-03",
+   "lastDate": "2024-06-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PFE",
+   "name": "Pfizer, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2025-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PG",
+   "name": "The Procter & Gamble Co",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-10-16",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PH",
+   "name": "Parker-Hannifin Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PINS",
+   "name": "Pinterest, Inc. Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PM",
+   "name": "Philip Morris International Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PNC",
+   "name": "PNC Financial Services Group, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PVH",
+   "name": "PVH Corp. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-01-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PVOXX",
+   "name": "Merrill Lynch Investment Account #821 ⇒ Federated Hermes Institutional Prime Value Obligations Fund IS Class (PVOXX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2023-06-12",
+   "lastDate": "2024-06-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QUAL",
+   "name": "Merrill Lynch Investment Account #821 ⇒ iShares MSCI USA Quality Factor ETF (QUAL)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2024-06-05",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RBLX",
+   "name": "Roblox Corporation Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-10-16",
+   "lastDate": "2025-10-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "REGN",
+   "name": "Regeneron Pharmaceuticals Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-02-12",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RELX",
+   "name": "RELX PLC PLC American Depositary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-10-22",
+   "lastDate": "2025-10-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SAIA",
+   "name": "Saia, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SBLYX",
+   "name": "Merrill Lynch IRA #822 ⇒ ClearBridge Large Cap Growth Fd Class I (SBLYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2022-09-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SCHA",
+   "name": "Merrill Lynch IRA #822 ⇒ Schwab U.S. Small-Cap ETF (SCHA) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2024-06-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SF",
+   "name": "Stifel Financial Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-11-03",
+   "lastDate": "2025-11-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SLB",
+   "name": "Schlumberger N.V. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-02-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "STT",
+   "name": "State Street Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2025-05-27",
+   "lastDate": "2025-11-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SYF",
+   "name": "Synchrony Financial Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-07-02",
+   "lastDate": "2025-07-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SYK",
+   "name": "Stryker Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-10-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "T",
+   "name": "AT&T Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TGLMX",
+   "name": "Merrill Lynch IRA #822 ⇒ TCW Total Return Bond Fund Cl I (TGLMX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2021-10-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TMO",
+   "name": "Thermo Fisher Scientific Inc Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TPR",
+   "name": "Tapestry, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TRV",
+   "name": "The Travelers Companies Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-02-20",
+   "lastDate": "2026-02-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TSM",
+   "name": "Taiwan Semiconductor Manufacturing Co Ltd",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TTWO",
+   "name": "Take-Two Interactive Software Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-04-14",
+   "lastDate": "2026-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TW",
+   "name": "Tradeweb Markets Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-29",
+   "lastDate": "2025-10-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UHID",
+   "name": "Universal Health Services, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-24",
+   "lastDate": "2025-01-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UHS",
+   "name": "Universal Health Services, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UNH",
+   "name": "UnitedHealth Group Incorporated Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-05-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "URI",
+   "name": "United Rentals Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-12-16",
+   "lastDate": "2026-02-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USHY",
+   "name": "Merrill Lynch Investment Account #025 ⇒ iShares Broad USD High Yield Corporate Bond ETF [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2022-01-03",
+   "lastDate": "2023-10-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "V",
+   "name": "Visa Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VCIT",
+   "name": "Merrill Lynch Usufruct Account #404 - Child 1 ⇒ Vanguard Intermediate-Term Corporate Bond ETF (VCIT) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 24,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2024-06-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VGLT",
+   "name": "Merrill Lynch Investment Account #025 ⇒ Vanguard Long-Term Treasury ETF (VGLT)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2023-07-19",
+   "lastDate": "2024-10-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VMBS",
+   "name": "Merrill Lynch Usufruct Account #404 - Child 1 ⇒ Vanguard Mortgage-Backed Securities ETF (VMBS) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2021-02-10",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VONG",
+   "name": "Merrill Lynch Investment Account #025 ⇒ Vanguard Russell 1000 Growth ETF (VONG)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2022-09-29",
+   "lastDate": "2024-06-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VRTX",
+   "name": "Vertex Pharmaceuticals Incorporated - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VST",
+   "name": "Vistra Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-02-17",
+   "lastDate": "2026-02-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VTEB",
+   "name": "Merrill Lynch Investment Account #025 ⇒ Vanguard Tax-Exempt Bond ETF (VTEB)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2024-06-03",
+   "lastDate": "2024-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WAT",
+   "name": "Waters Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WBD",
+   "name": "Warner Bros. Discovery, Inc. - Series A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-11-01",
+   "lastDate": "2025-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WDAY",
+   "name": "Workday, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WELL",
+   "name": "Merrill Lynch Investment Account ⇒ Welltower Inc. Common Stock (WELL) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2024-10-24",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WFC",
+   "name": "Wells Fargo & Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2024-10-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WMT",
+   "name": "Walmart Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-25",
+   "lastDate": "2024-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WSM",
+   "name": "Williams-Sonoma, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-10-23",
+   "lastDate": "2025-07-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

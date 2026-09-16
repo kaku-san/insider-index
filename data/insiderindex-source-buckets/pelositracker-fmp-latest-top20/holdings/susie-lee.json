@@ -1,0 +1,7433 @@
+{
+ "slug": "susie-lee",
+ "bioguideId": "L000590",
+ "name": "Susie Lee",
+ "party": "Democrat",
+ "state": "Nevada",
+ "title": "Representative",
+ "fmpYear": 2023,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020,
+  2019
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 75,
+ "holdingsWithTickerCount": 65,
+ "holdingsFromTransactionsCount": 370,
+ "holdings": [
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustiShares MSCI Japan Index Fund (EWJ) [EF]Brokerage Account ⇒",
+   "ticker": "EWJ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sTrust Brokerage Account ⇒iShares MSCI Japan Index Fund (EWJ) [EF]",
+   "ticker": "EWJ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sMyers Industries, Inc. Common Stock (MYE) [ST]Trust Brokerage Account ⇒",
+   "ticker": "MYE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW Subtrust",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Gabelli G Research Brokerage",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒3M Company Common Stock (MMM) [ST]",
+   "ticker": "MMM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Apple Inc. - Common Stock (AAPL) [ST]",
+   "ticker": "AAPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Aquila Opportunity Growth Fund Class A (ATGAX) [MF]",
+   "ticker": "ATGAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Avis Budget Group, Inc. - Common Stock (CAR) [ST]",
+   "ticker": "CAR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Becton, Dickinson and Company Common Stock (BDX) [ST]",
+   "ticker": "BDX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBlackRock Global Alloc A (MDLOX) [MF]",
+   "ticker": "MDLOX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Boeing Company (BA) [ST]",
+   "ticker": "BA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Cardinal Health, Inc. Common Stock (CAH) [ST]",
+   "ticker": "CAH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Diversified Healthcare Trust - Common Shares of BeneficialInterest (DHC) [ST]",
+   "ticker": "DHC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Dominion Energy, Inc. Common Stock (D) [ST]",
+   "ticker": "D",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Fidelity Nasdaq Composite Index ETF (ONEQ) [EF]",
+   "ticker": "ONEQ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Fidelity Total Bond (FTBFX) [MF]",
+   "ticker": "FTBFX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Full House Resorts, Inc. - Common Stock (FLL) [ST]",
+   "ticker": "FLL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒iShares Core MSCI Europe ETF (IEUR) [EF]",
+   "ticker": "IEUR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒iShares Dow Jones U.S. ETF (IYY) [EF]",
+   "ticker": "IYY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒MGM Resorts International Common Stock (MGM) [ST]",
+   "ticker": "MGM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Mondelez International, Inc. - Class A Common Stock(MDLZ) [ST]",
+   "ticker": "MDLZ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒PPL Corporation Common Stock (PPL) [ST]",
+   "ticker": "PPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustPublic Service Enterprise Group Incorporated Common StockBrokerage Account ⇒(PEG) [ST]",
+   "ticker": "PEG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Sony Group Corporation American Depositary Shares(SONY) [ST]",
+   "ticker": "SONY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒The RMR Group Inc. - Class A Common Stock (RMR) [ST]",
+   "ticker": "RMR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Travel Leisure Co. Common Stock (TNL) [ST]",
+   "ticker": "TNL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Wyndham Hotels & Resorts, Inc. Common Stock (WH) [ST]",
+   "ticker": "WH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ARW Subtrust ⇒ Fidelity Investments ARW SubtrustBrokerage Account ⇒Xerox Holdings Corporation - Common Stock (XRX) [ST]",
+   "ticker": "XRX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "Columbia Income Opp 529 PRT AG FBO DC1 [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒Boyd Gaming Corporation Common Stock (BYD) [ST]",
+   "ticker": "BYD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒Cash in Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒Fidelity Nasdaq Composite Index ETF (ONEQ) [EF]",
+   "ticker": "ONEQ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒Full House Resorts, Inc. - Common Stock (FLL) [ST]",
+   "ticker": "FLL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒iShares Core S&P 500 ETF (IVV) [EF]",
+   "ticker": "IVV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒iShares MSCI Japan Index Fund (EWJ) [EF]",
+   "ticker": "EWJ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒Methanex Corporation - Common Stock (MEOH) [ST]",
+   "ticker": "MEOH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒MGM Resorts International Common Stock (MGM) [ST]",
+   "ticker": "MGM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Fidelity Investments DC1 UTMA Account ⇒Starbucks Corporation - Common Stock (SBUX) [ST]",
+   "ticker": "SBUX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒BNY Mellon Diversified International Fund Class Y (DDIFX)[MF]",
+   "ticker": "DDIFX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒BNY Mellon Floating Rate Income Fund Class Y (DFLYX)[MF]",
+   "ticker": "DFLYX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒BNY Mellon Global Real Estate Sec Fd [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒BNY Mellon Mid Cap Multi-Strategy Fund Class M Shares(MPMCX) [MF]",
+   "ticker": "MPMCX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒BNY Mellon Municipal Opportunities Fund Class M Shares(MOTMX) [MF]",
+   "ticker": "MOTMX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒BNY Mellon National Intermediate Municipal Bond InvestorShares (MINMX) [MF]",
+   "ticker": "MINMX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒BNY Mellon Select Managers Small Cap Growth Fund Class Y(DSGYX) [MF]",
+   "ticker": "DSGYX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage AccountBNY Mellon U.S. Equity Fund Class Y (DPUYX) [MF]",
+   "ticker": "DPUYX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒Cash in Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒Fidelity Advisor International Small Cap Fund - Class Z(FIQIX) [MF]",
+   "ticker": "FIQIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒Gateway Fund Class Y (GTEYX) [MF]",
+   "ticker": "GTEYX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage AccountGoldman Sachs Absolute Return Tracker Fund Class I⇒(GJRTX) [MF]",
+   "ticker": "GJRTX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒iShares Core S&P 500 ETF (IVV) [EF]",
+   "ticker": "IVV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒iShares Core S&P Small-Cap ETF (IJR) [EF]",
+   "ticker": "IJR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒iShares Short-Term National Muni Bond ETF (SUB) [EF]",
+   "ticker": "SUB",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒Nationwide BNY Mellon Dynamic U.S. Core Fund Eagle Class(NWAEX) [MF]",
+   "ticker": "NWAEX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒SPDR S&P Dividend ETF (SDY) [EF]",
+   "ticker": "SDY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account⇒TCW Emerging Markets Income Fund I Cl (TGEIX) [MF]",
+   "ticker": "TGEIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sTrust Brokerage Account ⇒Amazon.com, Inc. - Common Stock (AMZN) [ST]",
+   "ticker": "AMZN",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sApple Inc. - Common Stock (AAPL) [ST]Trust Brokerage Account ⇒",
+   "ticker": "AAPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sTrust Brokerage Account ⇒Cash in Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "DSL Living Trust ⇒ Bank of New York Brokerage Account740 ⇒Cash in Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "DSL Living Trust ⇒ Bank of New York Brokerage Account740 ⇒Full House Resorts, Inc. (FLL) [ST]",
+   "ticker": "FLL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "DSL Living Trust ⇒ Fidelity Investments Brokerage Account",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "DSL Living Trust ⇒ Fidelity Investments Brokerage Account⇒Fidelity Government Money Market (SPAXX) [BA]",
+   "ticker": "SPAXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "Suzanne and Daniel R. Lee Family Foundation ⇒ FidelityFidelity Government Money Market (SPAXX) [BA]Investments Family Foundation Account ⇒",
+   "ticker": "SPAXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Suzanne and Daniel R. Lee Family Foundation ⇒ FidelityInvestments Family Foundation Account ⇒Full House Resorts, Inc. - Common Stock (FLL) [ST]",
+   "ticker": "FLL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sTrust Brokerage Account ⇒Century Casinos, Inc. - Common Stock (CNTY) [ST]",
+   "ticker": "CNTY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sFull House Resorts, Inc. - Common Stock (FLL) [ST]Trust Brokerage Account ⇒",
+   "ticker": "FLL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sTrust Brokerage Account ⇒iShares Core S&P 500 ETF (IVV) [EF]",
+   "ticker": "IVV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Fidelity Investments Lee Children'sTrust Brokerage Account ⇒Nike, Inc. Common Stock (NKE) [ST]",
+   "ticker": "NKE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Gabelli G Research BrokerageAccount ⇒Gabelli ABC Fund (GABCX) [MF]",
+   "ticker": "GABCX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Gabelli G Research BrokerageAccount ⇒Gabelli Global Rising Income and Dividend Fund Class AAA(GAGCX) [MF]",
+   "ticker": "GAGCX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Gabelli G Research BrokerageAccount ⇒Gabelli Small Cap Growth Fund (GABSX) [MF]",
+   "ticker": "GABSX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Lee Children's Trust ⇒ Gabelli G Research BrokerageGabelli US Treasury Fund (INV) [MF]Account ⇒",
+   "ticker": "INV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "ACHC",
+   "name": "Acadia Healthcare Company, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACI",
+   "name": "Albertsons Companies, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-06-26",
+   "lastDate": "2020-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACIW",
+   "name": "ACI Worldwide, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-01-07",
+   "lastDate": "2020-06-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACM",
+   "name": "AECOM",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-08",
+   "lastDate": "2020-11-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ADSW",
+   "name": "Advanced Disposal Services, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-04-11",
+   "lastDate": "2019-04-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AEIS",
+   "name": "Advanced Energy Industries, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-05-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AGCO",
+   "name": "AGCO Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2021-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AHCO",
+   "name": "AdaptHealth Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-05",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AJG",
+   "name": "Arthur J. Gallagher & Co.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-12",
+   "lastDate": "2023-04-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ALGM",
+   "name": "Allegro MicroSystems, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-05",
+   "lastDate": "2021-05-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ALLY",
+   "name": "Ally Financial Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-11",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ALYF",
+   "name": "Ally Financial Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-06-15",
+   "lastDate": "2021-06-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AME",
+   "name": "AMETEK, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-10-03",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMP",
+   "name": "Ameriprise Financial, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-10",
+   "lastDate": "2020-04-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMRC",
+   "name": "Ameresco, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-12-22",
+   "lastDate": "2021-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMTD",
+   "name": "TD Ameritrade Holding Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2019-10-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ANET",
+   "name": "Arista Networks, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-11",
+   "lastDate": "2019-11-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "APTV",
+   "name": "Aptiv PLC Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-10-07",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AQUA",
+   "name": "Evoqua Water Technologies Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-03-06",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ARLIX",
+   "name": "Fidelity Investments Roth IRA ⇒ American Century One Choice 2035 Portfolio - I Class",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-06-06",
+   "lastDate": "2025-06-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ARMK",
+   "name": "Aramark",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2020-08-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ASFYX",
+   "name": "Bank of New York IRa ⇒ aSG Managed Futures Strategy (aSFYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-07-02",
+   "lastDate": "2020-07-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ATGAX",
+   "name": "aRW Subtrust ⇒ Fidelity Investments aRW Subtrust Brokerage account ⇒ aquila Three Peaks Opp Growth Cl a (aTGaX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2019-12-04",
+   "lastDate": "2022-12-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ATR",
+   "name": "Aptargroup, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-07-12",
+   "lastDate": "2019-09-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AVGAX",
+   "name": "Bank of New York IRa ⇒ BNY Mellon Dynamic Total Return (aVGaX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-07-02",
+   "lastDate": "2020-07-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AVGYX",
+   "name": "Bank of New York Brokerage account ⇒ BNY Mellon Dynamic Total Return Y (aVGYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-07-01",
+   "lastDate": "2020-07-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AVTR",
+   "name": "Avantor, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-05-17",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AVYA",
+   "name": "Avaya Holdings Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-11-23",
+   "lastDate": "2021-09-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AWK",
+   "name": "American Water Works Company, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-07-12",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AZEK",
+   "name": "The AZEK Company Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-12-16",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AZO",
+   "name": "AutoZone, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-05-08",
+   "lastDate": "2020-06-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BAC",
+   "name": "Bank Of America Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-01-27",
+   "lastDate": "2022-01-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BAH",
+   "name": "Booz Allen Hamilton Holding Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BALL",
+   "name": "Ball Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BALY",
+   "name": "Bally's Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-25",
+   "lastDate": "2021-05-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BAX",
+   "name": "Baxter International Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2019-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BBWI",
+   "name": "Bath & Body Works, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BERY",
+   "name": "Berry Global Group, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-08",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BFAM",
+   "name": "Bright Horizons Family Solutions Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 26,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BHC",
+   "name": "Bausch Health Companies Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-01-06",
+   "lastDate": "2020-08-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BHI",
+   "name": "Baker Hughes Incorporated",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-23",
+   "lastDate": "2021-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BIO",
+   "name": "Bio-Rad Laboratories, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BKI",
+   "name": "Black Knight, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 19,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-10",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BKR",
+   "name": "Baker Hughes Company Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-02-23",
+   "lastDate": "2021-02-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BLDR",
+   "name": "Builders FirstSource, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-06-03",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BLL",
+   "name": "Ball Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 46,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2021-07-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BP",
+   "name": "BP P.l.c.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-11",
+   "lastDate": "2019-01-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BR",
+   "name": "Broadridge Financial Solutions, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BRKS",
+   "name": "Brooks Automation, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-05-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BRO",
+   "name": "Brown & Brown, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-22",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BSX",
+   "name": "Boston Scientific Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2019-04-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BYD",
+   "name": "Boyd Gaming Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-12-26",
+   "lastDate": "2020-03-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CACI",
+   "name": "CACI International, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-05-15",
+   "lastDate": "2021-01-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CAG",
+   "name": "ConAgra Brands, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-07",
+   "lastDate": "2020-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CARR",
+   "name": "Carrier Global Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2021-09-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CBRE",
+   "name": "CBRE Group Inc Common Stock Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2020-07-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CCC",
+   "name": "Clarivate PLC Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-06-04",
+   "lastDate": "2021-06-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CCI",
+   "name": "Crown Castle International Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2021-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CCK",
+   "name": "Crown Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CCL",
+   "name": "Carnival Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-06",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CCXX",
+   "name": "Churchill Capital Corp III Class A Common Stock, Par Value $0.0001 Per Share",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-07-13",
+   "lastDate": "2020-08-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CDK",
+   "name": "CDK Global, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-07-17",
+   "lastDate": "2021-05-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CDNS",
+   "name": "Cadence Design Systems, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-12",
+   "lastDate": "2021-06-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CDW",
+   "name": "CDW Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 24,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CHDN",
+   "name": "Churchill Downs, Incorporated",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 30,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CHGG",
+   "name": "Chegg, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-17",
+   "lastDate": "2021-05-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CHNG",
+   "name": "Change Healthcare Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-06-27",
+   "lastDate": "2021-01-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CHTR",
+   "name": "Charter Communications, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2021-02-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CHX",
+   "name": "ChampionX Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-05",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CLR",
+   "name": "Continental Resources, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-16",
+   "lastDate": "2019-10-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CLVT",
+   "name": "Clarivate PLC Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-11-30",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CLX",
+   "name": "Clorox Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-07",
+   "lastDate": "2019-10-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMCYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ Van Eck CM Commodity Index Fd Cl Y (CMCYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-08-29",
+   "lastDate": "2023-08-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CNC",
+   "name": "Centene Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 22,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-15",
+   "lastDate": "2021-05-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CNTY",
+   "name": "Century Casinos, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COLD",
+   "name": "Americold Realty Trust Common Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-05-24",
+   "lastDate": "2021-03-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COMM",
+   "name": "CommScope Holding Company, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 19,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-01-06",
+   "lastDate": "2021-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COO",
+   "name": "The Cooper Companies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2020-02-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COT",
+   "name": "Cott Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2019-08-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CPRT",
+   "name": "Copart, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2019-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRL",
+   "name": "Charles River Laboratories International, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-08-29",
+   "lastDate": "2019-10-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRWD",
+   "name": "CrowdStrike Holdings, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-28",
+   "lastDate": "2021-03-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CSGP",
+   "name": "CoStar Group, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-13",
+   "lastDate": "2020-12-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CTAS",
+   "name": "Cintas Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-06-25",
+   "lastDate": "2019-07-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CTL",
+   "name": "CenturyLink, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-15",
+   "lastDate": "2019-03-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CTLT",
+   "name": "Catalent, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CTXS",
+   "name": "Citrix Systems, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-25",
+   "lastDate": "2019-04-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CWH",
+   "name": "Camping World Holdings, Inc. Class A Commom Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2021-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CWK",
+   "name": "Cushman & Wakefield Plc Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-17",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CWST",
+   "name": "Casella Waste Systems, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-12",
+   "lastDate": "2019-12-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CZR",
+   "name": "Caesars Entertainment, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DDIFX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Diversified International Fund Class Y (DDIFX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2022-12-30",
+   "lastDate": "2023-12-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DELL",
+   "name": "Dell Technologies Inc. Class C",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 25,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-14",
+   "lastDate": "2021-08-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DESY",
+   "name": "Diversey Holdings Ltd (NASDAQ: DESY) [OT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2021-03-25",
+   "lastDate": "2021-03-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFLYX",
+   "name": "Bank of New York Brokerage account ⇒ BNY Mellon Float Rt Inc Fd Y (DFLYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2020-03-19",
+   "lastDate": "2022-03-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DFS",
+   "name": "Discover Financial Services",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-09-28",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DG",
+   "name": "Dollar General Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-03-31",
+   "lastDate": "2020-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DHR",
+   "name": "Danaher Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2019-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIN",
+   "name": "Dine Brands Global, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-12-03",
+   "lastDate": "2021-05-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DLR",
+   "name": "Digital Realty Trust, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-04-28",
+   "lastDate": "2021-01-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DLTR",
+   "name": "Dollar Tree, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-04-27",
+   "lastDate": "2021-05-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DMVYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Slct Mgrs Sml Cap Val Fd (DMVYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-03-11",
+   "lastDate": "2022-03-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DMXF",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ iShares ESG Advanced MSCI EAFE ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DNB",
+   "name": "Dun & Bradstreet Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-09-18",
+   "lastDate": "2020-12-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DNKN",
+   "name": "Dunkin' Brands Group, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-10",
+   "lastDate": "2020-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DOV",
+   "name": "Dover Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-08",
+   "lastDate": "2021-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DPUYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon U.S. Equity Fund Class Y (DPUYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2022-03-11",
+   "lastDate": "2023-12-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DPZ",
+   "name": "Domino's Pizza Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 28,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2021-06-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DRE",
+   "name": "Duke Realty Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-09-06",
+   "lastDate": "2021-01-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DRLYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Global Real Estate Sec Fd (DRLYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-12-28",
+   "lastDate": "2022-12-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DRRYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Global Real Return Fund Class Y (DRRYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2022-03-11",
+   "lastDate": "2023-11-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DSCYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Opportunistic Sml Cap Fd (DSCYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-03-11",
+   "lastDate": "2022-03-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DSEY",
+   "name": "Diversey Holdings, Ltd. - Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-03-25",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DSGYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Select Managers Small Cap Growth Fund Class Y (DSGYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2022-08-02",
+   "lastDate": "2023-12-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DSI",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG MSCI KLD 400 ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DSPIX",
+   "name": "DSL Living Trust ⇒ Bank of New York Brokerage Account 740 ⇒ BNY Mellon Institutional S&P 500 Stock Index Fund Class I (DSPIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-07-10",
+   "lastDate": "2023-07-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DXCM",
+   "name": "DexCom, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-10-02",
+   "lastDate": "2020-10-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DYYPX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY International Small Cap Fd (DYYPX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-01-12",
+   "lastDate": "2022-01-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EAGG",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG Aware U.S. Aggregate Bond ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ECL",
+   "name": "Ecolab Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2021-03-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EFX",
+   "name": "Equifax, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-28",
+   "lastDate": "2020-10-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EHC",
+   "name": "Encompass Health Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-15",
+   "lastDate": "2020-08-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ELAN",
+   "name": "Elanco Animal Health Incorporated",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ENR",
+   "name": "Energizer Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-27",
+   "lastDate": "2020-09-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ENTG",
+   "name": "Entegris, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-07-12",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ENV",
+   "name": "Envestnet, Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-01-09",
+   "lastDate": "2020-02-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EQIX",
+   "name": "Equinix, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2021-03-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ERI",
+   "name": "Eldorado Resorts, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-28",
+   "lastDate": "2019-10-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ESGD",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG Aware MSCI EAFE ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-05-21",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ESGE",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG Aware MSCI EM ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ESGU",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ iShares ESG Aware MSCI USA ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ESI",
+   "name": "Element Solutions Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-09-24",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EUSB",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG Advanced Universal USD Bond ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EVUS",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG Aware MSCI USA Value ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-09-17",
+   "lastDate": "2025-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EW",
+   "name": "Edwards Lifesciences Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2019-03-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EWJ",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ iShares MSCI Japan Index Fund",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EYE",
+   "name": "National Vision Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2019-03-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FAGIX",
+   "name": "Fidelity Investments IRA ⇒ Fidelity Capital & Income (FAGIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2022-06-10",
+   "lastDate": "2025-03-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FANG",
+   "name": "Diamondback Energy, Inc. - Commmon Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-16",
+   "lastDate": "2019-10-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FDC",
+   "name": "First Data Corporation Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2019-06-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FEYE",
+   "name": "FireEye, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-05-08",
+   "lastDate": "2020-05-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FGDL",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ Franklin Responsibly Sourced Gold ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-09-17",
+   "lastDate": "2025-12-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FHN",
+   "name": "First Horizon National Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-22",
+   "lastDate": "2020-01-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FIQIX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ Fidelity International Small Call Fund (FIQIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2022-03-11",
+   "lastDate": "2022-08-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FIS",
+   "name": "Fidelity National Information Services, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2021-03-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FISV",
+   "name": "Fiserv, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-18",
+   "lastDate": "2021-01-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FLIR",
+   "name": "FLIR Systems, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-24",
+   "lastDate": "2020-10-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FLL",
+   "name": "Full House Resorts, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 39,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2022-05-12",
+   "lastDate": "2026-07-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FLT",
+   "name": "FleetCor Technologies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-06-04",
+   "lastDate": "2021-05-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FMAGX",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ Fidelity Magellan",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FMC",
+   "name": "FMC Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-27",
+   "lastDate": "2021-05-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-14",
+   "lastDate": "2020-04-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FOUR",
+   "name": "Shift4 Payments, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-11-04",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FTBFX",
+   "name": "aRW Subtrust ⇒ Fidelity Investments aRW Subtrust Brokerage account ⇒ Fidelity Total Bond Fund (FTBFX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-10-09",
+   "lastDate": "2020-10-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FTNT",
+   "name": "Fortinet, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2021-01-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FTV",
+   "name": "Fortive Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2020-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FXAIX",
+   "name": "Fidelity Investments IRA ⇒ Fidelity 500 Index Fund",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-06-06",
+   "lastDate": "2025-06-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GABAX",
+   "name": "Lee Children's Trust ⇒ Gabelli G Research Brokerage Account ⇒ Gabelli Asset Fund (GABAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-12-29",
+   "lastDate": "2023-12-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GABCX",
+   "name": "Lee Children's Trust ⇒ Gabelli G Research Brokerage Account ⇒ Gabelli ABC Fund (GABCX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-12-28",
+   "lastDate": "2023-12-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GABSX",
+   "name": "Lee Children's Trust ⇒ Gabelli G Research Brokerage Account ⇒ Gabelli Small Cap Growth Fund (GABSX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-11-29",
+   "lastDate": "2023-10-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GAFYX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ ASG Global Alernatives Fund -Y (GAFYX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-08-16",
+   "lastDate": "2022-08-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GCGMF",
+   "name": "Great Canadian Gaming Corp Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-11",
+   "lastDate": "2021-09-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GDDY",
+   "name": "GoDaddy Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2021-09-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GDEN",
+   "name": "Golden Entertainment, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GFL",
+   "name": "GFL Environmental Inc. Subordinate voting shares, no par value",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-09-18",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GGT",
+   "name": "Gabelli Multi-Media Trust, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-23",
+   "lastDate": "2020-07-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GJRTX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ Goldman Sachs Absolute Return Tracker Fund Class I (GJRTX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-11-30",
+   "lastDate": "2023-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GLIBA",
+   "name": "GCI Liberty, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-07",
+   "lastDate": "2020-04-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GO",
+   "name": "Grocery Outlet Holding Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-01-28",
+   "lastDate": "2021-01-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GPC",
+   "name": "Genuine Parts Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-06-09",
+   "lastDate": "2020-12-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GPK",
+   "name": "Graphic Packaging Holding Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-17",
+   "lastDate": "2021-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GPN",
+   "name": "Global Payments Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GT",
+   "name": "The Goodyear Tire & Rubber Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-12",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GWW",
+   "name": "W.W. Grainger, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2019-05-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HASI",
+   "name": "Hannon Armstrong Sustainable Infrastructure Capital, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-09-18",
+   "lastDate": "2021-05-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HCA",
+   "name": "HCA Healthcare, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HDS",
+   "name": "HD Supply Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2020-11-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HFC",
+   "name": "HollyFrontier Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-12",
+   "lastDate": "2019-02-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HHC",
+   "name": "Howard Hughes Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-12-10",
+   "lastDate": "2021-10-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HLT",
+   "name": "Hilton Worldwide Holdings Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-06-25",
+   "lastDate": "2019-07-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HOLX",
+   "name": "Hologic, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-09-18",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HRC",
+   "name": "Hill-Rom Holdings Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2020-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HRI",
+   "name": "Herc Holdings Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-06-05",
+   "lastDate": "2020-11-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HRS",
+   "name": "Harris Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-22",
+   "lastDate": "2019-03-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HXL",
+   "name": "Hexcel Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2020-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IAA",
+   "name": "Iaa, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2019-08-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IHS",
+   "name": "IHS Inc. IHS Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-12-27",
+   "lastDate": "2019-12-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IJR",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ iShares Core S&P Small-Cap ETF (IJR) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-01-10",
+   "lastDate": "2023-05-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INFO",
+   "name": "IHS Markit Ltd. Common Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2021-01-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INTU",
+   "name": "Intuit Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-13",
+   "lastDate": "2019-03-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IQV",
+   "name": "IQVIA Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IT",
+   "name": "Gartner, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-07",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ITOT",
+   "name": "aRW Subtrust ⇒ Fidelity Investments aRW Subtrust Brokerage account ⇒ iShares Core S&P Total US Stock Mkt ETF (ITOT) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2020-08-25",
+   "lastDate": "2020-08-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IVV",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ iShares Core S&P 500 ETF (IVV) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2023-12-12",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JLL",
+   "name": "Jones Lang LaSalle Incorporated",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-11",
+   "lastDate": "2019-10-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JOE",
+   "name": "St. Joe Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2021-04-27",
+   "lastDate": "2022-10-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KAR",
+   "name": "KAR Auction Services, Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2019-08-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KBH",
+   "name": "KB Home",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-10-27",
+   "lastDate": "2022-10-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KEY",
+   "name": "KeyCorp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-11-15",
+   "lastDate": "2020-01-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KEYS",
+   "name": "Keysight Technologies Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KMX",
+   "name": "CarMax Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-10-07",
+   "lastDate": "2021-07-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KR",
+   "name": "Kroger Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2020-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LBDAV",
+   "name": "Liberty Broadband Corporation - Class A Common Stock When Issued",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-04-28",
+   "lastDate": "2020-04-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LBRDA",
+   "name": "Liberty Broadband Corporation - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-06-05",
+   "lastDate": "2020-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LCTD",
+   "name": "Fidelity Investments IRA ⇒ iShares World ex U.S. Carbon Transition Readiness Aware Active ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LCTU",
+   "name": "Fidelity Investments IRA ⇒ iShares U.S. Carbon Transition Readiness Aware Active ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LDOS",
+   "name": "Leidos Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-08-03",
+   "lastDate": "2021-09-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LEA",
+   "name": "Lear Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2021-02-09",
+   "lastDate": "2021-06-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LESL",
+   "name": "Leslie's, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-12",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LGVAX",
+   "name": "Morgan Stanley Smith Barney Brokerage Account ⇒ ClearBridge Value Fund - Class A (LGVAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-09-10",
+   "lastDate": "2024-09-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LH",
+   "name": "Laboratory Corporation Of America Holdings",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-28",
+   "lastDate": "2020-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LHX",
+   "name": "L3Harris Technologies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-09-11",
+   "lastDate": "2021-03-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LITE",
+   "name": "Lumentum Holdings Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2020-10-07",
+   "lastDate": "2021-06-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LKQ",
+   "name": "LKQ Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-07-11",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LLL",
+   "name": "L3 Technologies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2019-03-22",
+   "lastDate": "2019-03-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LMSAX",
+   "name": "Morgan Stanley Smith Barney Brokerage Account ⇒ ClearBridge Small Cap Fund Class A (LMSAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-09-10",
+   "lastDate": "2024-09-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LNG",
+   "name": "Cheniere Energy, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2019-07-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LPLA",
+   "name": "LPL Financial Holdings Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2023-04-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LQD",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ iShares iBoxx $ Investment Grade Corporate Bond ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-05-05",
+   "lastDate": "2025-05-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LSXMK",
+   "name": "Liberty Media Corporation - Series C Liberty SiriusXM",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2020-04-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LTD",
+   "name": "L Brands, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-04-26",
+   "lastDate": "2021-07-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LW",
+   "name": "Lamb Weston Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 22,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-24",
+   "lastDate": "2021-05-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LYV",
+   "name": "Live Nation Entertainment, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-11-01",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAR",
+   "name": "Marriott International - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-06",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAS",
+   "name": "Masco Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-10-10",
+   "lastDate": "2021-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MAT",
+   "name": "Mattel, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-06-23",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MDLOX",
+   "name": "aRW Subtrust ⇒ Fidelity Investments aRW Subtrust Brokerage account ⇒ Blackrock Global alloc CL a (MDLOX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-07-17",
+   "lastDate": "2022-07-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MFOMX",
+   "name": "Bank of New York IRa ⇒ BNY Mellon Focused Equity Opp Fund (MFOMX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-03-26",
+   "lastDate": "2020-03-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MGM",
+   "name": "MGM Resorts International Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MGP",
+   "name": "MGM Growth Properties LLC Class a common shares representing limited liability company interests",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2019-08-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MINMX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Ntl Intmdt Muni Bond (MINMX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2022-12-16",
+   "lastDate": "2022-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MKC",
+   "name": "McCormick & Company, Incorporated",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2019-01-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MKTX",
+   "name": "MarketAxess Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-28",
+   "lastDate": "2021-05-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MOTMX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Muni Opportunities (MOTMX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2022-12-30",
+   "lastDate": "2022-12-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MPBFX",
+   "name": "Bank of New York IRa ⇒ BNY Mellon Bond Fund (MPBFX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-12-08",
+   "lastDate": "2020-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MPC",
+   "name": "Marathon Petroleum Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2019-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MPLN",
+   "name": "MultiPlan Corporation Class A",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2020-11-12",
+   "lastDate": "2020-11-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MPMCX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Mellon Mid Cap Multi-Strategy Fund Class M Shares (MPMCX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2022-12-14",
+   "lastDate": "2023-12-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MPNIX",
+   "name": "Bank of New York Brokerage account ⇒ BNY Mellon Ntl Intmdt Muni Bond (MPNIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-06-30",
+   "lastDate": "2020-06-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MRVL",
+   "name": "Marvell Technology, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "E",
+    "Exchange",
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-10-04",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSCI",
+   "name": "MSCI Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2021-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSG",
+   "name": "The Madison Square Garden Company Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2019-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSI",
+   "name": "Motorola Solutions, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MTN",
+   "name": "Vail Resorts, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2020-02-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MYE",
+   "name": "Myers Industries, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-08-25",
+   "lastDate": "2020-08-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NDAQ",
+   "name": "Nasdaq, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NLOK",
+   "name": "NortonLifeLock Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-08",
+   "lastDate": "2021-07-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NMIH",
+   "name": "NMI Holdings Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-06-05",
+   "lastDate": "2020-07-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NOC",
+   "name": "Northrop Grumman Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-30",
+   "lastDate": "2019-04-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NRG",
+   "name": "NRG Energy, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-22",
+   "lastDate": "2019-07-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NSC",
+   "name": "Norfolk Southern Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-05-13",
+   "lastDate": "2019-05-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NTRS",
+   "name": "Northern Trust Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2019-01-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NWAEX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ Nationwide BNY Mellon Dynamic U.S. Core Fund Eagle Class (NWAEX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2022-12-30",
+   "lastDate": "2023-12-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NXST",
+   "name": "Nexstar Media Group, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-09-04",
+   "lastDate": "2020-04-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "O",
+   "name": "Realty Income Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-05-07",
+   "lastDate": "2021-03-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OKE",
+   "name": "ONEOK, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 23,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2020-10-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ON",
+   "name": "ON Semiconductor Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-10",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ONEQ",
+   "name": "aRW Subtrust ⇒ Fidelity Investments aRW Subtrust Brokerage account ⇒ Fidelity NaSDaQ Comp Index ETF (ONEQ) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2020-08-25",
+   "lastDate": "2020-08-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PANW",
+   "name": "Palo Alto Networks, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PFGC",
+   "name": "Performance Food Group Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-04-01",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PGR",
+   "name": "Progressive Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2019-03-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PHM",
+   "name": "Pultegroup, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-05-19",
+   "lastDate": "2021-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PII",
+   "name": "Polaris Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2020-05-19",
+   "lastDate": "2021-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PK",
+   "name": "Park Hotels & Resorts Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-06-05",
+   "lastDate": "2020-06-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PLNT",
+   "name": "Planet Fitness, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 30,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-16",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "POOL",
+   "name": "Pool Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-23",
+   "lastDate": "2021-03-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PRAH",
+   "name": "PRA Health Sciences, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-07",
+   "lastDate": "2020-12-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PSCNX",
+   "name": "DSL Living Trust ⇒ Penn Capital Funds Brokerage Account ⇒ Penn Cap Special Situations Small Cap (PSCNX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2022-01-06",
+   "lastDate": "2022-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PTC",
+   "name": "PTC Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-07-25",
+   "lastDate": "2019-07-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QRVO",
+   "name": "Qorvo, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-10-07",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QSR",
+   "name": "Restaurant Brands International Inc. Common Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-01-06",
+   "lastDate": "2020-03-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RCL",
+   "name": "Royal Caribbean Cruises Ltd.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-09-13",
+   "lastDate": "2023-09-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "REYN",
+   "name": "Reynolds Consumer Products Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-15",
+   "lastDate": "2020-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "REZI",
+   "name": "Resideo Technologies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-03-11",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RHI",
+   "name": "Robert Half International Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-27",
+   "lastDate": "2020-09-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RHP",
+   "name": "Ryman Hospitality Properties, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2019-08-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RLGY",
+   "name": "Realogy Holdings Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-12-10",
+   "lastDate": "2021-09-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RMD",
+   "name": "ResMed Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2019-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RNMBY",
+   "name": "RHEINMETALL AG UNSP/ADR",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-05-10",
+   "lastDate": "2024-05-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ROP",
+   "name": "Roper Technologies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2021-01-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RP",
+   "name": "RealPage, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-01-06",
+   "lastDate": "2020-03-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RSG",
+   "name": "Republic Services, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 23,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RTN",
+   "name": "Raytheon Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-30",
+   "lastDate": "2019-01-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RXT",
+   "name": "Rackspace Technology, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-08-27",
+   "lastDate": "2021-10-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SABR",
+   "name": "Sabre Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2021-05-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SAIC",
+   "name": "SCIENCE APPLICATIONS INTERNATIONAL CORPORATION",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-06",
+   "lastDate": "2021-04-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SBLTX",
+   "name": "Morgan Stanley Smith Barney Brokerage Account ⇒ Western Asset Intermediate-Term Municipals Fund Class A (SBLTX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-09-10",
+   "lastDate": "2024-09-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SBSPX",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ Franklin S&P 500 Index Fund Class A",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SBUX",
+   "name": "Starbucks Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-05-08",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SBYEX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ BNY Diversified Emerging Mkts Fd (SBYEX) [OT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2022-12-29",
+   "lastDate": "2023-05-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SCHW",
+   "name": "Charles Schwab Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2020-09-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SCI",
+   "name": "Service Corporation International",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 27,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SDY",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ SPDR S&P Dividend ETF (SDY) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2023-01-03",
+   "lastDate": "2023-08-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SERV",
+   "name": "ServiceMaster Global Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2020-05-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SHW",
+   "name": "Sherwin-Williams Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-05-08",
+   "lastDate": "2021-06-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SIRI",
+   "name": "Sirius XM Holdings Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-23",
+   "lastDate": "2020-12-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SIVB",
+   "name": "SVB Financial Group",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-09-10",
+   "lastDate": "2019-11-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SIX",
+   "name": "Six Flags Entertainment Corporation New",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-02-15",
+   "lastDate": "2019-10-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SMG",
+   "name": "Scotts Miracle-Gro Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-07",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SONY",
+   "name": "Sony Group Corporation American Depositary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SSNC",
+   "name": "SS&C Technologies Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "STAY",
+   "name": "Extended Stay America, Inc. - Paired Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2019-08-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "STI",
+   "name": "SunTrust Banks, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-16",
+   "lastDate": "2019-01-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "STOR",
+   "name": "STORE Capital Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 24,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2021-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "STZ",
+   "name": "Constellation Brands, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-04",
+   "lastDate": "2021-07-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SUB",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ iShares Short-Term National Muni Bond ETF (SUB) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-05-09",
+   "lastDate": "2023-05-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SUSB",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG Aware 1-5 Year USD Corporate Bond ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SUSC",
+   "name": "Fidelity Investments IRA ⇒ iShares ESG Aware USD Corporate Bond ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SVC",
+   "name": "Service Properties Trust - Shares Of Beneficial Interest",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-12-29",
+   "lastDate": "2021-05-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SWK",
+   "name": "Stanley Black & Decker, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SYF",
+   "name": "Synchrony Financial",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2021-09-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SYNH",
+   "name": "Syneos Health, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-09-24",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SYY",
+   "name": "Sysco Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-04-27",
+   "lastDate": "2020-06-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TAP",
+   "name": "Molson Coors Beverage Company Class B",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-04-26",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TDG",
+   "name": "Transdigm Group Incorporated Transdigm Group Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2019-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TDY",
+   "name": "Teledyne Technologies Incorporated",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TER",
+   "name": "Teradyne, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-23",
+   "lastDate": "2021-06-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TFX",
+   "name": "Teleflex Incorporated",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 23,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TGEIX",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ TCW Emerging Markets Income Fund I Cl (TGEIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "S"
+   ],
+   "firstDate": "2022-12-30",
+   "lastDate": "2023-05-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "THG",
+   "name": "Hanover Insurance Group Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-01-24",
+   "lastDate": "2019-01-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TJX",
+   "name": "TJX Companies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-05-19",
+   "lastDate": "2020-06-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TMUS",
+   "name": "T-Mobile US, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-26",
+   "lastDate": "2021-02-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TNC",
+   "name": "Tennant Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-03-14",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TNL",
+   "name": "Travel Leisure Co. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2021-06-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TOL",
+   "name": "Toll Brothers, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-23",
+   "lastDate": "2020-09-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TRGP",
+   "name": "Targa Resources, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2020-01-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TRU",
+   "name": "TransUnion",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TSS",
+   "name": "Total System Services, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2019-06-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TTEK",
+   "name": "Tetra Tech, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2020-12-22",
+   "lastDate": "2021-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TWTR",
+   "name": "Twitter, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-04-06",
+   "lastDate": "2020-05-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UAA",
+   "name": "Under Armour, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-11-20",
+   "lastDate": "2021-07-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ULTA",
+   "name": "Ulta Beauty, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-05-08",
+   "lastDate": "2020-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UNVR",
+   "name": "Univar Solutions Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-15",
+   "lastDate": "2020-02-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "URI",
+   "name": "United Rentals, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-07-12",
+   "lastDate": "2019-09-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USFD",
+   "name": "US Foods Holding Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USXF",
+   "name": "Suzanne K Lee Trust ⇒ Fidelity Brokerage 402 ⇒ iShares ESG Advanced MSCI USA ETF",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2025-03-13",
+   "lastDate": "2025-07-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VICI",
+   "name": "VICI Properties Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VLO",
+   "name": "Valero Energy Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-09-11",
+   "lastDate": "2020-10-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VNT",
+   "name": "Vontier Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-10-19",
+   "lastDate": "2021-06-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VRSK",
+   "name": "Verisk Analytics, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VRSN",
+   "name": "VeriSign, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2019-04-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VRT",
+   "name": "Vertiv Holdings, LLC Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-10-07",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VSCO",
+   "name": "Victorias Secret & Co.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-08-20",
+   "lastDate": "2021-08-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VST",
+   "name": "Vistra Energy Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-04-10",
+   "lastDate": "2019-07-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VVNT",
+   "name": "Vivint Smart Home, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-03-11",
+   "lastDate": "2021-05-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VWO",
+   "name": "Lee Children's Trust ⇒ Bank of New York Brokerage Account ⇒ Vanguard Emerging Markets ETF (VWO) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2022-08-09",
+   "lastDate": "2022-08-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "W",
+   "name": "Wayfair Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2021-02-11",
+   "lastDate": "2021-03-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WAB",
+   "name": "Westinghouse Air Brake Technologies Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-22",
+   "lastDate": "2020-02-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WAIR",
+   "name": "Wesco Aircraft Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-01-12",
+   "lastDate": "2021-01-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WCC",
+   "name": "WESCO International, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-12-11",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WCG",
+   "name": "Wellcare Health Plans, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-05-06",
+   "lastDate": "2019-05-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WCN",
+   "name": "Waste Connections, Inc. Common Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2019-09-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WDAY",
+   "name": "Workday, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-05-08",
+   "lastDate": "2021-05-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WDC",
+   "name": "Western Digital Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-04-08",
+   "lastDate": "2020-06-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WH",
+   "name": "Wyndham Hotels & Resorts, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-21",
+   "lastDate": "2021-02-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WHR",
+   "name": "Whirlpool Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-14",
+   "lastDate": "2021-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WLK",
+   "name": "Westlake Chemical Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-12-10",
+   "lastDate": "2021-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WM",
+   "name": "Waste Management, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-06",
+   "lastDate": "2020-06-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WP",
+   "name": "Worldpay, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-03-14",
+   "lastDate": "2019-03-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WRK",
+   "name": "Westrock Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 22,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-09-12",
+   "lastDate": "2021-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WSM",
+   "name": "Williams-Sonoma, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2021-01-11",
+   "lastDate": "2021-05-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WTRG",
+   "name": "Essential Utilities, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-27",
+   "lastDate": "2020-06-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WYNN",
+   "name": "Wynn Resorts, Limited - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-01-27",
+   "lastDate": "2025-03-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "XEL",
+   "name": "Xcel Energy Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-01-29",
+   "lastDate": "2019-09-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "XPO",
+   "name": "XPO Logistics, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-09-06",
+   "lastDate": "2021-07-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "XYL",
+   "name": "Xylem Inc. Common Stock New",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-04-12",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "Z",
+   "name": "Zillow Group, Inc. - Class C Capital Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-28",
+   "lastDate": "2021-05-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ZBH",
+   "name": "Zimmer Biomet Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-03-20",
+   "lastDate": "2021-09-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ZBRA",
+   "name": "Zebra Technologies Corporation - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-02-27",
+   "lastDate": "2022-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ZTS",
+   "name": "Zoetis Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-04-25",
+   "lastDate": "2019-04-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}
