@@ -61,7 +61,7 @@ function raydiumOracle(poolIndex = 0) {
     accountsToLoadLutIds: [0], accountsToLoadLutIndices: [poolIndex],
   };
 }
-function installedVault(overrides: Partial<{ pyth: boolean; wsolActive: boolean; missingStock: boolean }> = {}): Vault {
+function installedVault(overrides: Partial<{ pyth: boolean; wsolActive: boolean; missingStock: boolean; unresolvedPool: boolean }> = {}): Vault {
   const lut = KAKU_SAN_ASSETS.map(asset => new PublicKey(asset.pool));
   const defaults = KAKU_SAN_DEFAULT_SLOTS.map(slot => ({
     mint: new PublicKey(slot.mint), amount: 0n, weight: 0, active: overrides.wsolActive && slot.mint === KAKU_SAN_WSOL_MINT ? 1 : 0,
@@ -69,7 +69,9 @@ function installedVault(overrides: Partial<{ pyth: boolean; wsolActive: boolean;
   }));
   const stocks = KAKU_SAN_ASSETS.flatMap((asset, index) => overrides.missingStock && index === 0 ? [] : [{
     mint: new PublicKey(asset.mint), amount: 0n, weight: asset.targetWeightBps, active: 1,
-    oracleAggregator: { numOracles: 1, oracles: [raydiumOracle(index)] },
+    // An out-of-range LUT index simulates a vault snapshot whose lookup table hasn't caught up yet:
+    // vault.lutPubkeys[id].state.addresses[index] resolves to undefined rather than a pool address.
+    oracleAggregator: { numOracles: 1, oracles: [raydiumOracle(overrides.unresolvedPool && index === 0 ? 99 : index)] },
   }]);
   const composition = [...defaults, ...stocks];
   return {
@@ -446,6 +448,13 @@ test("installed composition requires the 5 xStocks, deactivated defaults, and no
   assert.throws(() => assertKakuSanComposition(installedVault({ pyth: true })), /ORACLE_TYPE_FORBIDDEN/);
   assert.throws(() => assertKakuSanComposition(installedVault({ wsolActive: true })), /still active/);
   assert.throws(() => assertKakuSanComposition(installedVault({ missingStock: true })), /5 xStocks/);
+});
+
+test("installed composition fails closed when a leg's Raydium pool cannot be resolved from the vault's lookup table", () => {
+  assert.throws(
+    () => assertKakuSanComposition(installedVault({ unresolvedPool: true })),
+    /RAYDIUM_POOL_MISMATCH: AAPLx installs unresolved, expected/,
+  );
 });
 
 test("observe reports missing accounts without fabricating a vault, and HTTP observe refuses non-deployers", async () => {
