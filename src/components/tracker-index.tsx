@@ -14,7 +14,7 @@ function InvestPanel({ view }: { view: TrackerPersonView }) {
   const { readiness } = view.index;
   return <aside id="invest" className={styles.investPanel} aria-labelledby="invest-title">
     <span className={styles.count}>{readiness.status === "VAULT_CANDIDATE" ? "Vault candidate · funds disabled" : "Wait readiness"}</span>
-    <h2 id="invest-title">{readiness.firstLiveCandidate ? "First live candidate" : "Research the target"}</h2>
+    <h2 id="invest-title">{readiness.status === "VAULT_CANDIDATE" && readiness.firstLiveCandidate ? "First live candidate" : "Research the target"}</h2>
     <p id="invest-blocker">{readiness.status === "VAULT_CANDIDATE" ? "The composition is vault-ready on paper: every name has a mint and an observed Raydium USDC pool. Public funds stay disabled until deployer readiness evidence, route checks and release gates pass." : "The tracker positions do not yet yield two investable names with mint and Raydium pool evidence. Nothing is substituted or invented."} Basket buying, deposits and signing are unavailable ({view.release.status}).</p>
     <button className={styles.secondaryButton} disabled aria-describedby="invest-blocker">Invest unavailable</button>
     <Link className={styles.primaryButton} href="/feed">Copy one print from the feed</Link>

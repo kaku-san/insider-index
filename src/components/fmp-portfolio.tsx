@@ -26,7 +26,7 @@ const sortSnapshots = (snapshots: SavedPortfolio["snapshots"]) => [...snapshots]
 const annualLabel = (period: string | null | undefined) => period ? `annual disclosure as of ${new Date(`${period}T00:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}` : "annual disclosure, reference date unknown";
 
 /** Saved FMP sections: published target, allocation, disclosed book, trade history. Older annual disclosure, never a live book. */
-function FmpSections({ id, book, snapshotId, setSnapshotId, olderLabel }: { id: string; book: SavedPortfolio; snapshotId: string | null; setSnapshotId: (value: string) => void; olderLabel: boolean }) {
+function FmpSections({ book, snapshotId, setSnapshotId, olderLabel }: { book: SavedPortfolio; snapshotId: string | null; setSnapshotId: (value: string) => void; olderLabel: boolean }) {
   const snapshots = sortSnapshots(book.snapshots);
   const snapshot = snapshots.find((entry) => entry.id === snapshotId) ?? snapshots[0];
   const index = book.publishedIndex;
@@ -39,7 +39,6 @@ function FmpSections({ id, book, snapshotId, setSnapshotId, olderLabel }: { id: 
   }, new Map<string, typeof activity>());
   const indexHref = index ? `/indexes/fmp-${index.hash}` : undefined;
   const heading = olderLabel ? "Older annual disclosure · FMP" : "Current holdings · published index";
-  void id;
 
   return <>
     <section className={styles.panel} aria-labelledby="mapped-holdings-title">
@@ -179,7 +178,7 @@ function TrackerPerson({ id, tracker, resource }: { id: string; tracker: Tracker
     <TrackerFilingStats profile={profile} />
     <TrackerSeries profile={profile} />
     <TrackerIdentity profile={profile} />
-    {book ? <FmpSections id={id} book={book} snapshotId={snapshotId} setSnapshotId={setSnapshotId} olderLabel /> : !fmpMissing ? <Skeleton cards={2} /> : null}
+    {book ? <FmpSections book={book} snapshotId={snapshotId} setSnapshotId={setSnapshotId} olderLabel /> : !fmpMissing ? <Skeleton cards={2} /> : null}
   </PortfolioLayout>;
 }
 
@@ -206,6 +205,6 @@ export function FmpPerson({ id, initialData, tracker }: { id: string; initialDat
     indexHref={indexHref}
     notice={resource.error ? <div className={styles.notice} role="alert">Could not refresh this saved book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : undefined}>
     <PerformancePanel />
-    <FmpSections id={id} book={book} snapshotId={snapshotId} setSnapshotId={setSnapshotId} olderLabel={false} />
+    <FmpSections book={book} snapshotId={snapshotId} setSnapshotId={setSnapshotId} olderLabel={false} />
   </PortfolioLayout>;
 }
