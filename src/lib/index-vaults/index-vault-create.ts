@@ -14,7 +14,6 @@
  * create, and only Raydium oracles are installed. Creating a vault never opens deposits.
  */
 import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
-import type { FetchFn } from "@solana/web3.js";
 import type { AddOrEditTokenInput, OracleInput, Vault } from "@symmetry-hq/sdk";
 import { OracleType } from "@symmetry-hq/sdk/dist/layouts/oracle.js";
 import { address, sha256, weightsValid } from "./amounts.ts";

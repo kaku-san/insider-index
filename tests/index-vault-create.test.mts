@@ -14,9 +14,9 @@ import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "../src/lib/in
 import type { PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 import {
   INDEX_VAULT_DEPLOYER, assertCreatableDefinition, buildIndexPreview, discardIndexCreateDraft,
-  handleIndexDiscard, handleIndexList, handleIndexPreview, handleIndexPrepare, handleIndexSubmit,
+  handleIndexList, handleIndexPreview, handleIndexPrepare, handleIndexSubmit,
   indexCreateJournal, indexTokenInput, markIndexCreateBroadcast, observeIndexVault, parseIndexDiscardRequest,
-  parseIndexPrepareRequest, parseIndexSubmitRequest, prepareIndexStep, recordIndexCreation, submitIndexStep,
+  parseIndexPrepareRequest, parseIndexSubmitRequest, prepareIndexStep, recordIndexCreation,
   type CreatableIndexLeg,
 } from "../src/lib/index-vaults/index-vault-create.ts";
 import {

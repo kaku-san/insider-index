@@ -46,6 +46,8 @@ export function IndexVaultAdmin() {
     }
   }, [allowed, wallet.solanaAddress]);
 
+  // loadList only setState()s after an async fetch resolves, not synchronously in the effect body.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void loadList(); }, [loadList]);
 
   async function loadPreview(indexId: string) {
