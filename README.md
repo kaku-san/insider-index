@@ -17,7 +17,7 @@ In V1:
 - **PelosiTracker top-20 handoff** (committed, no live scrape) is the shown *current* book for those 20 politicians: tracker positions as of 2026-09-15 first, the older FMP annual disclosure beside them, recent trades as information only, sector mix, filing stats and the tracker's value series — every figure labelled PelosiTracker and never a net worth or vault NAV. Each of the 20 also gets a vault-ready **tracker-positions index** (`/indexes/tracker-[bioguide]`): catalog mint + observed Raydium USDC pool, tracker percentages renormalized to 10,000 bps, trades never an input, Pelosi the first live candidate. See [`src/lib/tracker/README.md`](src/lib/tracker/README.md).
 - **AInvest Congressional Trades** remains the primary House/Senate **legacy tape** source (`AINVEST_API_KEY`, free tier)
 - Form4API is a fallback only (`FORM4API_KEY`); labelled mocks only where `STOCKLANA_ALLOW_MOCKS` permits (dev default)
-- Home is **indexes first**: published FMP holdings models, then the saved person directory. The raw SEC/AInvest tape remains `/feed`; legacy copy/index routes retain their own readiness gates.
+- Home is **indexes first**: published FMP holdings models, then the saved person directory. `/feed` is served from the committed PelosiTracker/FMP disclosure bundle (live EDGAR/AInvest lanes reported off); legacy copy/index routes retain their own readiness gates.
 - Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. A profile renders with one holding; basket buying remains unavailable regardless of book size
 - Day-1 alternative to research-only baskets: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
@@ -68,7 +68,7 @@ API routes:
 - `GET /api/politician-profiles` — persisted top-20 FMP politician profiles ranked by latest annual holding-band midpoints, with `P000197` Pelosi pinned; disclosed holdings (tradable and not), estimated band values, published weights and completeness flags. `netWorth` / YoY / S&P fields are `null` with reasons until those series exist. Supabase-only; no FMP or AInvest crawl
 - `GET /api/tracker-profiles` · `GET /api/tracker-profiles/[id]` — bundled PelosiTracker top-20 snapshot (`TRACKER_AS_OF`, currently 2026-09-15); the featured 20 person pages show this as the current book, with FMP annual filings staying older evidence and tracker trades info-only. Static snapshot, no live crawl
 - `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
-- `GET /api/disclosures` — insider + congress tape with per-lane provenance in `lanes.{insiders,congress}` (`source`, `live`, `count`, `note`) and `catalog` feed status; every row carries `venue` / `venueSymbol` / `mint` / `mintDecimals` / `tradeEligible`
+- `GET /api/disclosures` — feed body served from the committed PelosiTracker/FMP disclosure bundle via `src/lib/tracker/feed.ts` (research-only rows: `source: "pelositracker"`, `venue: "none"`, no mint, `tradeEligible: false`, value bands never exact prices). Per-lane provenance in `lanes.{insiders,congress,tracker}` (`source`, `live`, `count`, `note`): the live EDGAR/AInvest lanes are reported `off` with provenance rather than probed/retried. Paginated (`?page`/`?limit`; default/max in `feed.ts`) with `total`/`page`/`pageSize`/`pageCount`/`hasMore`/`partial`; `catalog` feed status included
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles`
@@ -81,7 +81,7 @@ API routes:
 UI routes:
 
 - `/` indexes first: published holdings targets, searchable saved people, links to original disclosed books
-- `/feed` the raw disclosure tape (Everything / Following, search, buy/sell filter)
+- `/feed` the disclosure tape served from the committed PelosiTracker/FMP bundle (research-only rows, live lanes reported off); Everything / Following, search, buy/sell filter
 - `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges; for the 20 PelosiTracker handoff people the page is tracker-first (shown book, vault-ready index, FMP comparison, trades as info) with the FMP annual filing labelled as the older disclosure
 - `/indexes/tracker-[bioguide]` tracker-positions index: weights, mints, Raydium USDC pools, readiness, disabled Invest (exit is USDC only; nothing enabled)
 - `/indexes/[id]` model allocation, native lifecycle/fee disclosure and disabled investment panel; no holder rebalance button
