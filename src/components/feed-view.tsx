@@ -1,11 +1,10 @@
 "use client";
-import {useEffect,useMemo,useState,useSyncExternalStore} from "react";
+import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {useSearchParams} from "next/navigation";
 import {useResource} from "@/lib/frontend/use-resource";
 import {PREVIEW_MODE} from "@/lib/frontend/api";
-import {portraitFor} from "@/lib/frontend/portraits";
-import {listFollowedPersonIds, subscribeToPersonFollows} from "@/lib/frontend/watchlist";
+import {portraitFor} from "@/lib/fomo/portraits";
 import {useUI,type Lane} from "@/components/providers/ui-provider";
 import {SignalCard} from "./signal-card";
 import {PersonAvatar} from "./person-avatar";
@@ -17,9 +16,8 @@ export function FeedView({initialDisclosures}:{initialDisclosures?:Disclosure[]}
  const disclosuresRes=useResource<{disclosures:Disclosure[]}>("/api/disclosures",initialDisclosures?{disclosures:initialDisclosures}:undefined);
  const [side,setSide]=useState("all"),[savedOnly,setSavedOnly]=useState(false),[sort,setSort]=useState("latest");
  const disclosures=disclosuresRes.data?.disclosures??[];
- const followedIds=useSyncExternalStore(subscribeToPersonFollows, listFollowedPersonIds, () => [] as string[]);
  useEffect(()=>{const view=params.get("view");ui.setLane(view==="following"?"following":"live");const q=params.get("q");if(q!=null)ui.setQuery(q);},[params]);
- const followed=useMemo(()=>new Set(followedIds),[followedIds]);
+ const followed=useMemo(()=>new Set(ui.deviceFollows),[ui.deviceFollows]);
  const signals=useMemo<CopySignal[]>(()=>disclosures.map(d=>({...d,headline:"",fomoLabel:"",imageUrl:portraitFor(d.profileId)})),[disclosures]);
  const people=useMemo(()=>{const seen=new Map<string,CopySignal>();for(const s of signals)if(!seen.has(s.profileId))seen.set(s.profileId,s);return [...seen.values()];},[signals]);
  const needle=ui.query.toLowerCase().trim();

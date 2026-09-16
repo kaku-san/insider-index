@@ -10,6 +10,7 @@ import { createPeopleHandlers } from "../src/lib/fmp/http.ts";
 register("./support/ui-loader.mjs", import.meta.url);
 const { FmpPerson } = await import("../src/components/fmp-portfolio.tsx");
 const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
+const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 const { PublishedTarget } = await import("../src/components/fmp-person.tsx");
 const person = { id: "P000197", name: "Nancy Pelosi", firstName: "Nancy", lastName: "Pelosi", chamber: "house", image: null };
 const holding = (id: string, name: string, kind = "stock") => ({ id, personId: person.id, name, ticker: null, kind, owner: "Joint", valueRange: { low: null, high: null }, incomeRange: { low: null, high: null }, token: null, mappingReason: "no-source-symbol" });
@@ -61,7 +62,7 @@ test("live people handlers return holdings-first weights with 65 unchanged items
 test("portfolio HTML shows persisted pie, ticker and venue overlays while keeping mutual funds and no-mint rows", async () => {
   const value = await service().portfolio(person.id);
   const before = structuredClone(value);
-  const html = renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(FmpPerson, { id: person.id, initialData: value })));
+  const html = renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(FmpPerson, { id: person.id, initialData: value }))));
   assert.match(html, /Published index target allocation: NVDA 75\.0 percent, AXP 25\.0 percent/);
   assert.match(html, /<strong>NVDA<\/strong><small>NVIDIA Corporation \[ST\]/);
   assert.match(html, /xStock · NVDAx/);

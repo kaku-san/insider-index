@@ -77,10 +77,11 @@ async function throttle(): Promise<void> {
 }
 
 async function edgarFetch(url: string): Promise<Response> {
+  const userAgent = edgarUserAgent();
   await throttle();
   const response = await fetch(url, {
     headers: {
-      "User-Agent": edgarUserAgent(),
+      "User-Agent": userAgent,
       Accept: url.endsWith(".json") ? "application/json" : "application/xml,text/xml,*/*",
     },
     // We memoise in-process; keep Next's data cache out of the loop so the

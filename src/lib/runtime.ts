@@ -43,12 +43,13 @@ export function jupiterMode(): JupiterMode {
 }
 
 /**
- * SEC EDGAR requires a descriptive User-Agent with contact info
- * (https://www.sec.gov/os/accessing-edgar-data). Override with SEC_EDGAR_USER_AGENT.
+ * SEC EDGAR requires a descriptive User-Agent with operator contact info
+ * (https://www.sec.gov/os/accessing-edgar-data).
  */
 export function edgarUserAgent(): string {
-  return (
-    process.env.SEC_EDGAR_USER_AGENT?.trim() ||
-    "InsiderIndex/1.0 (https://insiderindex.xyz; ops@barelystable.dev)"
-  );
+  const value = process.env.SEC_EDGAR_USER_AGENT?.trim();
+  if (!value) {
+    throw new Error("SEC_EDGAR_USER_AGENT with operator contact information is required");
+  }
+  return value;
 }

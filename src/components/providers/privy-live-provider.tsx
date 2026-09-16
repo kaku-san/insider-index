@@ -4,14 +4,16 @@ import { PrivyProvider, useLogin, usePrivy } from "@privy-io/react-auth";
 import {
   toSolanaWalletConnectors,
   useCreateWallet,
+  useSignAndSendTransaction,
   useSignTransaction,
   useWallets,
 } from "@privy-io/react-auth/solana";
 import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
-import { useCallback, useEffect, useMemo, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   PrivySolanaContext,
   type PrivySolanaWallet,
+  type WalletConnectMethod,
 } from "@/components/providers/privy-provider";
 
 function base64ToBytes(value: string): Uint8Array {
@@ -29,6 +31,39 @@ function bytesToBase64(bytes: Uint8Array): string {
     binary += String.fromCharCode(byte);
   }
   return btoa(binary);
+}
+
+function bytesToBase58(bytes: Uint8Array): string {
+  const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  if (!bytes.length) return "";
+  const digits = [0];
+  for (const byte of bytes) {
+    let carry = byte;
+    for (let j = 0; j < digits.length; j += 1) {
+      carry += digits[j] << 8;
+      digits[j] = carry % 58;
+      carry = (carry / 58) | 0;
+    }
+    while (carry) {
+      digits.push(carry % 58);
+      carry = (carry / 58) | 0;
+    }
+  }
+  let out = "";
+  for (let i = 0; i < bytes.length - 1 && bytes[i] === 0; i += 1) out += alphabet[0];
+  for (let i = digits.length - 1; i >= 0; i -= 1) out += alphabet[digits[i]];
+  return out;
+}
+
+function encodeSignature(result: unknown): string {
+  if (typeof result === "string") return result;
+  if (result instanceof Uint8Array) return bytesToBase58(result);
+  if (result && typeof result === "object") {
+    const record = result as { signature?: Uint8Array | string };
+    if (typeof record.signature === "string") return record.signature;
+    if (record.signature instanceof Uint8Array) return bytesToBase58(record.signature);
+  }
+  throw new Error("Privy did not return a Solana transaction signature.");
 }
 
 function encodeSignedTransaction(result: unknown): string {
@@ -65,6 +100,8 @@ function PrivyLiveBridge({
   const { wallets } = useWallets();
   const { createWallet } = useCreateWallet();
   const { signTransaction: signWithPrivy } = useSignTransaction();
+  const { signAndSendTransaction: signAndSendWithPrivy } = useSignAndSendTransaction();
+  const [connectionMethod, setConnectionMethod] = useState<WalletConnectMethod | null>(null);
   const wallet = wallets[0] ?? null;
 
   useEffect(() => {
@@ -76,16 +113,18 @@ function PrivyLiveBridge({
     });
   }, [authenticated, createWallet, ready, wallet]);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (method: WalletConnectMethod = "wallet") => {
+    setConnectionMethod(method);
     if (authenticated) {
       if (!wallet) await createWallet();
       return;
     }
-    await login();
+    await login({ loginMethods: [method === "email" ? "email" : "wallet"], walletChainType: "solana-only" });
   }, [authenticated, createWallet, login, wallet]);
 
   const disconnect = useCallback(async () => {
     await logout();
+    setConnectionMethod(null);
   }, [logout]);
 
   const signTransaction = useCallback(
@@ -107,24 +146,48 @@ function PrivyLiveBridge({
     [authenticated, signWithPrivy, wallet],
   );
 
+  const signAndSendTransaction = useCallback(
+    async (transactionBase64: string, network: "mainnet-beta" | "devnet" = "mainnet-beta") => {
+      if (!authenticated || !wallet) {
+        throw new Error("Connect a Solana wallet before signing.");
+      }
+      if (!transactionBase64) {
+        throw new Error("Nothing to sign.");
+      }
+      const sent = await signAndSendWithPrivy({
+        wallet,
+        transaction: base64ToBytes(transactionBase64),
+        chain: network === "devnet" ? "solana:devnet" : "solana:mainnet",
+        options: { uiOptions: { showWalletUIs: true } },
+      });
+      return encodeSignature(sent);
+    },
+    [authenticated, signAndSendWithPrivy, wallet],
+  );
+
   const value = useMemo<PrivySolanaWallet>(
     () => ({
       ready,
       configured: true,
       mode: "live",
       authenticated,
+      previewConnection: false,
       solanaAddress: wallet?.address ?? null,
       appId,
+      connectionMethod: connectionMethod ?? (authenticated ? "wallet" : null),
       connect,
       disconnect,
       signTransaction,
+      signAndSendTransaction,
     }),
     [
       appId,
       authenticated,
       connect,
+      connectionMethod,
       disconnect,
       ready,
+      signAndSendTransaction,
       signTransaction,
       wallet?.address,
     ],

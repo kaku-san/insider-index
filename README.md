@@ -1,10 +1,12 @@
-# InsiderIndex V1
+# InsiderIndex
 
-Disclosure-to-copy-trade app: real insider/politician prints → user-signed xStock swaps on Solana.
+Famous portfolios. Public receipts. Canonical product URL: [https://insiderindex.xyz](https://insiderindex.xyz).
 
-**Track A W0: copy one print from `/feed`, sign with Privy, execute through Jupiter, save the receipt.** Full disclosed books and model indexes remain research-only; basket Buy is unavailable. [W0 launch checklist and receipt contract](docs/track-a-w0.md).
+Index-first consumer app: people create discovery, public disclosures create trust, and the person index is the product. Copying one disclosure and owning native index shares remain separate money rails. Basket Buy stays unavailable; vault Sign is fail-closed.
 
-This repository is a Next.js App Router app. **Live product:** [https://insiderindex.xyz](https://insiderindex.xyz) (InsiderIndex.xyz). The existing Barely Stable / Hetzner deployment is documented below. SEC EDGAR needs no key and is always live; FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
+**Track A W0: copy one print from `/feed`, sign with Privy, execute through Jupiter, save the receipt.** Full disclosed books and model indexes remain research-only until a verified native vault prepare path exists. [W0 launch checklist and receipt contract](docs/track-a-w0.md). Consumer frontend contract: [docs/insiderindex-fe/FRONTEND-README.md](docs/insiderindex-fe/FRONTEND-README.md).
+
+This repository is a Next.js App Router app. **Live product:** [https://insiderindex.xyz](https://insiderindex.xyz) (InsiderIndex.xyz). The existing Barely Stable / Hetzner deployment is documented below. SEC EDGAR needs no API key but requires `SEC_EDGAR_USER_AGENT` with operator contact information; without it the EDGAR lane fails closed. FMP, AInvest, Form4API, Privy, Jupiter, Helius, and Supabase sit behind env keys so `npm run build` works without secrets.
 
 ## Product scope
 
@@ -62,6 +64,7 @@ API routes:
 - `GET /api/people?q=...` — searchable full FMP directory; source pagination/partial status, no featured-person allowlist
 - `GET /api/people/[id]/portfolio` — saved stable FMP `senateID` (both chambers), annual document versions, activity, aggregate history, completeness flags and `publishedIndex`
 - `GET /api/politician-profiles` — persisted top-20 FMP politician profiles ranked by latest annual holding-band midpoints, with `P000197` Pelosi pinned; disclosed holdings (tradable and not), estimated band values, published weights and completeness flags. `netWorth` / YoY / S&P fields are `null` with reasons until those series exist. Supabase-only; no FMP or AInvest crawl
+- `GET /api/tracker-profiles` · `GET /api/tracker-profiles/[id]` — bundled PelosiTracker top-20 snapshot (`TRACKER_AS_OF`, currently 2026-09-15); the featured 20 person pages show this as the current book, with FMP annual filings staying older evidence and tracker trades info-only. Static snapshot, no live crawl
 - `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
 - `GET /api/disclosures` — insider + congress tape with per-lane provenance in `lanes.{insiders,congress}` (`source`, `live`, `count`, `note`) and `catalog` feed status; every row carries `venue` / `venueSymbol` / `mint` / `mintDecimals` / `tradeEligible`
 - `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
@@ -139,11 +142,11 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-- **Insiders are live from SEC EDGAR with no key.** The first crawl after boot takes ~30 s (paced to the SEC's 10 req/s rule); it is warmed at startup and refreshed every 10 min in the background.
+- **Insiders are live from SEC EDGAR when `SEC_EDGAR_USER_AGENT` contains operator contact information.** No API key is needed. Without the contact string, the EDGAR lane fails closed. The first configured crawl after boot takes ~30 s (paced to the SEC's 10 req/s rule); it is warmed at startup and refreshed every 10 min in the background.
 - **Congress is live** when `AINVEST_API_KEY` is set. Without it: labelled `mock-congress` fixtures in development, an empty lane in production. AInvest only answers per ticker, so the lane crawls `AINVEST_UNIVERSE` (`wide` ≈ 300 hand-kept names · `catalog` (default) adds every US-looking xStock underlying · `full` adds every Backpack `.US` token), `AINVEST_PAGES_PER_TICKER` deep, memoised per ticker for `AINVEST_TICKER_TTL_MINUTES`. The crawl stops early on rate limits and says so in `lanes.congress.note`.
 - **The buy catalog is live** from xstocks.com and api.backpack.exchange with no key; the committed snapshot covers outages.
 - **Jupiter** quotes live (keyless) in production or when `JUPITER_API_KEY` / `JUPITER_MODE=live` is set; stub in development. **Helius** is used when `HELIUS_API_KEY` is set.
-- **Privy** is the real `@privy-io/react-auth` Solana provider when `NEXT_PUBLIC_PRIVY_APP_ID` is set. Missing configuration or a failed SDK load never enables a production stub: the wallet stays unavailable and offers a reload. Every trade requires an explicit signature. A fixture wallet exists only in a non-production `NEXT_PUBLIC_STOCKLANA_PREVIEW=1` UI preview, where writes are disabled.
+- **Privy** is the real `@privy-io/react-auth` Solana provider when `NEXT_PUBLIC_PRIVY_APP_ID` is set. Missing configuration or a failed SDK load never enables a production stub: the wallet stays unavailable and offers a reload. Every trade requires an explicit signature. A fixture wallet exists only in a non-production `NEXT_PUBLIC_INSIDERINDEX_PREVIEW=1` UI preview, where writes are disabled.
 
 Without keys, saved-data surfaces report unavailable data rather than inventing books. Development disclosure adapters may still serve labelled fixtures, but a real wallet is required outside the explicit UI preview.
 
@@ -168,7 +171,7 @@ npm run typecheck
 
 Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.env*.local`. See `.env.example` for empty placeholders:
 
-- `SEC_EDGAR_USER_AGENT` — contact string sent to SEC EDGAR (sane default); `EDGAR_FILINGS_PER_TICKER`, `EDGAR_DISABLED`, `EDGAR_UNIVERSE=wide`, `EDGAR_TICKERS`
+- `SEC_EDGAR_USER_AGENT` — required operator contact string sent to SEC EDGAR; without it EDGAR requests fail closed. `EDGAR_FILINGS_PER_TICKER`, `EDGAR_DISABLED`, `EDGAR_UNIVERSE=wide`, `EDGAR_TICKERS`
 - `FMP_API_KEY` — server-only FMP person directory, annual books and activity; local fallback `$HOME/.config/fmp-api-key`
 - `AINVEST_API_KEY` — AInvest Congressional Trades (primary legacy congress tape source); crawl width `AINVEST_UNIVERSE=wide|catalog|full`, `AINVEST_TICKERS`, depth `AINVEST_PAGES_PER_TICKER`, `AINVEST_PAGE_SIZE`, `AINVEST_CONCURRENCY`, `AINVEST_TICKER_TTL_MINUTES`
 - `XSTOCKS_CATALOG_DISABLED` / `BACKPACK_CATALOG_DISABLED` — `1` drops an issuer from the buy catalog
@@ -200,19 +203,16 @@ Congress rows are STOCK Act PTRs: they disclose a dollar range (`amountLow`/`amo
 
 ## Deploy
 
-**Barely Stable / Hetzner host:** [https://stocklana.barelystable.dev](https://stocklana.barelystable.dev). The current live product URL is listed at the top of this README.
+**Production:** [https://insiderindex.xyz](https://insiderindex.xyz).
 
 | Where | How |
 | --- | --- |
 | Local | `cp .env.example .env.local`, fill keys, `npm run dev` |
-| Server | gitignored `.env` at `/srv/projects/stocklana` — the deploy script never rsyncs `.env` / `.env.local` |
-| Traefik | Compose router rule is locked in `docker-compose.yml`. Barely Stable’s network is `edge` (default). Override with `TRAEFIK_NETWORK=edge` if you need to set it explicitly; do not switch the host. |
+| Production | Configure the deployment environment, build, and route `insiderindex.xyz` to the resulting service |
 | Health | Check `/api/health` using the [W0 launch checklist](docs/track-a-w0.md#production-launch-checklist-operator) |
-| Congress | Set `AINVEST_API_KEY` in the server `.env` or the congress lane stays empty in production (no invented politicians) |
+| Congress | Set `AINVEST_API_KEY` or the congress lane stays empty in production (no invented politicians) |
 
-```
-Host(`stocklana.barelystable.dev`)
-```
+`NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present at image **build** time so the client bundle can initialize Privy. Rebuild after changing them.
 
 ```bash
 # Barely Stable Traefik network (default in docker-compose.yml):
@@ -221,8 +221,6 @@ Host(`stocklana.barelystable.dev`)
 ./scripts/deploy.sh
 ```
 
-rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.*`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. Wildcard DNS already points at the Barely Stable / Hetzner host. The image build never `COPY`s `.env*` — `NEXT_PUBLIC_*` is injected only as Docker build args.
+rsyncs the tree to `/srv/projects/stocklana` and excludes `.env`, `.env.*`, `.env.local`, `.env*.local`, `node_modules`, and `.next`. Create or edit secrets only on the box. This Hetzner host is a demo/internal deployment, not the canonical production URL. The image build never `COPY`s `.env*` — `NEXT_PUBLIC_*` is injected only as Docker build args.
 
-`NEXT_PUBLIC_*` values (including `NEXT_PUBLIC_PRIVY_APP_ID`) must be present in the server `.env` at image **build** time so the client bundle can initialize Privy. On Vercel, set these for the deployment environment and rebuild after changes.
-
-**Privy dashboard:** allow `https://insiderindex.xyz`, `https://stocklana.barelystable.dev`, and `http://localhost:3000` as appropriate in allowed origins. Without that origin, the live wallet client will not finish loading. Do not commit real keys.
+**Privy dashboard:** allow `https://insiderindex.xyz`, `https://stocklana.barelystable.dev`, and `http://localhost:3000` as appropriate in allowed origins. Without the matching origin, the live wallet client will not finish loading. Do not commit real keys.

@@ -1,33 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { PersonAvatar } from "./person-avatar";
 import { EquityCurve, PortfolioDonut } from "./portfolio-charts";
+import { useUI } from "./providers/ui-provider";
 import { Icon } from "./social/icon";
 import type { BacktestPoint } from "@/lib/disclosures/types";
-import { isPersonFollowed, personFollowKey, PERSON_FOLLOW_EVENT, subscribeToPersonFollows } from "@/lib/frontend/watchlist";
 import styles from "./person-portfolio.module.css";
 
 export { styles as portfolioStyles };
 
 /** A device-local watch, not an account subscription or a promise of alerts. */
 function PersonFollow({ id }: { id: string }) {
-  const following = useSyncExternalStore(subscribeToPersonFollows, () => isPersonFollowed(id), () => false);
-  const [error, setError] = useState<string | null>(null);
-  function toggle() {
-    try {
-      localStorage.setItem(personFollowKey(id), String(!following));
-      window.dispatchEvent(new Event(PERSON_FOLLOW_EVENT));
-      setError(null);
-    } catch { setError("This browser could not save your watch."); }
-  }
+  const ui = useUI();
+  const following = ui.deviceFollows.includes(id);
   return <div className={styles.follow}>
-    <button type="button" className={styles.followButton} aria-pressed={following} onClick={toggle}>
+    <button type="button" className={styles.followButton} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(id)}>
       <Icon name={following ? "check" : "people"} size={16} />{following ? "Watching" : "Add to watchlist"}
     </button>
     <p className={styles.followNote}>Saved on this device. No alerts or automatic trades.</p>
-    {error && <p role="alert">{error}</p>}
   </div>;
 }
 

@@ -9,7 +9,7 @@ import {Icon} from "./social/icon";
 import type {Disclosure} from "@/lib/disclosures/types";
 import {venueLabel} from "@/lib/venues/label";
 import {formatDate,formatShares,formatUsd,formatUsdRange,shortenAddress} from "@/lib/format";
-import {portraitFor} from "@/lib/frontend/portraits";
+import {portraitFor} from "@/lib/fomo/portraits";
 export function InspectDisclosure({id}:{id:string}){const ui=useUI(),resource=useResource<{disclosure:Disclosure}>(`/api/disclosures/${encodeURIComponent(id)}`),d=resource.data?.disclosure;
  if(resource.loading&&!d)return <Skeleton/>;if(resource.error&&!d)return <PageError error={resource.error} retry={resource.reload}/>;if(!d)return <EmptyState title="Filing unavailable." description="This record could not be found."/>;
  const lag=Math.max(0,Math.round((Date.parse(d.filedAt)-Date.parse(d.transactionDate))/86400000)),mock=d.source.startsWith("mock"),buy=d.side==="buy",sell=d.side==="sell";

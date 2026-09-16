@@ -10,13 +10,15 @@ const { FmpPerson } = await import("../src/components/fmp-portfolio.tsx");
 const { PerformancePanel } = await import("../src/components/person-portfolio.tsx");
 const { ProfileView } = await import("../src/components/profile-view.tsx");
 const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
+const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 type Portfolio = NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
 const person = { id: "T000001", name: "Test Person", firstName: "Test", lastName: "Person", chamber: "house", state: "CA", party: null, image: null };
 const item = (id: string) => ({ id, name: `Disclosed asset ${id}`, ticker: null, kind: "other", owner: "Joint", valueRange: { low: null, high: null }, incomeRange: { low: null, high: 2500 }, mappingReason: "no-source-symbol" });
 function book(extra: Record<string, unknown> = {}): Portfolio {
   return { person, snapshots: [], activity: [], publishedIndex: null, indexName: "Test P Index", savedAt: null, state: "partial-disclosure-only", ...extra } as unknown as Portfolio;
 }
-function render(value: Portfolio) { return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(FmpPerson, { id: person.id, initialData: value }))); }
+function withProviders(child: ReturnType<typeof createElement>) { return createElement(UIProvider, null, createElement(PrivySolanaProvider, null, child)); }
+function render(value: Portfolio) { return renderToStaticMarkup(withProviders(createElement(FmpPerson, { id: person.id, initialData: value }))); }
 
 // Generated HTML is this test's public output contract; no implementation-source inspection.
 test("a 65-row annual book renders without a published index, independently of zero saved trades", () => {
@@ -78,14 +80,19 @@ test("empty performance has no fabricated curve; real points remain labelled his
   assert.match(measured, /comparison unavailable/);
 });
 
-test("legacy insider portfolios use the same uncluttered layout and keep unroutable positions", () => {
-  const initialData = { profile: { id: "insider-test", name: "Example Insider", kind: "insider", title: "Officer", imageUrl: null, curve: [], portfolio: [{ ticker: "UNMAPPED", issuerName: "Unmapped company", status: "holding", lastTradeAt: "2025-01-01", valueLow: null, valueHigh: 5000 }], index: { constituents: [] } }, trades: [] } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
-  const html = renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(ProfileView, { id: "insider-test", initialData })));
-  assert.match(html, /UNMAPPED/);
-  assert.match(html, /Up to \$5,000/);
-  assert.match(html, /Basket buying unavailable/);
-  assert.match(html, /Holdings distribution/);
-  assert.doesNotMatch(html, /Copy latest|Buy the index|Tradable basket|followers|role="switch"/);
+test("consumer person portfolios keep annual rows separate from published allocation and never invent a buy", () => {
+  const initialData = {
+    person: { id: "insider-test", name: "Example Insider", office: "Officer", image: null },
+    snapshots: [{ id: "s1", year: 2025, items: [{ id: "h1", ticker: "AAPL", name: "Apple Inc.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h2", ticker: "AAPL", name: "Apple Inc. (spouse)", kind: "stock", valueRange: { low: 15000, high: 50000 } }, { id: "h3", ticker: "MSFT", name: "Microsoft Corp.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h4", ticker: null, name: "Unmapped mutual fund", kind: "mutual-fund", valueRange: { low: null, high: 5000 } }] }],
+    activity: [],
+    publishedIndex: { hash: "a".repeat(64), person_id: "insider-test", constituents: [{ ticker: "AAPL", mint: "mint-aapl", issuer: "xstock", weight_bps: 6000 }, { ticker: "MSFT", mint: "mint-msft", issuer: "xstock", weight_bps: 4000 }], definition: { evidence: [{ holding: { id: "h1" }, token: { mint: "mint-aapl" } }, { holding: { id: "h2" }, token: { mint: "mint-aapl" } }, { holding: { id: "h3" }, token: { mint: "mint-msft" } }] } },
+  } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
+  const html = renderToStaticMarkup(withProviders(createElement(ProfileView, { id: "insider-test", initialData })));
+  assert.match(html, /Holdings 4/);
+  assert.match(html, /60%/);
+  assert.match(html, /40%/);
+  assert.match(html, new RegExp(`href="/indexes/fmp-${"a".repeat(64)}"[^>]*>View index`));
+  assert.doesNotMatch(html, /AAPL 75\.0%|MSFT 25\.0%|\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:/);
 });
 
 test("automated names use first name and last initial; only actual name collisions append IDs", () => {
