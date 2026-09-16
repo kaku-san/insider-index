@@ -21,6 +21,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
   const holdings = [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps);
   const max = Math.max(...holdings.map((h) => h.weight_bps), 1);
   const totalBps = holdings.reduce((sum, row) => sum + row.weight_bps, 0);
+  const asOf = new Date(index.sourceGeneratedAt ?? index.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 
   return (
     <div className={styles.page}>
@@ -29,7 +30,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
           <Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />
           Thematic indexes
         </Link>
-        <span>Research model</span>
+        <span>Research model · not investable</span>
       </div>
 
       <section className={styles.hero}>
@@ -38,7 +39,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
           <b>THEME</b>
         </div>
         <div className={styles.heroCopy}>
-          <span>{index.status} · {index.lane}</span>
+          <span className={styles.researchTag}>Research model · not a vault</span>
           <h1>{index.indexName}</h1>
           <p>{index.tagline}</p>
           <div className={styles.meta}>
@@ -49,20 +50,22 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
             <span>members</span>
             <i />
             <span>{index.rebalance}</span>
+            <i />
+            <span>as of {asOf}</span>
           </div>
           <div className={styles.actions}>
-            <Link className={styles.invest} href="/feed">
-              Copy one print <Icon name="arrow" size={14} />
-            </Link>
-            <Link href="/#themes">All themes</Link>
+            <button type="button" className={styles.blockedCta} disabled aria-disabled="true">
+              Deposit unavailable — research model
+            </button>
+            <Link href="/feed">Copy one print instead</Link>
           </div>
         </div>
-        <aside className={styles.state}>
+        <aside className={`${styles.state} ${styles.researchState}`}>
           <small>PRODUCT STATE</small>
-          <strong>Research</strong>
+          <strong>Research only</strong>
           <p>
-            Multi-member theme — not a celebrity clone. Basket Buy stays unavailable. Person trackers remain on
-            individual profiles.
+            A multi-member research view, not a fundable person vault index. There is no deposit, no basket Buy and no
+            NAV — nothing here is investable. Person trackers stay on their individual profiles.
           </p>
           <span>{index.badge}</span>
         </aside>
@@ -70,6 +73,16 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
 
       <div className={styles.layout}>
         <main>
+          <div className={styles.researchBanner} role="note">
+            <Icon name="info" size={16} />
+            <div>
+              <strong>This is a research model, not an investable product.</strong>
+              <p>
+                Unlike a person vault index, a thematic index can never be deposited into. Weights are a published
+                target derived from public filings — never a live wallet, balance, NAV or claim of returns.
+              </p>
+            </div>
+          </div>
           <p style={{ color: "#697183", lineHeight: 1.5, fontSize: 13, margin: "0 0 16px", maxWidth: 720 }}>
             {index.narrative}
           </p>
@@ -123,22 +136,28 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
               <p><b>Methodology</b> · <code>{index.methodology}</code></p>
             </div>
             <div>
-              <h3>Members ({index.members.length})</h3>
-              {index.members.slice(0, 12).map((m) => (
-                <p key={m.slug}>
-                  <b>{m.name}</b>
-                  {[m.party, m.state].filter(Boolean).length
-                    ? ` · ${[m.party, m.state].filter(Boolean).join(" · ")}`
-                    : ""}
-                </p>
-              ))}
+              <h3>Member roster ({index.members.length})</h3>
+              {index.members.slice(0, 12).map((m) => {
+                const detail = [m.party, m.state].filter(Boolean).join(" · ");
+                return (
+                  <p key={m.slug}>
+                    {m.bioguideId ? (
+                      <Link className={styles.memberLink} href={`/p/${encodeURIComponent(m.bioguideId)}`}>{m.name}</Link>
+                    ) : (
+                      <b>{m.name}</b>
+                    )}
+                    {detail ? ` · ${detail}` : ""}
+                  </p>
+                );
+              })}
               {index.members.length > 12 ? <p>+{index.members.length - 12} more in the feed</p> : null}
             </div>
           </section>
 
           <section className={styles.details} style={{ marginTop: 16 }}>
             <div>
-              <h3>Sources</h3>
+              <h3>Sources &amp; as-of</h3>
+              <p><b>As of</b> · {asOf} <span className={styles.asOf}>Source generated {new Date(index.sourceGeneratedAt ?? index.generatedAt).toISOString().slice(0, 10)}</span></p>
               <p>{index.sourceLine}</p>
               {index.sources.websiteFooterBlock.slice(0, 4).map((line) => (
                 <p key={line}>{line}</p>
@@ -154,7 +173,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
         </main>
 
         <aside className={styles.side}>
-          <span>RESEARCH MODEL</span>
+          <span>RESEARCH MODEL · NOT INVESTABLE</span>
           <h2>Theme, not a tip.</h2>
           <ol>
             <li>
@@ -181,13 +200,13 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
             <li>
               <b>4</b>
               <div>
-                <strong>Copy one print</strong>
-                <span>Basket Buy stays off until native vault release.</span>
+                <strong>Research only</strong>
+                <span>No deposit, no basket Buy, no NAV. A theme can never become a vault.</span>
               </div>
             </li>
           </ol>
           <Link href="/feed" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-            <button type="button">Open the feed</button>
+            <button type="button">Copy one print from the feed</button>
           </Link>
           <small>Index id <code>{index.id}</code> · basis <code>{index.basis}</code></small>
         </aside>

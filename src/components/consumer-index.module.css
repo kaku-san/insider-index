@@ -12,3 +12,11 @@
 /* Public-inspired index composition: visual breakdown first, logo-led allocation second. */
 .layout main>:global(.allocation-breakdown){margin-bottom:16px}.row{grid-template-columns:30px 36px 132px minmax(80px,1fr) 58px}.row :global(.stock-logo){width:34px;height:34px;border-radius:9px}.bar i{background:var(--primary)}.invest,.side button{background:var(--primary)!important}.heroCopy>span,.state small,.side>span{color:var(--primary)}
 @media(max-width:620px){.row{grid-template-columns:22px 32px 88px 1fr 48px}.row :global(.stock-logo){width:30px;height:30px;border-radius:8px}}
+
+/* Research-model theme pages: deliberately NOT the fundable person-index green. */
+.researchTag{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8a5a00;background:#fff4de;border:1px solid #f4d79a;border-radius:999px;padding:4px 10px;width:fit-content}
+.researchBanner{display:flex;align-items:flex-start;gap:12px;background:#fff8ec;border:1px solid #f0dcae;border-radius:14px;padding:14px 16px;margin:0 0 16px;color:#6a5220;max-width:760px}.researchBanner strong{display:block;font-size:12px;color:#5c4514;margin-bottom:3px}.researchBanner p{margin:0;font-size:11px;line-height:1.5;color:#7a6534}
+.blockedCta{border:1px dashed #c9ceda!important;background:#f2f4f8!important;color:#8b92a0!important;cursor:not-allowed!important}
+.researchState{border-color:#f0dcae!important;background:#fff8ec!important}.researchState small{color:#8a5a00!important}.researchState strong{color:#5c4514}
+.memberLink{color:#303748;text-decoration:none;font-weight:750}.memberLink:hover{color:var(--primary);text-decoration:underline}
+.asOf{display:block;font-size:9px;color:#9aa1ae;margin-top:2px}

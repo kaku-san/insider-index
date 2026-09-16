@@ -105,11 +105,11 @@ function ThematicDesk() {
       <header className={styles.sectionHeader}>
         <div>
           <span>THEMES, NOT CELEBRITY CLONES</span>
-          <h2>Indexes with a story.</h2>
+          <h2>Research models with a story.</h2>
         </div>
         <p>
-          Multi-member baskets from public filings. Person trackers stay on profile pages — these are Hill-wide themes
-          you can research and share.
+          Multi-member baskets from public filings. These are <strong>research-only</strong> views — no deposit, no
+          basket Buy, no NAV. Fundable person vault indexes stay on the people shelf above.
         </p>
       </header>
       {resource.loading && !indexes.length ? (
@@ -121,6 +121,7 @@ function ThematicDesk() {
           {indexes.map((index, i) => (
             <Link key={index.id} href={index.href} className={styles.themeCard}>
               <span className={styles.themeIndex}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={styles.themeBadge}>Research · not investable</span>
               <strong>{index.name}</strong>
               <p>{index.headline}</p>
               <small>{index.top5.map((t) => t.ticker).join(" · ")}</small>
@@ -128,7 +129,7 @@ function ThematicDesk() {
                 {index.legs} names · {index.members} members
               </span>
               <span className={styles.themeCta}>
-                Open theme <Icon name="arrow" size={14} />
+                Open research model <Icon name="arrow" size={14} />
               </span>
             </Link>
           ))}

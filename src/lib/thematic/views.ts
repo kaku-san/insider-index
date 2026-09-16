@@ -51,7 +51,9 @@ export type ThematicIndexView = {
   basis: "insiderindex-thematic";
   methodology: string;
   status: "RESEARCH_MODEL";
+  fundable: false;
   generatedAt: string;
+  sourceGeneratedAt: string;
   members: ThematicWebsiteCard["members"];
   constituents: {
     ticker: string;
@@ -74,6 +76,7 @@ export type ThematicIndexView = {
 type Feed = {
   schemaVersion: number;
   generatedAt: string;
+  sourceGeneratedAt: string;
   sources: ThematicIndexView["sources"];
   disclaimers: string[];
   website: ThematicWebsiteCard[];
@@ -120,7 +123,9 @@ export function listThematicViews(): ThematicIndexView[] {
       basis: "insiderindex-thematic",
       methodology: methodologyFor(card.lane),
       status: "RESEARCH_MODEL",
+      fundable: false,
       generatedAt: LIVE.generatedAt,
+      sourceGeneratedAt: LIVE.sourceGeneratedAt,
       members: card.members,
       constituents,
       personIndex,
@@ -141,8 +146,10 @@ export function thematicDirectory() {
   return {
     schemaVersion: LIVE.schemaVersion,
     generatedAt: LIVE.generatedAt,
+    sourceGeneratedAt: LIVE.sourceGeneratedAt,
     count: listThematicViews().length,
     status: "RESEARCH_MODEL" as const,
+    fundable: false as const,
     sources: LIVE.sources,
     disclaimers: LIVE.disclaimers,
     indexes: listThematicViews().map((view) => ({
@@ -158,6 +165,8 @@ export function thematicDirectory() {
       top5: view.constituents.slice(0, 5).map((c) => ({ ticker: c.ticker, weightBps: c.weight_bps })),
       href: `/indexes/${view.id}`,
       badge: view.badge,
+      status: "RESEARCH_MODEL" as const,
+      fundable: false as const,
     })),
   };
 }
