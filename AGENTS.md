@@ -35,7 +35,7 @@ Disclosure-to-copy-trade app: real insider/politician prints → user-signed xSt
 
 - Insiders: SEC EDGAR primary (`edgar.ts`), Form4API fallback, mocks dev-only.
 - Congress: AInvest primary (`ainvest.ts`, `AINVEST_API_KEY`), Form4API fallback, mocks dev-only. AInvest is ticker-scoped (no per-member pull): the crawl universe is `buildCongressUniverse()` in `universe.ts` (`AINVEST_UNIVERSE`).
-- `GET /api/disclosures` → `lanes` tells you what actually served; `catalog` says whether venue tags came from the live catalog or the snapshot.
+- `GET /api/disclosures` → `lanes` tells you what actually served; `catalog` says whether venue tags came from the live catalog or the snapshot. The feed body is served from the committed PelosiTracker/FMP bundle via `src/lib/tracker/feed.ts` (through the tracker handoff module, not a second parse) as research-only rows (`source: "pelositracker"`, `tradeEligible: false`, value bands never exact prices); the live EDGAR/AInvest lanes are reported `off` with provenance rather than probed/retried. Payload is paginated (`?page`/`?limit`, documented default/max in `feed.ts`).
 
 ## Sharp edges
 

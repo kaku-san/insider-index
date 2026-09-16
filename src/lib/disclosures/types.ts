@@ -4,6 +4,7 @@
  *  - form4            Form4API insiders (fallback, FORM4API_KEY)
  *  - ainvest-congress AInvest Congressional Trades (primary politicians, AINVEST_API_KEY)
  *  - congress         Form4API House PTRs (fallback, FORM4API_KEY)
+ *  - pelositracker    Committed PelosiTracker/FMP disclosure bundle (research-only feed rows)
  *  - mock-*           labelled fixtures; never served in production by default
  */
 export type DisclosureSource =
@@ -11,6 +12,7 @@ export type DisclosureSource =
   | "form4"
   | "ainvest-congress"
   | "congress"
+  | "pelositracker"
   | "mock-form4"
   | "mock-congress";
 
