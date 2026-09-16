@@ -108,7 +108,7 @@ export function assertKakuSanComposition(vault: Pick<Vault, "composition" | "num
       }
       const table = vault.lutPubkeys?.[oracle.accountsToLoadLutIds[0]];
       const pool = table?.state.addresses[oracle.accountsToLoadLutIndices[0]]?.toBase58();
-      if (pool && pool !== spec.pool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${spec.ticker} installs ${pool}, expected ${spec.pool}`);
+      if (!pool || pool !== spec.pool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${spec.ticker} installs ${pool ?? "unresolved"}, expected ${spec.pool}`);
     }
   }
   const activeMints = allocated.filter(isActiveAsset).map(asset => asset.mint.toBase58());
