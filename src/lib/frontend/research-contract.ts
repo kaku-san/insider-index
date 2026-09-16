@@ -83,6 +83,10 @@ export type PublishedConstituent = {
   mint: string;
   issuer: string;
   weight_bps: number;
+  /** Weight in the full disclosed book before mapped legs are normalized to a 100% target. */
+  book_weight_bps?: number;
+  /** True only when an observed supported pool makes this mapped token usable by the native vault. */
+  vault_ready?: boolean;
   payload?: {
     evidencedMidpoint?: number | null;
   } | null;

@@ -89,6 +89,16 @@ test("the ticker filter narrows the book", async () => {
   for (const row of body.disclosures) assert.equal(row.ticker, "NVDA");
 });
 
+test("the profile filter returns one person's activity for index pages", async () => {
+  const { disclosures } = loadTrackerFeed();
+  const profileId = disclosures[0]?.profileId;
+  assert.ok(profileId);
+  const body = await (await call(`https://app.test/api/disclosures?profileId=${encodeURIComponent(profileId)}&limit=500`)).json();
+  assert.ok(body.disclosures.length > 0, "expected activity for a bundled profile");
+  assert.equal(body.total, disclosures.filter((row) => row.profileId === profileId).length);
+  for (const row of body.disclosures) assert.equal(row.profileId, profileId);
+});
+
 test("a missing or empty bundle degrades to an honest empty state, not a crash", () => {
   const empty = trackerDisclosures({ profiles: [] } as unknown as TrackerHandoff);
   assert.deepEqual(empty, []);

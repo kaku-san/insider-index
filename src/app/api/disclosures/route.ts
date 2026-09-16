@@ -30,6 +30,7 @@ function clampInt(value: string | null, fallback: number, min: number, max: numb
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const ticker = searchParams.get("ticker")?.toUpperCase();
+  const profileId = searchParams.get("profileId");
   const limit = clampInt(searchParams.get("limit"), TRACKER_FEED_DEFAULT_LIMIT, 1, TRACKER_FEED_MAX_LIMIT);
   const page = clampInt(searchParams.get("page"), 1, 1, Number.MAX_SAFE_INTEGER);
 
@@ -37,7 +38,9 @@ export async function GET(request: Request) {
     Promise.resolve(loadTrackerFeed()),
     loadSolanaCatalog(),
   ]);
-  const filtered = feed.disclosures.filter((row) => (ticker ? row.ticker === ticker : true));
+  const filtered = feed.disclosures.filter(
+    (row) => (!ticker || row.ticker === ticker) && (!profileId || row.profileId === profileId),
+  );
 
   const total = filtered.length;
   const pageCount = Math.max(1, Math.ceil(total / limit));
