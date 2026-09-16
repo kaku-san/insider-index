@@ -58,13 +58,16 @@ confirm the drift and intended trades look right before you ever run with
 npm run keeper:index -- --index <indexId> --execute --keypair /absolute/path/to/keeper-keypair.json
 ```
 
-Executing requires **both** the explicit `--execute` flag **and** passing the same
-shared eligibility rule. A tick that is not eligible does nothing and says so
-(`skipped-not-eligible`), recording that outcome without any broadcast. When
-eligible it signs with the keeper key and broadcasts (existing rebalance intents
-are reconciled first via a Raydium price update; otherwise a normal rebalance),
-then records the real outcome (`rebalanced`/`prices-updated`) with the signatures
-onto the definition row.
+Executing requires **both** the explicit `--execute` flag **and** either passing
+the same shared eligibility rule **or** having a pending rebalance intent to settle.
+A tick that is neither eligible nor has a pending intent does nothing and says so
+(`skipped-not-eligible`), recording that outcome without any broadcast. Otherwise
+it signs with the keeper key and broadcasts: a pending rebalance intent is settled
+first via a Raydium price update (so a rebalance that was already broadcast on a
+prior tick reaches settlement instead of stalling); with no pending intent a
+drift-eligible tick broadcasts a normal rebalance. It then records the real
+outcome (`rebalanced`/`prices-updated`) with the signatures onto the definition
+row.
 
 There is no `--force-rebalance`; force is refused. A leg with no tradable pool is
 refused rather than traded, and weight is never silently re-weighted around a
