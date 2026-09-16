@@ -69,8 +69,7 @@ export function PortfolioLayout({ id, name, indexName, image, context, strategy,
         <div className={styles.heroActions}>
           <PersonFollow id={id} />
           <ShareButton />
-          {indexHref ? <Link className={styles.primaryAction} href={indexHref}>{indexLabel ?? "View index"} <Icon name="arrow" size={15} /></Link> :
-            hasIndexMetadata ? <button type="button" className={styles.primaryAction} disabled>Index not published</button> : null}
+          {indexHref ? <Link className={styles.primaryAction} href={indexHref}>{indexLabel ?? "View index"} <Icon name="arrow" size={15} /></Link> : null}
         </div>
       </div>
 
