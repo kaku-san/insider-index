@@ -1,0 +1,585 @@
+{
+ "slug": "cleo-fields",
+ "bioguideId": "F000110",
+ "name": "Cleo Fields",
+ "party": "Democrat",
+ "state": "Louisiana",
+ "title": "Representative",
+ "fmpYear": null,
+ "yearsAvailable": [],
+ "bookSource": "txn-derived",
+ "annualFetchComplete": true,
+ "annualFetchIssues": [],
+ "holdingsCount": 0,
+ "holdingsWithTickerCount": 0,
+ "holdingsFromTransactionsCount": 34,
+ "holdings": [],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 61,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-03",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-07-30",
+   "lastDate": "2026-02-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 46,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-05",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ARM",
+   "name": "Arm Holdings Plc - American Depositary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-16",
+   "lastDate": "2025-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AVGO",
+   "name": "Broadcom Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-07-18",
+   "lastDate": "2025-09-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BMNR",
+   "name": "BITMINE IMMERSIN TECH INC",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-16",
+   "lastDate": "2025-07-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CLS",
+   "name": "Celestica, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-10-31",
+   "lastDate": "2025-11-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMG",
+   "name": "Chipotle Mexican Grill, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-06-03",
+   "lastDate": "2025-10-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRWV",
+   "name": "CoreWeave, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-10-09",
+   "lastDate": "2025-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CSCO",
+   "name": "Cisco Systems, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-30",
+   "lastDate": "2025-06-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FIG",
+   "name": "FIGMA INC CLASS A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2025-08-01",
+   "lastDate": "2025-12-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOG",
+   "name": "Alphabet Inc. - Class C Capital Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 51,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-05",
+   "lastDate": "2026-06-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 23,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-10-10",
+   "lastDate": "2026-02-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HOOD",
+   "name": "Robinhood Markets, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-07-17",
+   "lastDate": "2025-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INTC",
+   "name": "Intel Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-06-30",
+   "lastDate": "2025-06-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IREN",
+   "name": "IREN Limited - Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-10",
+   "lastDate": "2026-01-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JPM",
+   "name": "JP Morgan Chase & Co. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-30",
+   "lastDate": "2025-06-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LRCX",
+   "name": "Lam Research Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-02-03",
+   "lastDate": "2026-02-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MCD",
+   "name": "McDonald's Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-25",
+   "lastDate": "2025-09-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "META",
+   "name": "Meta Platforms, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 34,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-30",
+   "lastDate": "2026-02-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 45,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-03",
+   "lastDate": "2026-06-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MU",
+   "name": "Micron Technology, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-02-03",
+   "lastDate": "2026-02-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NFLX",
+   "name": "Netflix, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-10-31",
+   "lastDate": "2026-01-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVDA",
+   "name": "NVIDIA Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 124,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2025-02-05",
+   "lastDate": "2026-06-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OPEN",
+   "name": "Opendoor Technologies Inc - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-21",
+   "lastDate": "2025-12-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ORCL",
+   "name": "Oracle Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-09-17",
+   "lastDate": "2025-09-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PLTR",
+   "name": "Palantir Technologies Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-25",
+   "lastDate": "2025-10-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QCOM",
+   "name": "QUALCOMM Incorporated - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-09-10",
+   "lastDate": "2025-09-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QNT",
+   "name": "Quantinuum Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-06-04",
+   "lastDate": "2026-06-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SOUN",
+   "name": "SoundHound AI, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-16",
+   "lastDate": "2025-12-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SOXX",
+   "name": "Morgan Stanley - E*TRADE #2 ⇒ iShares PHLX SOX Semiconductor Sector Index Fund (SOXX) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-02-05",
+   "lastDate": "2025-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "T",
+   "name": "AT&T Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-06-30",
+   "lastDate": "2025-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TSM",
+   "name": "Taiwan Semiconductor Manufacturing Company Ltd.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 35,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-06-25",
+   "lastDate": "2026-07-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UBER",
+   "name": "Uber Technologies, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-10",
+   "lastDate": "2025-12-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

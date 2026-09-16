@@ -1,0 +1,654 @@
+{
+ "slug": "tim-moore",
+ "bioguideId": "M001236",
+ "name": "Tim Moore",
+ "party": "Republican",
+ "state": "North Carolina",
+ "title": "Representative",
+ "fmpYear": null,
+ "yearsAvailable": [],
+ "bookSource": "txn-derived",
+ "annualFetchComplete": true,
+ "annualFetchIssues": [],
+ "holdingsCount": 0,
+ "holdingsWithTickerCount": 0,
+ "holdingsFromTransactionsCount": 37,
+ "holdings": [],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "AAL",
+   "name": "American Airlines Group, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 45,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2025-03-12",
+   "lastDate": "2025-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-06-02",
+   "lastDate": "2025-06-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BKR",
+   "name": "Baker Hughes Company - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-03-04",
+   "lastDate": "2025-03-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BLK",
+   "name": "BlackRock, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-03-04",
+   "lastDate": "2025-03-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CBRL",
+   "name": "Cracker Barrel Old Country Store, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-11-20",
+   "lastDate": "2026-04-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CL",
+   "name": "Colgate-Palmolive Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-09-10",
+   "lastDate": "2025-09-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CNC",
+   "name": "Centene Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-07-14",
+   "lastDate": "2025-08-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COIN",
+   "name": "Coinbase Global, Inc. - 3Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-09-11",
+   "lastDate": "2026-02-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DASH",
+   "name": "DoorDash, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-03-04",
+   "lastDate": "2026-06-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DNUT",
+   "name": "Krispy Kreme, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-29",
+   "lastDate": "2026-03-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "F",
+   "name": "Ford Motor Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 63,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-03",
+   "lastDate": "2025-04-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GD",
+   "name": "General Dynamics Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-02-20",
+   "lastDate": "2025-02-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GNPX",
+   "name": "Genprex, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-10-29",
+   "lastDate": "2026-02-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HOG",
+   "name": "Harley-Davidson, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 88,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-03",
+   "lastDate": "2026-04-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HY",
+   "name": "Hyster-Yale, Inc. Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 38,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-08-07",
+   "lastDate": "2026-01-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IHG",
+   "name": "Intercontinental Hotels Group American Depositary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-05-07",
+   "lastDate": "2026-05-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INTC",
+   "name": "Intel Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-07-29",
+   "lastDate": "2025-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LGIH",
+   "name": "LGI Homes, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-10-30",
+   "lastDate": "2026-03-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSTY",
+   "name": "YIELDMAX MSTR OPTION INCOME STRATEGY ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-08-11",
+   "lastDate": "2025-08-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVDA",
+   "name": "NVIDIA Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-03-24",
+   "lastDate": "2026-03-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PG",
+   "name": "Procter & Gamble Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-09-10",
+   "lastDate": "2025-09-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QYLD",
+   "name": "Global X NASDAQ 100 Covered ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2025-04-07",
+   "lastDate": "2025-05-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ROK",
+   "name": "Rockwell Automation, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-02-21",
+   "lastDate": "2025-02-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RYCEY",
+   "name": "ROLLS ROYCE HLDGS S/ADR",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-05-07",
+   "lastDate": "2026-05-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SCMY",
+   "name": "Yieldmax SMCI Optn Inc Strg ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-03-31",
+   "lastDate": "2025-03-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SMCI",
+   "name": "Super Micro Computer, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-04-30",
+   "lastDate": "2025-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SMCY",
+   "name": "YIELDMAX SMCI OPTION INCOME STRATEGY ETF ",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 39,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-15",
+   "lastDate": "2025-08-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SMCYY",
+   "name": "SIMCORP A/S UN/ADR",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-02-04",
+   "lastDate": "2025-02-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SMPL",
+   "name": "The Simply Good Foods Company - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-02-03",
+   "lastDate": "2026-03-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "T",
+   "name": "AT&T Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-01-09",
+   "lastDate": "2026-08-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TNA",
+   "name": "Direxion Daily Small Cap Bull 3X ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 63,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-01-02",
+   "lastDate": "2025-06-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TQQQ",
+   "name": "Proshares Ultrapro QQQ ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-04-17",
+   "lastDate": "2025-04-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TZA",
+   "name": "Direxion Shares ETF Trust - Direxion Daily Small Cap Bear 3X Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 18,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2025-06-27",
+   "lastDate": "2025-08-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UNH",
+   "name": "Unitedhealth Group Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2025-07-16",
+   "lastDate": "2025-08-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USFD",
+   "name": "US Foods Holding Corp. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-03-04",
+   "lastDate": "2025-03-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "V",
+   "name": "Visa Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale"
+   ],
+   "firstDate": "2025-08-01",
+   "lastDate": "2025-08-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VZ",
+   "name": "Verizon Communications Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2025-07-29",
+   "lastDate": "2026-01-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

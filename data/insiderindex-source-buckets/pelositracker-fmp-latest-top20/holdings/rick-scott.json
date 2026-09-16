@@ -1,0 +1,71 @@
+{
+ "slug": "rick-scott",
+ "bioguideId": "S001217",
+ "name": "Rick Scott",
+ "party": "Republican",
+ "state": "Florida",
+ "title": "Senator",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020,
+  2019,
+  2018,
+  2017
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 1,
+ "holdingsWithTickerCount": 0,
+ "holdingsFromTransactionsCount": 2,
+ "holdings": [
+  {
+   "name": "Campaign Loan from Personal Funds",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": "Accounts Receivable From a Business",
+   "owner": "Self",
+   "value": 15000000.5,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "VAXX",
+   "name": "Vaxxinity, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-12-20",
+   "lastDate": "2023-12-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WTT",
+   "name": "Wireless Telecom Group Inc",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-08-15",
+   "lastDate": "2023-08-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

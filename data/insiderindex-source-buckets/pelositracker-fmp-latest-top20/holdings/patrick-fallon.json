@@ -1,0 +1,1953 @@
+{
+ "slug": "patrick-fallon",
+ "bioguideId": "F000246",
+ "name": "Pat Fallon",
+ "party": "Republican",
+ "state": "Texas",
+ "title": "Representative",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 117,
+ "holdingsWithTickerCount": 75,
+ "holdingsFromTransactionsCount": 33,
+ "holdings": [
+  {
+   "name": "Chase Bank Accounts [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Employee Retirement System of TEXAS [PE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "PC Gear Texas GP LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Recon Sportswear LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Rental Home - 1 [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Wells Cash Accounts [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒DENTON CNTY TX FRESH WTR 3.000% DUE 9/1/34(24879TNF7) [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Fast Break Sportswear LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Fallon LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒BANK OF AMERICA, NA [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒BlackRock Global Dividend Ptf Institutional (BIBDX) [MF]",
+   "ticker": "BIBDX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒(BXMIX) [MF]Blackstone Alternative Multi-Strategy Fund Class I",
+   "ticker": "BXMIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Franklin Strategic Series Natural Resources Fund AdvisorClass (FNRAX) [MF]",
+   "ticker": "FNRAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒iShares Global 100 ETF (IOO) [EF]",
+   "ticker": "IOO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒iShares MSCI Canada Index Fund (EWC) [EF]",
+   "ticker": "EWC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒iShares MSCI EAFE Min Vol Factor ETF (EFAV) [EF]",
+   "ticker": "EFAV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒(EEMV) [EF]iShares MSCI Emerging Markets Min Vol Factor ETF",
+   "ticker": "EEMV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒iShares Residential and Multisector Real Estate ETF (REZ)[EF]",
+   "ticker": "REZ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒KAYNE ANDERSON ENERGY [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒PIMCO CommodityRealReturn Strategy Fund Class I-2(PCRPX) [MF]",
+   "ticker": "PCRPX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Communication Services ETF (VOX) [EF]",
+   "ticker": "VOX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Consumer Discretion ETF (VCR) [EF]",
+   "ticker": "VCR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Consumer Staples ETF (VDC) [EF]",
+   "ticker": "VDC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Energy ETF (VDE) [EF]",
+   "ticker": "VDE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Financials ETF (VFH) [EF]",
+   "ticker": "VFH",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard FTSE Emerging Markets ETF (VWO) [EF]",
+   "ticker": "VWO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard FTSE Pacific ETF (VPL) [EF]",
+   "ticker": "VPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard FTSEEuropean ETF (VGK) [EF]",
+   "ticker": "VGK",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Global ex-U.S. Real Estate ETF (VNQI) [EF]",
+   "ticker": "VNQI",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Health Care ETF (VHT) [EF]",
+   "ticker": "VHT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Industrials ETF (VIS) [EF]",
+   "ticker": "VIS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Information Tech ETF (VGT) [EF]",
+   "ticker": "VGT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Materials ETF (VAW) [EF]",
+   "ticker": "VAW",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒Vanguard Total Stock Market ETF (VTI) [EF]",
+   "ticker": "VTI",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ML - GMAS INVESTMENT ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒BANK OF AMERICA, NA [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒British American Tobacco Industries, p.l.c. Common StockADR (BTI) [ST]",
+   "ticker": "BTI",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒Enterprise Products Partners L.P. (EPD) [ST]",
+   "ticker": "EPD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒GE HealthCare Technologies Inc. - Common Stock (GEHC)[ST]",
+   "ticker": "GEHC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒GE Vernova Inc. Common Stock (GEV) [ST]",
+   "ticker": "GEV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒General Electric Company (GE) [ST]",
+   "ticker": "GE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒Invesco Income Advantage U.S. Fund Class A (SCAUX)[MF]",
+   "ticker": "SCAUX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒Microsoft Corporation (MSFT) [ST]",
+   "ticker": "MSFT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒NUVEEN QUALITY MUNICIPAL [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒ONEOK, Inc. (OKE) [ST]",
+   "ticker": "OKE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒Plains All American Pipeline, L.P. - Common Unitsrepresenting Limited Partner Interests (PAA) [ST]",
+   "ticker": "PAA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒Target Corporation (TGT) [ST]",
+   "ticker": "TGT",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - INVESTMENT ⇒Common Stock (WAB) [ST]",
+   "ticker": "WAB",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - KKR INVESTMENT ⇒BANK OF AMERICA - CASH [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ML - KKR INVESTMENT ⇒BLUE OWL TECHNOLOGY [HE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "ML - KKR INVESTMENT ⇒KKR DIRECT LENDING II [HE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - KKR INVESTMENT ⇒KKR DIRECT LENDING III [HE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ML - KKR INVESTMENT ⇒Lord Abbett Intermediate Tax-Free Fund Class A (LISAX)[MF]",
+   "ticker": "LISAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - KKR INVESTMENT ⇒Lord Abbett Tax-Free Income Fund National Series Cl A(LANSX) [MF]",
+   "ticker": "LANSX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ML - REAL INVESTMENT ⇒BANK OF AMERICA - CASH [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ML - REAL INVESTMENT ⇒[HE]BLACKSTONE REAL ESTATE INCOME TRURST CL S",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "ML - REAL INVESTMENT ⇒CARLYLE U.S. REALTY VII TRUST CL A [HE]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "WF - Investment - 2 ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "ML - REAL INVESTMENT ⇒Vanguard Real Estate ETF (VNQ) [EF]",
+   "ticker": "VNQ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒ALLIANCEBERNSTEIN GLOBAL (AWF) [EF]",
+   "ticker": "AWF",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒BANK OF AMERICA - CASH [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒DOUBLINE TOTAL RETURN (DBLTX) [MF]",
+   "ticker": "DBLTX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒GOLDMAN SACHS STRATEGIC (GSZIX) [MF]",
+   "ticker": "GSZIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒INVESCO DYNAMIC CREDIT OPPORTUNITY FUND CLAX (XAXCX) [EF]",
+   "ticker": "XAXCX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒ISHARES CORE US (AGG) [EF]",
+   "ticker": "AGG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒LORD ABBETT BOND (LBDFX) [MF]",
+   "ticker": "LBDFX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒MORGAN STANLEY EMERGING (EDD) [EF]",
+   "ticker": "EDD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒RIVERNORTH DOUBLE LINE (RNSIX) [MF]",
+   "ticker": "RNSIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - RF ⇒TEMPLETOWN GLBL BOND FD (TGBAX) [MF]",
+   "ticker": "TGBAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒ALLIANCEBERNSTEIN GLOBAL (AWF) [EF]",
+   "ticker": "AWF",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒BANK OF AMERICA - CASH [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒DOUBLELINE EMERGING (DBLEX) [EF]",
+   "ticker": "DBLEX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒DOUBLINE TOTAL RETURN (DBLTX) [MF]",
+   "ticker": "DBLTX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒GOLDMAN SACHS STRATEGIC (GSZIX) [MF]",
+   "ticker": "GSZIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒ISHARES CORE US (AGG) [EF]",
+   "ticker": "AGG",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒LORD ABBETT BOND (LBDFX) [MF]",
+   "ticker": "LBDFX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒MORGAN STANLEY EMERGING (EDD) [MF]",
+   "ticker": "EDD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒RIVERNORTH DOUBLE LINE (RNSIX) [MF]",
+   "ticker": "RNSIX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "ML - SEP IRA - TSG ⇒TEMPLETOWN GLBL BOND FD (TGBAX) [MF]",
+   "ticker": "TGBAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "USAA - IRA ⇒Victory Growth Fund Shares (USAAX) [MF]",
+   "ticker": "USAAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "USAA - SEP IRA ⇒Victory 500 Index Fund Member Shares (USSPX) [MF]",
+   "ticker": "USSPX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "USAA - SEP IRA ⇒Victory Cornerstone Moderately Aggressive Fund (USCRX)[MF]",
+   "ticker": "USCRX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "USAA - SEP IRA ⇒Victory High Income Fund Shares (USHYX) [MF]",
+   "ticker": "USHYX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "USAA - SEP IRA ⇒Victory Income Stock Fund Shares (USISX) [MF]",
+   "ticker": "USISX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "USAA - SEP IRA ⇒Victory International Fund Shares (USIFX) [MF]",
+   "ticker": "USIFX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "USAA - SEP IRA ⇒Victory Target Retirement 2030 Fund (URTRX) [MF]",
+   "ticker": "URTRX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒BONHAM TX INDPT SCH DIST B/E CPN 3.000% DUE08/01/37 (098104LB6) [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒02/15/35 (438164KM6) [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "BRUSHY CREEK REGL UTIL AUTH TX CPN 3.000% DUE",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "WF - Investment - 1 ⇒(34682WKS1) [GS]FORT BEND CNTY TX MUN 3.000% DUE 9/1/34",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒FRISCO TX FOR ISSUES B/E CPN 3.125% DUE 02/15/35(358776QB1) [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒HONDO TX INDPT SCH DIST B/E CPN 3.000% DUE02/15/35 (438164KM6) [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒HUTTO TX INDPT SCH DIST B/E CPN 3.125% DUE08/01/36 (448492VL9) [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒Invesco Government Money Market Fund Class A (ADAXX)[MF]",
+   "ticker": "ADAXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒Invesco SteelPath MLP Alpha Fund Class A (MLPAX) [MF]",
+   "ticker": "MLPAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒(OMBXX) [MF]Invesco U.S. Government Money Portfolio Class Y",
+   "ticker": "OMBXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒LITTLE ELM TX RFDG G/O Due 8/1/33 3.125%(537095TC5) [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒Nuveen Short Tax Free Fund Class A (FSHAX) [MF]",
+   "ticker": "FSHAX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "WF - Investment - 1 ⇒Wells Fargo Bank - CASH [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "FIMM Treasury Portfolio: Institutional Class (FRBXX) [MF]",
+   "ticker": "FRBXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 500000,
+   "valueRange": {
+    "min": 500000,
+    "max": 500000
+   }
+  },
+  {
+   "name": "WF - Investment - 2 ⇒Wells Fargo Bank - CASH [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒American Airlines Group, Inc. (AAL) [ST]",
+   "ticker": "AAL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒Block, Inc. Class A Common Stock, (SQ) [ST]",
+   "ticker": "SQ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒Boeing Company (BA) [ST]",
+   "ticker": "BA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒FedEx Corporation (FDX) [ST]",
+   "ticker": "FDX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒FIMM Treasury Portfolio: Institutional Class (FRBXX) [MF]",
+   "ticker": "FRBXX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒PayPal Holdings, Inc. (PYPL) [ST]",
+   "ticker": "PYPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒Southwest Airlines Company (LUV) [ST]",
+   "ticker": "LUV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒Walt Disney Company (DIS) [ST]",
+   "ticker": "DIS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "WF - Investment - 3 ⇒Wells Fargo Bank - CASH [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Recon Jackets SC Store [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Recon Sportswear & Jackets LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Scouts Out [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "T-Shirt Guys LP [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Virtus Apparel LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "AAL",
+   "name": "American Airlines Group, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 66,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-23",
+   "lastDate": "2021-10-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 55,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-19",
+   "lastDate": "2021-07-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMAT",
+   "name": "Applied Materials, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-04-05",
+   "lastDate": "2021-04-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 50,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-19",
+   "lastDate": "2021-10-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BA",
+   "name": "Boeing Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 55,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-19",
+   "lastDate": "2021-10-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CAT",
+   "name": "Caterpillar, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-04-19",
+   "lastDate": "2021-05-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRM",
+   "name": "Salesforce.com Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-27",
+   "lastDate": "2021-05-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRWD",
+   "name": "CrowdStrike Holdings, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 41,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-24",
+   "lastDate": "2021-10-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CVX",
+   "name": "Chevron Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 69,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-23",
+   "lastDate": "2021-10-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DCP",
+   "name": "ML - INVESTMENT ⇒ DCP Midstream, LP Common Units (DCP) [ST]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2023-06-16",
+   "lastDate": "2023-06-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DE",
+   "name": "Deere & Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-27",
+   "lastDate": "2021-08-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIS",
+   "name": "Walt Disney Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 29,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-04-05",
+   "lastDate": "2021-10-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DOCU",
+   "name": "DocuSign, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-02",
+   "lastDate": "2021-06-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FB",
+   "name": "Facebook, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 28,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-02-23",
+   "lastDate": "2021-05-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FDX",
+   "name": "FedEx Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 53,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-19",
+   "lastDate": "2021-10-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FRBXX",
+   "name": "WF - Investment - 3 ⇒ FIMM Treasury Portfolio: Institutional Class (FRBXX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "S (partial)"
+   ],
+   "firstDate": "2023-10-16",
+   "lastDate": "2024-10-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JMCVX",
+   "name": "Fidelity - Rollover IRA ⇒ Janus Henderson Mid Cap Value Fund - T Shares (JMCVX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-12-09",
+   "lastDate": "2025-12-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KKR",
+   "name": "KKR & Co. Inc.",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2021-01-13",
+   "lastDate": "2021-05-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LUV",
+   "name": "Southwest Airlines Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 22,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-27",
+   "lastDate": "2021-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 36,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-01-19",
+   "lastDate": "2021-06-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ORCC",
+   "name": "Owl Rock Capital Corporation",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2021-03-16",
+   "lastDate": "2021-11-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PYPL",
+   "name": "PayPal Holdings, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 38,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2021-01-19",
+   "lastDate": "2021-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SQ",
+   "name": "Square, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-10-04",
+   "lastDate": "2021-10-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TWTR",
+   "name": "Twitter, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 29,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-10-04",
+   "lastDate": "2022-10-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UNH",
+   "name": "UnitedHealth Group Incorporated Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-04-05",
+   "lastDate": "2021-04-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "URTRX",
+   "name": "USAA - SEP IRA ⇒ Victory Target Retirement 2030 Fund (URTRX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-12-19",
+   "lastDate": "2025-12-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USAAX",
+   "name": "USAA - IRA ⇒ Victory Growth Fund Shares (USAAX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-12-12",
+   "lastDate": "2025-12-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USCRX",
+   "name": "USAA - SEP IRA ⇒ Victory Cornerstone Moderately Aggressive Fund (USCRX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-12-14",
+   "lastDate": "2025-12-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USIFX",
+   "name": "USAA - SEP IRA ⇒ Victory International Fund Shares (USIFX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-12-14",
+   "lastDate": "2025-12-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USISX",
+   "name": "USAA - SEP IRA ⇒ Victory Income Stock Fund Shares (USISX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-12-14",
+   "lastDate": "2025-12-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "USSPX",
+   "name": "USAA - SEP IRA ⇒ Victory 500 Index Fund Member Shares (USSPX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2022-12-14",
+   "lastDate": "2025-12-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VZ",
+   "name": "Verizon Communications Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 43,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2021-03-23",
+   "lastDate": "2022-01-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "XAXCX",
+   "name": "ML - SEP IRA - RF ⇒ INVESCO DYNAMIC CREDIT OPPORTUNITY FUND CL AX (XAXCX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "E"
+   ],
+   "firstDate": "2021-11-01",
+   "lastDate": "2021-11-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

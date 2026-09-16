@@ -1,0 +1,322 @@
+{
+  "generatedAt": "2026-09-16T03:13:00.010Z",
+  "source": {
+    "zip": "pelositracker-fmp-latest-top20.zip",
+    "sha256": "70d7ebd9615a77df6ff89add9d93f0b31627a1c2d75e262397e3508d5d8cb533",
+    "generatedAt": "2026-09-16T03:13:00.010Z"
+  },
+  "poolEvidence": {
+    "source": "pending-raydium-pools-mainnet",
+    "fetchedAt": null,
+    "note": "Pending raydium-pools-mainnet; catalog mapping is complete, pool readiness is not."
+  },
+  "catalogSource": "snapshot",
+  "counts": {
+    "total": 20,
+    "creatable": 0,
+    "waitPoolEvidence": 10,
+    "blocked": 10
+  },
+  "people": [
+    {
+      "slug": "angus-s-jr-king",
+      "indexId": "insiderindex-angus-s-jr-king",
+      "symbol": "IIKING",
+      "status": "BLOCKED",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "none-no-ticker-holdings",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "no-ticker-holdings-in-annual-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "brandon-gill",
+      "indexId": "insiderindex-brandon-gill",
+      "symbol": "IIGILL",
+      "status": "BLOCKED",
+      "bookSource": "txn-derived",
+      "weightBasis": "none-txn-derived",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "txn-derived-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "cleo-fields",
+      "indexId": "insiderindex-cleo-fields",
+      "symbol": "IIFIELDS",
+      "status": "BLOCKED",
+      "bookSource": "txn-derived",
+      "weightBasis": "none-txn-derived",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "txn-derived-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "dan-sullivan",
+      "indexId": "insiderindex-dan-sullivan",
+      "symbol": "IISULLIV",
+      "status": "BLOCKED",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "none-no-ticker-holdings",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "no-ticker-holdings-in-annual-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "gilbert-ray-cisneros",
+      "indexId": "insiderindex-gilbert-ray-cisneros",
+      "symbol": "IICISNER",
+      "status": "BLOCKED",
+      "bookSource": "txn-derived",
+      "weightBasis": "none-txn-derived",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "txn-derived-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "jefferson-shreve",
+      "indexId": "insiderindex-jefferson-shreve",
+      "symbol": "IISHREVE",
+      "status": "BLOCKED",
+      "bookSource": "txn-derived",
+      "weightBasis": "none-txn-derived",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "txn-derived-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "josh-gottheimer",
+      "indexId": "insiderindex-josh-gottheimer",
+      "symbol": "IIGOTTHE",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 25,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 9109,
+      "unmappedByWeightBps": 891,
+      "blockedReasons": [],
+      "networkBudgetLamports": "335000000"
+    },
+    {
+      "slug": "julia-letlow",
+      "indexId": "insiderindex-julia-letlow",
+      "symbol": "IILETLOW",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 53,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 8941,
+      "unmappedByWeightBps": 1059,
+      "blockedReasons": [],
+      "networkBudgetLamports": "671000000"
+    },
+    {
+      "slug": "kevin-hern",
+      "indexId": "insiderindex-kevin-hern",
+      "symbol": "IIHERN",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 8,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 8929,
+      "unmappedByWeightBps": 1071,
+      "blockedReasons": [],
+      "networkBudgetLamports": "131000000"
+    },
+    {
+      "slug": "lisa-mcclain",
+      "indexId": "insiderindex-lisa-mcclain",
+      "symbol": "IIMCCLAI",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 45,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 5877,
+      "unmappedByWeightBps": 4123,
+      "blockedReasons": [],
+      "networkBudgetLamports": "575000000"
+    },
+    {
+      "slug": "marjorie-taylor-greene",
+      "indexId": "insiderindex-marjorie-taylor-greene",
+      "symbol": "IIGREENE",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 52,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 5971,
+      "unmappedByWeightBps": 4029,
+      "blockedReasons": [],
+      "networkBudgetLamports": "659000000"
+    },
+    {
+      "slug": "nancy-pelosi",
+      "indexId": "insiderindex-nancy-pelosi",
+      "symbol": "IIPELOSI",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 18,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 9687,
+      "unmappedByWeightBps": 313,
+      "blockedReasons": [],
+      "networkBudgetLamports": "251000000"
+    },
+    {
+      "slug": "patrick-fallon",
+      "indexId": "insiderindex-patrick-fallon",
+      "symbol": "IIFALLON",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 21,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 3372,
+      "unmappedByWeightBps": 6628,
+      "blockedReasons": [],
+      "networkBudgetLamports": "287000000"
+    },
+    {
+      "slug": "rick-scott",
+      "indexId": "insiderindex-rick-scott",
+      "symbol": "IISCOTT",
+      "status": "BLOCKED",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "none-no-ticker-holdings",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "no-ticker-holdings-in-annual-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "shelley-moore-capito",
+      "indexId": "insiderindex-shelley-moore-capito",
+      "symbol": "IICAPITO",
+      "status": "BLOCKED",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "none-no-ticker-holdings",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "no-ticker-holdings-in-annual-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "shri-thanedar",
+      "indexId": "insiderindex-shri-thanedar",
+      "symbol": "IITHANED",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 9,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 8510,
+      "unmappedByWeightBps": 1490,
+      "blockedReasons": [],
+      "networkBudgetLamports": "143000000"
+    },
+    {
+      "slug": "susie-lee",
+      "indexId": "insiderindex-susie-lee",
+      "symbol": "IILEE",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 18,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 2420,
+      "unmappedByWeightBps": 7580,
+      "blockedReasons": [],
+      "networkBudgetLamports": "251000000"
+    },
+    {
+      "slug": "ted-budd",
+      "indexId": "insiderindex-ted-budd",
+      "symbol": "IIBUDD",
+      "status": "BLOCKED",
+      "bookSource": "fmp-annual-latest",
+      "weightBasis": "none-no-ticker-holdings",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "no-ticker-holdings-in-annual-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "tim-moore",
+      "indexId": "insiderindex-tim-moore",
+      "symbol": "IIMOORE",
+      "status": "BLOCKED",
+      "bookSource": "txn-derived",
+      "weightBasis": "none-txn-derived",
+      "mappedLegs": 0,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 0,
+      "unmappedByWeightBps": 0,
+      "blockedReasons": [
+        "txn-derived-book"
+      ],
+      "networkBudgetLamports": "35000000"
+    },
+    {
+      "slug": "vern-buchanan",
+      "indexId": "insiderindex-vern-buchanan",
+      "symbol": "IIBUCHAN",
+      "status": "WAIT_POOL_EVIDENCE",
+      "bookSource": "fmp-annual-latest+txn",
+      "weightBasis": "annual-holding-value-midpoint",
+      "mappedLegs": 5,
+      "vaultReadyLegs": 0,
+      "mappableByWeightBps": 9233,
+      "unmappedByWeightBps": 767,
+      "blockedReasons": [],
+      "networkBudgetLamports": "95000000"
+    }
+  ]
+}

@@ -1,0 +1,3845 @@
+{
+ "slug": "kevin-hern",
+ "bioguideId": "H001082",
+ "name": "Kevin Hern",
+ "party": "Republican",
+ "state": "Oklahoma",
+ "title": "Representative",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020,
+  2018
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 80,
+ "holdingsWithTickerCount": 22,
+ "holdingsFromTransactionsCount": 171,
+ "holdings": [
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Schwab Bank [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒T. Rowe Price Global Stock Fund (PRGSX) [MF]",
+   "ticker": "PRGSX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒FIDELITY SELECT IT SERVICES PORTFOLIO [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒FIDELITY SELECT LEISURE [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Hern Family Foundation ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Hern Family Foundation ⇒Illinois Tool Works Inc. (ITW) [ST]",
+   "ticker": "ITW",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Hern Family Foundation ⇒Intel Corporation (INTC) [ST]",
+   "ticker": "INTC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Hern Family Foundation ⇒PTC Inc. (PTC) [ST]",
+   "ticker": "PTC",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Hern Family Revocable Trust ⇒O'Reilly Automotive, Inc. (ORLY) [ST]",
+   "ticker": "ORLY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "Hern Family Revocable Trust ⇒05/16/2024 [GS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Hern Family Foundation ⇒CITIGROUP GLOBAL MKTS HLDGS 03/23/2027 MTN [CS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Columbia Diversified Fixed Income Allocation ETF (DIAL)[ST]",
+   "ticker": "DIAL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Eaton Vance Corporation Eaton Vance Tax-Managed Buy-Write Opportunities Fund Common Shares of Benefi (ETV)[ST]",
+   "ticker": "ETV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒EVENTIDE GILEAD FUND CLASS I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY DIVIDEND ETF FOR RISING RATES [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒[ST]Fidelity MSCI Communication Services Index ETF (FCOM)",
+   "ticker": "FCOM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Fidelity MSCI Consumer Discretionary Index ETF (FDIS)[ST]",
+   "ticker": "FDIS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY MSCI CONSUMER STAPLES INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY MSCI ENERGY INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY MSCI FINLS INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY MSCI HEALTH CARE INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY MSCI INDL INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY MSCI INFORMATION TECHNOLOGY INDEXETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY MSCI MATLS INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Fidelity MSCI Real Estate Index ETF (FREL) [ST]",
+   "ticker": "FREL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Fidelity MSCI Utilities Index ETF (FUTY) [ST]",
+   "ticker": "FUTY",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY NASDAQ COMPOSITE INDEX TRACKINGSTOCK [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIDELITY TOTAL BOND ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒FIRST EAGLE GLOBAL CLASS I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Firstar Bank-Checking [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒IQVIA Holdings, Inc. (IQV) [ST]",
+   "ticker": "IQV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒JPM Global Allocation Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒JPM Global Bond Opp Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Mainstay Mackay high yield muni fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒PARAMETRIC COMMODITY STRATEGIC INST CL [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Virtus Artificial Intelligence & Technology OpportunitiesFund Common Shares of Beneficial Interest (AIO) [ST]",
+   "ticker": "AIO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒VIRTUS SEIX HIGH YIELD CL I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Gabrielle Ashtyn Hern Trust ⇒Vuzix Corporation (VUZI) [ST]",
+   "ticker": "VUZI",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒Apple Inc. (AAPL) [ST]",
+   "ticker": "AAPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒BLACKROCK STRATEGIC INCOME OPPRTSI INSTL [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒Boston Scientific Corporation (BSX) [ST]",
+   "ticker": "BSX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒DOUBLELINE TOTAL RT BOND FD CL N [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒FIDELITY DIVIDEND ETF FOR RISING RATES [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒FIDELITY MSCI FINLS INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒FIDELITY MSCI MATLS INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒FIDELITY SELECT CHEMICALS [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒FIRST EAGLE GLOBAL CLASS I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒Firstar Bank-Checking [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒[MF]GOLDMAN SACHS ABSOLU RETURN TRACKER INSTL",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒INVESCO EXCHANGE TRADED FD TR DYNMC LRG VALU[EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒[EF]INVESCO EXCHANGE-TRADED FD TR S&P500 LOW VOL",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒IQVIA Holdings, Inc. (IQV) [ST]",
+   "ticker": "IQV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒JPMORGAN GLOBAL ALLOCATION CLASS I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒LOOMIS SAYLES CORE PLUS BOND FUND CL Y [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒NUVEEN NWQ FLEXIBLE INCOME CL I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒PARNASSUS CORE EQUITY INVESTOR [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒PIMCO INCOME FUND INSTITUTIONAL FUND [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒Schwab Bank [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒Select Enterprise Technology Services Portfolio (FBSOX)[MF]",
+   "ticker": "FBSOX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒T ROWE PRICE BLUE CHIP GROWTH INC [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Kaden Everett Hern Trust ⇒Vuzix Corporation (VUZI) [ST]",
+   "ticker": "VUZI",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒BOSTON PARTNERS ALL CAP VALUE INSTL [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒Boston Scientific Corporation (BSX) [ST]",
+   "ticker": "BSX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒FIDELITY DIVIDEND ETF FOR RISING RATES [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒FIDELITY MSCI FINLS INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒FIDELITY MSCI MATLS INDEX ETF [EF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒FIDELITY SELECT CHEMICALS [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒FIRST EAGLE GLOBAL CLASS I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒Firstar Bank-Checking [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒[MF]GOLDMAN SACHS ABSOLU RETURN TRACKER INSTL",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒Invesco Dynamic Large Cap Value ETF (PWV) [ET]",
+   "ticker": "PWV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒Invesco S&P 500 Low Volatility ETF (SPLV) [ET]",
+   "ticker": "SPLV",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒NUVEEN NWQ FLEXIBLE INCOME CL I [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒PARNASSUS CORE EQUITY INVESTOR [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒Schwab Bank [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒T ROWE PRICE BLUE CHIP GROWTH INC [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "Kelby Austin Hern Trust ⇒",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Dependent Child",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "ABB",
+   "name": "ABB Ltd",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-11-26",
+   "lastDate": "2023-05-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACIZX",
+   "name": "Kevin Hern Traditional IRA ⇒ Alger Capital Appreciation Institutional Fund Class Z-2 (ACIZX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2025-10-06",
+   "lastDate": "2025-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACN",
+   "name": "Accenture Plc Class A Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 56,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2026-03-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ADBE",
+   "name": "Adobe Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-11-07",
+   "lastDate": "2026-08-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AGCO",
+   "name": "AGCO Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-11-26",
+   "lastDate": "2024-12-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AHCO",
+   "name": "AdaptHealth Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-20",
+   "lastDate": "2023-04-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AIO",
+   "name": "AllianzgI Artificial Intelligence & Technology Opportunities Fund Common Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-01-11",
+   "lastDate": "2021-01-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ALC",
+   "name": "Alcon Inc. Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-05",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMP",
+   "name": "Ameriprise Financial, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2022-11-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMT",
+   "name": "American Tower Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-07",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ARCB",
+   "name": "ArcBest Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-11-26",
+   "lastDate": "2022-12-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ARGO",
+   "name": "Argo Group International Holdings, Ltd.",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2023-06-20",
+   "lastDate": "2023-06-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ARKK",
+   "name": "aRK Innovation ETF (aRKK) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-10-16",
+   "lastDate": "2020-10-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ASML",
+   "name": "ASML Holding N.V. - New York Registry Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2022-08-25",
+   "lastDate": "2022-08-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ASXC",
+   "name": "Asensus Surgical, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-25",
+   "lastDate": "2021-12-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BA",
+   "name": "Boeing Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BBBY",
+   "name": "Bed Bath & Beyond Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)",
+    "s"
+   ],
+   "firstDate": "2020-02-27",
+   "lastDate": "2020-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BDX",
+   "name": "Becton, Dickinson And Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2026-03-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BIIB",
+   "name": "Biogen Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-18",
+   "lastDate": "2026-08-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BLK",
+   "name": "BlackRock, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BLL",
+   "name": "Ball Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-11-26",
+   "lastDate": "2022-12-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BNPQY",
+   "name": "BNP Paribas",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale"
+   ],
+   "firstDate": "2025-10-09",
+   "lastDate": "2025-10-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BSX",
+   "name": "Boston Scientific Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale"
+   ],
+   "firstDate": "2021-05-20",
+   "lastDate": "2025-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BUD",
+   "name": "Anheuser-Busch Inbev SA Sponsored ADR",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-18",
+   "lastDate": "2026-08-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BX",
+   "name": "The Blackstone Group Inc. Class a (BX) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-10-15",
+   "lastDate": "2020-10-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BYLD",
+   "name": "Kevin Hern Insurance Trust ⇒ iShares Yield Optimized Bond ETF (BYLD) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-10-16",
+   "lastDate": "2025-10-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "C",
+   "name": "Citigroup MTN 9/1/2026 [CS]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2024-09-23",
+   "lastDate": "2024-09-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CAIE",
+   "name": "Hern Family Revocable Trust ⇒ Brokerage Investment Account ⇒ Calamos Autocallable Income ETF (CAIE) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-12-03",
+   "lastDate": "2025-12-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CARR",
+   "name": "Carrier Global Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-22",
+   "lastDate": "2026-08-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CB",
+   "name": "Chubb Limited Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2024-07-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CBTO",
+   "name": "Hern Family Revocable Trust ⇒ Brokerage Investment Account ⇒ Calamos Bitcoin 80 Series Structured Alt Protection ETF - October (CBTO) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-12-03",
+   "lastDate": "2025-12-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CCLD",
+   "name": "CareCloud, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-12-19",
+   "lastDate": "2023-12-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CCT",
+   "name": "Corporate Capital Trust, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "E",
+    "Exchange"
+   ],
+   "firstDate": "2018-12-20",
+   "lastDate": "2018-12-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CDNS",
+   "name": "Cadence Design Systems, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-05-26",
+   "lastDate": "2022-08-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CERN",
+   "name": "Cerner Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-06-10",
+   "lastDate": "2022-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CL",
+   "name": "Colgate-Palmolive Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2026-08-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CLNC",
+   "name": "Colony Credit Real Estate, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 28,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)",
+    "s"
+   ],
+   "firstDate": "2018-12-10",
+   "lastDate": "monthly",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMCSA",
+   "name": "Comcast Corporation - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMP",
+   "name": "Compass Minerals Intl Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-10-11",
+   "lastDate": "2023-10-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "COST",
+   "name": "Costco Wholesale Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2024-01-12",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CR",
+   "name": "Crane Holdings, Co.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2022-11-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRM",
+   "name": "Salesforce, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CSX",
+   "name": "CSX Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S (partial)",
+    "Sale"
+   ],
+   "firstDate": "2025-10-28",
+   "lastDate": "2025-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CTRA",
+   "name": "Coterra Energy Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "E",
+    "Exchange",
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2022-08-17",
+   "lastDate": "2026-05-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CTSH",
+   "name": "Cognizant Technology Solutions Corporation - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-03-17",
+   "lastDate": "2026-03-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CVX",
+   "name": "Chevron Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2021-10-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DEO",
+   "name": "Diageo Plc Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DG",
+   "name": "Dollar General Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DGRO",
+   "name": "iShares Core Dividend Growth ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2022-09-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DHR",
+   "name": "Danaher Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIAL",
+   "name": "Columbia Diversified Fixed Income Allocation ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-07-07",
+   "lastDate": "2021-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIS",
+   "name": "Walt Disney Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-10",
+   "lastDate": "2026-08-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DRE",
+   "name": "Duke Realty Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-11-26",
+   "lastDate": "2021-11-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DVN",
+   "name": "Devon Energy Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 55,
+   "sides": [
+    "E",
+    "Exchange",
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2021-01-07",
+   "lastDate": "2026-05-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DXCM",
+   "name": "DexCom, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-07-01",
+   "lastDate": "2024-12-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DYNF",
+   "name": "Hern Family Revocable Trust ⇒ iShares U.S. Equity Factor Rotation Active ETF (DYNF) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-01-06",
+   "lastDate": "2025-01-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ECL",
+   "name": "Ecolab Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EL",
+   "name": "Estee Lauder Companies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EMR",
+   "name": "Emerson Electric Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 25,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-05-18",
+   "lastDate": "2024-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ETILX",
+   "name": "Hern Family Foundation ⇒ Eventide Gilead Fund Institutional Class (ETILX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2025-09-25",
+   "lastDate": "2025-09-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ETN",
+   "name": "Eaton Corp PLC",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S (partial)",
+    "Sale"
+   ],
+   "firstDate": "2025-10-06",
+   "lastDate": "2025-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ETV",
+   "name": "Eaton Vance Corporation Eaton Vance Tax-Managed Buy-Write Opportunities Fund Common Shares Of Beneficial Interest",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-07-01",
+   "lastDate": "2021-07-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "EXAS",
+   "name": "Exact Sciences Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 19,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2026-03-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FBND",
+   "name": "Fidelity Total Bond ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2025-10-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FCX",
+   "name": "Freeport-McMoRan, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-05-18",
+   "lastDate": "2021-05-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FDIS",
+   "name": "Fidelity MSCI Consumer Discretionary Index ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2021-11-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FDRR",
+   "name": "Fidelity Dividend ETF For Rising Rates",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-07-30",
+   "lastDate": "2021-07-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FEMS",
+   "name": "First Trust Emerging Markets small Cap alphaDEX Fund (FEMs) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2020-04-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FENY",
+   "name": "Fidelity MsCI Energy Index ETF (FENY) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2020-04-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FHLC",
+   "name": "Fidelity MSCI Health Care Index ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2021-07-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FMAT",
+   "name": "Fidelity MSCI Materials Index ETF (FMAT)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2021-10-20",
+   "lastDate": "2021-10-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FNCL",
+   "name": "Fidelity MsCI Financials Index ETF (FNCL) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2020-04-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FQAL",
+   "name": "Fidelity Quality Factor ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-03-26",
+   "lastDate": "2021-07-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FSEN",
+   "name": "Fs Energy And Power Fund",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2018-12-04",
+   "lastDate": "2020-02-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FSK",
+   "name": "FS KKR Capital Corp.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "E",
+    "Exchange",
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)",
+    "s"
+   ],
+   "firstDate": "2018-12-20",
+   "lastDate": "Quarterly",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FSKR",
+   "name": "FS KKR Capital Corp. II",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-10-01",
+   "lastDate": "2021-01-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FSTA",
+   "name": "Fidelity MsCI COnsumer staples Index ETF (FsTa) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2020-04-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FTEC",
+   "name": "Fidelity MSCI Information Technology Index ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2025-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FTSM",
+   "name": "First Trust Enhanced Short Maturity ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2020-02-27",
+   "lastDate": "2022-08-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GAP",
+   "name": "Gap, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-13",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GARP",
+   "name": "Hern Family Revocable Trust ⇒ Brokerage Investment Account ⇒ iShares MSCI USA Quality GARP ETF (GARP) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-01-06",
+   "lastDate": "2025-01-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GFFFX",
+   "name": "Kevin Hern Traditional IRA ⇒ The Growth Fund of America Class F-2 Shares (GFFFX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2025-10-06",
+   "lastDate": "2025-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-07-30",
+   "lastDate": "2021-07-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HD",
+   "name": "Home Depot, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 61,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2026-08-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HLT",
+   "name": "Hilton Worldwide Holdings Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-11-26",
+   "lastDate": "2022-12-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HON",
+   "name": "Honeywell International Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 23,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HONA",
+   "name": "Honeywell Aerospace Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-19",
+   "lastDate": "2026-08-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HONAV",
+   "name": "Honeywell Aerospace Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "E",
+    "Exchange"
+   ],
+   "firstDate": "2026-06-29",
+   "lastDate": "2026-06-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HRL",
+   "name": "Hormel Foods Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-13",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ICE",
+   "name": "Intercontinental Exchange Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-02-14",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ICLR",
+   "name": "ICON Plc - Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2026-08-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INTC",
+   "name": "Intel Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 25,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2024-12-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IQV",
+   "name": "IQVIA Holdings, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 11,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-18",
+   "lastDate": "2026-03-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ITW",
+   "name": "Illinois Tool Works Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-10-16",
+   "lastDate": "2021-10-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IVZ",
+   "name": "Invesco Ltd Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-03-17",
+   "lastDate": "2026-03-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JCPB",
+   "name": "Kevin Hern Insurance Trust ⇒ JPMorgan Core Plus Bond ETF (JCPB) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2025-10-16",
+   "lastDate": "2025-10-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JEPI",
+   "name": "JPMorgan Equity Premium Income ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-07-30",
+   "lastDate": "2022-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JNJ",
+   "name": "Johnson & Johnson Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 31,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2024-12-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "JPM",
+   "name": "JP Morgan Chase & Co. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 36,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2024-04-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KMB",
+   "name": "Kimberly-Clark Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-18",
+   "lastDate": "2026-08-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KO",
+   "name": "Coca-Cola Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "KVUE",
+   "name": "Kenvue Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-03-17",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LIN",
+   "name": "Linde Plc - Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 27,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2024-06-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LMBS",
+   "name": "First Trust Low Duration Opportunities ETF (LMBs) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2020-04-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LMT",
+   "name": "Lockheed Martin Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 27,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2024-06-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "LOW",
+   "name": "Lowe's Companies, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-07",
+   "lastDate": "2026-08-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MASI",
+   "name": "Masimo Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-25",
+   "lastDate": "2025-09-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MCD",
+   "name": "McDonald's Corp",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale"
+   ],
+   "firstDate": "2020-10-16",
+   "lastDate": "2025-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MDLZ",
+   "name": "Mondelez International, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-02-14",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MDT",
+   "name": "Medtronic Plc. Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-07",
+   "lastDate": "2026-08-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MINT",
+   "name": "Hern Family Foundation ⇒ PIMCO Enhanced Short Maturity Active Exchange-Traded Fund (MINT) [EF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2025-02-11",
+   "lastDate": "2025-02-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MMC",
+   "name": "Marsh & McLennan Companies, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 15,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MMP",
+   "name": "Magellan Midstream Partners L.P. Limited Partnership",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 40,
+   "sides": [
+    "E",
+    "Exchange",
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-03-26",
+   "lastDate": "2023-09-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MRFIX",
+   "name": "Kevin Hern Traditional IRA ⇒ MFS Series Trust V - MFS Research Fund Class I (MRFIX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2025-10-06",
+   "lastDate": "2025-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MRSH",
+   "name": "Marsh Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-24",
+   "lastDate": "2026-08-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 49,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2026-08-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MTBC",
+   "name": "CareCloud, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-20",
+   "lastDate": "2022-05-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MUA",
+   "name": "Blackrock MuniAssets Fund, Inc Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-03-17",
+   "lastDate": "2026-03-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NEE",
+   "name": "NextEra Energy, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 34,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2024-06-17",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NEFFX",
+   "name": "Kevin Hern Traditional IRA ⇒ The New Economy Fund, Class F-2 Shs (NEFFX) [MF]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 1,
+   "sides": [
+    "S (partial)"
+   ],
+   "firstDate": "2025-10-06",
+   "lastDate": "2025-10-06",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NGL",
+   "name": "Ngl ENERGY PARTNERs LP Common Units Representing Limited Partner Interests",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)",
+    "s"
+   ],
+   "firstDate": "2019-05-15",
+   "lastDate": "Quarterly",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NKE",
+   "name": "Nike, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2026-08-13",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NTSX",
+   "name": "WisdomTree U.s. Efficient Core Fund (NTsX) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-01-29",
+   "lastDate": "2020-01-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVS",
+   "name": "Novartis AG",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OGN",
+   "name": "Organon & Co. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-03",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OKE",
+   "name": "ONEOK, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 49,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2019-08-14",
+   "lastDate": "semi-annua",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ONEQ",
+   "name": "Fidelity Nasdaq Composite Index ETF (ONEQ) [sT]",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2020-04-09",
+   "lastDate": "2020-04-09",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ORLY",
+   "name": "O'Reilly Automotive Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-07",
+   "lastDate": "2025-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "OTIS",
+   "name": "Otis Worldwide Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-22",
+   "lastDate": "2026-08-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PG",
+   "name": "Procter & Gamble Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 16,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2026-08-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PH",
+   "name": "Parker-Hannifin Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PLD",
+   "name": "Prologis, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-03-20",
+   "lastDate": "2026-03-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PRGS",
+   "name": "Progress Software Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-26",
+   "lastDate": "2026-03-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PSX",
+   "name": "Phillips 66",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PTC",
+   "name": "PTC Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-05-26",
+   "lastDate": "2022-08-25",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PWR",
+   "name": "Quanta Services, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-11-26",
+   "lastDate": "2021-11-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PXD",
+   "name": "Pioneer Natural Resources Company Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 41,
+   "sides": [
+    "E",
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-06-09",
+   "lastDate": "2024-05-03",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QSY",
+   "name": "WisdomTree U.s. Quality Shareholder Yield Fund",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-02-14",
+   "lastDate": "2020-02-14",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RHT",
+   "name": "Red Hat, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Sale (Full)",
+    "s"
+   ],
+   "firstDate": "2019-07-10",
+   "lastDate": "2019-07-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ROK",
+   "name": "Rockwell Automation, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 34,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2024-06-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RSG",
+   "name": "Republic Services, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RTN",
+   "name": "Raytheon Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2022-12-15",
+   "lastDate": "2022-12-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RTX",
+   "name": "RTX Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 24,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2024-06-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RY",
+   "name": "Royal Bank of Canada",
+   "sources": [
+    "fmp"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "Purchase"
+   ],
+   "firstDate": "2025-10-10",
+   "lastDate": "2025-10-10",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SHW",
+   "name": "Sherwin-Williams Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2022-11-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SLB",
+   "name": "Schlumberger N.V.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-12-04",
+   "lastDate": "2019-12-04",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SMA",
+   "name": "SmartStop Self Storage REIT, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-03-18",
+   "lastDate": "2026-03-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SOLS",
+   "name": "Solstice Advanced Materials Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-05",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SPY",
+   "name": "SPDR S&P 500",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2021-07-30",
+   "lastDate": "2021-09-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "STX",
+   "name": "Seagate Technology Holdings PLC",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S (partial)",
+    "Sale"
+   ],
+   "firstDate": "2025-10-06",
+   "lastDate": "2025-10-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SU",
+   "name": "Suncor Energy Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2020-11-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TIP",
+   "name": "iShares TIPS Bond ETF",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2021-07-08",
+   "lastDate": "2022-07-08",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TJX",
+   "name": "TJX Companies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-07-27",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TMO",
+   "name": "Thermo Fisher Scientific Inc",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 10,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-07",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TROW",
+   "name": "T. Rowe Price Group, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-07-07",
+   "lastDate": "2026-03-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TXN",
+   "name": "Texas Instruments Incorporated - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 55,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2026-03-18",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UNH",
+   "name": "UnitedHealth Group Incorporated Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 24,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-09-02",
+   "lastDate": "2025-12-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UTX",
+   "name": "United Technologies Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2019-10-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "V",
+   "name": "Visa Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-11-07",
+   "lastDate": "2023-01-31",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VFC",
+   "name": "V.F. Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-10-15",
+   "lastDate": "2022-11-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VLTO",
+   "name": "Veralto Corp Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2026-08-10",
+   "lastDate": "2026-08-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VOD",
+   "name": "Vodafone Group PLC - American Depositary Shares Each Representing Ten Ordinary Shares",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2023-10-11",
+   "lastDate": "2023-10-11",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VSNT",
+   "name": "Versant Media Group, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-08-05",
+   "lastDate": "2026-08-05",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VUZI",
+   "name": "Vuzix Corporation",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 13,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2021-05-18",
+   "lastDate": "2024-01-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WAT",
+   "name": "Waters Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "E",
+    "Exchange",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2026-02-09",
+   "lastDate": "2026-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WBA",
+   "name": "Walgreens Boots Alliance, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S",
+    "Sale (Full)",
+    "s"
+   ],
+   "firstDate": "2020-02-27",
+   "lastDate": "2020-02-27",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WMB",
+   "name": "Williams Companies, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 40,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-03-26",
+   "lastDate": "2024-06-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WPX",
+   "name": "WPX Energy, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-03-26",
+   "lastDate": "2021-01-07",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WYNN",
+   "name": "Wynn Resorts, Limited",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2022-12-19",
+   "lastDate": "2022-12-19",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "XOM",
+   "name": "Exxon Mobil Corporation Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 48,
+   "sides": [
+    "E",
+    "Exchange",
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2019-08-07",
+   "lastDate": "2026-07-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}

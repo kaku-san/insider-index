@@ -1,0 +1,1512 @@
+{
+ "slug": "nancy-pelosi",
+ "bioguideId": "P000197",
+ "name": "Nancy Pelosi",
+ "party": "Democrat",
+ "state": "California",
+ "title": "Representative",
+ "fmpYear": 2024,
+ "yearsAvailable": [
+  2024,
+  2023,
+  2022,
+  2021,
+  2020,
+  2019,
+  2018,
+  2017,
+  2016,
+  2015,
+  2014,
+  2013
+ ],
+ "bookSource": "fmp-annual-latest+txn",
+ "annualFetchComplete": false,
+ "annualFetchIssues": [
+  "repeated-page@1"
+ ],
+ "holdingsCount": 54,
+ "holdingsWithTickerCount": 22,
+ "holdingsFromTransactionsCount": 49,
+ "holdings": [
+  {
+   "name": "Bank of America - Checking Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "11 Zinfandel Lane - Home & Vineyard [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Wells Fargo Bank - Checking Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Joint",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "NVIDIA Corporation - Common Stock (NVDA) [ST]",
+   "ticker": "NVDA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Palo Alto Networks, Inc. - Common Stock (PANW)[ST]",
+   "ticker": "PANW",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "PayPal Holdings, Inc. (PYPL) [ST]",
+   "ticker": "PYPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Piatti Restaurant Company [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "QUALCOMM Incorporated (QCOM) [ST]",
+   "ticker": "QCOM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "REOF XX, LLC [AB]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "REOF XXI, LLC [AB]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "REOF XXII, LLC [AB]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "REOF XXV, LLC [AB]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "REOF XXVI, LLC [AB]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Roblox Corporation Class A (RBLX) [ST]",
+   "ticker": "RBLX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Russell Ranch LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Salesforce.com Inc (CRM) [ST]",
+   "ticker": "CRM",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Stoneridge LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Thirteen Hundred One Sansome LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Tripath Technology Inc. Common Stock [PS]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "U.S. Bank - Checking Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "U.S. Bank - Pelosi Trust Checking Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 501,
+   "valueRange": {
+    "min": 1,
+    "max": 1000
+   }
+  },
+  {
+   "name": "Visa Inc. (V) [ST]",
+   "ticker": "V",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Walt Disney Company (DIS) [ST]",
+   "ticker": "DIS",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Warner Bros. Discovery, Inc. - Series A (WBD) [ST]",
+   "ticker": "WBD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Congressional Credit Union - Checking Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "The Art of Power Book Contract [IP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": null,
+   "value": null,
+   "valueRange": null
+  },
+  {
+   "name": "Apple Inc. (AAPL) [ST]",
+   "ticker": "AAPL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 37500001,
+   "valueRange": {
+    "min": 25000001,
+    "max": 50000000
+   }
+  },
+  {
+   "name": "25 Point Lobos - Commercial Property [RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "45 Belden Place - Four Story Commercial Building[RP]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "AllianceBernstein Holding L.P. Units (AB) [OL]",
+   "ticker": "AB",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Alphabet Inc. - Class A (GOOGL) [ST]",
+   "ticker": "GOOGL",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Amazon.com, Inc. (AMZN) [ST]",
+   "ticker": "AMZN",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "American Express Company (AXP) [ST]",
+   "ticker": "AXP",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Aristotle LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "AT&T Inc. (T) [ST]",
+   "ticker": "T",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Auberge du Soleil [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 15000001,
+   "valueRange": {
+    "min": 5000001,
+    "max": 25000000
+   }
+  },
+  {
+   "name": "Bank of America - Checking Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Block, Inc. Class A Common Stock, (SQ) [ST]",
+   "ticker": "SQ",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Borel Real Estate Company [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Broadcom Inc. - Common Stock (AVGO) [OP]",
+   "ticker": "AVGO",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "City Car Services LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 75001,
+   "valueRange": {
+    "min": 50001,
+    "max": 100000
+   }
+  },
+  {
+   "name": "City National Bank - Checking Account [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "City National Securities - Brokerage Money MarketAccount [BA]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Clean Energy Fuels Corp. (CLNE) [ST]",
+   "ticker": "CLNE",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 8001,
+   "valueRange": {
+    "min": 1001,
+    "max": 15000
+   }
+  },
+  {
+   "name": "Comcast Corporation - Class A (CMCSA) [ST]",
+   "ticker": "CMCSA",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 750001,
+   "valueRange": {
+    "min": 500001,
+    "max": 1000000
+   }
+  },
+  {
+   "name": "CrowdStrike Holdings, Inc. - Class A (CRWD) [ST]",
+   "ticker": "CRWD",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Dropbox, Inc. - Class A (DBX) [ST]",
+   "ticker": "DBX",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "EDI Associates [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Financial Leasing Services [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 175001,
+   "valueRange": {
+    "min": 100001,
+    "max": 250000
+   }
+  },
+  {
+   "name": "Forge Investments, LLC [AB]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Forty-Five Belden Corporation [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 3000001,
+   "valueRange": {
+    "min": 1000001,
+    "max": 5000000
+   }
+  },
+  {
+   "name": "Global Ambassador Concierge LLC [OL]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  },
+  {
+   "name": "Interactive Brokers Group, Inc. (IBKR) [ST]",
+   "ticker": "IBKR",
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 375001,
+   "valueRange": {
+    "min": 250001,
+    "max": 500000
+   }
+  },
+  {
+   "name": "Matthews International Mutual Fund [MF]",
+   "ticker": null,
+   "section": "Asset",
+   "assetType": null,
+   "owner": "Spouse",
+   "value": 32501,
+   "valueRange": {
+    "min": 15001,
+    "max": 50000
+   }
+  }
+ ],
+ "holdingsFromTransactions": [
+  {
+   "ticker": "AA",
+   "name": "Alcoa Inc. (AA)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-10-23",
+   "lastDate": "2014-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 93,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)",
+    "p",
+    "s"
+   ],
+   "firstDate": "2016-01-13",
+   "lastDate": "2025-12-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AB",
+   "name": "AllianceBernstein Holding L.P. Units",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 21,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)"
+   ],
+   "firstDate": "2020-12-22",
+   "lastDate": "2026-01-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ACTV",
+   "name": "The Active Network, Inc. (ACTV)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2013-11-26",
+   "lastDate": "2013-11-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon.com, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 38,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)",
+    "p",
+    "s"
+   ],
+   "firstDate": "2018-07-27",
+   "lastDate": "2026-01-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AVGO",
+   "name": "Broadcom Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-06-24",
+   "lastDate": "2025-06-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "AXP",
+   "name": "American Express Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "p",
+    "s"
+   ],
+   "firstDate": "2020-01-16",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BCOR",
+   "name": "Blucora, Inc. (BCOR)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-10-23",
+   "lastDate": "2014-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BE",
+   "name": "Bloom Energy Corporation Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-07-24",
+   "lastDate": "2026-07-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BFET",
+   "name": "07/22/2019P$500,001 - $1,000,000 DESCRIPTION: Purchased 20 call options with a strike price of $1700 and an expiration date of 1/17/20. BF Enterprises Common Stock New (BFET)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "s"
+   ],
+   "firstDate": "2017-06-20",
+   "lastDate": "2020-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "BRCM",
+   "name": "Broadcom Corporation - Class A (BRCM)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-10-23",
+   "lastDate": "2014-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CLNE",
+   "name": "$1,001 - $15,000Interest$201 - $1,000 gfedc Clean Energy Fuels Corp. (CLNE)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "s"
+   ],
+   "firstDate": "2018-05-14",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CMCSA",
+   "name": "$1,001 - $15,000None gfedc assetownervalue of assetincome type(s) incometx. > $1,000? Comcast Corporation - Class A (CMCSA)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "s"
+   ],
+   "firstDate": "2018-05-14",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRM",
+   "name": "Salesforce, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 31,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "p"
+   ],
+   "firstDate": "2015-12-30",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "CRWD",
+   "name": "CrowdStrike Holdings, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2020-09-03",
+   "lastDate": "2020-12-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DBX",
+   "name": "$1,000,001 - $5,000,000 None Dropbox, Inc. - Class A (DBX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "p"
+   ],
+   "firstDate": "2018-03-27",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DIS",
+   "name": "Walt Disney Company",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 42,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)",
+    "p",
+    "s"
+   ],
+   "firstDate": "2014-11-28",
+   "lastDate": "2025-12-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "DOW",
+   "name": "Dow Chemical Company (DOW)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-10-23",
+   "lastDate": "2014-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ELX",
+   "name": "Emulex Corporation (ELX)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-10-23",
+   "lastDate": "2014-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "ENTR",
+   "name": "Entropic Communications, Inc. (ENTR)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-10-23",
+   "lastDate": "2014-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "FB",
+   "name": "Facebook, Inc. - Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 22,
+   "sides": [
+    "P",
+    "Purchase",
+    "S (partial)",
+    "Sale (Full)",
+    "p",
+    "s"
+   ],
+   "firstDate": "2018-05-14",
+   "lastDate": "2021-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOG",
+   "name": "Alphabet Inc. - Class C Capital Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2021-06-18",
+   "lastDate": "2022-12-28",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 32,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)",
+    "p"
+   ],
+   "firstDate": "2020-02-27",
+   "lastDate": "2026-01-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "HTZ",
+   "name": "Hertz Global Holdings, Inc (HTZ)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 26,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2014-11-05",
+   "lastDate": "2015-07-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "IBKR",
+   "name": "$15,001 - $50,000None gfedc LOCATION: Washington, DC, US DESCRIPTION: Ltd. Partnership Interest in Concierge Services for International Travelers Interactive Brokers Group, Inc. (IBKR)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "S",
+    "S (partial)",
+    "s"
+   ],
+   "firstDate": "2018-05-14",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "INTC",
+   "name": "Intel Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-05-29",
+   "lastDate": "2026-07-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MGRC",
+   "name": "McGrath RentCorp",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 4,
+   "sides": [
+    "S (partial)",
+    "Sale"
+   ],
+   "firstDate": "2014-09-22",
+   "lastDate": "2016-07-21",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MORN",
+   "name": "$50,001 - $100,000 Dividends$201 - $1,000 gfedc assetownervalue of assetincome type(s) incometx. > $1,000? Morningstar, Inc. (MORN)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)",
+    "p"
+   ],
+   "firstDate": "2018-05-14",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 32,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)",
+    "p",
+    "s"
+   ],
+   "firstDate": "2020-02-20",
+   "lastDate": "2024-07-26",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "MU",
+   "name": "Micron Technology, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "s"
+   ],
+   "firstDate": "2021-12-21",
+   "lastDate": "2023-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NFLX",
+   "name": "Netflix, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 20,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Partial)"
+   ],
+   "firstDate": "2019-07-05",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "NVDA",
+   "name": "NVIDIA Corporation - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 48,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)",
+    "p",
+    "s"
+   ],
+   "firstDate": "2021-03-19",
+   "lastDate": "2026-01-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PANW",
+   "name": "Palo Alto Networks, Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2024-02-12",
+   "lastDate": "2024-12-20",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "PYPL",
+   "name": "PayPal Holdings, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 27,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)",
+    "p"
+   ],
+   "firstDate": "2020-06-12",
+   "lastDate": "2025-12-30",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "QCOM",
+   "name": "$1,000,001 - $5,000,000 Partnership Loss$201 - $1,000 gfedc LOCATION: Tiburon/Marin, CA, US DESCRIPTION: Ltd. Partnership Investment in Restaurant Company QUALCOMM Incorporated (QCOM)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 7,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2018-05-14",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RBLX",
+   "name": "Roblox Corporation Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 14,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)",
+    "p"
+   ],
+   "firstDate": "2021-03-10",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "RHI",
+   "name": "Robert Half International Inc. (RHI)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-09-22",
+   "lastDate": "2014-09-22",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SFLY",
+   "name": "Shutterfly, Inc. (SFLY)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 3,
+   "sides": [
+    "S"
+   ],
+   "firstDate": "2014-10-23",
+   "lastDate": "2014-10-23",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SQ",
+   "name": "$250,001 - $500,000 Partnership Loss$1 - $200 gfedc LOCATION: Sacramento/Sacramento, CA, US DESCRIPTION: Ltd. Partnership in Undeveloped Real Estate Investment Square, Inc. Class A (SQ)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 12,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "p",
+    "s"
+   ],
+   "firstDate": "2016-05-17",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "SUNE",
+   "name": "$250,001 - $500,000 Partnership Income $2,501 - $5,000 gfedc LOCATION: Sacramento/Sacramento, CA, US DESCRIPTION: Ltd. Partner in Undeveloped Residential Real Estate Investment SunEdison, Inc. (SUNE)",
+   "sources": [
+    "pelosiTracker"
+   ],
+   "tradeCount": 6,
+   "sides": [
+    "P"
+   ],
+   "firstDate": "2014-10-24",
+   "lastDate": "2020-08-13",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "T",
+   "name": "AT&T Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 9,
+   "sides": [
+    "P",
+    "Purchase",
+    "S"
+   ],
+   "firstDate": "2018-10-24",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TEM",
+   "name": "Tempus AI, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-01-14",
+   "lastDate": "2026-01-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "TSLA",
+   "name": "Tesla, Inc. - Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 17,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "S (partial)",
+    "Sale (Full)",
+    "Sale (Partial)",
+    "p"
+   ],
+   "firstDate": "2020-02-20",
+   "lastDate": "2024-06-24",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "UBER",
+   "name": "Uber Technologies, Inc. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2026-05-29",
+   "lastDate": "2026-05-29",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "V",
+   "name": "Visa Inc.",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 45,
+   "sides": [
+    "P",
+    "S",
+    "S (partial)",
+    "Sale (Partial)",
+    "Sale (partial)",
+    "s"
+   ],
+   "firstDate": "2014-12-29",
+   "lastDate": "2024-07-01",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VSNT",
+   "name": "Versant Media Group, Inc. - Class A Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 2,
+   "sides": [
+    "E",
+    "Exchange"
+   ],
+   "firstDate": "2026-01-02",
+   "lastDate": "2026-01-02",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "VST",
+   "name": "Vistra Corp. Common Stock",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "P",
+    "Purchase"
+   ],
+   "firstDate": "2025-01-14",
+   "lastDate": "2026-01-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WBD",
+   "name": "Warner Bros. Discovery, Inc. - Series A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 5,
+   "sides": [
+    "E",
+    "Exchange",
+    "S (partial)",
+    "p",
+    "s"
+   ],
+   "firstDate": "2022-04-11",
+   "lastDate": "2024-05-15",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  },
+  {
+   "ticker": "WORK",
+   "name": "Slack Technologies, Inc. Class A",
+   "sources": [
+    "fmp",
+    "pelosiTracker"
+   ],
+   "tradeCount": 8,
+   "sides": [
+    "P",
+    "Purchase",
+    "S",
+    "Sale (Full)"
+   ],
+   "firstDate": "2020-02-20",
+   "lastDate": "2022-05-16",
+   "note": "Derived from transactions only — not an annual disclosure position size"
+  }
+ ]
+}
