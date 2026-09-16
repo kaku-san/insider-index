@@ -114,9 +114,13 @@ export type PersonIndexDefinition = {
     tickerCount: number;
     mappedLegCount: number;
     vaultReadyLegCount: number;
+    // Whole-book basis: `mappableByWeightBps` + `unmappedByWeightBps` = 10000 over every
+    // positive-value ticker (mapped + unmapped).
     mappableByWeightBps: number;
     unmappedByWeightBps: number;
-    poolReadyByWeightBps: number;
+    // Mapped-only basis: share of the renormalised mapped-leg weights (`targetWeightBps`, which
+    // sum to 10000 across mapped legs) that is pool-ready. NOT comparable to the whole-book fields.
+    poolReadyOfMappedBps: number;
   };
   nativeTokenCap: number;
   structurallyCreatable: boolean;
@@ -249,7 +253,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       legs: [],
       unmapped: [],
       activity,
-      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, poolReadyByWeightBps: 0 },
+      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, poolReadyOfMappedBps: 0 },
       structurallyCreatable: false,
       blockedReasons: ["txn-derived-book"],
       status: "BLOCKED",
@@ -278,7 +282,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       legs: [],
       unmapped: [],
       activity: [],
-      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, poolReadyByWeightBps: 0 },
+      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, poolReadyOfMappedBps: 0 },
       structurallyCreatable: false,
       blockedReasons: ["no-ticker-holdings-in-annual-book"],
       status: "BLOCKED",
@@ -329,7 +333,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
 
   const mappableByWeightBps = legs.reduce((s, l) => s + l.bookWeightBps, 0);
   const vaultReadyLegCount = legs.filter((l) => l.vaultReady).length;
-  const poolReadyByWeightBps = legs.filter((l) => l.vaultReady).reduce((s, l) => s + l.targetWeightBps, 0);
+  const poolReadyOfMappedBps = legs.filter((l) => l.vaultReady).reduce((s, l) => s + l.targetWeightBps, 0);
 
   const blockedReasons: string[] = [];
   if (legs.length < MIN_MAPPED_LEGS) blockedReasons.push("too-few-mapped-legs");
@@ -365,7 +369,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       vaultReadyLegCount,
       mappableByWeightBps,
       unmappedByWeightBps: 10_000 - mappableByWeightBps,
-      poolReadyByWeightBps,
+      poolReadyOfMappedBps,
     },
     nativeTokenCap: NATIVE_TOKEN_CAP,
     structurallyCreatable,

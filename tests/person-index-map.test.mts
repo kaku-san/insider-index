@@ -146,6 +146,15 @@ test("thin pools are recorded, not silently used", () => {
   assert.equal(def.status, "WAIT_POOL_EVIDENCE"); // only 1 vault-ready leg
 });
 
+test("a non-Raydium pool kind fails closed, never coerced to CLMM", () => {
+  const catalog = indexCatalog([xstock("AAPL", "AAPLx", A.mint), xstock("NVDA", "NVDAx", B.mint)]);
+  // Both pools are "observed" (above the TVL floor) but one carries a non-Raydium kind.
+  const pools = poolSourceFromEvidence([observed(A.mint, A.pool, "orca_whirlpool"), observed(B.mint, B.pool, "raydium_clmm")]);
+  const def = derivePersonIndex(book({ slug: "kind", holdings: [{ ticker: "AAPL", value: 500 }, { ticker: "NVDA", value: 500 }] }), catalog, pools);
+  assert.equal(def.status, "CREATABLE");
+  assert.throws(() => buildPersonVaultInit(def), /ORACLE_KIND_FORBIDDEN/);
+});
+
 test("native leg cap: a book mapping past the cap throws, never truncates", () => {
   const tokens: CatalogToken[] = [];
   const holdings = [];

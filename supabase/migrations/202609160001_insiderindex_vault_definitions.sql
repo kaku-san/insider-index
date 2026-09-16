@@ -19,6 +19,10 @@ create table public.insiderindex_vault_definitions (
   structurally_creatable boolean not null,
   blocked_reasons jsonb not null default '[]'::jsonb,
   book_source text,
+  -- Full derivation provenance (fmpYear, annualFetchComplete, holdings/ticker/weighted counts,
+  -- note). book_source stays its own queryable column above; this shows book honesty without
+  -- re-reading the source zip.
+  provenance jsonb not null default '{}'::jsonb,
   native_token_cap integer not null check (native_token_cap between 1 and 100),
   host_entry_fee_bps integer not null check (host_entry_fee_bps = 25),
   host_exit_fee_bps integer not null check (host_exit_fee_bps = 0),
@@ -93,14 +97,14 @@ begin
 
     insert into insiderindex_vault_definitions as t (
       index_id, person_slug, bioguide_id, network, name, symbol, weight_basis, status,
-      structurally_creatable, blocked_reasons, book_source, native_token_cap,
+      structurally_creatable, blocked_reasons, book_source, provenance, native_token_cap,
       host_entry_fee_bps, host_exit_fee_bps, legs, vault_legs, pool_excluded_legs, unmapped,
       coverage, cost, keeper, source_zip, source_sha256, definition_hash
     ) values (
       def->>'indexId', def->>'personSlug', def->>'bioguideId', coalesce(def->>'network','mainnet-beta'),
       def->>'name', def->>'symbol', def->>'weightBasis', def->>'status',
       (def->>'structurallyCreatable')::boolean, coalesce(def->'blockedReasons','[]'::jsonb), def->>'bookSource',
-      coalesce((def->>'nativeTokenCap')::integer, 100), 25, 0,
+      coalesce(def->'provenance','{}'::jsonb), coalesce((def->>'nativeTokenCap')::integer, 100), 25, 0,
       coalesce(def->'legs','[]'::jsonb), vlegs, coalesce(def->'poolExcludedLegs','[]'::jsonb),
       coalesce(def->'unmapped','[]'::jsonb), coalesce(def->'coverage','{}'::jsonb), def->'cost',
       coalesce(def->'keeper','{}'::jsonb), d->'source'->>'zip', d->'source'->>'sha256', h
@@ -109,7 +113,7 @@ begin
       person_slug = excluded.person_slug, bioguide_id = excluded.bioguide_id, network = excluded.network,
       name = excluded.name, symbol = excluded.symbol, weight_basis = excluded.weight_basis, status = excluded.status,
       structurally_creatable = excluded.structurally_creatable, blocked_reasons = excluded.blocked_reasons,
-      book_source = excluded.book_source, native_token_cap = excluded.native_token_cap,
+      book_source = excluded.book_source, provenance = excluded.provenance, native_token_cap = excluded.native_token_cap,
       legs = excluded.legs, vault_legs = excluded.vault_legs, pool_excluded_legs = excluded.pool_excluded_legs,
       unmapped = excluded.unmapped, coverage = excluded.coverage, cost = excluded.cost, keeper = excluded.keeper,
       source_zip = excluded.source_zip, source_sha256 = excluded.source_sha256,
@@ -134,6 +138,7 @@ language sql stable security definer set search_path = public, pg_temp as $$
   select case when count(*) = 0 then null else jsonb_build_object(
     'indexId', index_id, 'personSlug', person_slug, 'network', network, 'name', name, 'symbol', symbol,
     'status', status, 'weightBasis', weight_basis, 'nativeTokenCap', native_token_cap,
+    'bookSource', book_source, 'provenance', provenance,
     'hostEntryFeeBps', host_entry_fee_bps, 'hostExitFeeBps', host_exit_fee_bps,
     'vaultAddress', vault_address, 'shareMint', share_mint, 'vaultLegs', vault_legs, 'keeper', keeper,
     'lastRebalanceAt', last_rebalance_at, 'lastRebalanceResult', last_rebalance_result,

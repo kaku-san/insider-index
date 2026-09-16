@@ -21,6 +21,16 @@ export const INDEX_START_PRICE = "1000000";
 
 const LAMPORTS = { create: 30_000_000, perToken: 12_000_000, weights: 5_000_000 } as const;
 
+const RAYDIUM_KINDS: readonly RaydiumOracleKind[] = ["raydium_clmm", "raydium_cpmm"];
+/** Validate the pool-evidence kind against the Raydium kinds Symmetry supports. Fails closed on an
+ *  unknown/unset kind (a future non-Raydium adapter or typo) instead of silently coercing to CLMM. */
+function raydiumKind(kind: string): RaydiumOracleKind {
+  if (!RAYDIUM_KINDS.includes(kind as RaydiumOracleKind)) {
+    throw new Error(`ORACLE_KIND_FORBIDDEN: ${String(kind)} (Raydium CLMM/CPMM only)`);
+  }
+  return kind as RaydiumOracleKind;
+}
+
 export type PersonVaultLeg = {
   ticker: string;
   mint: string;
@@ -52,7 +62,7 @@ export type PersonVaultInit = {
 
 function oracleInput(leg: MappedLeg): OracleInput {
   return {
-    oracle_type: (leg.pool.pool!.kind as RaydiumOracleKind) === "raydium_cpmm" ? "raydium_cpmm" : "raydium_clmm",
+    oracle_type: raydiumKind(leg.pool.pool!.kind),
     account_lut_id: 0,
     account_lut_index: 0,
     account: leg.pool.pool!.pool,
@@ -111,7 +121,7 @@ export function buildPersonVaultInit(definition: PersonIndexDefinition): PersonV
   const bindings: RaydiumPoolBinding[] = ready.map((l) => ({
     mint: l.mint,
     pool: l.pool.pool!.pool,
-    kind: (l.pool.pool!.kind as RaydiumOracleKind) === "raydium_cpmm" ? "raydium_cpmm" : "raydium_clmm",
+    kind: raydiumKind(l.pool.pool!.kind),
   }));
   const legs: PersonVaultLeg[] = ready.map((l, i) => {
     const token: AddOrEditTokenInput = {

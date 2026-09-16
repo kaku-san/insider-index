@@ -55,7 +55,11 @@ export function definitionForDb(definition: PersonIndexDefinition): Record<strin
     status: definition.status,
     structurallyCreatable: definition.structurallyCreatable,
     blockedReasons: definition.blockedReasons,
+    // `book_source` stays its own queryable column (keeper/reports filter on it); the full
+    // provenance object is persisted alongside so the DB record shows book honesty (incomplete
+    // annual fetch, ticker-row counts, weighted share) without re-reading the source zip.
     bookSource: definition.provenance.bookSource,
+    provenance: definition.provenance,
     nativeTokenCap: definition.nativeTokenCap,
     hostEntryFeeBps: 25,
     hostExitFeeBps: 0,
@@ -91,6 +95,8 @@ export async function publishVaultDefinitions(db: SupabaseClient, document: Vaul
 export type PersistedVaultDefinition = {
   indexId: string;
   status: string;
+  bookSource: string | null;
+  provenance: Record<string, unknown>;
   vaultAddress: string | null;
   shareMint: string | null;
   vaultLegs: { ticker: string; mint: string; targetWeightBps: number }[];
