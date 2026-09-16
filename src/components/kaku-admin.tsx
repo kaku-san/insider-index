@@ -105,8 +105,12 @@ export function KakuAdmin() {
     const isCurrent = () => token === version.current;
     setBusy(true);
     try {
+      setStatus("Waiting for your signature to discard…");
+      const prepared = await prepareKakuSan({ creator: wallet.solanaAddress, step: "create" });
+      const signed = await signPreparedKakuSan(prepared, wallet, isCurrent);
+      if (!isCurrent()) return;
       setStatus("Discarding the unconfirmed draft…");
-      await discardKakuSan({ creator: wallet.solanaAddress, vault: receipt.vault, shareMint: receipt.shareMint });
+      await discardKakuSan({ creator: wallet.solanaAddress, vault: receipt.vault, shareMint: receipt.shareMint, signedTransaction: signed[0] });
       clearKakuSanReceipt();
       if (isCurrent()) { setReceipt(null); setStatus("Draft discarded. You can start over."); }
     } catch (error) {

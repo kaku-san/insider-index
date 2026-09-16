@@ -226,14 +226,19 @@ export function parseKakuSanObserveRequest(body: unknown): { creator: string; va
 }
 
 /** Discard is refused once the draft has been broadcast (or its vault is a real vault on-chain): never
- * abandon a create that may still land, and never abandon a created vault by mistake. */
+ * abandon a create that may still land, and never abandon a created vault by mistake. Authorized by the
+ * same Ed25519 deployer signature submitKakuSanStep enforces (assertSignedByDeployer), so a public-address
+ * string match can no longer clear an operator's unbroadcast draft. */
 export function parseKakuSanDiscardRequest(body: unknown): { creator: string; vault: string; shareMint: string } {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Discard request required");
   const input = body as Record<string, unknown>;
-  if (Object.keys(input).some(key => !["creator", "vault", "shareMint"].includes(key))) throw new Error("Unexpected discard field");
+  if (Object.keys(input).some(key => !["creator", "vault", "shareMint", "signedTransaction"].includes(key))) throw new Error("Unexpected discard field");
   if (typeof input.creator !== "string") throw new Error("Creator public key required");
   if (typeof input.vault !== "string" || typeof input.shareMint !== "string") throw new Error("Draft vault and share mint required");
-  return { creator: assertKakuSanDeployer(address(input.creator)), vault: address(input.vault), shareMint: address(input.shareMint) };
+  if (typeof input.signedTransaction !== "string" || input.signedTransaction.length === 0 || input.signedTransaction.length > 20_000) throw new Error("Signed discard authorization required");
+  const creator = assertKakuSanDeployer(address(input.creator));
+  assertSignedByDeployer(input.signedTransaction, creator);
+  return { creator, vault: address(input.vault), shareMint: address(input.shareMint) };
 }
 
 /** Mainnet RPC only. Sends are permitted solely when broadcasting a wallet-signed transaction. Never a signer. */

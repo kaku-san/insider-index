@@ -220,10 +220,10 @@ test("discard clears an unconfirmed draft and permits exactly one new createVaul
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
   assert.equal(createCalls, 1);
 
-  const mismatched = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: OTHER });
+  const mismatched = { creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: OTHER };
   await assert.rejects(discardKakuSanCreateDraft(mismatched, native, journal), /resume it instead/);
 
-  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT });
+  const discardInput = { creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT };
   assert.equal((await discardKakuSanCreateDraft(discardInput, native, journal)).discarded, true);
 
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
@@ -238,7 +238,7 @@ test("discard is not fooled by a stray-funded address at the derived vault PDA t
   const native = builders(null);
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
 
-  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT });
+  const discardInput = { creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT };
   // An unrelated System-Program-owned address that merely received a stray balance at the derived vault
   // PDA must never be mistaken for a created Symmetry vault.
   const strayFunded = builders({ data: new Uint8Array(0), owner: SystemProgram.programId });
@@ -259,7 +259,7 @@ test("discard refuses once the create has been broadcast, even before any on-cha
   // (native.connection.getAccountInfo below still returns null, matching the un-landed transaction).
   await markKakuSanCreateBroadcast(prepared.vault!, prepared.shareMint!, journal);
 
-  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: prepared.vault!, shareMint: prepared.shareMint! });
+  const discardInput = { creator: KAKU_SAN_DEPLOYER, vault: prepared.vault!, shareMint: prepared.shareMint! };
   await assert.rejects(discardKakuSanCreateDraft(discardInput, native, journal), /already broadcast/);
 
   // Resuming must still resolve to the same journaled vault/mint; it must never call createVaultTx again.
@@ -279,7 +279,7 @@ test("a submit racing a concurrent discard must abort before broadcasting, never
 
   // A concurrent discard wins the race while a submit for the same draft is still in flight (e.g. a
   // reloaded tab discards a draft the original request is about to broadcast).
-  const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: prepared.vault!, shareMint: prepared.shareMint! });
+  const discardInput = { creator: KAKU_SAN_DEPLOYER, vault: prepared.vault!, shareMint: prepared.shareMint! };
   assert.equal((await discardKakuSanCreateDraft(discardInput, native, journal)).discarded, true);
 
   // The in-flight submit's latch call must now fail loudly, aborting submitKakuSanStep before it ever
@@ -312,7 +312,7 @@ test("a local receipt for a since-discarded draft is reconciled to the server's 
 
     // Another tab discards the never-broadcast draft, then a fresh prepare (e.g. the same operator resuming)
     // journals a genuinely new draft. The server now tracks OTHER, not VAULT.
-    const discardInput = parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: first.vault!, shareMint: first.shareMint! });
+    const discardInput = { creator: KAKU_SAN_DEPLOYER, vault: first.vault!, shareMint: first.shareMint! };
     assert.equal((await discardKakuSanCreateDraft(discardInput, native, journal)).discarded, true);
     const second = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
     assert.equal(createCalls, 2);
@@ -337,13 +337,38 @@ test("a local receipt for a since-discarded draft is reconciled to the server's 
 test("HTTP discard is no-store and refuses a non-deployer", async () => temp(async dir => {
   const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(null), true, journal);
-  const denied = await handleKakuSanDiscard(request({ creator: OTHER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
+  const denied = await handleKakuSanDiscard(request({ creator: OTHER, vault: VAULT, shareMint: MINT, signedTransaction: unsignedPayload(OTHER).tx_b64 }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
   assert.equal(denied.status, 400);
-  const ok = await handleKakuSanDiscard(request({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
-  assert.equal(ok.status, 200);
-  assert.equal(ok.headers.get("Cache-Control"), "no-store");
-  assert.deepEqual(await ok.json(), { discarded: true });
+  assert.equal(denied.headers.get("Cache-Control"), "no-store");
   assert.equal((await discardRoute(request({ creator: OTHER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"))).status, 400);
+}));
+
+test("discard requires the deployer's Ed25519 signature: unsigned or foreign-signed authorization is refused and leaves the draft resumable", async () => temp(async dir => {
+  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+  await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(null), true, journal);
+
+  // An unsigned authorization (deployer payer, but no signature) cannot clear the draft.
+  assert.throws(() => parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT, signedTransaction: unsignedPayload().tx_b64 }), /unsigned/);
+  // A transaction signed by a wallet that is not the deployer cannot authorize a discard.
+  const kp = Keypair.generate();
+  const foreign = new VersionedTransaction(new TransactionMessage({
+    payerKey: kp.publicKey, recentBlockhash: PublicKey.default.toBase58(),
+    instructions: [SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: kp.publicKey, lamports: 1 })],
+  }).compileToV0Message());
+  foreign.sign([kp]);
+  const foreignB64 = Buffer.from(foreign.serialize()).toString("base64");
+  assert.throws(() => parseKakuSanDiscardRequest({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT, signedTransaction: foreignB64 }), /approved deployer/);
+
+  // Both refusals surface as HTTP 400s and never mutate the journal.
+  const missing = await handleKakuSanDiscard(request({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
+  assert.equal(missing.status, 400);
+  const foreignHttp = await handleKakuSanDiscard(request({ creator: KAKU_SAN_DEPLOYER, vault: VAULT, shareMint: MINT, signedTransaction: foreignB64 }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
+  assert.equal(foreignHttp.status, 400);
+
+  // The never-broadcast draft survived both rejected discards: it resumes, never re-derives a new vault.
+  const resumed = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(null), true, journal);
+  assert.equal(resumed.vault, VAULT);
+  assert.equal(resumed.shareMint, MINT);
 }));
 
 test("signed-by helper accepts a matching keypair and deployer submit refuses unsigned or foreign payers", () => {

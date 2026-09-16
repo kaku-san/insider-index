@@ -234,8 +234,10 @@ export async function observeKakuSanStatus(body: { creator: string; vault: strin
   return result;
 }
 
-/** Server refuses this once the draft's vault is a real vault on-chain; never discards a created vault. */
-export async function discardKakuSan(body: { creator: string; vault: string; shareMint: string }): Promise<{ discarded: boolean }> {
+/** Server refuses this once the draft's vault is a real vault on-chain; never discards a created vault.
+ * `signedTransaction` is a deployer-signed transaction proving key control (same signing path as submit);
+ * the server verifies its Ed25519 signature and never broadcasts it. */
+export async function discardKakuSan(body: { creator: string; vault: string; shareMint: string; signedTransaction: string }): Promise<{ discarded: boolean }> {
   if (PREVIEW_MODE) throw new Error("UI preview only. No transactions or server-side changes are submitted.");
   const response = await fetch("/api/vaults/kaku-san/discard", {
     method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
