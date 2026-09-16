@@ -11,6 +11,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { kakuSanDrift } from "./kaku-san-rebalance.ts";
 import type { PersonIndexDefinition } from "./person-index-map.ts";
 import { buildPersonVaultInit, estimateVaultCost, type PersonVaultInit } from "./person-vault-init.ts";
+import { VAULT_RELEASE } from "./release.ts";
 
 export type VaultDefinitionSource = { zip: string | null; sha256: string | null; generatedAt: string };
 export type VaultDefinitionDocument = {
@@ -46,6 +47,9 @@ export function definitionForDb(definition: PersonIndexDefinition): Record<strin
   }
   return {
     indexId: definition.indexId,
+    // A thematic definition is a constructed multi-member basket, not a person: `kind` keeps the
+    // persisted record honest even though the person-slug column is reused for the identity slug.
+    kind: definition.kind,
     personSlug: definition.slug,
     bioguideId: definition.bioguideId,
     network: definition.network,
@@ -55,6 +59,14 @@ export function definitionForDb(definition: PersonIndexDefinition): Record<strin
     status: definition.status,
     structurallyCreatable: definition.structurallyCreatable,
     blockedReasons: definition.blockedReasons,
+    // Per-vault deposit gate (closed by default, driven by tradable coverage) AND the authoritative
+    // release flag. Creation being possible never opens deposits.
+    deposits: {
+      enabled: definition.depositsEnabled,
+      reason: definition.depositReason,
+      releaseGated: !VAULT_RELEASE.publicFundsEnabled,
+      effectiveEnabled: definition.depositsEnabled && VAULT_RELEASE.publicFundsEnabled,
+    },
     // `book_source` stays its own queryable column (keeper/reports filter on it); the full
     // provenance object is persisted alongside so the DB record shows book honesty (incomplete
     // annual fetch, ticker-row counts, weighted share) without re-reading the source zip.
