@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -132,6 +132,27 @@ test("execute broadcasts only when eligible and records the real rebalance", asy
   assert.equal(recorded[0].result.outcome, "rebalanced");
 });
 
+test("execute with a pending rebalance intent runs the prices step (not skipped-not-eligible)", async () => {
+  const recorded: Recorded[] = [];
+  const submits: number[] = [];
+  let prepared = false;
+  const pending = observation({ eligibility: { required: null, reason: "Existing intents take priority over a new rebalance" }, intents: 1 });
+  const result = await runIndexKeeperTick(
+    { indexId: "insiderindex-nancy-pelosi", mode: "execute", keypair: "/outside/key.json" },
+    io({
+      recorded, submits, obs: pending,
+      prepare: async () => { prepared = true; return { step: "prices", eligible: true, reason: "Updating Raydium prices for the existing rebalance intent", transactions: [{ txBase64: "AA==" }] }; },
+    }),
+  );
+  assert.equal(prepared, true, "pending intent must reach the prepare/prices step");
+  assert.notEqual(result.outcome, "skipped-not-eligible");
+  assert.equal(result.outcome, "prices-updated");
+  assert.equal(result.broadcasts, 1);
+  assert.equal(submits.length, 1);
+  assert.equal(recorded[0].result.outcome, "prices-updated");
+  assert.equal(recorded[0].result.step, "prices");
+});
+
 test("a wrong keeper is refused", async () => {
   const other = Keypair.generate();
   await assert.rejects(
@@ -238,10 +259,6 @@ test("the CLI script never networks on a bad arg and only it loads a keypair", (
   assert.equal(bad.status, 1);
   assert.equal(bad.stdout, "");
   assert.match(bad.stderr, /Force-rebalance|failed-closed/);
-  assert.match(readFileSync("scripts/insiderindex-keeper-tick.mts", "utf8"), /loadKeeperKeypair/);
-  // The server-side library never loads a keypair; only the CLI seam does.
-  const lib = readFileSync("src/lib/index-vaults/keeper-tick.ts", "utf8");
-  assert.match(lib, /must not live in the web app tree/);
 });
 
 test("dev directory guard for keypair-in-app-tree keeps CLI and library truthful", () => {

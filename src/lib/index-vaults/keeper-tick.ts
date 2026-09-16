@@ -365,7 +365,7 @@ export async function runIndexKeeperTick(args: IndexKeeperArgs, io: IndexKeeperI
   const keypair = io.loadKeypair(args.keypair!);
   const keeper = assertIndexKeeper(keypair.publicKey.toBase58(), observation.guards);
 
-  if (observation.eligibility.required !== true) {
+  if (observation.eligibility.required !== true && observation.intents === 0) {
     const recordedAt = now();
     const result: IndexKeeperTickResult = { ...base, mode: "execute", keeper, broadcasts: 0, signatures: [], outcome: "skipped-not-eligible", recordedAt };
     await io.recordOutcome(args.indexId, { mode: "execute", outcome: "skipped-not-eligible", at: recordedAt, reason: observation.eligibility.reason, broadcasts: 0 });
