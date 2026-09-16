@@ -149,5 +149,3 @@ export function FilingLink({ url }: { url: string | null }) {
   if (!url || !/^https?:\/\//i.test(url)) return <span className={styles.caption}>Source link unavailable</span>;
   return <a className={styles.sourceLink} href={url} target="_blank" rel="noreferrer">Source filing <span aria-hidden="true">↗</span></a>;
 }
-
-export function MissingValue() { return <span aria-label="Unavailable">—</span>; }
