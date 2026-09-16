@@ -1,0 +1,178 @@
+{
+  "scrapedAt": "2026-09-15T16:21:02.901681+00:00",
+  "verdict": "PelosiTracker does NOT publish full ticker-level disclosure holdings. Only topHoldings (~5) + OTHER aggregate.",
+  "perPolitician": [
+    {
+      "slug": "nancy-pelosi",
+      "name": "Nancy Pelosi",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 75659043,
+      "copyTradeFullHoldings": 15
+    },
+    {
+      "slug": "rick-scott",
+      "name": "Rick Scott",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 4037460,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "cleo-fields",
+      "name": "Cleo Fields",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 11857730,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "josh-gottheimer",
+      "name": "Josh Gottheimer",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 10830452,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "kevin-hern",
+      "name": "Kevin Hern",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 19955352,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "gilbert-ray-cisneros",
+      "name": "Gilbert Ray Cisneros, Jr.",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 12215645,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "jefferson-shreve",
+      "name": "Jefferson Shreve",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 2710887,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "marjorie-taylor-greene",
+      "name": "Marjorie Taylor Greene",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 10370381,
+      "copyTradeFullHoldings": 76
+    },
+    {
+      "slug": "vern-buchanan",
+      "name": "Vern Buchanan",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 1883687,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "angus-s-jr-king",
+      "name": "Angus S. King Jr.",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 1908705,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "patrick-fallon",
+      "name": "Pat Fallon",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 1415008,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "susie-lee",
+      "name": "Susie Lee",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 4908366,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "tim-moore",
+      "name": "Tim Moore",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 875833,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "lisa-mcclain",
+      "name": "Lisa C. McClain",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 1626471,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "shelley-moore-capito",
+      "name": "Shelley Moore Capito",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 3355666,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "shri-thanedar",
+      "name": "Shri Thanedar",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 846660,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "dan-sullivan",
+      "name": "Dan Sullivan",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 1860691,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "julia-letlow",
+      "name": "Julia Letlow",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 2541275,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "brandon-gill",
+      "name": "Brandon Gill",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 8000,
+      "copyTradeFullHoldings": 0
+    },
+    {
+      "slug": "ted-budd",
+      "name": "Ted Budd",
+      "disclosureItemized": 5,
+      "disclosureOtherValue": 847243,
+      "copyTradeFullHoldings": 0
+    }
+  ],
+  "publicCopyPortfoliosWithFullHoldings": {
+    "tech-giants": {
+      "holdingsCount": 7,
+      "totalValue": 115541,
+      "politicianSlug": null
+    },
+    "best-of-congress": {
+      "holdingsCount": 18,
+      "totalValue": 245609,
+      "politicianSlug": null
+    },
+    "defense-sector": {
+      "holdingsCount": 10,
+      "totalValue": 273287,
+      "politicianSlug": null
+    },
+    "debbie-wasserman-schultz": {
+      "holdingsCount": 9,
+      "totalValue": 105848,
+      "politicianSlug": "debbie-wasserman-schultz"
+    },
+    "nancy-pelosi": {
+      "holdingsCount": 15,
+      "totalValue": 23202729,
+      "politicianSlug": "nancy-pelosi"
+    },
+    "marjorie-taylor-greene": {
+      "holdingsCount": 76,
+      "totalValue": 923432,
+      "politicianSlug": null
+    }
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "bucket": "pelositracker-top20full-handoff",
+  "origin": "Downloads/pelositracker-top20full-handoff.zip (612604 bytes) extracted verbatim; sha256 of every extracted file below",
+  "source": "pelositracker.app",
+  "scrapedAt": "2026-09-15T16:21:02.901681+00:00",
+  "selection": "top_20_by_portfolio_value",
+  "count": 20,
+  "photos": 20,
+  "fileCount": 26,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 330,
+      "sha256": "58c442577fd9bb2a2d32fc0c6ec13c1194965e8e5b5f779e26e7f146c0f96636"
+    },
+    {
+      "path": "all-copy-portfolios-full-holdings.json",
+      "bytes": 153605,
+      "sha256": "ca3e88a00835440244c7bf505b03bedeb250a01e0ede36014b971262578fbacd"
+    },
+    {
+      "path": "holdings-completeness.json",
+      "bytes": 4568,
+      "sha256": "9e4976e0edb4618be23e2214e5441d4d83d1737ea5a01de6bd2b0ec9ae4484aa"
+    },
+    {
+      "path": "nancy-pelosi.json",
+      "bytes": 188795,
+      "sha256": "6b948d37b42704bc7707bcc62616ea0ed609dc50bc2e033bc37236bc5fd845e9"
+    },
+    {
+      "path": "photos/angus-s-jr-king.jpg",
+      "bytes": 5906,
+      "sha256": "3b2ca1a9e5d6e7041c4d4f99f7b6d72f60c6e0689cdb9946477d016450ca1206"
+    },
+    {
+      "path": "photos/brandon-gill.jpg",
+      "bytes": 11520,
+      "sha256": "b85cc84a3a1cab3ce5eacd7074c02f0a6956b6de14bb2d9d1d42a6cbb29fda2a"
+    },
+    {
+      "path": "photos/cleo-fields.jpg",
+      "bytes": 11001,
+      "sha256": "a960d41988d52412e4cef13adbc11bdd15c7472daeac279a12f6482625634cb7"
+    },
+    {
+      "path": "photos/dan-sullivan.jpg",
+      "bytes": 7603,
+      "sha256": "22077686f9a20f0688875582814f6868685e0d20fc5c40464db36dda1b965a64"
+    },
+    {
+      "path": "photos/gilbert-ray-cisneros.jpg",
+      "bytes": 11278,
+      "sha256": "89f3364973d7310080493bddcc53165364b12db99a648e20da6bc4b50ac9f6b1"
+    },
+    {
+      "path": "photos/jefferson-shreve.jpg",
+      "bytes": 11505,
+      "sha256": "8c2a8f5c32e82eca43ad965e36e9f97ee0c6138abb4caff69ab62946b1647b6a"
+    },
+    {
+      "path": "photos/josh-gottheimer.jpg",
+      "bytes": 7487,
+      "sha256": "27369fd6512225f993046f4903c8fe9226957baf8610fc2bc80c526e542df788"
+    },
+    {
+      "path": "photos/julia-letlow.jpg",
+      "bytes": 5206,
+      "sha256": "1e9346ec842f11169da6913eb1e5d31c5821f1bacd8f2af9058b7f30758d0911"
+    },
+    {
+      "path": "photos/kevin-hern.jpg",
+      "bytes": 9213,
+      "sha256": "d7bc4cbaf2222b5f054fae98a206baecd273347cbada99a9e77c3c88c4e9598d"
+    },
+    {
+      "path": "photos/lisa-mcclain.jpg",
+      "bytes": 10750,
+      "sha256": "7531fc38abcd0c8fd8fff4b878ccc3bdf60eec1ad38f94281a3f136c9609ed40"
+    },
+    {
+      "path": "photos/marjorie-taylor-greene.jpg",
+      "bytes": 11940,
+      "sha256": "5783ed5db91a87fe4e59e7b0cbf70147de0b499883d6827cea6e85ee93e77f90"
+    },
+    {
+      "path": "photos/nancy-pelosi.jpg",
+      "bytes": 6957,
+      "sha256": "52fa8a47c1d6e36a8d030c1cedf6b83cf2dff9f6204f594c9f3ef5bddfac53c3"
+    },
+    {
+      "path": "photos/patrick-fallon.jpg",
+      "bytes": 8966,
+      "sha256": "265eafbc0a43388bd07fceb7bf22e860dad7ef2a2c4ecc5c0bd8296532aa2117"
+    },
+    {
+      "path": "photos/rick-scott.jpg",
+      "bytes": 7089,
+      "sha256": "e22d8b26781ac899ea41e7a1ff1800d7a84f097bf4906794c73af1e22d2bcd8c"
+    },
+    {
+      "path": "photos/shelley-moore-capito.jpg",
+      "bytes": 6804,
+      "sha256": "9caa06b9dc73c0e65daa35f8b380f107e9cc4178ec1883694c46b4d55b22f91d"
+    },
+    {
+      "path": "photos/shri-thanedar.jpg",
+      "bytes": 9770,
+      "sha256": "70e495b58de60a9a36e106ba23d1fb639944a95e7b39a972ed2bd46500cd3778"
+    },
+    {
+      "path": "photos/susie-lee.jpg",
+      "bytes": 8990,
+      "sha256": "80f2f6e710eaf633594c6796558a72deaabc18bff49560123c39dd06fb9dd6ca"
+    },
+    {
+      "path": "photos/ted-budd.jpg",
+      "bytes": 8741,
+      "sha256": "fab571ca7ab336987a80ee7ec2af70c0fb28ef49ab59ea911c3bae48de67b34a"
+    },
+    {
+      "path": "photos/tim-moore.jpg",
+      "bytes": 11534,
+      "sha256": "b7b455af2e6a2696e3816d82c9d95672969f0d35bc328bef870d1b04aa19fcb6"
+    },
+    {
+      "path": "photos/vern-buchanan.jpg",
+      "bytes": 5950,
+      "sha256": "0f7c1e07115ee4cd5bbf181fe053ff4f8ed23343a2a4ea366dac0df08e80394f"
+    },
+    {
+      "path": "top20-agent-brief.json",
+      "bytes": 3167565,
+      "sha256": "52e0a19fa4e8fedbedecea609ea554913701bb5c844f8250a03d7c95758d9277"
+    },
+    {
+      "path": "top20-directory.json",
+      "bytes": 9158,
+      "sha256": "8dc913d85fbb63595dee3f2867bfb98c849244e89b571f64447082f19a84f60e"
+    }
+  ]
+}

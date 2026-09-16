@@ -203,3 +203,49 @@
 @media (prefers-reduced-motion: reduce) {
   .heroCard::before { display: none; }
 }
+
+/* PelosiTracker handoff surfaces: every tracker figure carries its source and scrape date. */
+.sourceTag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 7px; border-radius: 6px; font-size: 8.5px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); background: var(--surface-alt); color: var(--muted-foreground); }
+.sourceTag[data-source="tracker"] { color: var(--purple-text); background: var(--purple-bg); border-color: color-mix(in srgb, var(--purple-text) 25%, transparent); }
+.sourceTag[data-source="fmp"] { color: var(--foreground); }
+.sourceTag[data-source="both"] { color: var(--positive); border-color: color-mix(in srgb, var(--positive) 35%, transparent); background: color-mix(in srgb, var(--positive) 8%, var(--surface-alt)); }
+.stats dd[data-tone="negative"] { color: #ef9794; }
+.stats dd[data-tone="positive"] { color: var(--primary); }
+.statGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+.statGrid > div { min-width: 0; padding: 14px 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); }
+.statGrid dt { color: var(--muted-foreground); font-size: 9px; }
+.statGrid dd { margin: 6px 0 4px; font-size: 22px; font-weight: 720; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.statGrid small { display: block; color: var(--muted-foreground); font-size: 8.5px; line-height: 1.5; }
+.sectorBars { display: grid; gap: 9px; margin-top: 12px; }
+.sectorBar { display: grid; grid-template-columns: 170px minmax(0, 1fr) 58px; align-items: center; gap: 12px; font-size: 10.5px; }
+.sectorBar > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sectorBar > span:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 650; }
+.sectorTrack { height: 8px; border-radius: 999px; overflow: hidden; background: var(--surface-alt); }
+.sectorTrack > span { display: block; height: 100%; min-width: 2px; border-radius: inherit; background: var(--purple-text); }
+.sectorTrack[data-cash="true"] > span { background: var(--soft-text); }
+.readiness { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 7px; font-size: 9px; font-weight: 750; border: 1px solid var(--border); background: var(--surface-alt); color: var(--muted-foreground); }
+.readiness[data-status="VAULT_CANDIDATE"] { color: var(--positive); border-color: color-mix(in srgb, var(--positive) 40%, transparent); background: color-mix(in srgb, var(--primary) 24%, var(--card)); }
+.readiness[data-status="observed"] { color: var(--positive); }
+.readiness[data-status="thin"], .readiness[data-status="none"] { color: var(--muted-foreground); }
+.reasonList { margin: 10px 0 0; padding-left: 18px; color: var(--muted-foreground); font-size: 9.5px; line-height: 1.7; }
+.mint { display: block; max-width: 100%; font-size: 8.5px; overflow-wrap: anywhere; color: var(--muted-foreground); }
+.seriesChart { margin-top: 10px; }
+.seriesChart > svg { width: 100%; height: auto; min-height: 140px; max-height: 240px; overflow: visible; }
+.seriesTopline { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 9.5px; color: var(--muted-foreground); }
+.seriesTopline strong { font-size: 13px; color: var(--foreground); font-variant-numeric: tabular-nums; }
+.seriesLabels { display: flex; justify-content: space-between; gap: 6px; margin-top: 8px; color: var(--soft-text); font-size: 8.5px; }
+.newsList { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.newsList li { font-size: 10.5px; line-height: 1.6; }
+.newsList small { display: block; color: var(--muted-foreground); font-size: 8.5px; }
+.trackerShelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 14px; }
+.trackerTile { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 13px; background: var(--card); color: inherit; box-shadow: var(--shadow); }
+.trackerTile:hover { border-color: color-mix(in srgb, var(--positive) 35%, var(--border)); }
+.trackerTile > div { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.trackerTile strong { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trackerTile small { display: block; color: var(--muted-foreground); font-size: 8.5px; line-height: 1.5; }
+.trackerRank { flex: 0 0 auto; color: var(--soft-text); font-size: 9px; font-weight: 700; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; color: var(--muted-foreground); font-size: 9.5px; }
+.pager button { padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-alt); color: var(--foreground); font-size: 10px; font-weight: 650; cursor: pointer; }
+.pager button:disabled { color: var(--muted-foreground); cursor: not-allowed; opacity: .5; }
+@media (max-width: 900px) { .statGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .sectorBar { grid-template-columns: 120px minmax(0, 1fr) 50px; } }
+@media (max-width: 660px) { .statGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .statGrid dd { font-size: 19px; } .sectorBar { grid-template-columns: 96px minmax(0, 1fr) 44px; font-size: 9.5px; } }

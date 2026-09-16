@@ -1,0 +1,4841 @@
+{
+  "tech-giants": {
+    "slug": "tech-giants",
+    "name": "Tech Giants",
+    "politicianSlug": null,
+    "politicianName": null,
+    "totalValue": 115541,
+    "totalHoldings": 7,
+    "holdingsCount": 7,
+    "holdings": [
+      {
+        "symbol": "NVDA",
+        "quantity": 80,
+        "latestPrice": 212.05999755859375,
+        "marketValue": 16964.7998046875,
+        "weight": 14.68
+      },
+      {
+        "symbol": "MSFT",
+        "quantity": 30,
+        "latestPrice": 500.0899963378906,
+        "marketValue": 15002.699890136719,
+        "weight": 12.98
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 50,
+        "latestPrice": 330.0450134277344,
+        "marketValue": 16502.25067138672,
+        "weight": 14.28
+      },
+      {
+        "symbol": "AMZN",
+        "quantity": 60,
+        "latestPrice": 248.83999633789062,
+        "marketValue": 14930.399780273438,
+        "weight": 12.92
+      },
+      {
+        "symbol": "GOOGL",
+        "quantity": 70,
+        "latestPrice": 344.2550048828125,
+        "marketValue": 24097.850341796875,
+        "weight": 20.86
+      },
+      {
+        "symbol": "META",
+        "quantity": 22,
+        "latestPrice": 666.819091796875,
+        "marketValue": 14670.02001953125,
+        "weight": 12.7
+      },
+      {
+        "symbol": "TSLA",
+        "quantity": 37,
+        "latestPrice": 361.42999267578125,
+        "marketValue": 13372.909729003906,
+        "weight": 11.57
+      }
+    ],
+    "enrichedTransactions": null,
+    "source": "https://pelositracker.app/api/portfolios/tech-giants",
+    "kind": "copy_trade_portfolio_NOT_disclosure_book"
+  },
+  "best-of-congress": {
+    "slug": "best-of-congress",
+    "name": "Best of Congress",
+    "politicianSlug": null,
+    "politicianName": null,
+    "totalValue": 245609,
+    "totalHoldings": 18,
+    "holdingsCount": 18,
+    "holdings": [
+      {
+        "symbol": "NVDA",
+        "quantity": 95,
+        "latestPrice": 212.1699981689453,
+        "marketValue": 20156.149826049805,
+        "weight": 8.21
+      },
+      {
+        "symbol": "MSFT",
+        "quantity": 25,
+        "latestPrice": 501.360107421875,
+        "marketValue": 12534.002685546875,
+        "weight": 5.1
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 30,
+        "latestPrice": 329.92999267578125,
+        "marketValue": 9897.899780273438,
+        "weight": 4.03
+      },
+      {
+        "symbol": "AMZN",
+        "quantity": 50,
+        "latestPrice": 249.66000366210938,
+        "marketValue": 12483.000183105469,
+        "weight": 5.08
+      },
+      {
+        "symbol": "GOOGL",
+        "quantity": 70,
+        "latestPrice": 343.4100036621094,
+        "marketValue": 24038.700256347656,
+        "weight": 9.79
+      },
+      {
+        "symbol": "META",
+        "quantity": 25,
+        "latestPrice": 668.219970703125,
+        "marketValue": 16705.499267578125,
+        "weight": 6.8
+      },
+      {
+        "symbol": "AVGO",
+        "quantity": 45,
+        "latestPrice": 339.79998779296875,
+        "marketValue": 15290.999450683594,
+        "weight": 6.23
+      },
+      {
+        "symbol": "LLY",
+        "quantity": 10,
+        "latestPrice": 1144.81494140625,
+        "marketValue": 11448.1494140625,
+        "weight": 4.66
+      },
+      {
+        "symbol": "UNH",
+        "quantity": 10,
+        "latestPrice": 377.5849914550781,
+        "marketValue": 3775.8499145507812,
+        "weight": 1.54
+      },
+      {
+        "symbol": "XOM",
+        "quantity": 60,
+        "latestPrice": 169.1699981689453,
+        "marketValue": 10150.199890136719,
+        "weight": 4.13
+      },
+      {
+        "symbol": "NEE",
+        "quantity": 80,
+        "latestPrice": 81.44499969482422,
+        "marketValue": 6515.5999755859375,
+        "weight": 2.65
+      },
+      {
+        "symbol": "LMT",
+        "quantity": 9,
+        "latestPrice": 529.635009765625,
+        "marketValue": 4766.715087890625,
+        "weight": 1.94
+      },
+      {
+        "symbol": "RTX",
+        "quantity": 40,
+        "latestPrice": 194.69000244140625,
+        "marketValue": 7787.60009765625,
+        "weight": 3.17
+      },
+      {
+        "symbol": "CAT",
+        "quantity": 15,
+        "latestPrice": 781.0449829101562,
+        "marketValue": 11715.674743652344,
+        "weight": 4.77
+      },
+      {
+        "symbol": "PANW",
+        "quantity": 35,
+        "latestPrice": 375.614990234375,
+        "marketValue": 13146.524658203125,
+        "weight": 5.35
+      },
+      {
+        "symbol": "CRWD",
+        "quantity": 168,
+        "latestPrice": 242.0850067138672,
+        "marketValue": 40670.28112792969,
+        "weight": 16.56
+      },
+      {
+        "symbol": "TSLA",
+        "quantity": 20,
+        "latestPrice": 360.6155090332031,
+        "marketValue": 7212.3101806640625,
+        "weight": 2.94
+      },
+      {
+        "symbol": "PLTR",
+        "quantity": 100,
+        "latestPrice": 173.13499450683594,
+        "marketValue": 17313.499450683594,
+        "weight": 7.05
+      }
+    ],
+    "enrichedTransactions": null,
+    "source": "https://pelositracker.app/api/portfolios/best-of-congress",
+    "kind": "copy_trade_portfolio_NOT_disclosure_book"
+  },
+  "defense-sector": {
+    "slug": "defense-sector",
+    "name": "Defense & Aerospace",
+    "politicianSlug": null,
+    "politicianName": null,
+    "totalValue": 273287,
+    "totalHoldings": 10,
+    "holdingsCount": 10,
+    "holdings": [
+      {
+        "symbol": "RTX",
+        "quantity": 150,
+        "latestPrice": 195.08999633789062,
+        "marketValue": 29263.499450683594,
+        "weight": 10.71
+      },
+      {
+        "symbol": "NOC",
+        "quantity": 25,
+        "latestPrice": 528.9550170898438,
+        "marketValue": 13223.875427246094,
+        "weight": 4.84
+      },
+      {
+        "symbol": "BA",
+        "quantity": 120,
+        "latestPrice": 210.25,
+        "marketValue": 25230,
+        "weight": 9.23
+      },
+      {
+        "symbol": "LHX",
+        "quantity": 50,
+        "latestPrice": 250.33999633789062,
+        "marketValue": 12516.999816894531,
+        "weight": 4.58
+      },
+      {
+        "symbol": "RHM.DE",
+        "quantity": 30,
+        "latestPrice": 1028.5999755859375,
+        "marketValue": 30857.999267578125,
+        "weight": 11.29
+      },
+      {
+        "symbol": "RR.L",
+        "quantity": 45,
+        "latestPrice": 1420.199951171875,
+        "marketValue": 63908.997802734375,
+        "weight": 23.39
+      },
+      {
+        "symbol": "AVAV",
+        "quantity": 100,
+        "latestPrice": 152.0800018310547,
+        "marketValue": 15208.000183105469,
+        "weight": 5.56
+      },
+      {
+        "symbol": "HWM",
+        "quantity": 150,
+        "latestPrice": 223.4499969482422,
+        "marketValue": 33517.49954223633,
+        "weight": 12.26
+      },
+      {
+        "symbol": "KTOS",
+        "quantity": 450,
+        "latestPrice": 47.3650016784668,
+        "marketValue": 21314.25075531006,
+        "weight": 7.8
+      },
+      {
+        "symbol": "AIR.PA",
+        "quantity": 145,
+        "latestPrice": 194.8000030517578,
+        "marketValue": 28246.000442504883,
+        "weight": 10.34
+      }
+    ],
+    "enrichedTransactions": null,
+    "source": "https://pelositracker.app/api/portfolios/defense-sector",
+    "kind": "copy_trade_portfolio_NOT_disclosure_book"
+  },
+  "debbie-wasserman-schultz": {
+    "slug": "debbie-wasserman-schultz",
+    "name": "Debbie Wasserman Schultz's Tracker",
+    "politicianSlug": "debbie-wasserman-schultz",
+    "politicianName": "Debbie Wasserman Schultz",
+    "totalValue": 105848,
+    "totalHoldings": 9,
+    "holdingsCount": 9,
+    "holdings": [
+      {
+        "symbol": "PTEN",
+        "quantity": 1260,
+        "latestPrice": 12.824999809265137,
+        "marketValue": 16159.499759674072,
+        "weight": 15.27
+      },
+      {
+        "symbol": "PERI",
+        "quantity": 569,
+        "latestPrice": 9.170000076293945,
+        "marketValue": 5217.730043411255,
+        "weight": 4.93
+      },
+      {
+        "symbol": "HL",
+        "quantity": 576,
+        "latestPrice": 18.479999542236328,
+        "marketValue": 10644.479736328125,
+        "weight": 10.06
+      },
+      {
+        "symbol": "VSAT",
+        "quantity": 203,
+        "latestPrice": 68.30000305175781,
+        "marketValue": 13864.900619506836,
+        "weight": 13.1
+      },
+      {
+        "symbol": "BAX",
+        "quantity": 182,
+        "latestPrice": 23.78499984741211,
+        "marketValue": 4328.869972229004,
+        "weight": 4.09
+      },
+      {
+        "symbol": "IBTA.L",
+        "quantity": 5000,
+        "latestPrice": 5.947000026702881,
+        "marketValue": 29735.000133514404,
+        "weight": 28.09
+      },
+      {
+        "symbol": "ICHR",
+        "quantity": 245,
+        "latestPrice": 50.16999816894531,
+        "marketValue": 12291.649551391602,
+        "weight": 11.61
+      },
+      {
+        "symbol": "SSYS",
+        "quantity": 494,
+        "latestPrice": 7.490200042724609,
+        "marketValue": 3700.158821105957,
+        "weight": 3.5
+      },
+      {
+        "symbol": "CDE",
+        "quantity": 505,
+        "latestPrice": 19.614999771118164,
+        "marketValue": 9905.574884414673,
+        "weight": 9.36
+      }
+    ],
+    "enrichedTransactions": [
+      {
+        "id": "wbvY72HeF9gcVBiYiQ7W",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1691712000000,
+        "createdAt": 1766758544505,
+        "symbol": "PTEN",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 528,
+        "price": 14.140000343322754,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 14.140000343322754,
+          "portfolioTotalValue": 2488.6400604248047,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "aEUDe8AlA2A32ZdPBL8L",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1717977600000,
+        "createdAt": 1766758544505,
+        "symbol": "PERI",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 299,
+        "price": 8.350000381469727,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 8.350000381469727,
+          "portfolioTotalValue": 2496.6501140594482,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "hqYjojtYwvqAWcpEhKV7",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1725494400000,
+        "createdAt": 1766758544505,
+        "symbol": "HL",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 452,
+        "price": 5.519999980926514,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 5.519999980926514,
+          "portfolioTotalValue": 2495.039991378784,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "BCqjR8Z7OLeepWtlvvzP",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1732060800000,
+        "createdAt": 1766758544505,
+        "symbol": "VSAT",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 293,
+        "price": 8.510000228881836,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 8.510000228881836,
+          "portfolioTotalValue": 11866.499753952026,
+          "weightBefore": 0,
+          "weightAfter": 21.012346679836778,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "udXBx9YHssuqRU4EWOqW",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1732060800000,
+        "createdAt": 1766758544505,
+        "symbol": "BAX",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 73,
+        "price": 34.22999954223633,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 34.22999954223633,
+          "portfolioTotalValue": 11871.8596534729,
+          "weightBefore": 0,
+          "weightAfter": 21.048007974490126,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "RYw5nVbmqzv4OeAucECC",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1732060800000,
+        "createdAt": 1766758544505,
+        "symbol": "PTEN",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 302,
+        "price": 8.260000228881836,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 8.260000228881836,
+          "portfolioTotalValue": 11867.589756011963,
+          "weightBefore": 46.52990179887218,
+          "weightAfter": 57.76910333877077,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769169313755-p7r1mzwd7",
+        "date": 1735300500000,
+        "createdAt": 1769169313755,
+        "symbol": "IBTA.L",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 4600,
+        "price": 5.61079,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 5.61079,
+          "portfolioTotalValue": 41867.22390001678,
+          "weightBefore": 0,
+          "weightAfter": 61.64639447228707,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "a6Ar39m6lpP4IHebrspM",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "HURC",
+        "type": "SELL",
+        "quantity": 135,
+        "price": 18.489999771118164,
+        "date": 1738800000000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "cnzKvCn24SW0Y8ZwUGCR",
+        "validation": {
+          "priceAtExecution": 18.489999771118164,
+          "portfolioTotalValue": 43606.95053958893,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "zKoySNp9F3aiE7NqtVz3",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "ANGO",
+        "type": "BUY",
+        "quantity": 275,
+        "price": 9.0600004196167,
+        "date": 1750982400000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "jd5ciG0BsLYtdYDlAi75",
+        "validation": {
+          "priceAtExecution": 9.0600004196167,
+          "portfolioTotalValue": 46163.52007770538,
+          "weightBefore": 0,
+          "weightAfter": 5.3971190047915325,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "56gqFzTq1t3xIvVaBqCE",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1751328000000,
+        "createdAt": 1766758544505,
+        "symbol": "NGD",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 596,
+        "price": 4.190000057220459,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 4.190000057220459,
+          "portfolioTotalValue": 48919.70976924896,
+          "weightBefore": 0,
+          "weightAfter": 5.104772791749398,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "K2f3aTvOKuxF4FwZKAwY",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "ANGO",
+        "type": "SELL",
+        "quantity": 491,
+        "price": 10.150998181578098,
+        "date": 1752624000000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5,RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "9NFS86PNLplichRInEgx,1AmS0xwDTLqVjxwsklji",
+        "validation": {
+          "priceAtExecution": 10.150998181578098,
+          "portfolioTotalValue": 46119.79632850383,
+          "weightBefore": 5.707317759267996,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "rUlH5DddbgPxwxYR9Nj2",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "VSAT",
+        "type": "SELL",
+        "quantity": 90,
+        "price": 27.489999771118164,
+        "date": 1752796800000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "TpYhRtvohscpITDI4Qjj",
+        "validation": {
+          "priceAtExecution": 27.489999771118164,
+          "portfolioTotalValue": 44228.55008506775,
+          "weightBefore": 17.24649441052935,
+          "weightAfter": 12.6173477150024,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "RhALHSKX4ow6uvwO6dWA",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1753401600000,
+        "createdAt": 1766758544505,
+        "symbol": "ANGO",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 243,
+        "price": 10.260000228881836,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 10.260000228881836,
+          "portfolioTotalValue": 47790.84008026123,
+          "weightBefore": 0,
+          "weightAfter": 5.216857563983333,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "eBF0DpOrQdQDXXKQAnan",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1753401600000,
+        "createdAt": 1766758544505,
+        "symbol": "VSAT",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 77,
+        "price": 32.33000183105469,
+        "type": "SELL",
+        "validation": {
+          "priceAtExecution": 32.33000183105469,
+          "portfolioTotalValue": 42808.24988365173,
+          "weightBefore": 14.488585874267429,
+          "weightAfter": 9.515876593377323,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "o5L8ogZ0zC988HqAgmpV",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "ICHR",
+        "type": "BUY",
+        "quantity": 131,
+        "price": 19.020000457763672,
+        "date": 1754352000000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "Di4QRnnu06tMxm8pjnvb",
+        "validation": {
+          "priceAtExecution": 19.020000457763672,
+          "portfolioTotalValue": 48462.340478897095,
+          "weightBefore": 0,
+          "weightAfter": 5.141353131824114,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "iLK7BYcr53aJ5DuuwL7V",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1754438400000,
+        "createdAt": 1766758544505,
+        "symbol": "ICHR",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 143,
+        "price": 17.440000534057617,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 17.440000534057617,
+          "portfolioTotalValue": 50463.2202539444,
+          "weightBefore": 4.762712946622528,
+          "weightAfter": 9.469392009239199,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "xkJ7Si1jVUTJPSvAcThn",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1755043200000,
+        "createdAt": 1766758544505,
+        "symbol": "VSAT",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 77,
+        "price": 32.33000183105469,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 32.33000183105469,
+          "portfolioTotalValue": 54908.529311180115,
+          "weightBefore": 7.771172608771271,
+          "weightAfter": 11.952588157133155,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "b50Q3X79HSsLKNCQoqRi",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1755043200000,
+        "createdAt": 1766758544505,
+        "symbol": "PTEN",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 430,
+        "price": 5.809999942779541,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 5.809999942779541,
+          "portfolioTotalValue": 54917.41914558411,
+          "weightBefore": 9.199505884199391,
+          "weightAfter": 13.330196578421818,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "zYx0nqY3X22JTYvTwUWI",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1755043200000,
+        "createdAt": 1766758544505,
+        "symbol": "PERI",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 270,
+        "price": 9.229999542236328,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 9.229999542236328,
+          "portfolioTotalValue": 54911.21904659271,
+          "weightBefore": 5.264815408607937,
+          "weightAfter": 9.564292745124101,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "BHLnfkfK24vvG8hUeB7o",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1755043200000,
+        "createdAt": 1766758544505,
+        "symbol": "NGD",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 423,
+        "price": 5.900000095367432,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 5.900000095367432,
+          "portfolioTotalValue": 54914.81921052933,
+          "weightBefore": 6.708239498306543,
+          "weightAfter": 10.948046781562848,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "mjqEq7oFZlBXjY9bjNUX",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1755043200000,
+        "createdAt": 1766758544505,
+        "symbol": "BAX",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 109,
+        "price": 22.770000457763672,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 22.770000457763672,
+          "portfolioTotalValue": 54901.049220085144,
+          "weightBefore": 3.1709995507937836,
+          "weightAfter": 7.548380481218355,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "b5oCPoJsSPWUMmYF1wyE",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1755043200000,
+        "createdAt": 1766758544505,
+        "symbol": "HL",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 124,
+        "price": 16.81999969482422,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 16.81999969482422,
+          "portfolioTotalValue": 54504.79913234711,
+          "weightBefore": 14.50356278856402,
+          "weightAfter": 17.77516838598713,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "nQLxGw3q0nWJSEJ4QnOs",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "SSYS",
+        "type": "BUY",
+        "quantity": 271,
+        "price": 9.220000267028809,
+        "date": 1755216000000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "7rqaxh4cO67iwv9dytHL",
+        "validation": {
+          "priceAtExecution": 9.220000267028809,
+          "portfolioTotalValue": 67223.33102655411,
+          "weightBefore": 0,
+          "weightAfter": 3.716894170831581,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "oB9pHgKQIiQrdxmG70IL",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1755475200000,
+        "createdAt": 1766758544505,
+        "symbol": "SSYS",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 223,
+        "price": 11.199999809265137,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 11.199999809265137,
+          "portfolioTotalValue": 69362.95021390915,
+          "weightBefore": 4.53927174040098,
+          "weightAfter": 7.976592530615142,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "t6GK9HQHuhueFuBJUQuC",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "VLRS",
+        "type": "SELL",
+        "quantity": 371,
+        "price": 6.730000019073486,
+        "date": 1759104000000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "xSsLte8DF2X3l8Esgi6b",
+        "validation": {
+          "priceAtExecution": 6.730000019073486,
+          "portfolioTotalValue": 73229.53076219559,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "3j45YngvdV9Pp3lpc0Py",
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "date": 1761264000000,
+        "createdAt": 1766758544505,
+        "symbol": "ANGO",
+        "portfolioId": "debbie-wasserman-schultz",
+        "quantity": 403,
+        "price": 12.399999618530273,
+        "type": "SELL",
+        "validation": {
+          "priceAtExecution": 12.399999618530273,
+          "portfolioTotalValue": 76178.4400601387,
+          "weightBefore": 3.8049469723593146,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Iw32Shd5k3GJEBjaFqGA",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "INVX",
+        "type": "SELL",
+        "quantity": 109,
+        "price": 22.770000457763672,
+        "date": 1764028800000,
+        "createdAt": 1786634200644,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "hcqBj0e2DP6thf13xU2n",
+        "validation": {
+          "priceAtExecution": 22.770000457763672,
+          "portfolioTotalValue": 70595.00035333633,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1774860668838-iccoepw0i",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "CDE",
+        "type": "BUY",
+        "quantity": 505,
+        "price": 17.1299991607666,
+        "date": 1774860668838,
+        "createdAt": 1774860668838,
+        "validation": {
+          "priceAtExecution": 17.1299991607666,
+          "portfolioTotalValue": 96543.2793507576,
+          "weightBefore": 0,
+          "weightAfter": 8.96038505669349,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1774860668838-4u0fzig7c",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "NGD",
+        "type": "SELL",
+        "quantity": 1019,
+        "price": 0,
+        "date": 1774860668838,
+        "createdAt": 1774860668838,
+        "validation": {
+          "priceAtExecution": 4.190000057220459,
+          "portfolioTotalValue": 83623.01971626282,
+          "weightBefore": 4.857756639275063,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "CzPkoAV4VQJJl1HhJo2G",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "ICHR",
+        "type": "SELL",
+        "quantity": 29,
+        "price": 85.7699966430664,
+        "date": 1781654400000,
+        "createdAt": 1784128597754,
+        "ruleId": "RF8lEVYhyXDWbxIsEzA5",
+        "ruleExecutionLogId": "ZImFj2rm5xrufjGGc5CN",
+        "validation": {
+          "priceAtExecution": 85.7699966430664,
+          "portfolioTotalValue": 106164.21945476532,
+          "weightBefore": 21.629676906762413,
+          "weightAfter": 19.79353240241625,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1784131972907-9rfq51xfl",
+        "portfolioId": "debbie-wasserman-schultz",
+        "symbol": "IBTA.L",
+        "type": "BUY",
+        "quantity": 400,
+        "price": 5.956999778747559,
+        "date": 1784131972907,
+        "createdAt": 1784131972907,
+        "validation": {
+          "priceAtExecution": 5.956999778747559,
+          "portfolioTotalValue": 109845.9502696991,
+          "weightBefore": 25.499158447245186,
+          "weightAfter": 27.11524532366302,
+          "holdingValueMatchesQuantity": true
+        }
+      }
+    ],
+    "source": "https://pelositracker.app/api/portfolios/debbie-wasserman-schultz",
+    "kind": "copy_trade_portfolio_NOT_disclosure_book"
+  },
+  "nancy-pelosi": {
+    "slug": "nancy-pelosi",
+    "name": "Nancy Pelosi Tracker",
+    "politicianSlug": "nancy-pelosi",
+    "politicianName": "Nancy Pelosi",
+    "totalValue": 23202729,
+    "totalHoldings": 15,
+    "holdingsCount": 15,
+    "holdings": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2246,
+        "latestPrice": 329.6300048828125,
+        "marketValue": 740348.9909667969,
+        "weight": 3.19
+      },
+      {
+        "symbol": "VST",
+        "quantity": 9550,
+        "latestPrice": 140.58999633789062,
+        "marketValue": 1342634.4650268555,
+        "weight": 5.79
+      },
+      {
+        "symbol": "GOOGL",
+        "quantity": 9000,
+        "latestPrice": 343.6300048828125,
+        "marketValue": 3092670.0439453125,
+        "weight": 13.33
+      },
+      {
+        "symbol": "CRWD",
+        "quantity": 5600,
+        "latestPrice": 240.19500732421875,
+        "marketValue": 1345092.041015625,
+        "weight": 5.8
+      },
+      {
+        "symbol": "TEM",
+        "quantity": 14500,
+        "latestPrice": 65.80000305175781,
+        "marketValue": 954100.0442504883,
+        "weight": 4.11
+      },
+      {
+        "symbol": "TSLA",
+        "quantity": 1735,
+        "latestPrice": 361.010009765625,
+        "marketValue": 626352.3669433594,
+        "weight": 2.7
+      },
+      {
+        "symbol": "NVDA",
+        "quantity": 16600,
+        "latestPrice": 212.0449981689453,
+        "marketValue": 3519946.969604492,
+        "weight": 15.17
+      },
+      {
+        "symbol": "AVGO",
+        "quantity": 8423,
+        "latestPrice": 339.79998779296875,
+        "marketValue": 2862135.297180176,
+        "weight": 12.34
+      },
+      {
+        "symbol": "PANW",
+        "quantity": 4422,
+        "latestPrice": 373.010009765625,
+        "marketValue": 1649450.2631835938,
+        "weight": 7.11
+      },
+      {
+        "symbol": "MSFT",
+        "quantity": 1323,
+        "latestPrice": 500.2850036621094,
+        "marketValue": 661877.0598449707,
+        "weight": 2.85
+      },
+      {
+        "symbol": "AMZN",
+        "quantity": 4670,
+        "latestPrice": 249.56199645996094,
+        "marketValue": 1165454.5234680176,
+        "weight": 5.02
+      },
+      {
+        "symbol": "IBTA.L",
+        "quantity": 75000,
+        "latestPrice": 5.947000026702881,
+        "marketValue": 446025.00200271606,
+        "weight": 1.92
+      },
+      {
+        "symbol": "INTC",
+        "quantity": 14900,
+        "latestPrice": 97.92500305175781,
+        "marketValue": 1459082.5454711914,
+        "weight": 6.29
+      },
+      {
+        "symbol": "UBER",
+        "quantity": 5000,
+        "latestPrice": 71.59500122070312,
+        "marketValue": 357975.0061035156,
+        "weight": 1.54
+      },
+      {
+        "symbol": "BE",
+        "quantity": 11300,
+        "latestPrice": 263.67999267578125,
+        "marketValue": 2979583.917236328,
+        "weight": 12.84
+      }
+    ],
+    "enrichedTransactions": [
+      {
+        "id": "gen-1769448321173-518za5l0o",
+        "createdAt": 1769448321173,
+        "symbol": "CRWD",
+        "portfolioId": "nancy-pelosi",
+        "type": "BUY",
+        "price": 116.887497,
+        "splitAdjustments": [
+          "CRWD:2026-07-02"
+        ],
+        "date": 1769448300000,
+        "quantity": 100,
+        "validation": {
+          "priceAtExecution": 116.887497,
+          "portfolioTotalValue": 16145616.754002979,
+          "weightBefore": 3.9846541606516475,
+          "weightAfter": 4.0541652460424755,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-8gddk2wk9",
+        "createdAt": 1769448321173,
+        "symbol": "NVDA",
+        "portfolioId": "nancy-pelosi",
+        "price": 186.81350708007812,
+        "type": "SELL",
+        "date": 1769448300000,
+        "quantity": 900,
+        "validation": {
+          "priceAtExecution": 186.81350708007812,
+          "portfolioTotalValue": 15965795.847930908,
+          "weightBefore": 20.263114927929823,
+          "weightAfter": 19.42342396875371,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-701kc7d1n",
+        "createdAt": 1769448321173,
+        "symbol": "GOOGL",
+        "portfolioId": "nancy-pelosi",
+        "price": 335.6549987792969,
+        "type": "SELL",
+        "date": 1769448300000,
+        "quantity": 400,
+        "validation": {
+          "priceAtExecution": 335.6549987792969,
+          "portfolioTotalValue": 15999666.00479126,
+          "weightBefore": 19.556037362283373,
+          "weightAfter": 18.880987816302135,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-zedhkyhqj",
+        "createdAt": 1769448321173,
+        "symbol": "TSLA",
+        "portfolioId": "nancy-pelosi",
+        "price": 439.60479736328125,
+        "type": "BUY",
+        "date": 1769448300000,
+        "quantity": 270,
+        "validation": {
+          "priceAtExecution": 439.60479736328125,
+          "portfolioTotalValue": 16252621.299591064,
+          "weightBefore": 3.9917187430453653,
+          "weightAfter": 4.692869595407873,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-gr5l54twy",
+        "date": 1769448300000,
+        "createdAt": 1769448321173,
+        "symbol": "IBTA.L",
+        "portfolioId": "nancy-pelosi",
+        "quantity": 135000,
+        "price": 5.9120001792907715,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 5.9120001792907715,
+          "portfolioTotalValue": 16932048.028507233,
+          "weightBefore": 0,
+          "weightAfter": 4.713665014772688,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-de92z9af7",
+        "createdAt": 1769448321173,
+        "symbol": "TEM",
+        "portfolioId": "nancy-pelosi",
+        "price": 69.63999938964844,
+        "type": "BUY",
+        "date": 1769448300000,
+        "quantity": 1500,
+        "validation": {
+          "priceAtExecution": 69.63999938964844,
+          "portfolioTotalValue": 16238388.003387451,
+          "weightBefore": 5.611280723602941,
+          "weightAfter": 6.218474339566554,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-c160eej4c",
+        "createdAt": 1769448321173,
+        "symbol": "AAPL",
+        "portfolioId": "nancy-pelosi",
+        "price": 254.72000122070312,
+        "type": "SELL",
+        "date": 1769448300000,
+        "quantity": 300,
+        "validation": {
+          "priceAtExecution": 254.72000122070312,
+          "portfolioTotalValue": 16057512.003936768,
+          "weightBefore": 4.019586073118389,
+          "weightAfter": 3.5628254402141444,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-rs73ielxj",
+        "date": 1769448321173,
+        "createdAt": 1769448321173,
+        "symbol": "VST",
+        "portfolioId": "nancy-pelosi",
+        "quantity": 2150,
+        "price": 161.4499969482422,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 161.4499969482422,
+          "portfolioTotalValue": 16481045.4977417,
+          "weightBefore": 7.405078150208388,
+          "weightAfter": 9.35527707308971,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-fqlirkm46",
+        "date": 1769448321173,
+        "createdAt": 1769448321173,
+        "symbol": "AMZN",
+        "portfolioId": "nancy-pelosi",
+        "quantity": 580,
+        "price": 239.6999969482422,
+        "type": "SELL",
+        "validation": {
+          "priceAtExecution": 239.6999969482422,
+          "portfolioTotalValue": 15994902.006072998,
+          "weightBefore": 7.799867358046006,
+          "weightAfter": 6.998473546904344,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-bye1cfy3y",
+        "date": 1769448321173,
+        "createdAt": 1769448321173,
+        "symbol": "MSFT",
+        "portfolioId": "nancy-pelosi",
+        "quantity": 22,
+        "price": 473.864990234375,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 473.864990234375,
+          "portfolioTotalValue": 16144353.034088135,
+          "weightBefore": 3.8211299327138404,
+          "weightAfter": 3.8832363288659217,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-bbqrbx1hy",
+        "date": 1769448321173,
+        "createdAt": 1769448321173,
+        "symbol": "PANW",
+        "portfolioId": "nancy-pelosi",
+        "quantity": 178,
+        "price": 184.3699951171875,
+        "type": "SELL",
+        "validation": {
+          "priceAtExecution": 184.3699951171875,
+          "portfolioTotalValue": 16101110.14517212,
+          "weightBefore": 7.999229731756008,
+          "weightAfter": 7.811710468092123,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1769448321173-tpqxgrfnl",
+        "date": 1769448321173,
+        "createdAt": 1769448321173,
+        "symbol": "AVGO",
+        "portfolioId": "nancy-pelosi",
+        "quantity": 423,
+        "price": 328.3699951171875,
+        "type": "BUY",
+        "validation": {
+          "priceAtExecution": 328.3699951171875,
+          "portfolioTotalValue": 16272828.512237549,
+          "weightBefore": 16.282209516720787,
+          "weightAfter": 16.996802164983663,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1782726850454-kffex2ab7",
+        "portfolioId": "nancy-pelosi",
+        "symbol": "PANW",
+        "type": "SELL",
+        "createdAt": 1782726850454,
+        "date": 1782294840000,
+        "price": 293.20001220703125,
+        "quantity": 2400,
+        "validation": {
+          "priceAtExecution": 293.20001220703125,
+          "portfolioTotalValue": 17812237.676265717,
+          "weightBefore": 10.802653776515001,
+          "weightAfter": 7.278874656535046,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1782308626922-khuexb9q7",
+        "portfolioId": "nancy-pelosi",
+        "symbol": "INTC",
+        "type": "BUY",
+        "price": 130.07000732421875,
+        "createdAt": 1782308626922,
+        "date": 1782308580000,
+        "quantity": 4500,
+        "validation": {
+          "priceAtExecution": 130.07000732421875,
+          "portfolioTotalValue": 18417418.7207489,
+          "weightBefore": 0,
+          "weightAfter": 3.1780513970699578,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1782308710241-zfp640wcc",
+        "portfolioId": "nancy-pelosi",
+        "symbol": "UBER",
+        "type": "BUY",
+        "price": 70.36000061035156,
+        "createdAt": 1782308710241,
+        "date": 1782308700000,
+        "quantity": 5000,
+        "validation": {
+          "priceAtExecution": 70.36000061035156,
+          "portfolioTotalValue": 18183903.690841675,
+          "weightBefore": 0,
+          "weightAfter": 1.934678103409346,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1787578733928-ajtqb5aa3",
+        "portfolioId": "nancy-pelosi",
+        "symbol": "BE",
+        "type": "BUY",
+        "price": 187.6699981689453,
+        "createdAt": 1787578733928,
+        "date": 1787578680000,
+        "quantity": 11300,
+        "validation": {
+          "priceAtExecution": 187.6699981689453,
+          "portfolioTotalValue": 21378040.150211334,
+          "weightBefore": 0,
+          "weightAfter": 9.919856845661869,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1787578930580-pl8e9k8sx",
+        "portfolioId": "nancy-pelosi",
+        "symbol": "IBTA.L",
+        "type": "SELL",
+        "price": 5.980000019073486,
+        "createdAt": 1787578930580,
+        "date": 1787578920000,
+        "quantity": 60000,
+        "validation": {
+          "priceAtExecution": 5.980000019073486,
+          "portfolioTotalValue": 18898569.169757843,
+          "weightBefore": 4.192161428751884,
+          "weightAfter": 2.3731955440744,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gen-1787578930580-5bzftzf6p",
+        "portfolioId": "nancy-pelosi",
+        "symbol": "INTC",
+        "type": "BUY",
+        "price": 86.3550033569336,
+        "createdAt": 1787578930580,
+        "date": 1787578920000,
+        "quantity": 10400,
+        "validation": {
+          "priceAtExecution": 86.3550033569336,
+          "portfolioTotalValue": 20155461.20581436,
+          "weightBefore": 2.0179159035563865,
+          "weightAfter": 6.383825886589644,
+          "holdingValueMatchesQuantity": true
+        }
+      }
+    ],
+    "source": "https://pelositracker.app/api/portfolios/nancy-pelosi",
+    "kind": "copy_trade_portfolio_NOT_disclosure_book"
+  },
+  "marjorie-taylor-greene": {
+    "slug": "marjorie-taylor-greene",
+    "name": "Marjorie Taylor Greene's Portfolio",
+    "politicianSlug": null,
+    "politicianName": null,
+    "totalValue": 923432,
+    "totalHoldings": 76,
+    "holdingsCount": 76,
+    "holdings": [
+      {
+        "symbol": "GOOG",
+        "quantity": 52,
+        "latestPrice": 340.2799987792969,
+        "marketValue": 17694.559936523438,
+        "weight": 1.92
+      },
+      {
+        "symbol": "AMZN",
+        "quantity": 44,
+        "latestPrice": 249.0399932861328,
+        "marketValue": 10957.759704589844,
+        "weight": 1.19
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 36,
+        "latestPrice": 329.6300048828125,
+        "marketValue": 11866.68017578125,
+        "weight": 1.29
+      },
+      {
+        "symbol": "SJM",
+        "quantity": 26,
+        "latestPrice": 119.78500366210938,
+        "marketValue": 3114.4100952148438,
+        "weight": 0.34
+      },
+      {
+        "symbol": "GILD",
+        "quantity": 44,
+        "latestPrice": 145.4499969482422,
+        "marketValue": 6399.799865722656,
+        "weight": 0.69
+      },
+      {
+        "symbol": "NOW",
+        "quantity": 36,
+        "latestPrice": 146.17999267578125,
+        "marketValue": 5262.479736328125,
+        "weight": 0.57
+      },
+      {
+        "symbol": "BAC",
+        "quantity": 55,
+        "latestPrice": 58.89500045776367,
+        "marketValue": 3239.225025177002,
+        "weight": 0.35
+      },
+      {
+        "symbol": "AMD",
+        "quantity": 140,
+        "latestPrice": 503.79998779296875,
+        "marketValue": 70531.99829101562,
+        "weight": 7.64
+      },
+      {
+        "symbol": "PENN",
+        "quantity": 592,
+        "latestPrice": 17.84000015258789,
+        "marketValue": 10561.280090332031,
+        "weight": 1.14
+      },
+      {
+        "symbol": "LMT",
+        "quantity": 25,
+        "latestPrice": 532.6555786132812,
+        "marketValue": 13316.389465332031,
+        "weight": 1.44
+      },
+      {
+        "symbol": "DKNG",
+        "quantity": 65,
+        "latestPrice": 24.915000915527344,
+        "marketValue": 1619.4750595092773,
+        "weight": 0.18
+      },
+      {
+        "symbol": "CRSP",
+        "quantity": 60,
+        "latestPrice": 52.005001068115234,
+        "marketValue": 3120.300064086914,
+        "weight": 0.34
+      },
+      {
+        "symbol": "WMT",
+        "quantity": 52,
+        "latestPrice": 108.55500030517578,
+        "marketValue": 5644.860015869141,
+        "weight": 0.61
+      },
+      {
+        "symbol": "LULU",
+        "quantity": 36,
+        "latestPrice": 97.23999786376953,
+        "marketValue": 3500.639923095703,
+        "weight": 0.38
+      },
+      {
+        "symbol": "CAT",
+        "quantity": 36,
+        "latestPrice": 780.3300170898438,
+        "marketValue": 28091.880615234375,
+        "weight": 3.04
+      },
+      {
+        "symbol": "AVGO",
+        "quantity": 18,
+        "latestPrice": 339.79998779296875,
+        "marketValue": 6116.3997802734375,
+        "weight": 0.66
+      },
+      {
+        "symbol": "GS",
+        "quantity": 24,
+        "latestPrice": 955.7849731445312,
+        "marketValue": 22938.83935546875,
+        "weight": 2.48
+      },
+      {
+        "symbol": "KO",
+        "quantity": 68,
+        "latestPrice": 88.36000061035156,
+        "marketValue": 6008.480041503906,
+        "weight": 0.65
+      },
+      {
+        "symbol": "TSM",
+        "quantity": 33,
+        "latestPrice": 413.0799865722656,
+        "marketValue": 13631.639556884766,
+        "weight": 1.48
+      },
+      {
+        "symbol": "PAGS",
+        "quantity": 274,
+        "latestPrice": 9.845000267028809,
+        "marketValue": 2697.5300731658936,
+        "weight": 0.29
+      },
+      {
+        "symbol": "TSLA",
+        "quantity": 35,
+        "latestPrice": 361.010009765625,
+        "marketValue": 12635.350341796875,
+        "weight": 1.37
+      },
+      {
+        "symbol": "BDX",
+        "quantity": 18,
+        "latestPrice": 185.68499755859375,
+        "marketValue": 3342.3299560546875,
+        "weight": 0.36
+      },
+      {
+        "symbol": "VMC",
+        "quantity": 9,
+        "latestPrice": 248.4499969482422,
+        "marketValue": 2236.0499725341797,
+        "weight": 0.24
+      },
+      {
+        "symbol": "NEE",
+        "quantity": 204,
+        "latestPrice": 81.53500366210938,
+        "marketValue": 16633.140747070312,
+        "weight": 1.8
+      },
+      {
+        "symbol": "STX",
+        "quantity": 19,
+        "latestPrice": 764.3599853515625,
+        "marketValue": 14522.839721679688,
+        "weight": 1.57
+      },
+      {
+        "symbol": "BHP",
+        "quantity": 49,
+        "latestPrice": 84.43689727783203,
+        "marketValue": 4137.4079666137695,
+        "weight": 0.45
+      },
+      {
+        "symbol": "SO",
+        "quantity": 108,
+        "latestPrice": 86.2301025390625,
+        "marketValue": 9312.85107421875,
+        "weight": 1.01
+      },
+      {
+        "symbol": "NSRGY",
+        "quantity": 360,
+        "latestPrice": 95.05000305175781,
+        "marketValue": 34218.00109863281,
+        "weight": 3.71
+      },
+      {
+        "symbol": "AMAT",
+        "quantity": 84,
+        "latestPrice": 417.45050048828125,
+        "marketValue": 35065.842041015625,
+        "weight": 3.8
+      },
+      {
+        "symbol": "KMI",
+        "quantity": 270,
+        "latestPrice": 30.75,
+        "marketValue": 8302.5,
+        "weight": 0.9
+      },
+      {
+        "symbol": "IP",
+        "quantity": 53,
+        "latestPrice": 33.88880157470703,
+        "marketValue": 1796.1064834594727,
+        "weight": 0.19
+      },
+      {
+        "symbol": "ABBV",
+        "quantity": 26,
+        "latestPrice": 263.7149963378906,
+        "marketValue": 6856.589904785156,
+        "weight": 0.74
+      },
+      {
+        "symbol": "CVX",
+        "quantity": 51,
+        "latestPrice": 216.23500061035156,
+        "marketValue": 11027.98503112793,
+        "weight": 1.19
+      },
+      {
+        "symbol": "T",
+        "quantity": 88,
+        "latestPrice": 26.7450008392334,
+        "marketValue": 2353.560073852539,
+        "weight": 0.25
+      },
+      {
+        "symbol": "V",
+        "quantity": 56,
+        "latestPrice": 374.5199890136719,
+        "marketValue": 20973.119384765625,
+        "weight": 2.27
+      },
+      {
+        "symbol": "AMGN",
+        "quantity": 24,
+        "latestPrice": 377.5799865722656,
+        "marketValue": 9061.919677734375,
+        "weight": 0.98
+      },
+      {
+        "symbol": "COST",
+        "quantity": 18,
+        "latestPrice": 906.1400146484375,
+        "marketValue": 16310.520263671875,
+        "weight": 1.77
+      },
+      {
+        "symbol": "NVDA",
+        "quantity": 85,
+        "latestPrice": 211.9250030517578,
+        "marketValue": 18013.625259399414,
+        "weight": 1.95
+      },
+      {
+        "symbol": "INTC",
+        "quantity": 840,
+        "latestPrice": 97.92500305175781,
+        "marketValue": 82257.00256347656,
+        "weight": 8.91
+      },
+      {
+        "symbol": "CLX",
+        "quantity": 77,
+        "latestPrice": 88.31999969482422,
+        "marketValue": 6800.639976501465,
+        "weight": 0.74
+      },
+      {
+        "symbol": "ALB",
+        "quantity": 38,
+        "latestPrice": 113.41000366210938,
+        "marketValue": 4309.580139160156,
+        "weight": 0.47
+      },
+      {
+        "symbol": "DIS",
+        "quantity": 60,
+        "latestPrice": 107.41999816894531,
+        "marketValue": 6445.199890136719,
+        "weight": 0.7
+      },
+      {
+        "symbol": "PYPL",
+        "quantity": 66,
+        "latestPrice": 53.65010070800781,
+        "marketValue": 3540.9066467285156,
+        "weight": 0.38
+      },
+      {
+        "symbol": "JPM",
+        "quantity": 54,
+        "latestPrice": 343.94989013671875,
+        "marketValue": 18573.294067382812,
+        "weight": 2.01
+      },
+      {
+        "symbol": "MDT",
+        "quantity": 56,
+        "latestPrice": 94.21499633789062,
+        "marketValue": 5276.039794921875,
+        "weight": 0.57
+      },
+      {
+        "symbol": "AFL",
+        "quantity": 48,
+        "latestPrice": 117.1500015258789,
+        "marketValue": 5623.2000732421875,
+        "weight": 0.61
+      },
+      {
+        "symbol": "ADP",
+        "quantity": 16,
+        "latestPrice": 277.989990234375,
+        "marketValue": 4447.83984375,
+        "weight": 0.48
+      },
+      {
+        "symbol": "UPS",
+        "quantity": 194,
+        "latestPrice": 102.0999984741211,
+        "marketValue": 19807.399703979492,
+        "weight": 2.14
+      },
+      {
+        "symbol": "QQQ",
+        "quantity": 18,
+        "latestPrice": 704.7999877929688,
+        "marketValue": 12686.399780273438,
+        "weight": 1.37
+      },
+      {
+        "symbol": "PG",
+        "quantity": 30,
+        "latestPrice": 147.00010681152344,
+        "marketValue": 4410.003204345703,
+        "weight": 0.48
+      },
+      {
+        "symbol": "HD",
+        "quantity": 44,
+        "latestPrice": 305.3999938964844,
+        "marketValue": 13437.599731445312,
+        "weight": 1.46
+      },
+      {
+        "symbol": "MSFT",
+        "quantity": 25,
+        "latestPrice": 500.2850036621094,
+        "marketValue": 12507.125091552734,
+        "weight": 1.35
+      },
+      {
+        "symbol": "HSY",
+        "quantity": 56,
+        "latestPrice": 170.49000549316406,
+        "marketValue": 9547.440307617188,
+        "weight": 1.03
+      },
+      {
+        "symbol": "QCOM",
+        "quantity": 45,
+        "latestPrice": 187.32000732421875,
+        "marketValue": 8429.400329589844,
+        "weight": 0.91
+      },
+      {
+        "symbol": "BRK.B",
+        "quantity": 30,
+        "latestPrice": 514.75,
+        "marketValue": 15442.5,
+        "weight": 1.67
+      },
+      {
+        "symbol": "TSCO",
+        "quantity": 96,
+        "latestPrice": 32.71500015258789,
+        "marketValue": 3140.6400146484375,
+        "weight": 0.34
+      },
+      {
+        "symbol": "SCHW",
+        "quantity": 84,
+        "latestPrice": 108.16000366210938,
+        "marketValue": 9085.440307617188,
+        "weight": 0.98
+      },
+      {
+        "symbol": "CRWD",
+        "quantity": 60,
+        "latestPrice": 240.19500732421875,
+        "marketValue": 14411.700439453125,
+        "weight": 1.56
+      },
+      {
+        "symbol": "ASML",
+        "quantity": 12,
+        "latestPrice": 1585.6944580078125,
+        "marketValue": 19028.33349609375,
+        "weight": 2.06
+      },
+      {
+        "symbol": "DUK",
+        "quantity": 84,
+        "latestPrice": 117.875,
+        "marketValue": 9901.5,
+        "weight": 1.07
+      },
+      {
+        "symbol": "DELL",
+        "quantity": 66,
+        "latestPrice": 548.5250244140625,
+        "marketValue": 36202.651611328125,
+        "weight": 3.92
+      },
+      {
+        "symbol": "GLW",
+        "quantity": 147,
+        "latestPrice": 143.41000366210938,
+        "marketValue": 21081.270538330078,
+        "weight": 2.28
+      },
+      {
+        "symbol": "FDX",
+        "quantity": 48.399,
+        "latestPrice": 307.6300048828125,
+        "marketValue": 14888.984606323242,
+        "weight": 1.61
+      },
+      {
+        "symbol": "PANW",
+        "quantity": 24,
+        "latestPrice": 373.010009765625,
+        "marketValue": 8952.240234375,
+        "weight": 0.97
+      },
+      {
+        "symbol": "DLR",
+        "quantity": 28,
+        "latestPrice": 177.76499938964844,
+        "marketValue": 4977.419982910156,
+        "weight": 0.54
+      },
+      {
+        "symbol": "GSK",
+        "quantity": 120,
+        "latestPrice": 49.97999954223633,
+        "marketValue": 5997.599945068359,
+        "weight": 0.65
+      },
+      {
+        "symbol": "CAH",
+        "quantity": 16,
+        "latestPrice": 232.38999938964844,
+        "marketValue": 3718.239990234375,
+        "weight": 0.4
+      },
+      {
+        "symbol": "LRCX",
+        "quantity": 81,
+        "latestPrice": 266.7300109863281,
+        "marketValue": 21605.130889892578,
+        "weight": 2.34
+      },
+      {
+        "symbol": "BX",
+        "quantity": 51,
+        "latestPrice": 127.2300033569336,
+        "marketValue": 6488.730171203613,
+        "weight": 0.7
+      },
+      {
+        "symbol": "SCCO",
+        "quantity": 52.624,
+        "latestPrice": 187.3249969482422,
+        "marketValue": 9857.790639404297,
+        "weight": 1.07
+      },
+      {
+        "symbol": "META",
+        "quantity": 9,
+        "latestPrice": 669.2750244140625,
+        "marketValue": 6023.4752197265625,
+        "weight": 0.65
+      },
+      {
+        "symbol": "OXY",
+        "quantity": 55,
+        "latestPrice": 63.435001373291016,
+        "marketValue": 3488.925075531006,
+        "weight": 0.38
+      },
+      {
+        "symbol": "ADBE",
+        "quantity": 12,
+        "latestPrice": 263.3940124511719,
+        "marketValue": 3160.7281494140625,
+        "weight": 0.34
+      },
+      {
+        "symbol": "JNJ",
+        "quantity": 32,
+        "latestPrice": 264.3900146484375,
+        "marketValue": 8460.48046875,
+        "weight": 0.92
+      },
+      {
+        "symbol": "LLY",
+        "quantity": 3,
+        "latestPrice": 1142.4200439453125,
+        "marketValue": 3427.2601318359375,
+        "weight": 0.37
+      },
+      {
+        "symbol": "NSC",
+        "quantity": 9,
+        "latestPrice": 319.67999267578125,
+        "marketValue": 2877.1199340820312,
+        "weight": 0.31
+      }
+    ],
+    "enrichedTransactions": [
+      {
+        "id": "TavXlszNJkUdpf9wgkkl",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GOOG",
+        "type": "SELL",
+        "quantity": 53,
+        "price": 178.7899932861328,
+        "date": 1611100800000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Xre0Knk3KtHrpry9mA6S,6aa20HX9B4Y0oSkMud2q",
+        "validation": {
+          "priceAtExecution": 178.7899932861328,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "8ZYAK4VZAvjlnXswIxKt",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMZN",
+        "type": "SELL",
+        "quantity": 45,
+        "price": 213.1999969482422,
+        "date": 1611100800000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "1z1GMZ8tQFu4StuOzA5B,L82u7RETqAWeWr02Uij1",
+        "validation": {
+          "priceAtExecution": 213.1999969482422,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "yu3tm9DIKGui8wnifMIM",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AAPL",
+        "type": "SELL",
+        "quantity": 37,
+        "price": 198.77999877929688,
+        "date": 1611100800000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "cOA8XccLybrPfvZ7Qdlm,mJMEAbNkZxjHHPn1Zeg4",
+        "validation": {
+          "priceAtExecution": 198.77999877929688,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "wQh5fy8JicpVIF0pYRnN",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "FB",
+        "type": "SELL",
+        "quantity": 187,
+        "price": 39.90999984741211,
+        "date": 1611100800000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "JIKw4J1XDxG4CyVrJi3O,tQ8NHNPradp6VIoyu8v1",
+        "validation": {
+          "priceAtExecution": 39.90999984741211,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "51gvKEhcBWYlYcPw8Nr7",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SJM",
+        "type": "BUY",
+        "quantity": 26,
+        "price": 95.87000274658203,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "4wIeglkBL13cno2x0Q5i",
+        "validation": {
+          "priceAtExecution": 95.87000274658203,
+          "portfolioTotalValue": 2492.620071411133,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "egBEDQvNVYJxmnfujE9J",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GILD",
+        "type": "BUY",
+        "quantity": 22,
+        "price": 109.30000305175781,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "PrM3qYlTuqxlgF9VWftj",
+        "validation": {
+          "priceAtExecution": 109.30000305175781,
+          "portfolioTotalValue": 2404.600067138672,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "9wMQbfC1MqgmGBPyCGtb",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NOW",
+        "type": "BUY",
+        "quantity": 12,
+        "price": 200.86599731445312,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "vGIwiOxSytLz9HA2Gu5I",
+        "validation": {
+          "priceAtExecution": 200.86599731445312,
+          "portfolioTotalValue": 2410.3919677734375,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "xgtJ9ckWGvXv1anivX0X",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "BAC",
+        "type": "BUY",
+        "quantity": 55,
+        "price": 44.72999954223633,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "or2CkBEnOViDGrDyU2RJ",
+        "validation": {
+          "priceAtExecution": 44.72999954223633,
+          "portfolioTotalValue": 2460.149974822998,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "WY2JaAxU6wcKljR11nIU",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMD",
+        "type": "BUY",
+        "quantity": 20,
+        "price": 121.13999938964844,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "niDL1Ug34WJnnbSUlhGO",
+        "validation": {
+          "priceAtExecution": 121.13999938964844,
+          "portfolioTotalValue": 2422.7999877929688,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "1Jp6Ufj85r71YQQtAJ9L",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PENN",
+        "type": "BUY",
+        "quantity": 296,
+        "price": 16.81999969482422,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "7nFF4IUMus3gjjPLavAi,ydnSoMQ1tyKqu0DodLuY",
+        "validation": {
+          "priceAtExecution": 16.81999969482422,
+          "portfolioTotalValue": 4978.719909667969,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Jtst0NxqPkiw5M1MNUHS",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LMT",
+        "type": "BUY",
+        "quantity": 5,
+        "price": 456.6000061035156,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "onazUlVuqdLJ1454YwHw",
+        "validation": {
+          "priceAtExecution": 456.6000061035156,
+          "portfolioTotalValue": 2283.000030517578,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Gn7VxdH2qgC5aEJOmM1H",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "DKNG",
+        "type": "BUY",
+        "quantity": 65,
+        "price": 37.880001068115234,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "YAuUVPlY2UG6XAfq6MXE",
+        "validation": {
+          "priceAtExecution": 37.880001068115234,
+          "portfolioTotalValue": 2462.2000694274902,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "BvVEMTqlDqIakGyNDg9m",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CRSP",
+        "type": "BUY",
+        "quantity": 60,
+        "price": 41.52000045776367,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "lWk1IsrwiChbiw15Eujw",
+        "validation": {
+          "priceAtExecution": 41.52000045776367,
+          "portfolioTotalValue": 2491.2000274658203,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "YisjjDtEw3xbPtHX69Th",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "WMT",
+        "type": "BUY",
+        "quantity": 26,
+        "price": 95.80000305175781,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "7FiugEvyNRVJE2Kxg5KG",
+        "validation": {
+          "priceAtExecution": 95.80000305175781,
+          "portfolioTotalValue": 2490.800079345703,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "8QdAPTnkKVAT5ZhycKcs",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LULU",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 252.27999877929688,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "E2h0gt10tHFf4LxkXd4h,Ge5i4AwJkPKrBYB8SOVT",
+        "validation": {
+          "priceAtExecution": 252.27999877929688,
+          "portfolioTotalValue": 4541.039978027344,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "EJ7bfTsbv1Ed9q5SBKt4",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CAT",
+        "type": "BUY",
+        "quantity": 6,
+        "price": 363.1400146484375,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "JVNZ7nLS942T9iiF1kTn",
+        "validation": {
+          "priceAtExecution": 363.1400146484375,
+          "portfolioTotalValue": 2178.840087890625,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "x183A6QdfY1Uh58Mg83h",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SFTBY",
+        "type": "BUY",
+        "quantity": 362,
+        "price": 6.90500020980835,
+        "date": 1611187200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "FvRFpbBwh38CnOLAtnGK",
+        "validation": {
+          "priceAtExecution": 6.90500020980835,
+          "portfolioTotalValue": 2499.6100759506226,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Iguwn5KCSFq18ffPgr9G",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AVGO",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 252.91000366210938,
+        "date": 1611273600000,
+        "createdAt": 1781184794644,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "hihYikT9NitrdTPi9UKq",
+        "validation": {
+          "priceAtExecution": 252.91000366210938,
+          "portfolioTotalValue": 2276.1900329589844,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "upWYMkBOO2iiceBG1Zn8",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PENN",
+        "type": "BUY",
+        "quantity": 148,
+        "price": 16.81999969482422,
+        "date": 1611273600000,
+        "createdAt": 1781184794644,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "qbcuETTwlLbawbrLmz8a",
+        "validation": {
+          "priceAtExecution": 16.81999969482422,
+          "portfolioTotalValue": 2489.3599548339844,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "n24QVQv4SAn4CsmNyaOm",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GS",
+        "type": "BUY",
+        "quantity": 8,
+        "price": 624.1699829101562,
+        "date": 1611273600000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "wayIL99uUejQ8Iy8vQ2h",
+        "validation": {
+          "priceAtExecution": 624.1699829101562,
+          "portfolioTotalValue": 2496.679931640625,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "8kyZb4XOdznmBFgyZU88",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "KO",
+        "type": "BUY",
+        "quantity": 68,
+        "price": 72.06999969482422,
+        "date": 1611273600000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "NxQyJ2Cb6VkPaGVaKZuC",
+        "validation": {
+          "priceAtExecution": 72.06999969482422,
+          "portfolioTotalValue": 2450.3799896240234,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "rFm05gT0EiLzjio21VWl",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TSM",
+        "type": "BUY",
+        "quantity": 22,
+        "price": 214.10000610351562,
+        "date": 1611273600000,
+        "createdAt": 1781184794644,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "mOQEshE8ErrrLrOQT3f2",
+        "validation": {
+          "priceAtExecution": 214.10000610351562,
+          "portfolioTotalValue": 2355.100067138672,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "HS2ZvEHEdA7qFx5qMy69",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PAGS",
+        "type": "BUY",
+        "quantity": 822,
+        "price": 9.109999656677246,
+        "date": 1611273600000,
+        "createdAt": 1781184794644,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "kka3LzfzcRqWuYrFJfW4",
+        "validation": {
+          "priceAtExecution": 9.109999656677246,
+          "portfolioTotalValue": 4992.279811859131,
+          "weightBefore": 0,
+          "weightAfter": 150,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "OzLzRbood0RYdHy7OdDP",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TSLA",
+        "type": "BUY",
+        "quantity": 7,
+        "price": 326.42999267578125,
+        "date": 1611273600000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "hlVHk5iSCF7uusDDtYJ5",
+        "validation": {
+          "priceAtExecution": 326.42999267578125,
+          "portfolioTotalValue": 2285.0099487304688,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "DFvaqwwsCURoG94uSnpK",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "MJNA",
+        "type": "SELL",
+        "quantity": 1000000,
+        "price": 0.00019999999494757503,
+        "date": 1612483200000,
+        "createdAt": 1781185356857,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "8ipu2p8uqiHux53poA4I",
+        "validation": {
+          "priceAtExecution": 0.00019999999494757503,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "kzw8pKC2qZubQQAcxDSE",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TFC",
+        "type": "BUY",
+        "quantity": 62,
+        "price": 40.2599983215332,
+        "date": 1620777600000,
+        "createdAt": 1781184659701,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "kHMVjF0Rb8DniarIBxHe",
+        "validation": {
+          "priceAtExecution": 40.2599983215332,
+          "portfolioTotalValue": 2496.1198959350586,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "4n0ZxpwOiT3WlRDLtLAI",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AAPL",
+        "type": "BUY",
+        "quantity": 25,
+        "price": 198.77999877929688,
+        "date": 1620777600000,
+        "createdAt": 1781184659701,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "OmYSPN5wHxWOWgp31CU1",
+        "validation": {
+          "priceAtExecution": 198.77999877929688,
+          "portfolioTotalValue": 4969.499969482422,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "jYjE2NEnzn4mK8LfIUGP",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "BDX",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 135.78616333007812,
+        "date": 1620777600000,
+        "createdAt": 1781184659701,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "KjBN3t1vr3IesWYFwU4T",
+        "validation": {
+          "priceAtExecution": 135.78616333007812,
+          "portfolioTotalValue": 2444.1509399414062,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "nZDi4QqcUZcK1PwfHNEQ",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "VMC",
+        "type": "BUY",
+        "quantity": 9,
+        "price": 261.1199951171875,
+        "date": 1621296000000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "kY2DSCmj3eVo51aV3VpD",
+        "validation": {
+          "priceAtExecution": 261.1199951171875,
+          "portfolioTotalValue": 2350.0799560546875,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "U4HBnk7KVCYou8mfbiZW",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NEE",
+        "type": "BUY",
+        "quantity": 34,
+        "price": 73,
+        "date": 1621296000000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "3JxGzGOCnhIwzTLywW2n",
+        "validation": {
+          "priceAtExecution": 73,
+          "portfolioTotalValue": 2482,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "bEaI3fWCbrB9QguFcdSa",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "STX",
+        "type": "BUY",
+        "quantity": 19,
+        "price": 126.48999786376953,
+        "date": 1621382400000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "16UJQfL5TKGUc8AHtvLz",
+        "validation": {
+          "priceAtExecution": 126.48999786376953,
+          "portfolioTotalValue": 2403.309959411621,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "mTkBjoOq7PEcEub2I5JB",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "WMT",
+        "type": "BUY",
+        "quantity": 26,
+        "price": 95.80000305175781,
+        "date": 1621382400000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Qj0ya9vK2epmsADIVvgi",
+        "validation": {
+          "priceAtExecution": 95.80000305175781,
+          "portfolioTotalValue": 2490.800079345703,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "sCFoLq3W0Q2hV8s2UjaC",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "BHP",
+        "type": "BUY",
+        "quantity": 49,
+        "price": 50.61000061035156,
+        "date": 1621382400000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "MVVbyI67zDgvgBdKsBdR",
+        "validation": {
+          "priceAtExecution": 50.61000061035156,
+          "portfolioTotalValue": 2479.8900299072266,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "rh9221rMFXuU1ysFhYv4",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SO",
+        "type": "BUY",
+        "quantity": 27,
+        "price": 89.55000305175781,
+        "date": 1621382400000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Qox8ZdM91YEFdBxKlChi",
+        "validation": {
+          "priceAtExecution": 89.55000305175781,
+          "portfolioTotalValue": 2417.850082397461,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "61hgsPhc3VTnLWwnBjUO",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMD",
+        "type": "BUY",
+        "quantity": 20,
+        "price": 121.13999938964844,
+        "date": 1621382400000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "qSKwOuYGUbYus1pmhcVM",
+        "validation": {
+          "priceAtExecution": 121.13999938964844,
+          "portfolioTotalValue": 2422.7999877929688,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Yg4XR4E22DK0Jb6PXwS5",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSRGY",
+        "type": "BUY",
+        "quantity": 48,
+        "price": 103.66999816894531,
+        "date": 1621382400000,
+        "createdAt": 1781184689819,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "5RkWpiuqhgTz3tzygAM4,Pr5jPKilhWr9NIksXfLG",
+        "validation": {
+          "priceAtExecution": 103.66999816894531,
+          "portfolioTotalValue": 4976.159912109375,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "J3UdxNoMjFOdSgzpNNaX",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSRGY",
+        "type": "BUY",
+        "quantity": 24,
+        "price": 103.66999816894531,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "HObOSflMh1iwwDtE4Jbj",
+        "validation": {
+          "priceAtExecution": 103.66999816894531,
+          "portfolioTotalValue": 2488.0799560546875,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "jiLJFsZ9I3wMxOh9BFXO",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMAT",
+        "type": "BUY",
+        "quantity": 14,
+        "price": 172.7899932861328,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "hFkgC3rwm7J9WyEkWmtW",
+        "validation": {
+          "priceAtExecution": 172.7899932861328,
+          "portfolioTotalValue": 2419.0599060058594,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "GdSKJgMXx7LnbmMPLSYa",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "KMI",
+        "type": "BUY",
+        "quantity": 90,
+        "price": 27.520000457763672,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "I3G8gmdNBhIdGbYxJYBi",
+        "validation": {
+          "priceAtExecution": 27.520000457763672,
+          "portfolioTotalValue": 2476.8000411987305,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "bzhqqciU0rQwKW5TNafO",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "IP",
+        "type": "BUY",
+        "quantity": 53,
+        "price": 47.08000183105469,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "0L6HnGlbWyxFvNpbaGj9",
+        "validation": {
+          "priceAtExecution": 47.08000183105469,
+          "portfolioTotalValue": 2495.2400970458984,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "LGFqU9M2EUNo0SpyckFe",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TSM",
+        "type": "BUY",
+        "quantity": 11,
+        "price": 214.10000610351562,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "n3rzL98gyFvkrrx2umXy",
+        "validation": {
+          "priceAtExecution": 214.10000610351562,
+          "portfolioTotalValue": 2355.100067138672,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "HK2NOPaAQUyFp7GxqLm1",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "ABBV",
+        "type": "BUY",
+        "quantity": 13,
+        "price": 191.5,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "0rHokkChgYwyEEyMgtZB",
+        "validation": {
+          "priceAtExecution": 191.5,
+          "portfolioTotalValue": 2489.5,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "0NaaBDB5M6lQrloIbfrX",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CVX",
+        "type": "BUY",
+        "quantity": 17,
+        "price": 144.77999877929688,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "PxvYptS81W5hYm1VXcal",
+        "validation": {
+          "priceAtExecution": 144.77999877929688,
+          "portfolioTotalValue": 2461.259979248047,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "prWkaK8BZsuIYOPMbh2q",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "T",
+        "type": "BUY",
+        "quantity": 88,
+        "price": 28.34000015258789,
+        "date": 1623801600000,
+        "createdAt": 1781184693844,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Dj8BKDJhGHiBZSK3U6z2",
+        "validation": {
+          "priceAtExecution": 28.34000015258789,
+          "portfolioTotalValue": 2493.9200134277344,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "qPLYd5TFTropGVwO7IU4",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSRGY",
+        "type": "BUY",
+        "quantity": 24,
+        "price": 103.66999816894531,
+        "date": 1626652800000,
+        "createdAt": 1781184728344,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "gN9kbVluOkstMYwea4Vt",
+        "validation": {
+          "priceAtExecution": 103.66999816894531,
+          "portfolioTotalValue": 2488.0799560546875,
+          "weightBefore": 0,
+          "weightAfter": 400,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ysXb5gN5uNOPTgBksKdk",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "V",
+        "type": "BUY",
+        "quantity": 6,
+        "price": 373.30999755859375,
+        "date": 1626652800000,
+        "createdAt": 1781184728344,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Z023LC33WSCfjrodLmVJ",
+        "validation": {
+          "priceAtExecution": 373.30999755859375,
+          "portfolioTotalValue": 2239.8599853515625,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "hs50nhi2JwsJ5LQ6wUf6",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMGN",
+        "type": "BUY",
+        "quantity": 8,
+        "price": 291.80999755859375,
+        "date": 1626652800000,
+        "createdAt": 1781184728344,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "zrtHLScPqw5e8u6PoNn7",
+        "validation": {
+          "priceAtExecution": 291.80999755859375,
+          "portfolioTotalValue": 2334.47998046875,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ucSD1gjHNOboYhEkTS3X",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "COST",
+        "type": "BUY",
+        "quantity": 2,
+        "price": 996.780029296875,
+        "date": 1626652800000,
+        "createdAt": 1781184728344,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "8U4T75Yd9OcBs3N2NNYt",
+        "validation": {
+          "priceAtExecution": 996.780029296875,
+          "portfolioTotalValue": 1993.56005859375,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "wk6wRuDtmZqmSTqEuiZq",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NVDA",
+        "type": "BUY",
+        "quantity": 17,
+        "price": 142.8300018310547,
+        "date": 1626652800000,
+        "createdAt": 1781184728344,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "XT6pgQ9XJkJhdNXDwtdD",
+        "validation": {
+          "priceAtExecution": 142.8300018310547,
+          "portfolioTotalValue": 2428.1100311279297,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "bq6UwRBMkWs4uop1K224",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "INTC",
+        "type": "BUY",
+        "quantity": 120,
+        "price": 20.68000030517578,
+        "date": 1626652800000,
+        "createdAt": 1781184728344,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "ivHf9FK5uC9mDtM3ZrMA",
+        "validation": {
+          "priceAtExecution": 20.68000030517578,
+          "portfolioTotalValue": 2481.6000366210938,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "gMFX1AwOTFL7ur6FwwNz",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "V",
+        "type": "BUY",
+        "quantity": 6,
+        "price": 373.30999755859375,
+        "date": 1628121600000,
+        "createdAt": 1781184747541,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "HcYZqZTrqqrBCZRMaExJ",
+        "validation": {
+          "priceAtExecution": 373.30999755859375,
+          "portfolioTotalValue": 2239.8599853515625,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "tIZim3wn5cqOx4dLHc3a",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CLX",
+        "type": "BUY",
+        "quantity": 39,
+        "price": 126.26000213623047,
+        "date": 1628121600000,
+        "createdAt": 1781184747541,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "IXxZOG3rJmytQTFkB3KQ",
+        "validation": {
+          "priceAtExecution": 126.26000213623047,
+          "portfolioTotalValue": 4924.140083312988,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "5nnYzpCIQTDTewGFHraK",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SFTBY",
+        "type": "BUY",
+        "quantity": 362,
+        "price": 6.90500020980835,
+        "date": 1630368000000,
+        "createdAt": 1781184723801,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "rKE5Bff0bfZXlBjvlY6Q",
+        "validation": {
+          "priceAtExecution": 6.90500020980835,
+          "portfolioTotalValue": 2499.6100759506226,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "QS0QrY1NONqB4Q2Gmslp",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "ALB",
+        "type": "BUY",
+        "quantity": 38,
+        "price": 65.08000183105469,
+        "date": 1630368000000,
+        "createdAt": 1781184723801,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "66BkHzhnHgRz6L64FOZ9",
+        "validation": {
+          "priceAtExecution": 65.08000183105469,
+          "portfolioTotalValue": 2473.040069580078,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "6gS7KrMEl0CEaOf9EXV5",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "V",
+        "type": "BUY",
+        "quantity": 6,
+        "price": 373.30999755859375,
+        "date": 1630368000000,
+        "createdAt": 1781184723801,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "w3OVLoNQKqJcKpEXGI5B",
+        "validation": {
+          "priceAtExecution": 373.30999755859375,
+          "portfolioTotalValue": 2239.8599853515625,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Z75FOlyWd5E0Y9Xlvikl",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMAT",
+        "type": "BUY",
+        "quantity": 14,
+        "price": 172.7899932861328,
+        "date": 1630368000000,
+        "createdAt": 1781184723801,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "hjMa6tdwvaXCcr3PJax4",
+        "validation": {
+          "priceAtExecution": 172.7899932861328,
+          "portfolioTotalValue": 2419.0599060058594,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "wFESPcj1rUIDLljnHEKf",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "DIS",
+        "type": "BUY",
+        "quantity": 20,
+        "price": 119.5199966430664,
+        "date": 1630368000000,
+        "createdAt": 1781184723801,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "3TpjD4gm6qI4xvZgTdST",
+        "validation": {
+          "priceAtExecution": 119.5199966430664,
+          "portfolioTotalValue": 2390.399932861328,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "vtNESs4meqV7TEfCwUhm",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SLVM",
+        "type": "BUY",
+        "quantity": 47,
+        "price": 52.79999923706055,
+        "date": 1635724800000,
+        "createdAt": 1781184776194,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "8hxMLbYn6sHcxob8miXU",
+        "validation": {
+          "priceAtExecution": 52.79999923706055,
+          "portfolioTotalValue": 2481.5999641418457,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "KTeC60j3O4Sg7kylKCn9",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LMT",
+        "type": "BUY",
+        "quantity": 5,
+        "price": 456.6000061035156,
+        "date": 1636934400000,
+        "createdAt": 1781184776194,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "d9Hfrg4oME6a0cKOynjE",
+        "validation": {
+          "priceAtExecution": 456.6000061035156,
+          "portfolioTotalValue": 2283.000030517578,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "0Y5q3tsS63ziYLtlOZZf",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PYPL",
+        "type": "BUY",
+        "quantity": 33,
+        "price": 74.61000061035156,
+        "date": 1636934400000,
+        "createdAt": 1781184776194,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "f6shLTi7SZtXRmE9so0b",
+        "validation": {
+          "priceAtExecution": 74.61000061035156,
+          "portfolioTotalValue": 2462.1300201416016,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "YAGcY2s8Txv7WBbZYQAp",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "DIS",
+        "type": "BUY",
+        "quantity": 20,
+        "price": 119.5199966430664,
+        "date": 1636934400000,
+        "createdAt": 1781184776194,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "6C202jN8cll7wTqNAKyi",
+        "validation": {
+          "priceAtExecution": 119.5199966430664,
+          "portfolioTotalValue": 2390.399932861328,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ywN5WaioJxSaNrPtL7yn",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PYPL",
+        "type": "BUY",
+        "quantity": 33,
+        "price": 74.61000061035156,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "KcuD7PYzMn18ROE7E0Pe",
+        "validation": {
+          "priceAtExecution": 74.61000061035156,
+          "portfolioTotalValue": 2462.1300201416016,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ATqsPSkdlSha5pqfQ0o9",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LMT",
+        "type": "BUY",
+        "quantity": 5,
+        "price": 456.6000061035156,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "C7RhZv02LbWxI90yIe8V",
+        "validation": {
+          "priceAtExecution": 456.6000061035156,
+          "portfolioTotalValue": 2283.000030517578,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "QihLtVaJ8Z2p1wBHBDDi",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PAGS",
+        "type": "SELL",
+        "quantity": 274,
+        "price": 9.109999656677246,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "QxHYUWlLZ5fTDf5sv074",
+        "validation": {
+          "priceAtExecution": 9.109999656677246,
+          "portfolioTotalValue": -2496.1399059295654,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "wmGBnhJt9Kf2smyiXDQS",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "RXT",
+        "type": "SELL",
+        "quantity": 1748,
+        "price": 1.4299999475479126,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Z2qC42sYqAX9eHnqYDyR",
+        "validation": {
+          "priceAtExecution": 1.4299999475479126,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ESRnY4gD8DvwbWR3kuEo",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SFTBY",
+        "type": "SELL",
+        "quantity": 362,
+        "price": 6.90500020980835,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "iqfZykESlVFc63j66be0",
+        "validation": {
+          "priceAtExecution": 6.90500020980835,
+          "portfolioTotalValue": -2499.6100759506226,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "IxisA5ZG7YHj8EkLiJeT",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TFC",
+        "type": "SELL",
+        "quantity": 124,
+        "price": 40.2599983215332,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "bAIJDq4CacSkLUa3gEyk",
+        "validation": {
+          "priceAtExecution": 40.2599983215332,
+          "portfolioTotalValue": -2496.1198959350586,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "nwnfpQsFAg9QSyplgVYf",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "JPM",
+        "type": "BUY",
+        "quantity": 9,
+        "price": 268.1499938964844,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "VxKKzL2qWrIUsrD6uMDa",
+        "validation": {
+          "priceAtExecution": 268.1499938964844,
+          "portfolioTotalValue": 2413.3499450683594,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "aWDhZjw1cJDbh2yD2J7D",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "KHC",
+        "type": "SELL",
+        "quantity": 94,
+        "price": 26.420000076293945,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "OxbqCQ3WcV7PhTe01t4h",
+        "validation": {
+          "priceAtExecution": 26.420000076293945,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "w08fmX6Ro9TDokCvZZw4",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSRGY",
+        "type": "BUY",
+        "quantity": 24,
+        "price": 103.66999816894531,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "FhnqdpgC3HdT35T3ntnz",
+        "validation": {
+          "priceAtExecution": 103.66999816894531,
+          "portfolioTotalValue": 2488.0799560546875,
+          "weightBefore": 0,
+          "weightAfter": 500,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "kCuH25f9pi0CIGQtlUUY",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SO",
+        "type": "BUY",
+        "quantity": 27,
+        "price": 89.55000305175781,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "vOvfpQtNVE12tsx4mZEt",
+        "validation": {
+          "priceAtExecution": 89.55000305175781,
+          "portfolioTotalValue": 2417.850082397461,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "FPuspodQAsY8RqW3DdkB",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "DIS",
+        "type": "BUY",
+        "quantity": 20,
+        "price": 119.5199966430664,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "UslCiY8pNDGWM3j1NL85",
+        "validation": {
+          "priceAtExecution": 119.5199966430664,
+          "portfolioTotalValue": 2390.399932861328,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "qRliv7zvhHS0T1836Ypb",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PENN",
+        "type": "BUY",
+        "quantity": 148,
+        "price": 16.81999969482422,
+        "date": 1639612800000,
+        "createdAt": 1781184788893,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "3Fr0A52rE6aXxpPysKrQ",
+        "validation": {
+          "priceAtExecution": 16.81999969482422,
+          "portfolioTotalValue": 2489.3599548339844,
+          "weightBefore": 0,
+          "weightAfter": 400,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "h5z8Yo7aO9O3OmTa04Ef",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMZN",
+        "type": "SELL",
+        "quantity": 34,
+        "price": 213.1999969482422,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "SFJBfJu7HHpxRvjYjV8I,Er02L58EYpCJZ5GcTk5I",
+        "validation": {
+          "priceAtExecution": 213.1999969482422,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "SXt654Q4nsKJ4D5IINmn",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SLVM",
+        "type": "SELL",
+        "quantity": 47,
+        "price": 52.79999923706055,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "n1Iz7f0PBiC6iM8mpIpY",
+        "validation": {
+          "priceAtExecution": 52.79999923706055,
+          "portfolioTotalValue": -2481.5999641418457,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "tWeIfdoLBWXctSOff1Cr",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TFC",
+        "type": "SELL",
+        "quantity": 62,
+        "price": 40.2599983215332,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "DAWd1zAqKN2jsTI69rmM",
+        "validation": {
+          "priceAtExecution": 40.2599983215332,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "caT4znsiCdkEhU2nmqNt",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "RXT",
+        "type": "SELL",
+        "quantity": 1748,
+        "price": 1.4299999475479126,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "wpCyVTXcaYHVRQwTxCFI",
+        "validation": {
+          "priceAtExecution": 1.4299999475479126,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "CW0YVs8l3RDlRrNlF9hJ",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GOOG",
+        "type": "SELL",
+        "quantity": 40,
+        "price": 178.7899932861328,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "lQgzSrhzq2qDmWcDtxiv,TqZJTc1lN3ehEtBbArq5",
+        "validation": {
+          "priceAtExecution": 178.7899932861328,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "jZq7vxOtNAGAOCEtw7zZ",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AAPL",
+        "type": "SELL",
+        "quantity": 37,
+        "price": 198.77999877929688,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Y4KxeB9ny9EVG7l1ZD2y,nYNYIGZBff4qQzM2LUJy",
+        "validation": {
+          "priceAtExecution": 198.77999877929688,
+          "portfolioTotalValue": -4969.499969482422,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "lZbTTcUOoHJsRmVkbBki",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PAGS",
+        "type": "SELL",
+        "quantity": 274,
+        "price": 9.109999656677246,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "4PBu994LaS1XdLhTYmRU",
+        "validation": {
+          "priceAtExecution": 9.109999656677246,
+          "portfolioTotalValue": -2496.1399059295654,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "2fzcUMmH6CrS4mUkTiAo",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "MJNA",
+        "type": "SELL",
+        "quantity": 1000000,
+        "price": 0.00019999999494757503,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "8bnGrVe7ubap9EXICj6p",
+        "validation": {
+          "priceAtExecution": 0.00019999999494757503,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "wQi4jRpmXaE8OXpbCcNW",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SFTBY",
+        "type": "SELL",
+        "quantity": 362,
+        "price": 6.90500020980835,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "q8qRx9hGovCfkXJT8sXh",
+        "validation": {
+          "priceAtExecution": 6.90500020980835,
+          "portfolioTotalValue": -2499.6100759506226,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "RtJbHrPHnhK1rcJa62nX",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GE",
+        "type": "SELL",
+        "quantity": 10,
+        "price": 245.52000427246094,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "JRpiSyW4sVG7IOZlr4IU",
+        "validation": {
+          "priceAtExecution": 245.52000427246094,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "U1WAh5jNXgGHCKWXpDfO",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "KHC",
+        "type": "SELL",
+        "quantity": 94,
+        "price": 26.420000076293945,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "EtHzUEwYr03IlRXlGN8E",
+        "validation": {
+          "priceAtExecution": 26.420000076293945,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "PX8PJHCbAuzwtD04NZWz",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "FB",
+        "type": "SELL",
+        "quantity": 187,
+        "price": 39.90999984741211,
+        "date": 1640908800000,
+        "createdAt": 1781184751697,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "DIV4XtZqPndh0y5TQOVu,9pNjCzfLd1nDjCYLnPzg",
+        "validation": {
+          "priceAtExecution": 39.90999984741211,
+          "portfolioTotalValue": 0,
+          "weightBefore": 0,
+          "weightAfter": 0,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "L09iM1YkooJc35o6O9Vb",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSRGY",
+        "type": "BUY",
+        "quantity": 96,
+        "price": 103.66999816894531,
+        "date": 1642550400000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "oIhcStTLFXaoJJ92yNfJ,HPR9ybIOsunuLljcMMMJ",
+        "validation": {
+          "priceAtExecution": 103.66999816894531,
+          "portfolioTotalValue": 2488.0799560546875,
+          "weightBefore": 0,
+          "weightAfter": 900,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "UKrqj9r4Wg7hM149Cafr",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "MDT",
+        "type": "BUY",
+        "quantity": 56,
+        "price": 88.05999755859375,
+        "date": 1642550400000,
+        "createdAt": 1781184784811,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "G3uu3Hhp6GwRLqSTGVsH",
+        "validation": {
+          "priceAtExecution": 88.05999755859375,
+          "portfolioTotalValue": 2465.679931640625,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "kzRFEkfduHuFv7528yqj",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "JPM",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 268.1499938964844,
+        "date": 1642550400000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "uRXdsl6b7ZZNpsKbrAO5",
+        "validation": {
+          "priceAtExecution": 268.1499938964844,
+          "portfolioTotalValue": 2413.3499450683594,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "8J0AQeeEcGpRAsdYP9Cp",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NEE",
+        "type": "BUY",
+        "quantity": 68,
+        "price": 73,
+        "date": 1645488000000,
+        "createdAt": 1781184791543,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Ter4vjQlaC4Oe9e9QKEj",
+        "validation": {
+          "priceAtExecution": 73,
+          "portfolioTotalValue": 2482,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "GOnGYrQRb0Gi2mT88rdf",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AFL",
+        "type": "BUY",
+        "quantity": 48,
+        "price": 101.3499984741211,
+        "date": 1645488000000,
+        "createdAt": 1781184791543,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "hSBBv6E2Byi8uOPNBf17",
+        "validation": {
+          "priceAtExecution": 101.3499984741211,
+          "portfolioTotalValue": 2432.3999633789062,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "X2BaNr1P1DT6ElZBGoj5",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LMT",
+        "type": "BUY",
+        "quantity": 10,
+        "price": 456.6000061035156,
+        "date": 1645488000000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "bBsUkQpr6B7LQnDjr2LF",
+        "validation": {
+          "priceAtExecution": 456.6000061035156,
+          "portfolioTotalValue": 2283.000030517578,
+          "weightBefore": 0,
+          "weightAfter": 500,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "eN5pqvp9jRukVTGntKDd",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CLX",
+        "type": "BUY",
+        "quantity": 38,
+        "price": 126.26000213623047,
+        "date": 1645488000000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "yR2sGhsYlHfJPQtokXuc",
+        "validation": {
+          "priceAtExecution": 126.26000213623047,
+          "portfolioTotalValue": 2398.940040588379,
+          "weightBefore": 0,
+          "weightAfter": 405.2631578947368,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ff51J7RdSDe9MshGMede",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMGN",
+        "type": "BUY",
+        "quantity": 16,
+        "price": 291.80999755859375,
+        "date": 1645488000000,
+        "createdAt": 1781184791543,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "6wExHKG8cBEeYS1mJ7bI",
+        "validation": {
+          "priceAtExecution": 291.80999755859375,
+          "portfolioTotalValue": 2334.47998046875,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Y5M0sQaIdNdXbuOuFwjB",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CVX",
+        "type": "BUY",
+        "quantity": 34,
+        "price": 144.77999877929688,
+        "date": 1645488000000,
+        "createdAt": 1781184791543,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "3otaVJXudKVk5lml1PB1",
+        "validation": {
+          "priceAtExecution": 144.77999877929688,
+          "portfolioTotalValue": 2461.259979248047,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "byXO5u18XmNhn3YmHa8v",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "ADP",
+        "type": "BUY",
+        "quantity": 16,
+        "price": 312.3699951171875,
+        "date": 1645488000000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "b7NPP60j9Z3XYGRa2wZ9",
+        "validation": {
+          "priceAtExecution": 312.3699951171875,
+          "portfolioTotalValue": 2498.9599609375,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "krBbLHZKAIGZNQ6Utf96",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CAT",
+        "type": "BUY",
+        "quantity": 12,
+        "price": 363.1400146484375,
+        "date": 1645488000000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "t1cQHI3QX6cXMpyrkHCU",
+        "validation": {
+          "priceAtExecution": 363.1400146484375,
+          "portfolioTotalValue": 2178.840087890625,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "dANPW9mbHIgkEDWrueFY",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMD",
+        "type": "BUY",
+        "quantity": 40,
+        "price": 121.13999938964844,
+        "date": 1645488000000,
+        "createdAt": 1781184791543,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "tStZ74OckHKOI772bVhS",
+        "validation": {
+          "priceAtExecution": 121.13999938964844,
+          "portfolioTotalValue": 2422.7999877929688,
+          "weightBefore": 0,
+          "weightAfter": 400,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "hacYTV5LWkNL6O2cQ8GB",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "INTC",
+        "type": "BUY",
+        "quantity": 240,
+        "price": 20.68000030517578,
+        "date": 1654819200000,
+        "createdAt": 1781184802422,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "hEo22WcrM81beMrciU0K",
+        "validation": {
+          "priceAtExecution": 20.68000030517578,
+          "portfolioTotalValue": 2481.6000366210938,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "5fFhA2fZ1Gfvd5oMgYFA",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "UPS",
+        "type": "BUY",
+        "quantity": 98,
+        "price": 101.16000366210938,
+        "date": 1654819200000,
+        "createdAt": 1781184802422,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "No9x94rBAWQkCLZRAcIo",
+        "validation": {
+          "priceAtExecution": 101.16000366210938,
+          "portfolioTotalValue": 4956.840179443359,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "aX9OG0eX6Znk11Fs6Uki",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSRGY",
+        "type": "BUY",
+        "quantity": 48,
+        "price": 103.66999816894531,
+        "date": 1654819200000,
+        "createdAt": 1781184802422,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "mrtDK5KAwPpo9E6bGnEg",
+        "validation": {
+          "priceAtExecution": 103.66999816894531,
+          "portfolioTotalValue": 4976.159912109375,
+          "weightBefore": 0,
+          "weightAfter": 550,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "l7DbrCGaz7Hl7PRe1oqj",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GS",
+        "type": "BUY",
+        "quantity": 8,
+        "price": 624.1699829101562,
+        "date": 1654819200000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "S4RwPkOAkjUb4qnNQ0ny",
+        "validation": {
+          "priceAtExecution": 624.1699829101562,
+          "portfolioTotalValue": 2496.679931640625,
+          "weightBefore": 0,
+          "weightAfter": 400,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "UVxQqZT8Vjb8Jsi0gMMs",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "COST",
+        "type": "BUY",
+        "quantity": 10,
+        "price": 996.780029296875,
+        "date": 1654819200000,
+        "createdAt": 1781184802422,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "6ExWSVskSvCGxJqKBqFJ",
+        "validation": {
+          "priceAtExecution": 996.780029296875,
+          "portfolioTotalValue": 4983.900146484375,
+          "weightBefore": 0,
+          "weightAfter": 240,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "mxjZEDpbKyhIwrWC1VNp",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "V",
+        "type": "BUY",
+        "quantity": 26,
+        "price": 373.30999755859375,
+        "date": 1654819200000,
+        "createdAt": 1781184802422,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "VxpFuGineYDsmxjdUFMa",
+        "validation": {
+          "priceAtExecution": 373.30999755859375,
+          "portfolioTotalValue": 4853.029968261719,
+          "weightBefore": 0,
+          "weightAfter": 338.46153846153845,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "JM53DwBHwaZmIZ19Mr6m",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "QQQ",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 532.4099731445312,
+        "date": 1654819200000,
+        "createdAt": 1781184802422,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "YEh7O2jr7bKlTeKajt5Y",
+        "validation": {
+          "priceAtExecution": 532.4099731445312,
+          "portfolioTotalValue": 4791.689758300781,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "iQhV3UyFn7qAePOYwGun",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PG",
+        "type": "BUY",
+        "quantity": 30,
+        "price": 162.11000061035156,
+        "date": 1654819200000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "8rCGjHgqCOIJ1cTkbxsr",
+        "validation": {
+          "priceAtExecution": 162.11000061035156,
+          "portfolioTotalValue": 2431.6500091552734,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ZYjyKbLNcBwePhwZP3Ja",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "HD",
+        "type": "BUY",
+        "quantity": 26,
+        "price": 360.4599914550781,
+        "date": 1654819200000,
+        "createdAt": 1781185446829,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "mDiagrFkkwlfxJ1V5byj",
+        "validation": {
+          "priceAtExecution": 360.4599914550781,
+          "portfolioTotalValue": 4685.979888916016,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "moFdvu4xcptDBJqSHNv9",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "HD",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 360.4599914550781,
+        "date": 1713916800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "MNmwRLjIHJdLHbk49UXv,M0lqqOo6hZaQUXhQKoqq,Hh0ra49p809bwEQF25GY",
+        "validation": {
+          "priceAtExecution": 360.4599914550781,
+          "portfolioTotalValue": 6488.279846191406,
+          "weightBefore": 0,
+          "weightAfter": 244.44444444444446,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "MnTA8CdQKbemVgpTvjmG",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "MSFT",
+        "type": "BUY",
+        "quantity": 25,
+        "price": 472.6199951171875,
+        "date": 1713916800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "KgUmpm2U7L7fi14zoaB4,8jxUKWsX9mRm9p93jZbQ,orjgDOhjDdGaZ69ilFJE,V0tgUmaJ5cJJNifVUHIu,7rYpF0orU2pvlM9vijIF",
+        "validation": {
+          "priceAtExecution": 472.6199951171875,
+          "portfolioTotalValue": 11815.499877929688,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "daY2ZZ3qabulygwLCiNN",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "HSY",
+        "type": "BUY",
+        "quantity": 56,
+        "price": 168.0500030517578,
+        "date": 1713916800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "rZMHIiaXMDdTcHwC04jV,8wluGycQuYrHXF1ZHCOl,ljFi75iu0w2AEDID3mSE,ZhRQ9m8qG6XVUblwViQI",
+        "validation": {
+          "priceAtExecution": 168.0500030517578,
+          "portfolioTotalValue": 9410.800170898438,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "qJOcQAesqPPXPnFUsAYH",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GS",
+        "type": "BUY",
+        "quantity": 8,
+        "price": 624.1699829101562,
+        "date": 1713916800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "quubzXmQk9h6Q9TCyEbg,fboBw3tc51uEpRfYvvlm",
+        "validation": {
+          "priceAtExecution": 624.1699829101562,
+          "portfolioTotalValue": 4993.35986328125,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "iIXhqN96nEAXD8U837Hx",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "QCOM",
+        "type": "BUY",
+        "quantity": 45,
+        "price": 159.47999572753906,
+        "date": 1713916800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "NbzCrDRM3tyIwzvOoa4v,gb8Jj2xDX9ifnBJSGuqm,ixk8tKcu8f1t6aU0WGl7",
+        "validation": {
+          "priceAtExecution": 159.47999572753906,
+          "portfolioTotalValue": 7176.599807739258,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "SWBlmwzfswjdCg3GhKfk",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "BRK.B",
+        "type": "BUY",
+        "quantity": 30,
+        "price": 488.1400146484375,
+        "date": 1713916800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "T53aGdyqjNVgjDXP3XYX,D150ZpTAX0o9oRHbKvAx,VV5H47DG9ern7ktpEOHa,8nGVtU0eWsnESt5vuNVY,7d6WaoP9hopAV9QyS0DB,BVpltKmKajEa2JhTx6Ub",
+        "validation": {
+          "priceAtExecution": 488.1400146484375,
+          "portfolioTotalValue": 14644.200439453125,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "oomiXJ4ynKhmR4wlk5Au",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TSCO",
+        "type": "BUY",
+        "quantity": 96,
+        "price": 51.310001373291016,
+        "date": 1713916800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "COcS7mzz48nYszK34CZz,g775QeNjRXlVD0HGrUUD",
+        "validation": {
+          "priceAtExecution": 51.310001373291016,
+          "portfolioTotalValue": 4925.7601318359375,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Cw2KO7lLkWnQaJLxr8BK",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CAT",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 363.1400146484375,
+        "date": 1716249600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "WKcZjxwuY5Pk9w3Xg3ZZ,uKh9BByiBCGFVJjICKOI,hUEEaXEeNa0BPYWOHrWJ",
+        "validation": {
+          "priceAtExecution": 363.1400146484375,
+          "portfolioTotalValue": 6536.520263671875,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "FTg7QRWcsRqRvHRPJzoU",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMD",
+        "type": "BUY",
+        "quantity": 60,
+        "price": 121.13999938964844,
+        "date": 1716249600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "PqdNcSLpH8iRlEkqzS2Q,MHuXaPn8fxeWRnVEUMFa,fYrn6lA5EgSG0Q5sA0wK",
+        "validation": {
+          "priceAtExecution": 121.13999938964844,
+          "portfolioTotalValue": 7268.399963378906,
+          "weightBefore": 0,
+          "weightAfter": 233.33333333333334,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "znaeLKnPgSQDOcLq6lAL",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SCHW",
+        "type": "BUY",
+        "quantity": 84,
+        "price": 88.4000015258789,
+        "date": 1716249600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "4IYt731roeTlEPuMwLpF,2wxdbsDv0RbZsuREl0q1,vfURtF4gpvTMS8gnoDR0",
+        "validation": {
+          "priceAtExecution": 88.4000015258789,
+          "portfolioTotalValue": 7425.600128173828,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "pbNN0kgWUJQQYgaHNDUY",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SO",
+        "type": "BUY",
+        "quantity": 54,
+        "price": 89.55000305175781,
+        "date": 1716249600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "l8Ag8gVHgvysLiXGBpCd,DycslAIRwRG7Akyq6nXJ",
+        "validation": {
+          "priceAtExecution": 89.55000305175781,
+          "portfolioTotalValue": 4835.700164794922,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "30vJOBW0fi4cOE0H0r1Z",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AAPL",
+        "type": "BUY",
+        "quantity": 36,
+        "price": 198.77999877929688,
+        "date": 1716249600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "fSwkAGJP6LwJ05zCNHAT,TpJrzCMGjNbuPNVAKWy4,6aKPfrpYNEVw055wne5I",
+        "validation": {
+          "priceAtExecution": 198.77999877929688,
+          "portfolioTotalValue": 7156.0799560546875,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "ABkSffKkxR0Ko2QEHEq0",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "KMI",
+        "type": "BUY",
+        "quantity": 180,
+        "price": 27.520000457763672,
+        "date": 1716249600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "X3vVuCzRquB5iqi3i1VX,fkApZl8Lc3pycPzYFMjL",
+        "validation": {
+          "priceAtExecution": 27.520000457763672,
+          "portfolioTotalValue": 4953.600082397461,
+          "weightBefore": 0,
+          "weightAfter": 150,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Wnx0V0D1PMJa6mwqimDV",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CRWD",
+        "type": "BUY",
+        "date": 1719187200000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Wh6rzTKfyorXFg3QBdad,u19PhYoPCkiGsBxD60Dx,fZVjWdeLH1HszghvrT0h",
+        "quantity": 60,
+        "price": 119.245003,
+        "splitAdjustments": [
+          "CRWD:2026-07-02"
+        ],
+        "validation": {
+          "priceAtExecution": 119.245003,
+          "portfolioTotalValue": 7154.70018,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "68XMnTBboB0gqyOJQpHG",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LULU",
+        "type": "BUY",
+        "quantity": 18,
+        "price": 252.27999877929688,
+        "date": 1719187200000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "1Mt1jnPcvKm2TAP0Jqpl,Ql4yaB0ftCYnMQxjk0kg",
+        "validation": {
+          "priceAtExecution": 252.27999877929688,
+          "portfolioTotalValue": 4541.039978027344,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "wrtIFydVnrxc7sk1N8lC",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "COST",
+        "type": "BUY",
+        "quantity": 6,
+        "price": 996.780029296875,
+        "date": 1719187200000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "ELreLvvaROROWdh9yIej,AMqZm2T3el40YFShQf69,U9Wa6d0XqB1HuL4t0i07",
+        "validation": {
+          "priceAtExecution": 996.780029296875,
+          "portfolioTotalValue": 5980.68017578125,
+          "weightBefore": 0,
+          "weightAfter": 300,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "evipwBYkpyjPtJounyMA",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NEE",
+        "type": "BUY",
+        "quantity": 102,
+        "price": 73,
+        "date": 1719187200000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "lY6rcTtez92xffcu290o,KnQROZFSkeRYQ2D5oUvn,VxMgydUjLGhgGj1TV0kj",
+        "validation": {
+          "priceAtExecution": 73,
+          "portfolioTotalValue": 7446,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "rVt3Rd9vZSvulN2XieMj",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSRGY",
+        "type": "BUY",
+        "quantity": 96,
+        "price": 103.66999816894531,
+        "date": 1719187200000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "OLHlPUYPj9mNdDW9bfWe,jnow7Kns0qnnNJxeQ9RM,YTz9EGdYwbeIALfixFIq,Ac3ZCW2X88cPMgMoVvjb",
+        "validation": {
+          "priceAtExecution": 103.66999816894531,
+          "portfolioTotalValue": 9952.31982421875,
+          "weightBefore": 0,
+          "weightAfter": 375,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "1wInbfMecmpKMahfxTCm",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "ASML",
+        "type": "BUY",
+        "quantity": 12,
+        "price": 784.0900268554688,
+        "date": 1719187200000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "sL8kAJrOQBHlOV9TGRF6,XKLV7c5j3VU0qxOsfVAe,rV5uXrB9lJmbMw107uf4,VBawq0li8naFLOnGa0xy",
+        "validation": {
+          "priceAtExecution": 784.0900268554688,
+          "portfolioTotalValue": 9409.080322265625,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "PpCUja5LPzF94ZK2AFup",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "UPS",
+        "type": "BUY",
+        "quantity": 96,
+        "price": 101.16000366210938,
+        "date": 1721692800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "YOoRIdgOHroBpxqB6pSJ,mG205My2IZATG3T9qNLy,iJuT4DFmfCCbt94bnrmM,Y9bxTVPFumjEomzcgbHC",
+        "validation": {
+          "priceAtExecution": 101.16000366210938,
+          "portfolioTotalValue": 9711.3603515625,
+          "weightBefore": 0,
+          "weightAfter": 202.08333333333334,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "OvR9DUqjcSobFkqOQhlw",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMAT",
+        "type": "BUY",
+        "quantity": 56,
+        "price": 172.7899932861328,
+        "date": 1721692800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "XdqVV53NhTz2Y08qXxYA,R3h6iYPm7eaChPjIBFwS,58EU7eB9jA8pYceF5Ys1,VbrZunHoUFQBDmSUEWYL",
+        "validation": {
+          "priceAtExecution": 172.7899932861328,
+          "portfolioTotalValue": 9676.239624023438,
+          "weightBefore": 0,
+          "weightAfter": 150,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "oY6C8p69qxOAETAGseBF",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "JPM",
+        "type": "BUY",
+        "quantity": 27,
+        "price": 268.1499938964844,
+        "date": 1721692800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "fBcljAchgi7WcTqbVcP2,7JEcRw6lC1BEjIJygMTV,NeVkme2tggo6WJkv7kWd",
+        "validation": {
+          "priceAtExecution": 268.1499938964844,
+          "portfolioTotalValue": 7240.049835205078,
+          "weightBefore": 0,
+          "weightAfter": 200,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "XzYvazxMDgYsGRSwpG4Q",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "DUK",
+        "type": "BUY",
+        "quantity": 84,
+        "price": 116.3499984741211,
+        "date": 1721692800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "VA0PFb2bScOHnGW79nFt,JVvRE8Kw0nfj9YIxuBav,YJQnBraZfwvd8AhyOP5I,PxICkAA7yOtCSzxY28ML",
+        "validation": {
+          "priceAtExecution": 116.3499984741211,
+          "portfolioTotalValue": 9773.399871826172,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "mfVig13lP5HHZdPj5Syu",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "DELL",
+        "type": "BUY",
+        "quantity": 66,
+        "price": 111.23999786376953,
+        "date": 1721692800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "OlMMEmZccL25gqHJgKlU,nXckZQE1Zd7SJ9Ma78sh,PG2HPbiyXCY8zD1ut4Jx",
+        "validation": {
+          "priceAtExecution": 111.23999786376953,
+          "portfolioTotalValue": 7341.839859008789,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "5tgMpJLFD9wwM0Y3daJw",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GLW",
+        "type": "BUY",
+        "quantity": 147,
+        "price": 50.45000076293945,
+        "date": 1721692800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "hgBXYal1s7KASiFzHWFu,tEdtudVtvOq8yLD6otYr,iultlBFq5veqWYpEc12N",
+        "validation": {
+          "priceAtExecution": 50.45000076293945,
+          "portfolioTotalValue": 7416.1501121521,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "shOXND7BUV0cbmKqw65z",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NVDA",
+        "type": "BUY",
+        "quantity": 68,
+        "price": 142.8300018310547,
+        "date": 1724198400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "E8RfGXFTPAWboVgWX5uS,LIkKFpz9F8skikudunRj,mPSOJswqJhL5gcsy3XF5,ynj8GXoJsVSLEmwCEaCU",
+        "validation": {
+          "priceAtExecution": 142.8300018310547,
+          "portfolioTotalValue": 9712.440124511719,
+          "weightBefore": 0,
+          "weightAfter": 125,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "BcwYzOv11XzppTB0s71o",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "INTC",
+        "type": "BUY",
+        "quantity": 480,
+        "price": 20.68000030517578,
+        "date": 1724198400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "fW6Fmd0e6DChoH7Uwhyn,CePoJ9FW9zCQEeSCsBza,OrwwFksx2cuwkLyu5NsW,dGwBDGTbNY3VwPVDN6JD",
+        "validation": {
+          "priceAtExecution": 20.68000030517578,
+          "portfolioTotalValue": 9926.400146484375,
+          "weightBefore": 0,
+          "weightAfter": 175,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "bimNCqTjBjVKGkgUBIgy",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "FDX",
+        "type": "BUY",
+        "date": 1724198400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "CHoqwVzJpVxKinxO0jiH,neNzeOwTqgDTIPyheaeJ,wWRif6JMaB2Il7MFv25B",
+        "quantity": 48.399,
+        "price": 145.4469,
+        "splitAdjustments": [
+          "FDX:2026-06-01"
+        ],
+        "validation": {
+          "priceAtExecution": 145.4469,
+          "portfolioTotalValue": 7039.4845131,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "K1RdB52O6rtmwNZJx0Bi",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "AMZN",
+        "type": "BUY",
+        "quantity": 44,
+        "price": 213.1999969482422,
+        "date": 1724198400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "gIWCOj4nHK4SDPEOHM4j,bgtYm6tVRIPI1ZeWM26Z,Hx0PPVKqfJYpYWHGI468,WyguIqZJw86gxD2KdM4u",
+        "validation": {
+          "priceAtExecution": 213.1999969482422,
+          "portfolioTotalValue": 9380.799865722656,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "2TFF12RBLUAtdbxMF3Qe",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GOOG",
+        "type": "BUY",
+        "quantity": 52,
+        "price": 178.7899932861328,
+        "date": 1724198400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Nz4MGR6KeGLpQgfHGvI3,wmfvmJkS5wYvj651Yh7z,zd3QbRy6AZhQTgec2Vzv,Nu01LdHgJsd7YdrioQwG",
+        "validation": {
+          "priceAtExecution": 178.7899932861328,
+          "portfolioTotalValue": 9297.079650878906,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "DPDXFHj14NqqFnNNuyCo",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "PANW",
+        "type": "BUY",
+        "quantity": 24,
+        "price": 194.38999938964844,
+        "date": 1725321600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "XBWWpRUBjRowWx0ERLnE,eC1Dgj3v6nrssDFyWkeD",
+        "validation": {
+          "priceAtExecution": 194.38999938964844,
+          "portfolioTotalValue": 4665.3599853515625,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "KxbyRjcdxtEgX42GB6wZ",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "DLR",
+        "type": "BUY",
+        "quantity": 28,
+        "price": 175.83999633789062,
+        "date": 1725321600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "U2jrYyWEL18RGZ7iR0bX,MUNaYU5BKcaVcrYPdLhe",
+        "validation": {
+          "priceAtExecution": 175.83999633789062,
+          "portfolioTotalValue": 4923.5198974609375,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "kBd3KeBvAKejMJYQQcTx",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "TSLA",
+        "type": "BUY",
+        "quantity": 28,
+        "price": 326.42999267578125,
+        "date": 1725321600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "zwSzDmS1HBd3TgKhT3NB,13AydPaGELT38N5iyUOt,j8jvRfcqzEv8gdIg5J7Z,xXp4jfEIXTdHhrp684oM",
+        "validation": {
+          "priceAtExecution": 326.42999267578125,
+          "portfolioTotalValue": 9140.039794921875,
+          "weightBefore": 0,
+          "weightAfter": 125,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "dMvse5K8noVpWCt3dxre",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GSK",
+        "type": "BUY",
+        "quantity": 120,
+        "price": 41.619998931884766,
+        "date": 1725321600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "UnEUg4sWklZGCfuz5ScY,bsZu2CbZq2QoTUMVkxQo",
+        "validation": {
+          "priceAtExecution": 41.619998931884766,
+          "portfolioTotalValue": 4994.399871826172,
+          "weightBefore": 0,
+          "weightAfter": 100,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "g6EE2kzYbVAV9BxKVGAo",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "CAH",
+        "type": "BUY",
+        "quantity": 16,
+        "price": 153.52999877929688,
+        "date": 1726790400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "HWVpLpy2LcklChlVQKgu",
+        "validation": {
+          "priceAtExecution": 153.52999877929688,
+          "portfolioTotalValue": 551052.2053197479,
+          "weightBefore": 0,
+          "weightAfter": 0.4457799019320462,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "UKcvCZx4YkZW970zAqs6",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LRCX",
+        "type": "BUY",
+        "quantity": 81,
+        "price": 90.94999694824219,
+        "date": 1726790400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "CLP6CcVWJudMPoUEYl70,nG7jhc8YnTgrNTuA4u96,OXsCFxXHXN9g8Sc4Sm1w",
+        "validation": {
+          "priceAtExecution": 90.94999694824219,
+          "portfolioTotalValue": 555962.6750920868,
+          "weightBefore": 0,
+          "weightAfter": 1.325079916846467,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "98zbfczxzjTqS0rUrv8q",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "BX",
+        "type": "BUY",
+        "quantity": 51,
+        "price": 141.38999938964844,
+        "date": 1726790400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "uulcTn3nHwNAal1igVYe,y80oh54Uu7ANRkodOscO,ENen98BfOe4jjHxS5mQy",
+        "validation": {
+          "priceAtExecution": 141.38999938964844,
+          "portfolioTotalValue": 555806.6153081512,
+          "weightBefore": 0,
+          "weightAfter": 1.2973739013297272,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "Dbh1L5BYOBpo0eSD9dko",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "SCCO",
+        "type": "BUY",
+        "date": 1726790400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Z4MkHf9LFgzWStNh0bRf,yWseYzqYyIbdji3R07T9",
+        "quantity": 52.624,
+        "price": 91.579498,
+        "splitAdjustments": [
+          "SCCO:2026-08-11"
+        ],
+        "validation": {
+          "priceAtExecution": 91.579498,
+          "portfolioTotalValue": 553415.0048420312,
+          "weightBefore": 0,
+          "weightAfter": 0.8708255939189132,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "LaqFr8A4et1xB9ffTO9f",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "V",
+        "type": "BUY",
+        "quantity": 12,
+        "price": 373.30999755859375,
+        "date": 1728000000000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "eoogqMI29v2cU5BXKgWu,gkbfqlnaN0Oj9mHb5MFO",
+        "validation": {
+          "priceAtExecution": 373.30999755859375,
+          "portfolioTotalValue": 584221.8891191712,
+          "weightBefore": 2.8332663667892737,
+          "weightAfter": 3.5783253336844623,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "NDt7XquyGc5Ty6ifX4Xm",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "META",
+        "type": "BUY",
+        "quantity": 9,
+        "price": 694.1400146484375,
+        "date": 1728000000000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "XIeOvpl65ZrDm5GGXJ1j,2941JaBbFt8skypriUfD,c4aItml4QJItlapIVk0V",
+        "validation": {
+          "priceAtExecution": 694.1400146484375,
+          "portfolioTotalValue": 585989.429280304,
+          "weightBefore": 0,
+          "weightAfter": 1.0661045779458256,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "UfBHDTkO9w2EU07jpy5Y",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NOW",
+        "type": "BUY",
+        "quantity": 24,
+        "price": 200.86599731445312,
+        "date": 1730937600000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "qmyvNrAy39z0q6N1Y3iZ,MuPFnyyu3Jsvppjk5jfe",
+        "validation": {
+          "priceAtExecution": 200.86599731445312,
+          "portfolioTotalValue": 607127.9274633179,
+          "weightBefore": 0.40019315621188545,
+          "weightAfter": 1.1910464955109834,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "iN2O5oyzXkaTaXZGdBKN",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "OXY",
+        "type": "BUY",
+        "quantity": 55,
+        "price": 44.84000015258789,
+        "date": 1732060800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "8US2W1VAQ4QNgiQUOSmK",
+        "validation": {
+          "priceAtExecution": 44.84000015258789,
+          "portfolioTotalValue": 600672.4290700378,
+          "weightBefore": 0,
+          "weightAfter": 0.410573199141254,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "wvUVUa3FrNzzxj1fxyk6",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "ADBE",
+        "type": "BUY",
+        "quantity": 12,
+        "price": 412.8399963378906,
+        "date": 1732060800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "Bsm1jzFB4rkW20icQq8W,j8G9oFnl7G55f38ylRvE",
+        "validation": {
+          "priceAtExecution": 412.8399963378906,
+          "portfolioTotalValue": 603160.3090177001,
+          "weightBefore": 0,
+          "weightAfter": 0.8213537731159473,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "BhtV7uPIZAjAnFvqXbvN",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "ABBV",
+        "type": "BUY",
+        "quantity": 13,
+        "price": 191.5,
+        "date": 1732060800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "laCYvl1KZrsi56IsxgyY",
+        "validation": {
+          "priceAtExecution": 191.5,
+          "portfolioTotalValue": 600695.7290616455,
+          "weightBefore": 0.4161608286669071,
+          "weightAfter": 0.8288722158517358,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "h7RhYqpR1AebIfCxIcQF",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "JNJ",
+        "type": "BUY",
+        "quantity": 32,
+        "price": 155.25999450683594,
+        "date": 1732492800000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns,IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "QLDjD5e5RFB8LoRQ9G02,pmWApS0QOSTYIfdvxivd",
+        "validation": {
+          "priceAtExecution": 155.25999450683594,
+          "portfolioTotalValue": 626446.3328564911,
+          "weightBefore": 0,
+          "weightAfter": 0.7930958429533841,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "4D6ayWD3C8eWGy42Nw2r",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "LLY",
+        "type": "BUY",
+        "quantity": 3,
+        "price": 808.6099853515625,
+        "date": 1734998400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "8At7F0kLMx2GTxf3w9Iy",
+        "validation": {
+          "priceAtExecution": 808.6099853515625,
+          "portfolioTotalValue": 612150.6454608154,
+          "weightBefore": 0,
+          "weightAfter": 0.3962798984273828,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "bjKh5exrb58wLdHqSltF",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "NSC",
+        "type": "BUY",
+        "quantity": 9,
+        "price": 251.3300018310547,
+        "date": 1734998400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "DyXovL4d4I4VE0m68Tt0",
+        "validation": {
+          "priceAtExecution": 251.3300018310547,
+          "portfolioTotalValue": 611986.7855212402,
+          "weightBefore": 0,
+          "weightAfter": 0.36961092461382666,
+          "holdingValueMatchesQuantity": true
+        }
+      },
+      {
+        "id": "7ldQQjkbVRC64wGhEWW2",
+        "portfolioId": "marjorie-taylor-greene",
+        "symbol": "GILD",
+        "type": "BUY",
+        "quantity": 22,
+        "price": 109.30000305175781,
+        "date": 1734998400000,
+        "createdAt": 1781184799031,
+        "ruleId": "IYhsaoK9IMOKi87dcEns",
+        "ruleExecutionLogId": "ta79EyYGk2d31KZ1BcXj",
+        "validation": {
+          "priceAtExecution": 109.30000305175781,
+          "portfolioTotalValue": 612129.4155718994,
+          "weightBefore": 0.39437464344435835,
+          "weightAfter": 0.7856508790358019,
+          "holdingValueMatchesQuantity": true
+        }
+      }
+    ],
+    "source": "https://pelositracker.app/api/portfolios/marjorie-taylor-greene",
+    "kind": "copy_trade_portfolio_NOT_disclosure_book"
+  }
+}

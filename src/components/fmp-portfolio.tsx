@@ -5,57 +5,46 @@ import Link from "next/link";
 import { useResource } from "@/lib/frontend/use-resource";
 import { disclosedRange, personContext } from "@/lib/frontend/disclosure-labels";
 import type { StoredPeopleService } from "@/lib/fmp/store";
+import type { TrackerPersonView } from "@/lib/tracker/views";
+import { buildShownBook, compareWithFmp, type FmpResolutionInput, type ShownBookToken } from "@/lib/tracker/shown-book";
 import { PageError, Skeleton } from "./social/shared";
 import {
   AllocationPanel, FilingLink, PerformancePanel, PortfolioLayout,
   TableRegion, portfolioStyles as styles,
 } from "./person-portfolio";
+import {
+  ShownBookPanel, TrackerCompare, TrackerFilingStats, TrackerHeroStats, TrackerIdentity,
+  TrackerIndexPanel, TrackerLedger, TrackerSectors, TrackerSeries, TrackerSourceStrip, TrackerTag, TrackerTrades,
+} from "./tracker-portfolio";
 
 export type SavedPortfolio = Awaited<ReturnType<StoredPeopleService["portfolio"]>>;
 const savedDate = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 const estimate = (value: number) => value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const eventSide = (value: string | null) => /purchase|buy/i.test(value ?? "") ? "buy" : /sale|sell/i.test(value ?? "") ? "sell" : "other";
+const sortSnapshots = (snapshots: SavedPortfolio["snapshots"]) => [...snapshots].sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || (b.filingDate ?? "").localeCompare(a.filingDate ?? "") || a.id.localeCompare(b.id));
+/** Plain-English date for an annual reference: the filing is a year-end picture, not today's book. */
+const annualLabel = (period: string | null | undefined) => period ? `annual disclosure as of ${new Date(`${period}T00:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}` : "annual disclosure, reference date unknown";
 
-export function FmpPerson({ id, initialData }: { id: string; initialData?: SavedPortfolio }) {
-  const resource = useResource<SavedPortfolio>(`/api/people/${encodeURIComponent(id)}/portfolio`, initialData);
-  const [snapshotId, setSnapshotId] = useState<string | null>(null);
-  if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
-  if (!resource.data) return <Skeleton cards={3} />;
-  const book = resource.data;
-  // Select one source version. Separate years / documents are never added together.
-  const snapshots = [...book.snapshots].sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || (b.filingDate ?? "").localeCompare(a.filingDate ?? "") || a.id.localeCompare(b.id));
+/** Saved FMP sections: published target, allocation, disclosed book, trade history. Older annual disclosure, never a live book. */
+function FmpSections({ book, snapshotId, setSnapshotId, olderLabel }: { book: SavedPortfolio; snapshotId: string | null; setSnapshotId: (value: string) => void; olderLabel: boolean }) {
+  const snapshots = sortSnapshots(book.snapshots);
   const snapshot = snapshots.find((entry) => entry.id === snapshotId) ?? snapshots[0];
   const index = book.publishedIndex;
-  // Saved publication evidence is a presentation overlay, never a rewrite of annual rows.
   const resolutions = new Map(index?.definition.evidence?.map((entry) => [entry.holding.id, entry]) ?? []);
   const activity = [...book.activity].sort((a, b) => (b.transactionDate ?? "").localeCompare(a.transactionDate ?? "") || (b.disclosureDate ?? "").localeCompare(a.disclosureDate ?? "") || a.id.localeCompare(b.id));
   const groupedActivity = activity.reduce((groups, trade) => {
     const key = trade.transactionDate ?? "Date unknown";
-    const rows = groups.get(key) ?? [];
-    rows.push(trade);
-    groups.set(key, rows);
+    groups.set(key, [...(groups.get(key) ?? []), trade]);
     return groups;
   }, new Map<string, typeof activity>());
-
   const indexHref = index ? `/indexes/fmp-${index.hash}` : undefined;
-  const latestFiling = snapshots.map((entry) => entry.filingDate).filter((date): date is string => Boolean(date)).sort().at(-1) ?? null;
+  const heading = olderLabel ? "Older annual disclosure · FMP" : "Current holdings · published index";
 
-  return <PortfolioLayout id={id} name={book.person.name} indexName={index ? book.indexName : undefined} image={book.person.image} context={personContext(book.person)}
-    strategy="Track the disclosed book, then inspect the mapped InsiderIndex separately. Reported trades remain activity—they never overwrite the annual filing."
-    count={snapshot ? snapshot.items.length : null}
-    countNote={snapshot ? `${snapshot.year ?? "Undated"} annual filing` : "Annual book unavailable"}
-    mappedCount={index?.constituents.length ?? null}
-    activityCount={activity.length}
-    latestFiling={latestFiling ? savedDate(latestFiling) : null}
-    indexHref={indexHref}
-    notice={resource.error ? <div className={styles.notice} role="alert">Could not refresh this saved book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : undefined}>
-
-    <PerformancePanel />
-
+  return <>
     <section className={styles.panel} aria-labelledby="mapped-holdings-title">
       <div className={styles.sectionHead}>
-        <div><h2 id="mapped-holdings-title">Current holdings · published index</h2><p>Saved published target · annual reference {index?.period ?? "unavailable"}. Changing the filing version below does not change this model.</p></div>
-        <span className={styles.badge}>{index ? `${index.constituents.length} holdings` : "Not published"}</span>
+        <div><h2 id="mapped-holdings-title">{heading}</h2><p>{index ? `Published FMP target from the ${annualLabel(index.period)}. ` : "No FMP target is published. "}{olderLabel ? "This is the latest annual filing we have, not 2026 holdings. " : ""}Changing the filing version below does not change this model.</p></div>
+        <span className={styles.badge}>{index ? `${index.constituents.length} mapped names · annual ${index.period}` : "Not published"}</span>
       </div>
       {!index ? <div className={styles.empty}><h3>No mapped index is published</h3><p>The disclosed book is still available below. InsiderIndex does not invent a ticker, token, or weight when identity mapping is unresolved.</p></div> : <>
         <TableRegion label="Published index holdings and target weights">
@@ -86,7 +75,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
 
     <section id="disclosed-book" className={styles.panel} aria-labelledby="holdings-title">
       <div className={styles.sectionHead}>
-        <div><h2 id="holdings-title">Disclosed book</h2><p>Every row in the selected annual source version</p></div>
+        <div><h2 id="holdings-title">Disclosed book · annual filing</h2><p>Every row in the selected annual source version{snapshot?.year ? ` (${annualLabel(`${snapshot.year}-12-31`)})` : ""}</p></div>
         <span className={styles.badge}>Public filing · not live holdings</span>
       </div>
       {!snapshot ? <div className={styles.empty}><h3>{book.state === "annual-source-unavailable" ? "Annual source unavailable" : "No annual book saved yet"}</h3><p>This does not mean the person owns nothing. Reported activity is shown below and is never used to manufacture a missing annual book.</p></div> : <>
@@ -132,7 +121,7 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
 
     <section className={styles.panel} aria-labelledby="activity-title">
       <div className={styles.sectionHead}>
-        <div><h2 id="activity-title">Allocation history / trades</h2><p>Reported activity grouped by transaction date</p></div>
+        <div><h2 id="activity-title">{olderLabel ? "Saved FMP trade history" : "Allocation history / trades"}</h2><p>Reported activity grouped by transaction date</p></div>
         <span className={styles.badge}>{activity.length} saved trades</span>
       </div>
       <p className={styles.caption}>This is filing activity, not executed InsiderIndex rebalances. Buys and sales stay separate from the annual book. {book.activityComplete ? "History ingestion complete." : "History may be partial."}</p>
@@ -145,5 +134,77 @@ export function FmpPerson({ id, initialData }: { id: string; initialData?: Saved
           </article>)}</div>
         </section>)}</div>}
     </section>
+  </>;
+}
+
+/** PelosiTracker-first page: tracker positions are the shown current book; FMP is the older annual disclosure beside it. */
+function TrackerPerson({ id, tracker, resource }: { id: string; tracker: TrackerPersonView; resource: ReturnType<typeof useResource<SavedPortfolio>> }) {
+  const [snapshotId, setSnapshotId] = useState<string | null>(null);
+  const { profile } = tracker;
+  const book = resource.data;
+  const fmpMissing = Boolean(resource.error && !book);
+  const snapshots = book ? sortSnapshots(book.snapshots) : [];
+  const latest = snapshots[0] ?? null;
+  const index = book?.publishedIndex ?? null;
+  const resolutions = new Map<string, FmpResolutionInput>(index?.definition.evidence?.map((entry) => [entry.holding.id, entry]) ?? []);
+  const tokens = new Map<string, ShownBookToken>(tracker.holdingTokens.flatMap((entry) => entry.token ? [[entry.ticker, { issuer: entry.token.issuer, symbol: entry.token.symbol, mint: entry.token.mint }]] : []));
+  const annual = latest ? { referenceDate: latest.year ? `${latest.year}-12-31` : null, items: latest.items } : null;
+  const shownBook = buildShownBook(profile, annual, resolutions, tokens);
+  const comparison = compareWithFmp(profile, index ? { period: index.period, constituents: index.constituents } : null, annual, resolutions);
+  const fmpIndexHref = index ? `/indexes/fmp-${index.hash}` : null;
+  const context = [profile.chamber === "house" ? "House" : profile.chamber === "senate" ? "Senate" : "Chamber unknown", profile.state, profile.party].filter(Boolean).join(" · ");
+
+  return <PortfolioLayout id={id} name={profile.name} indexName={tracker.index.indexName} image={profile.photo.local} context={context}
+    strategy={profile.holdingsBasis === "copy-trade-full"
+      ? `The shown book is PelosiTracker’s copy-trade portfolio (${profile.topHoldings.length} names, scraped ${savedDate(`${profile.asOf}T00:00:00Z`)}), a different product from the politician-API disclosure estimate. The FMP rows beside it are the older annual disclosure${annual?.referenceDate ? ` (as of ${annual.referenceDate})` : ""}. Trades are information only.`
+      : `The shown book is PelosiTracker’s current positions (top ${profile.coverage.holdingsSlice} + OTHER, third-party model, scraped ${savedDate(`${profile.asOf}T00:00:00Z`)}). The FMP rows beside it are the older annual disclosure${annual?.referenceDate ? ` (as of ${annual.referenceDate})` : ""}. Trades are information only.`}
+    count={profile.topHoldings.length} countNote={profile.holdingsBasis === "copy-trade-full" ? `PelosiTracker copy-trade book · ${profile.topHoldings.length} names` : `PelosiTracker top ${profile.coverage.holdingsSlice} + OTHER`}
+    mappedCount={tracker.index.constituents.length} activityCount={profile.recentTrades.length}
+    latestFiling={savedDate(`${profile.asOf}T00:00:00Z`)}
+    indexHref={`/indexes/${tracker.index.id}`} indexLabel="Tracker index"
+    heroStats={<TrackerHeroStats profile={profile} index={tracker.index} />}
+    sourceStrip={<TrackerSourceStrip profile={profile} />}
+    notice={<>
+      {resource.error && book ? <div className={styles.notice} role="alert">Could not refresh the saved FMP book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : null}
+      {fmpMissing ? <div className={styles.notice} role="status"><TrackerTag asOf={profile.asOf} variant="fmp">FMP</TrackerTag>No saved FMP annual book for this person ({resource.error}). The PelosiTracker book below is complete on its own; no annual rows are invented.<button onClick={resource.reload}>Retry FMP</button></div> : null}
+    </>}>
+
+    <ShownBookPanel book={shownBook} view={tracker} fmpReferenceLabel={annual ? annualLabel(annual.referenceDate) : null} />
+    <TrackerIndexPanel view={tracker} />
+    <TrackerCompare comparison={comparison} fmpIndexHref={fmpIndexHref} fmpAvailable={Boolean(book)} />
+    <TrackerSectors profile={profile} />
+    <TrackerTrades profile={profile} />
+    <TrackerLedger profile={profile} />
+    <TrackerFilingStats profile={profile} />
+    <TrackerSeries profile={profile} />
+    <TrackerIdentity profile={profile} />
+    {book ? <FmpSections book={book} snapshotId={snapshotId} setSnapshotId={setSnapshotId} olderLabel /> : !fmpMissing ? <Skeleton cards={2} /> : null}
+  </PortfolioLayout>;
+}
+
+export function FmpPerson({ id, initialData, tracker }: { id: string; initialData?: SavedPortfolio; tracker?: TrackerPersonView | null }) {
+  const resource = useResource<SavedPortfolio>(`/api/people/${encodeURIComponent(id)}/portfolio`, initialData);
+  const [snapshotId, setSnapshotId] = useState<string | null>(null);
+  if (tracker) return <TrackerPerson id={id} tracker={tracker} resource={resource} />;
+  if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
+  if (!resource.data) return <Skeleton cards={3} />;
+  const book = resource.data;
+  const snapshots = sortSnapshots(book.snapshots);
+  const snapshot = snapshots.find((entry) => entry.id === snapshotId) ?? snapshots[0];
+  const index = book.publishedIndex;
+  const indexHref = index ? `/indexes/fmp-${index.hash}` : undefined;
+  const latestFiling = snapshots.map((entry) => entry.filingDate).filter((date): date is string => Boolean(date)).sort().at(-1) ?? null;
+
+  return <PortfolioLayout id={id} name={book.person.name} indexName={index ? book.indexName : undefined} image={book.person.image} context={personContext(book.person)}
+    strategy={`Track the disclosed book (the latest annual filing we have${snapshot?.year ? `, as of ${snapshot.year}-12-31` : ""}), then inspect the mapped InsiderIndex separately. Reported trades remain activity—they never overwrite the annual filing.`}
+    count={snapshot ? snapshot.items.length : null}
+    countNote={snapshot ? `${snapshot.year ?? "Undated"} annual filing` : "Annual book unavailable"}
+    mappedCount={index?.constituents.length ?? null}
+    activityCount={book.activity.length}
+    latestFiling={latestFiling ? savedDate(latestFiling) : null}
+    indexHref={indexHref}
+    notice={resource.error ? <div className={styles.notice} role="alert">Could not refresh this saved book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : undefined}>
+    <PerformancePanel />
+    <FmpSections book={book} snapshotId={snapshotId} setSnapshotId={setSnapshotId} olderLabel={false} />
   </PortfolioLayout>;
 }
