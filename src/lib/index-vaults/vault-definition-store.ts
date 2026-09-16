@@ -104,14 +104,41 @@ export async function publishVaultDefinitions(db: SupabaseClient, document: Vaul
   return { total: result.total ?? 0, changed: result.changed ?? 0 };
 }
 
+/** A persisted, pool-ready vault leg: the DB stores the Raydium pool + kind + decimals alongside the
+ *  target weight, so creation builds transactions from the record, never re-derived from constants. */
+export type PersistedVaultLeg = {
+  ticker: string;
+  mint: string;
+  provider?: string | null;
+  decimals: number;
+  pool: string;
+  kind: string;
+  tvlUsd?: number | null;
+  targetWeightBps: number;
+};
 export type PersistedVaultDefinition = {
   indexId: string;
+  kind?: string | null;
+  personSlug?: string | null;
+  network?: string | null;
+  name: string;
+  symbol: string;
   status: string;
+  depositsEnabled?: boolean | null;
+  depositReason?: string | null;
+  weightBasis?: string | null;
+  nativeTokenCap?: number | null;
+  structurallyCreatable?: boolean | null;
+  blockedReasons?: string[];
   bookSource: string | null;
   provenance: Record<string, unknown>;
+  hostEntryFeeBps?: number | null;
+  hostExitFeeBps?: number | null;
+  coverage?: Record<string, unknown> | null;
+  poolExcludedLegs?: { ticker: string; mint: string; reason: string }[];
   vaultAddress: string | null;
   shareMint: string | null;
-  vaultLegs: { ticker: string; mint: string; targetWeightBps: number }[];
+  vaultLegs: PersistedVaultLeg[];
   keeper: { pubkey: string | null; automationEnabled: boolean };
 };
 
@@ -119,6 +146,39 @@ export async function readVaultDefinition(db: SupabaseClient, indexId: string): 
   const { data, error } = await db.rpc("read_insiderindex_vault_definition", { p_index_id: indexId });
   if (error) throw new Error(`Vault definition read failed (${error.code ?? "storage"})`);
   return (data as PersistedVaultDefinition | null) ?? null;
+}
+
+export type VaultDefinitionSummary = {
+  indexId: string;
+  name: string;
+  symbol: string;
+  status: string;
+  structurallyCreatable: boolean;
+  coverage: Record<string, unknown>;
+  vaultAddress: string | null;
+  shareMint: string | null;
+};
+
+/** List every persisted definition (id, name, status, coverage, live vault) for the admin selector. */
+export async function readVaultDefinitions(db: SupabaseClient): Promise<VaultDefinitionSummary[]> {
+  const { data, error } = await db.rpc("read_insiderindex_vault_definitions");
+  if (error) throw new Error(`Vault definitions read failed (${error.code ?? "storage"})`);
+  return (data as VaultDefinitionSummary[] | null) ?? [];
+}
+
+/** Write the captain-authorised creation (vault address + share mint + receipt) back onto the record.
+ *  Idempotent and refuses to clobber a different already-recorded vault (owner RPC enforces this). */
+export async function writeVaultCreation(
+  db: SupabaseClient,
+  indexId: string,
+  vaultAddress: string,
+  shareMint: string,
+  receipt: Record<string, unknown>,
+): Promise<void> {
+  const { error } = await db.rpc("set_insiderindex_vault_address", {
+    p_index_id: indexId, p_vault_address: vaultAddress, p_share_mint: shareMint, p_receipt: receipt,
+  });
+  if (error) throw new Error(`Vault creation write-back failed (${error.code ?? "storage"}): ${error.message ?? "unknown"}`);
 }
 
 /**
