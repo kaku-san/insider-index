@@ -11,6 +11,7 @@ import type {
 import { buildCrowdIndexes } from "@/lib/fomo/crowd-indexes";
 import { buildProfile, signalFomo, signalHeadline } from "@/lib/fomo/insights";
 import { portraitFor } from "@/lib/fomo/portraits";
+import { getThematicIndex, listThematicIndexes } from "@/lib/fomo/thematic-indexes";
 import { fetchMintPrices } from "@/lib/venues/prices";
 import { loadVenueCatalog, tagVenues } from "@/lib/venues/resolve";
 
@@ -151,11 +152,13 @@ export async function listIndexes(): Promise<PersonIndex[]> {
   const personIndexes = (await listProfiles(disclosures))
     .map((profile) => profile.index)
     .filter((index) => index.constituents.length > 0);
-  // Crowd baskets (many filers, one basket) lead; person baskets follow.
-  return [...buildCrowdIndexes(disclosures), ...personIndexes];
+  // Thematic curated themes → crowd tape baskets → person books.
+  return [...listThematicIndexes(), ...buildCrowdIndexes(disclosures), ...personIndexes];
 }
 
 export async function getIndex(id: string): Promise<PersonIndex | null> {
+  const thematic = getThematicIndex(id);
+  if (thematic) return thematic;
   const indexes = await listIndexes();
   return (
     indexes.find((index) => index.id === id || index.profileId === id) ?? null
