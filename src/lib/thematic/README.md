@@ -26,4 +26,26 @@ Committed snapshot of 10 multi-member InsiderIndex research themes.
 
 ## Status
 
-`RESEARCH_MODEL` — Basket Buy / vault deposit unavailable (W0).
+`RESEARCH_MODEL` — Basket Buy / vault deposit unavailable (W0). Views also carry
+`fundable: false`; the directory + each view expose `status`/`fundable`/`sourceGeneratedAt`
+so the UI can prove a research model is not a fundable person vault index.
+
+## Profile page + fundable-vs-research distinction
+
+- `/indexes/idx-theme-<slug>` (`src/components/thematic-index.tsx`) is a person-quality
+  research profile: linked member roster (`/p/<bioguideId>`), constituents with weight + venue,
+  source + as-of date, and an unmistakable non-fundable state (disabled deposit CTA, research
+  banner) exactly where a person index would offer investing.
+- Home shelf (`consumer-home.tsx` `#themes`) and the directory tag each theme card
+  `Research · not investable`; person indexes keep the `PERSON INDEX` badge. A fundable person
+  vault index and a research thematic index must never read as the same product.
+
+## Ten no-position-book politicians
+
+`src/lib/frontend/no-index-people.ts` lists the ten politicians with no mappable book
+(six no-holdings-book, four trades-only) whose person pages stay live with an honest
+`No InsiderIndex person index` note (`fmp-portfolio.tsx`) pointing to the thematic desk —
+never a dead end or a half-built person index. The ten thematic research indexes fill the
+index lineup in their place. This is a frontend reference only; it drives no mapping/vault/db.
+
+Tests: `tests/thematic-profile.test.mts`.

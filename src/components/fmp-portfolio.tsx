@@ -7,6 +7,8 @@ import { disclosedRange, personContext } from "@/lib/frontend/disclosure-labels"
 import type { StoredPeopleService } from "@/lib/fmp/store";
 import type { TrackerPersonView } from "@/lib/tracker/views";
 import { buildShownBook, compareWithFmp, type FmpResolutionInput, type ShownBookToken } from "@/lib/tracker/shown-book";
+import { noIndexReason, noIndexExplanation } from "@/lib/frontend/no-index-people";
+import { Icon } from "./social/icon";
 import { PageError, Skeleton } from "./social/shared";
 import {
   AllocationPanel, FilingLink, PerformancePanel, PortfolioLayout,
@@ -18,6 +20,20 @@ import {
 } from "./tracker-portfolio";
 
 export type SavedPortfolio = Awaited<ReturnType<StoredPeopleService["portfolio"]>>;
+
+/**
+ * Honest, non-dead-end explanation for the ten politicians whose public disclosure
+ * carries no mappable position book: no InsiderIndex person index exists, nothing is
+ * invented, and the ten thematic research indexes fill the index lineup instead.
+ */
+function NoPersonIndexNotice({ id }: { id: string }) {
+  const person = noIndexReason(id);
+  if (!person) return null;
+  return <div className={styles.notice} role="note">
+    <Icon name="info" size={15} />
+    <span><strong>No InsiderIndex person index.</strong> {noIndexExplanation(person)} Browse the <Link href="/#themes">thematic research indexes</Link> instead.</span>
+  </div>;
+}
 const savedDate = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 const estimate = (value: number) => value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const eventSide = (value: string | null) => /purchase|buy/i.test(value ?? "") ? "buy" : /sale|sell/i.test(value ?? "") ? "sell" : "other";
@@ -165,6 +181,7 @@ function TrackerPerson({ id, tracker, resource }: { id: string; tracker: Tracker
     heroStats={<TrackerHeroStats profile={profile} index={tracker.index} />}
     sourceStrip={<TrackerSourceStrip profile={profile} />}
     notice={<>
+      <NoPersonIndexNotice id={id} />
       {resource.error && book ? <div className={styles.notice} role="alert">Could not refresh the saved FMP book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : null}
       {fmpMissing ? <div className={styles.notice} role="status"><TrackerTag asOf={profile.asOf} variant="fmp">FMP</TrackerTag>No saved FMP annual book for this person ({resource.error}). The PelosiTracker book below is complete on its own; no annual rows are invented.<button onClick={resource.reload}>Retry FMP</button></div> : null}
     </>}>
@@ -203,7 +220,10 @@ export function FmpPerson({ id, initialData, tracker }: { id: string; initialDat
     activityCount={book.activity.length}
     latestFiling={latestFiling ? savedDate(latestFiling) : null}
     indexHref={indexHref}
-    notice={resource.error ? <div className={styles.notice} role="alert">Could not refresh this saved book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : undefined}>
+    notice={<>
+      <NoPersonIndexNotice id={id} />
+      {resource.error ? <div className={styles.notice} role="alert">Could not refresh this saved book. Showing the last loaded observation.<button onClick={resource.reload}>Retry</button></div> : null}
+    </>}>
     <PerformancePanel />
     <FmpSections book={book} snapshotId={snapshotId} setSnapshotId={setSnapshotId} olderLabel={false} />
   </PortfolioLayout>;
