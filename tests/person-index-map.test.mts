@@ -146,6 +146,39 @@ test("thin pools are recorded, not silently used", () => {
   assert.equal(def.status, "WAIT_POOL_EVIDENCE"); // only 1 vault-ready leg
 });
 
+test("a not-ready leg never contributes to tradable coverage", () => {
+  const M = { AAPL: "MINT_AAPL_TRAD", NVDA: "MINT_NVDA_TRAD", MSFT: "MINT_MSFT_TRAD", TSLA: "MINT_TSLA_TRAD" };
+  const catalog = indexCatalog([
+    xstock("AAPL", "AAPLx", M.AAPL), xstock("NVDA", "NVDAx", M.NVDA),
+    xstock("MSFT", "MSFTx", M.MSFT), xstock("TSLA", "TSLAx", M.TSLA),
+  ]);
+  // AAPL & NVDA have real tradable pools; MSFT's pool is thin (below floor); TSLA has no pool.
+  const pools = poolSourceFromEvidence([
+    observed(M.AAPL, "POOL_AAPL"), observed(M.NVDA, "POOL_NVDA"),
+    observed(M.MSFT, "POOL_MSFT", "raydium_clmm", 5_000),
+  ]);
+  const def = derivePersonIndex(book({ slug: "trad", holdings: [
+    { ticker: "AAPL", value: 400 }, { ticker: "NVDA", value: 300 },
+    { ticker: "MSFT", value: 200 }, { ticker: "TSLA", value: 100 },
+  ] }), catalog, pools);
+  const byT = new Map(def.legs.map((l) => [l.ticker, l]));
+  // All four resolve to a mint, so catalog coverage is the whole book.
+  assert.equal(def.coverage.mappedLegCount, 4);
+  assert.equal(def.coverage.mappableByWeightBps, 10_000);
+  // Tradable coverage counts ONLY the two legs with a real, tradable pool — never the thin/absent ones.
+  const expectedTradable = byT.get("AAPL")!.bookWeightBps + byT.get("NVDA")!.bookWeightBps;
+  assert.equal(def.coverage.tradableByWeightBps, expectedTradable);
+  assert.equal(byT.get("MSFT")!.vaultReady, false); // thin
+  assert.equal(byT.get("TSLA")!.vaultReady, false); // no pool
+  assert.equal(def.coverage.vaultReadyLegCount, 2);
+  // The mapped-but-untradable weight is disclosed as the gap, not silently re-weighted away.
+  assert.equal(
+    def.coverage.mappableByWeightBps - def.coverage.tradableByWeightBps,
+    byT.get("MSFT")!.bookWeightBps + byT.get("TSLA")!.bookWeightBps,
+  );
+  assert.equal(def.status, "CREATABLE");
+});
+
 test("a non-Raydium pool kind fails closed, never coerced to CLMM", () => {
   const catalog = indexCatalog([xstock("AAPL", "AAPLx", A.mint), xstock("NVDA", "NVDAx", B.mint)]);
   // Both pools are "observed" (above the TVL floor) but one carries a non-Raydium kind.
