@@ -1,0 +1,13 @@
+# Per-repo no-mistakes overrides.
+
+# Pin the Test gate to the project's real, deterministic command so the gate runs
+# the suite itself instead of asking the agent to improvise. When this was absent
+# the gate logged "no test command configured, asking agent to run tests" and an
+# agent launched headless Chrome against a dev server to screenshot /kaku-admin,
+# which hung the step for ~30 minutes. Validation is code-level and offline:
+# typecheck plus the node --test suite over tests/*.test.mts (fixtures only, no
+# network, no browser). NEVER launch a browser, headless Chrome/Chromium, a dev
+# server screenshot, or any DOM dump from a gate step — a scenario that would
+# need one is untested-with-reason.
+commands:
+  test: 'npm run typecheck && npm test'

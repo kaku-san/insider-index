@@ -28,6 +28,7 @@ Disclosure-to-copy-trade app: real insider/politician prints → user-signed xSt
 
 - `npm run dev` / `npm run build` / `npm run typecheck`
 - `npm test` — `tests/*.test.mts`; keep `*-parse.ts` free of `@/` aliases, env, and fetch.
+- Validation is code-level and offline only. NEVER launch a browser, headless Chrome/Chromium, a dev-server screenshot, or any DOM dump to validate a change (including `/kaku-admin`); a scenario that would need one is untested-with-reason. The no-mistakes Test gate is pinned to `npm run typecheck && npm test` in `.no-mistakes.yaml` so it runs deterministically and never improvises a browser.
 
 ## Data sources (`src/lib/disclosures/`)
 
