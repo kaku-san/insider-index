@@ -5,6 +5,7 @@ import { cloneElement, createElement, type ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { bookStatus, disclosedRange, filterPeople, personContext } from "../src/lib/frontend/disclosure-labels.ts";
 import type { StoredPerson } from "../src/lib/fmp/store.ts";
+import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { ConsumerHome, FilingTape } = await import("../src/components/consumer-home.tsx");
@@ -14,8 +15,9 @@ const { UIProvider } = await import("../src/components/providers/ui-provider.tsx
 function renderPerson(book: NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>) {
   return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(FmpPerson, { id: person.id, initialData: book }))));
 }
-function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }) {
-  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData }))));
+function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }, indexes: PublicVaultDefinition[] = []) {
+  const initialIndexes = { count: indexes.length, indexes, publicFundsEnabled: false, storage: "supabase" };
+  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData, initialIndexes }))));
 }
 
 const person: StoredPerson = {
@@ -25,37 +27,39 @@ const person: StoredPerson = {
   bookState: "partial-disclosure-only", publishedIndexHash: null,
 };
 const directory = Array.from({ length: 540 }, (_, i) => ({ ...person, id: `A${String(i).padStart(6, "0")}`, name: `Example Filer ${i}`, chamber: i % 2 ? "house" as const : "senate" as const }));
+const nativeIndex: PublicVaultDefinition = {
+  indexId: "insiderindex-example-filer", kind: "person", personSlug: "example-filer", bioguideId: person.id,
+  name: "Example F Index", symbol: "IIFILER", status: "CREATABLE", weightBasis: "annual-holding-value-midpoint",
+  depositsEnabled: false, depositReason: "public release disabled",
+  coverage: { tickerCount: 1, mappedLegCount: 1, mappableByWeightBps: 7500 },
+  provenance: { kind: "person", fmpYear: 2025, note: "Annual holdings mapped from public disclosure." },
+  legs: [{ ticker: "TEST", provider: "xstock", mint: "test-mint", bookWeightBps: 7500, targetWeightBps: 10000, vaultReady: true }],
+  unmapped: [], vaultAddress: null, shareMint: null, updatedAt: "2026-09-16T00:00:00Z",
+};
 
 // Assertions below inspect generated HTML, the public render output, not implementation source.
-test("home renders index-first discovery, portraits, honest empty models and a bounded full directory", () => {
+test("home is one index catalog surface without stacked discovery sections", () => {
   const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" });
-  assert.match(html, /Follow the money/);
-  assert.match(html, /href="\/feed"[^>]*>See the disclosure tape/);
-  assert.ok(html.indexOf("PEOPLE ARE THE INDEX") < html.indexOf("THE DIRECTORY"));
-  assert.match(html, /Everyone we&#x27;re watching/);
-  assert.match(html, /Show more people/);
-  assert.equal((html.match(/class="directoryRow"/g) ?? []).length, 10);
-  assert.match(html, /portrait.jpg/);
+  assert.match(html, /They disclose it/);
+  assert.match(html, /Pick the index\. See the book/);
+  assert.match(html, /Built on Solana/);
+  assert.doesNotMatch(html, /PEOPLE ARE THE INDEX|THE DIRECTORY|THE TAPE|Show more people/);
   assert.doesNotMatch(html, /Capitol Buys|Form-4 CEO|Sign &amp; buy|Basket Buy/);
 });
 
 test("published models use person-index discovery, never legacy crowd baskets", () => {
   const hash = "a".repeat(64);
-  const html = renderHome({ people: [{ ...person, publishedIndexHash: hash, indexName: "Example F Index" }], total: 1, partial: true, savedAt: null, storage: "supabase" });
-  assert.match(html, /\/p\/A000001/);
-  assert.match(html, /PERSON INDEX|INDEX/);
+  const html = renderHome({ people: [{ ...person, publishedIndexHash: hash, indexName: "Example F Index" }], total: 1, partial: true, savedAt: null, storage: "supabase" }, [nativeIndex]);
+  assert.match(html, /\/indexes\/insiderindex-example-filer/);
+  assert.match(html, /Person index/);
   assert.match(html, /Example F Index/);
   assert.doesNotMatch(html, /Capitol Buys|crowd basket|Sign &amp; buy/);
 });
 
-test("unpublished books retain person discovery labels when an index name exists", () => {
+test("unpublished books do not appear in the 20-index catalog", () => {
   const html = renderHome({ people: [{ ...person, indexName: "Example F Index" }], total: 1, partial: true, savedAt: null, storage: "supabase" });
-  assert.match(html, /PUBLIC PROFILE/);
-  assert.match(html, /ON THE RADAR/);
-  assert.match(html, />WATCH</);
-  assert.match(html, /Example Filer/);
-  assert.match(html, /partial disclosure only/);
-  assert.doesNotMatch(html, /PERSON INDEX|>INDEX<|Example F Index/);
+  assert.doesNotMatch(html, /Example Filer|Example F Index|Person index/);
+  assert.match(html, /No indexes match this view|Loading index catalog/);
 });
 
 test("a failed disclosure tape renders a retryable error instead of an empty tape", () => {

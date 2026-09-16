@@ -66,7 +66,7 @@ export function SiteHeader() {
 
         <form className={`consumer-search ${mobileSearch ? "open" : ""}`} role="search" onSubmit={submitSearch}>
           <Icon name="search" size={16} />
-          <input ref={input} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people" aria-label="Search people" />
+          <input ref={input} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search indexes or tickers" aria-label="Search indexes or tickers" />
           <kbd>/</kbd>
         </form>
 
