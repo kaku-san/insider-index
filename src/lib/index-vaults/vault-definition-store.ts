@@ -145,6 +145,110 @@ export type PersistedVaultDefinition = {
   definitionVersion?: number;
 };
 
+export type PublicVaultLeg = {
+  ticker: string;
+  name?: string | null;
+  provider: "xstock" | "backpack";
+  mint: string;
+  bookWeightBps: number;
+  targetWeightBps: number;
+  vaultReady: boolean;
+};
+
+export type PublicVaultDefinition = {
+  indexId: string;
+  kind: "person" | "thematic";
+  personSlug: string;
+  bioguideId: string | null;
+  name: string;
+  symbol: string;
+  status: "CREATABLE" | "WAIT_POOL_EVIDENCE" | "BLOCKED";
+  weightBasis: string;
+  depositsEnabled: boolean;
+  depositReason: string | null;
+  coverage: {
+    tickerCount?: number;
+    mappedLegCount?: number;
+    vaultReadyLegCount?: number;
+    mappableByWeightBps?: number;
+    tradableByWeightBps?: number;
+    poolReadyOfMappedBps?: number;
+  };
+  provenance: {
+    kind?: "person" | "thematic";
+    fmpYear?: number | null;
+    note?: string;
+    memberCount?: number;
+  };
+  legs: PublicVaultLeg[];
+  unmapped: { ticker: string; name?: string | null; bookWeightBps?: number; reason?: string }[];
+  vaultAddress: string | null;
+  shareMint: string | null;
+  updatedAt: string;
+};
+
+type PublicVaultRow = {
+  index_id: string;
+  kind: "person" | "thematic";
+  person_slug: string;
+  bioguide_id: string | null;
+  name: string;
+  symbol: string;
+  status: PublicVaultDefinition["status"];
+  weight_basis: string;
+  deposits_enabled: boolean;
+  deposit_reason: string | null;
+  coverage: PublicVaultDefinition["coverage"];
+  provenance: PublicVaultDefinition["provenance"];
+  legs: PublicVaultLeg[];
+  unmapped: PublicVaultDefinition["unmapped"];
+  vault_address: string | null;
+  share_mint: string | null;
+  updated_at: string;
+};
+
+function publicDefinition(row: PublicVaultRow): PublicVaultDefinition {
+  return {
+    indexId: row.index_id,
+    kind: row.kind,
+    personSlug: row.person_slug,
+    bioguideId: row.bioguide_id,
+    name: row.name,
+    symbol: row.symbol,
+    status: row.status,
+    weightBasis: row.weight_basis,
+    depositsEnabled: row.deposits_enabled,
+    depositReason: row.deposit_reason,
+    coverage: row.coverage ?? {},
+    provenance: row.provenance ?? {},
+    legs: row.legs ?? [],
+    unmapped: row.unmapped ?? [],
+    vaultAddress: row.vault_address,
+    shareMint: row.share_mint,
+    updatedAt: row.updated_at,
+  };
+}
+
+/** Public presentation reader. Service-role only; returns derived definitions, never raw books. */
+export async function readPublicVaultDefinitions(db: SupabaseClient): Promise<PublicVaultDefinition[]> {
+  const { data, error } = await db
+    .from("insiderindex_vault_definitions")
+    .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
+    .order("index_id");
+  if (error || !data) throw new Error(`Vault definition directory read failed (${error?.code ?? "storage"})`);
+  return (data as PublicVaultRow[]).map(publicDefinition);
+}
+
+export async function readPublicVaultDefinition(db: SupabaseClient, indexId: string): Promise<PublicVaultDefinition | null> {
+  const { data, error } = await db
+    .from("insiderindex_vault_definitions")
+    .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
+    .eq("index_id", indexId)
+    .maybeSingle();
+  if (error) throw new Error(`Vault definition read failed (${error.code ?? "storage"})`);
+  return data ? publicDefinition(data as PublicVaultRow) : null;
+}
+
 export async function readVaultDefinition(db: SupabaseClient, indexId: string): Promise<PersistedVaultDefinition | null> {
   const { data, error } = await db.rpc("read_insiderindex_vault_definition", { p_index_id: indexId });
   if (error) throw new Error(`Vault definition read failed (${error.code ?? "storage"})`);

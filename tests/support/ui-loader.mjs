@@ -12,6 +12,7 @@ export async function resolve(specifier, context, nextResolve) {
     }
   }
   if (specifier === "next/link") return nextResolve("next/link.js", context);
+  if (specifier === "next/image") return { shortCircuit: true, url: new URL("./next-image-stub.mjs", import.meta.url).href };
   if (specifier === "next/navigation") return { shortCircuit: true, url: new URL("./next-navigation-stub.mjs", import.meta.url).href };
   if (specifier === "next/server") return nextResolve("next/server.js", context);
   if (specifier === "server-only") return nextResolve("next/dist/compiled/server-only/empty.js", context);
