@@ -140,6 +140,9 @@ export type PersistedVaultDefinition = {
   shareMint: string | null;
   vaultLegs: PersistedVaultLeg[];
   keeper: { pubkey: string | null; automationEnabled: boolean };
+  lastRebalanceAt?: string | null;
+  lastRebalanceResult?: Record<string, unknown> | null;
+  definitionVersion?: number;
 };
 
 export async function readVaultDefinition(db: SupabaseClient, indexId: string): Promise<PersistedVaultDefinition | null> {
@@ -179,6 +182,22 @@ export async function writeVaultCreation(
     p_index_id: indexId, p_vault_address: vaultAddress, p_share_mint: shareMint, p_receipt: receipt,
   });
   if (error) throw new Error(`Vault creation write-back failed (${error.code ?? "storage"}): ${error.message ?? "unknown"}`);
+}
+
+/**
+ * Keeper write-back: record one tick's outcome onto the definition row (migration 202609180001).
+ * A dry run records mode:"dry-run" and never claims a rebalance; only a broadcast execute tick
+ * records a rebalance with signatures. The server-side RPC refuses a row with no created vault.
+ */
+export async function recordRebalanceOutcome(
+  db: SupabaseClient,
+  indexId: string,
+  result: Record<string, unknown>,
+): Promise<void> {
+  const mode = result.mode;
+  if (mode !== "dry-run" && mode !== "execute") throw new Error("Rebalance outcome must carry mode dry-run or execute");
+  const { error } = await db.rpc("record_insiderindex_vault_rebalance", { p_index_id: indexId, p_result: JSON.stringify(result) });
+  if (error) throw new Error(`Rebalance outcome write failed (${error.code ?? "storage"}); apply migration 202609180001`);
 }
 
 /**

@@ -19,6 +19,7 @@
     "vault:redeem:preflight": "node --experimental-strip-types scripts/redeem-devnet-vault.mts",
     "keeper:devnet": "node --experimental-strip-types scripts/devnet-keeper-tick.mts",
     "keeper:kaku-san": "node --experimental-strip-types scripts/kaku-san-keeper-tick.mts",
+    "keeper:index": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/insiderindex-keeper-tick.mts",
     "vault:settle:devnet": "node --experimental-strip-types scripts/settle-devnet-vault.mts",
     "vault:cycle": "node --experimental-strip-types scripts/vault-full-cycle.mts"
   },
