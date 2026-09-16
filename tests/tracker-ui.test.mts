@@ -14,6 +14,7 @@ const { TrackerIndex } = await import("../src/components/tracker-index.tsx");
 const { TrackerShelf } = await import("../src/components/tracker-shelf.tsx");
 const { TrackerLedger } = await import("../src/components/tracker-portfolio.tsx");
 const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
+const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 type Portfolio = NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
 
 const brief = JSON.parse(readFileSync(new URL("../data/insiderindex-source-buckets/pelositracker-top20rere-handoff/top20-agent-brief.json", import.meta.url), "utf8"));
@@ -32,7 +33,7 @@ const book: Portfolio = {
   ] }],
   publishedIndex: { hash: "c".repeat(64), person_id: "P000197", period: "2024-12-31", version: 1, published_at: "2026-09-14T17:00:00Z", definition: { label: "Latest saved annual holdings", methodology: "holding-band-midpoints", snapshotComplete: false, evidence: [{ holding: { id: "a1" }, ticker: "NVDA", token: { issuer: "xstock", symbol: "NVDAx", mint: "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh" }, method: "fmp-exact-name", reason: null }] }, constituents: [{ ticker: "AAPL", mint: "m-aapl", issuer: "xstock", weight_bps: 7143, payload: { evidencedMidpoint: 37500000.5 } }, { ticker: "NVDA", mint: "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh", issuer: "xstock", weight_bps: 2857, payload: { evidencedMidpoint: 15000000.5 } }] },
 } as unknown as Portfolio;
-const render = (element: React.ReactElement) => renderToStaticMarkup(createElement(PrivySolanaProvider, null, element));
+const render = (element: React.ReactElement) => renderToStaticMarkup(createElement(UIProvider, null, createElement(PrivySolanaProvider, null, element)));
 
 test("the tracker-first person page labels every tracker figure PelosiTracker · Sep 15, 2026, shows trades as info, and keeps FMP as the older annual filing", () => {
   const html = render(createElement(FmpPerson, { id: "P000197", initialData: book, tracker: pelosiView }));
