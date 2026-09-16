@@ -40,6 +40,7 @@ Disclosure-to-copy-trade app: real insider/politician prints → user-signed xSt
 
 - Shared caches go through `globalState()` in `src/lib/cache.ts`.
 - EDGAR cold crawl ~30 s; warmed at boot via `src/instrumentation.ts`.
+- A stale gitignored `.next/` makes `npm run typecheck` fail on deleted routes (`TS2307 … src/app/api/<removed>/route.js` in `.next/types/validator.ts`). It is a cache, not a source error: `rm -rf .next` (or `npm run build`) and re-run. The no-mistakes Test gate runs `npm run typecheck && npm test` (`.no-mistakes.yaml`), so clear it there before trusting a red typecheck.
 - Jupiter live vs stub is `jupiterMode()` in `src/lib/runtime.ts`; live mode rejects stub signatures. Wallet fallback (`src/components/providers/privy-provider.tsx`) fails closed in production; a Privy load failure must never enable a fixture wallet.
 
 ## Maintaining this file
