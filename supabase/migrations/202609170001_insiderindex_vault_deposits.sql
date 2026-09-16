@@ -1,63 +1,22 @@
--- Durable per-vault InsiderIndex definitions: one row per person index / Symmetry V3 vault.
--- The keeper reads its target weights and eligibility inputs from here, never from local files.
--- Definitions are UPDATED in place (never duplicated) and versioned by their derived hash + the
--- source drop sha256, so a refresh never silently changes weights without a trace. A live
--- vault_address / share_mint and the last rebalance result survive a definition refresh.
--- Legs are xStock-first with verified Backpack .US fallback; transaction-derived books never
--- become weights (they persist as blocked). No net worth, no NAV.
+-- All 20 published indexes become first-class vault candidates: the 10 person books plus the 10
+-- constructed multi-member thematic research baskets, all in one row shape. Two truths are added:
+--   * `kind` distinguishes a person's disclosed annual book from a thematic basket, so a thematic
+--     row can never read as a person index even though `person_slug` is reused for the identity slug.
+--   * an explicit per-vault deposit gate (`deposits_enabled` / `deposit_reason`), CLOSED BY DEFAULT
+--     and driven by tradable coverage, never by creation. Creating a vault is cheap and ungated; a
+--     deposit is only honest when every mapped leg has an observed tradable pool (else weight lands
+--     where it cannot be rebalanced or exited to USDC). The global publicFundsEnabled release flag
+--     stays authoritative on top of this column and is enforced in application code.
 begin;
 
-create table public.insiderindex_vault_definitions (
-  index_id text primary key,
-  person_slug text not null,
-  bioguide_id text,
-  network text not null default 'mainnet-beta' check (network in ('mainnet-beta','devnet')),
-  name text not null,
-  symbol text not null,
-  weight_basis text not null,
-  status text not null check (status in ('CREATABLE','WAIT_POOL_EVIDENCE','BLOCKED')),
-  structurally_creatable boolean not null,
-  blocked_reasons jsonb not null default '[]'::jsonb,
-  book_source text,
-  -- Full derivation provenance (fmpYear, annualFetchComplete, holdings/ticker/weighted counts,
-  -- note). book_source stays its own queryable column above; this shows book honesty without
-  -- re-reading the source zip.
-  provenance jsonb not null default '{}'::jsonb,
-  native_token_cap integer not null check (native_token_cap between 1 and 100),
-  host_entry_fee_bps integer not null check (host_entry_fee_bps = 25),
-  host_exit_fee_bps integer not null check (host_exit_fee_bps = 0),
-  -- Mapped catalog legs (mints + book weights) and the pool-ready vault composition (bps→10000).
-  legs jsonb not null default '[]'::jsonb,
-  vault_legs jsonb not null default '[]'::jsonb,
-  pool_excluded_legs jsonb not null default '[]'::jsonb,
-  unmapped jsonb not null default '[]'::jsonb,
-  coverage jsonb not null default '{}'::jsonb,
-  cost jsonb,
-  keeper jsonb not null default '{}'::jsonb,
-  -- Set by the captain-authorised creation step, never wiped by a definition refresh.
-  vault_address text,
-  share_mint text,
-  last_rebalance_at timestamptz,
-  last_rebalance_result jsonb,
-  -- Provenance / versioning.
-  source_zip text,
-  source_sha256 text,
-  definition_hash text not null,
-  definition_version integer not null default 1,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  check (jsonb_typeof(legs) = 'array'),
-  check (jsonb_typeof(vault_legs) = 'array')
-);
-comment on table public.insiderindex_vault_definitions is 'Per-person InsiderIndex vault definitions. Keeper target/eligibility source of truth. Not net worth, not NAV.';
+alter table public.insiderindex_vault_definitions
+  add column if not exists kind text not null default 'person' check (kind in ('person','thematic')),
+  add column if not exists deposits_enabled boolean not null default false,
+  add column if not exists deposit_reason text;
 
-alter table public.insiderindex_vault_definitions enable row level security;
-revoke all on public.insiderindex_vault_definitions from public, anon, authenticated, service_role;
-grant select on public.insiderindex_vault_definitions to service_role;
+comment on column public.insiderindex_vault_definitions.kind is 'person = one disclosed annual book; thematic = constructed multi-member research basket.';
+comment on column public.insiderindex_vault_definitions.deposits_enabled is 'Per-vault deposit gate. Closed by default; driven by tradable coverage, never by creation. Release flag is authoritative on top in app code.';
 
--- Owner RPC: upsert the full set from one derivation document in a single transaction. Updates in
--- place, bumps definition_version only when the derived hash changes, and preserves a live
--- vault_address / share_mint / last rebalance across refreshes.
 create or replace function public.publish_insiderindex_vault_definitions(p_document text) returns jsonb
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare
@@ -66,6 +25,7 @@ declare
   h text;
   vlegs jsonb;
   bps integer;
+  dep_enabled boolean;
   changed integer := 0;
   total integer := 0;
   seen text[] := array[]::text[];
@@ -91,28 +51,36 @@ begin
     if def->>'weightBasis' = 'none-txn-derived' and jsonb_array_length(coalesce(def->'legs','[]'::jsonb)) > 0 then
       raise exception 'txn-derived book cannot carry legs for %', def->>'indexId';
     end if;
+    -- Deposit gate: closed unless the vault is creatable with a full pool-ready composition. This is
+    -- the server's honesty guard; the release flag governs whether deposits actually go live.
+    dep_enabled := coalesce((def->'deposits'->>'enabled')::boolean, false);
+    if dep_enabled and (def->>'status' is distinct from 'CREATABLE' or jsonb_array_length(vlegs) = 0) then
+      raise exception 'deposits cannot be enabled for % without a creatable, fully pool-ready composition', def->>'indexId';
+    end if;
 
     h := md5(def::text);
     seen := array_append(seen, def->>'indexId');
 
     insert into insiderindex_vault_definitions as t (
-      index_id, person_slug, bioguide_id, network, name, symbol, weight_basis, status,
-      structurally_creatable, blocked_reasons, book_source, provenance, native_token_cap,
-      host_entry_fee_bps, host_exit_fee_bps, legs, vault_legs, pool_excluded_legs, unmapped,
-      coverage, cost, keeper, source_zip, source_sha256, definition_hash
+      index_id, kind, person_slug, bioguide_id, network, name, symbol, weight_basis, status,
+      structurally_creatable, blocked_reasons, deposits_enabled, deposit_reason, book_source, provenance,
+      native_token_cap, host_entry_fee_bps, host_exit_fee_bps, legs, vault_legs, pool_excluded_legs,
+      unmapped, coverage, cost, keeper, source_zip, source_sha256, definition_hash
     ) values (
-      def->>'indexId', def->>'personSlug', def->>'bioguideId', coalesce(def->>'network','mainnet-beta'),
+      def->>'indexId', coalesce(def->>'kind','person'), def->>'personSlug', def->>'bioguideId', coalesce(def->>'network','mainnet-beta'),
       def->>'name', def->>'symbol', def->>'weightBasis', def->>'status',
-      (def->>'structurallyCreatable')::boolean, coalesce(def->'blockedReasons','[]'::jsonb), def->>'bookSource',
+      (def->>'structurallyCreatable')::boolean, coalesce(def->'blockedReasons','[]'::jsonb),
+      dep_enabled, def->'deposits'->>'reason', def->>'bookSource',
       coalesce(def->'provenance','{}'::jsonb), coalesce((def->>'nativeTokenCap')::integer, 100), 25, 0,
       coalesce(def->'legs','[]'::jsonb), vlegs, coalesce(def->'poolExcludedLegs','[]'::jsonb),
       coalesce(def->'unmapped','[]'::jsonb), coalesce(def->'coverage','{}'::jsonb), def->'cost',
       coalesce(def->'keeper','{}'::jsonb), d->'source'->>'zip', d->'source'->>'sha256', h
     )
     on conflict (index_id) do update set
-      person_slug = excluded.person_slug, bioguide_id = excluded.bioguide_id, network = excluded.network,
+      kind = excluded.kind, person_slug = excluded.person_slug, bioguide_id = excluded.bioguide_id, network = excluded.network,
       name = excluded.name, symbol = excluded.symbol, weight_basis = excluded.weight_basis, status = excluded.status,
       structurally_creatable = excluded.structurally_creatable, blocked_reasons = excluded.blocked_reasons,
+      deposits_enabled = excluded.deposits_enabled, deposit_reason = excluded.deposit_reason,
       book_source = excluded.book_source, provenance = excluded.provenance, native_token_cap = excluded.native_token_cap,
       legs = excluded.legs, vault_legs = excluded.vault_legs, pool_excluded_legs = excluded.pool_excluded_legs,
       unmapped = excluded.unmapped, coverage = excluded.coverage, cost = excluded.cost, keeper = excluded.keeper,
@@ -132,15 +100,14 @@ end $$;
 revoke all on function public.publish_insiderindex_vault_definitions(text) from public, anon, authenticated;
 grant execute on function public.publish_insiderindex_vault_definitions(text) to service_role;
 
--- Keeper read: targets + eligibility inputs for one vault (or all). Never exposes raw books.
--- Single-row read by primary key: build the object for the matching row and return NULL when none
--- matches. No aggregate (a mixed count(*) + bare columns is a GROUP BY error), so it stays a plain
--- projection over the at-most-one row selected by the primary key.
-create function public.read_insiderindex_vault_definition(p_index_id text) returns jsonb
+-- Single-row read by primary key: a plain projection over the at-most-one matching row (returns
+-- NULL when none). No count(*)/bare-column mix (that is a GROUP BY error).
+create or replace function public.read_insiderindex_vault_definition(p_index_id text) returns jsonb
 language sql stable security definer set search_path = public, pg_temp as $$
   select jsonb_build_object(
-    'indexId', index_id, 'personSlug', person_slug, 'network', network, 'name', name, 'symbol', symbol,
+    'indexId', index_id, 'kind', kind, 'personSlug', person_slug, 'network', network, 'name', name, 'symbol', symbol,
     'status', status, 'weightBasis', weight_basis, 'nativeTokenCap', native_token_cap,
+    'depositsEnabled', deposits_enabled, 'depositReason', deposit_reason,
     'bookSource', book_source, 'provenance', provenance,
     'hostEntryFeeBps', host_entry_fee_bps, 'hostExitFeeBps', host_exit_fee_bps,
     'vaultAddress', vault_address, 'shareMint', share_mint, 'vaultLegs', vault_legs, 'keeper', keeper,
@@ -152,11 +119,12 @@ $$;
 revoke all on function public.read_insiderindex_vault_definition(text) from public, anon, authenticated;
 grant execute on function public.read_insiderindex_vault_definition(text) to service_role;
 
-create function public.read_insiderindex_vault_definitions() returns jsonb
+create or replace function public.read_insiderindex_vault_definitions() returns jsonb
 language sql stable security definer set search_path = public, pg_temp as $$
   select coalesce(jsonb_agg(jsonb_build_object(
-    'indexId', index_id, 'personSlug', person_slug, 'name', name, 'symbol', symbol, 'status', status,
+    'indexId', index_id, 'kind', kind, 'personSlug', person_slug, 'name', name, 'symbol', symbol, 'status', status,
     'weightBasis', weight_basis, 'structurallyCreatable', structurally_creatable, 'blockedReasons', blocked_reasons,
+    'depositsEnabled', deposits_enabled, 'depositReason', deposit_reason,
     'coverage', coverage, 'vaultAddress', vault_address, 'shareMint', share_mint,
     'definitionVersion', definition_version, 'sourceSha256', source_sha256, 'updatedAt', updated_at
   ) order by index_id), '[]'::jsonb)

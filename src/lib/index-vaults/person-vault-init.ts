@@ -13,7 +13,7 @@ import type { CostPreview } from "./adapter-contract.ts";
 import { address, weightsValid } from "./amounts.ts";
 import { HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
 import { assertNativeTokenCap, KAKU_SAN_NATIVE_TOKEN_CAP } from "./kaku-san-rebalance.ts";
-import { allocateBps, MIN_MAPPED_LEGS, type MappedLeg, type PersonIndexDefinition } from "./person-index-map.ts";
+import { allocateBps, MIN_MAPPED_LEGS, WEIGHTABLE_BASES, type MappedLeg, type PersonIndexDefinition } from "./person-index-map.ts";
 import { assertRaydiumOnlyToken, type RaydiumOracleKind, type RaydiumPoolBinding } from "./raydium-oracles.ts";
 
 /** SDK `start_price` is divided by 10^6; "1000000" → $1 bootstrap. Unverified basis, same as Kaku San. */
@@ -102,7 +102,7 @@ export function estimateVaultCost(legCount: number): CostPreview {
  * carry observed Raydium pool evidence. Pool-excluded legs are recorded, not silently dropped.
  */
 export function buildPersonVaultInit(definition: PersonIndexDefinition): PersonVaultInit {
-  if (definition.weightBasis !== "annual-holding-value-midpoint") {
+  if (!WEIGHTABLE_BASES.includes(definition.weightBasis)) {
     throw new Error(`NOT_WEIGHTABLE: ${definition.indexId} book is ${definition.weightBasis}`);
   }
   // The request is the mapped book: asking for more legs than the vault can hold must throw.

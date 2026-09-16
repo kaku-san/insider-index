@@ -25,6 +25,17 @@ export const INDEX_NETWORK = "mainnet-beta" as const;
 /** Matches the Solana catalog issuer tag. xStock is preferred over a Backpack `.US` token. */
 export type LegProvider = "xstock" | "backpack";
 
+/** A definition is either one person's disclosed annual book or a constructed multi-member basket. */
+export type IndexKind = "person" | "thematic";
+
+export type WeightBasis =
+  | "annual-holding-value-midpoint"
+  | "thematic-multi-member-value"
+  | "none-txn-derived"
+  | "none-no-ticker-holdings";
+/** The weight bases the vault-init builder will size legs from; others are not weightable. */
+export const WEIGHTABLE_BASES: readonly WeightBasis[] = ["annual-holding-value-midpoint", "thematic-multi-member-value"];
+
 export type HoldingRow = {
   name?: string | null;
   ticker: string | null;
@@ -88,7 +99,34 @@ export type ActivityTicker = {
   provider: LegProvider | null;
 };
 
-export type PersonIndexDefinition = {
+/**
+ * Provenance is a superset shape carried by both kinds; `kind` and `note` make the two honestly
+ * distinguishable, and the thematic-only fields (basis, lane, methodology, members…) are present
+ * only for a constructed basket. A person book never sets them; a thematic record never pretends to
+ * a disclosed annual book (its person-book counters stay 0 / null).
+ */
+export type IndexProvenance = {
+  kind: IndexKind;
+  bookSource: string | null;
+  fmpYear: number | null;
+  annualFetchComplete: boolean | null;
+  holdingsCount: number;
+  tickerHoldingsCount: number;
+  weightedTickerCount: number;
+  unweightedTickerCount: number;
+  note: string;
+  // Thematic-only: a constructed multi-member research basket, never one person's book.
+  basis?: "insiderindex-thematic";
+  lane?: string;
+  methodology?: string;
+  memberCount?: number;
+  members?: { slug: string; name: string; party?: string | null; state?: string | null; bioguideId?: string | null }[];
+  constituentCount?: number;
+};
+
+/** Shared identity for a weighted index definition, independent of whether it is a person or basket. */
+export type IndexIdentity = {
+  kind: IndexKind;
   slug: string;
   bioguideId: string | null;
   name: string;
@@ -96,17 +134,20 @@ export type PersonIndexDefinition = {
   indexName: string;
   symbol: string;
   network: typeof INDEX_NETWORK;
-  weightBasis: "annual-holding-value-midpoint" | "none-txn-derived" | "none-no-ticker-holdings";
-  provenance: {
-    bookSource: string | null;
-    fmpYear: number | null;
-    annualFetchComplete: boolean | null;
-    holdingsCount: number;
-    tickerHoldingsCount: number;
-    weightedTickerCount: number;
-    unweightedTickerCount: number;
-    note: string;
-  };
+  nativeTokenCap: number;
+};
+
+export type PersonIndexDefinition = {
+  kind: IndexKind;
+  slug: string;
+  bioguideId: string | null;
+  name: string;
+  indexId: string;
+  indexName: string;
+  symbol: string;
+  network: typeof INDEX_NETWORK;
+  weightBasis: WeightBasis;
+  provenance: IndexProvenance;
   legs: MappedLeg[];
   unmapped: UnmappedLeg[];
   activity: ActivityTicker[];
@@ -124,14 +165,44 @@ export type PersonIndexDefinition = {
     // book weight that maps to a mint but has no usable pool behind it. Never re-weighted around.
     tradableByWeightBps: number;
     // Mapped-only basis: share of the renormalised mapped-leg weights (`targetWeightBps`, which
-    // sum to 10000 across mapped legs) that is pool-ready. NOT comparable to the whole-book fields.
+    // sum to 10000 across mapped legs) that is pool-ready. This is tradable coverage of the mapped
+    // book. NOT comparable to the whole-book fields.
     poolReadyOfMappedBps: number;
   };
   nativeTokenCap: number;
   structurallyCreatable: boolean;
   blockedReasons: string[];
   status: "CREATABLE" | "WAIT_POOL_EVIDENCE" | "BLOCKED";
+  // Per-vault deposit gate, driven by tradable coverage, NOT by creation. Default closed. The
+  // global `VAULT_RELEASE.publicFundsEnabled` flag stays authoritative on top of this.
+  depositsEnabled: boolean;
+  depositReason: string;
 };
+
+/**
+ * The per-vault deposit gate. Creation is cheap and ungated, but a deposit can only be honest when
+ * EVERY mapped leg carries an observed tradable pool: otherwise weight lands on a leg that cannot be
+ * rebalanced or exited to USDC, trapping a user's money. Default is closed; full tradable coverage
+ * (all mapped legs vault-ready and the mapped weight 100% pool-ready) is required to open it, and
+ * even then the release flag governs whether deposits actually go live.
+ */
+export function depositGate(args: {
+  structurallyCreatable: boolean;
+  mappedLegCount: number;
+  vaultReadyLegCount: number;
+  poolReadyOfMappedBps: number;
+}): { enabled: boolean; reason: string } {
+  if (!args.structurallyCreatable) return { enabled: false, reason: "vault-not-creatable" };
+  if (args.mappedLegCount === 0) return { enabled: false, reason: "no-mapped-legs" };
+  const notReady = args.mappedLegCount - args.vaultReadyLegCount;
+  if (notReady > 0 || args.poolReadyOfMappedBps < 10_000) {
+    return {
+      enabled: false,
+      reason: `${notReady}-of-${args.mappedLegCount}-mapped-legs-without-observed-tradable-pool; deposits stay closed so no weight is stranded from USDC exit`,
+    };
+  }
+  return { enabled: true, reason: "all-mapped-legs-carry-an-observed-tradable-pool (still gated by VAULT_RELEASE.publicFundsEnabled)" };
+}
 
 /** Value used to weight a holding: the disclosed midpoint, else the band midpoint, else 0. */
 export function holdingValue(row: HoldingRow): number {
@@ -216,7 +287,8 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
   const holdingsCount = book.holdings.length;
   const tickerHoldingsCount = book.holdings.filter((h) => h.ticker).length;
 
-  const base = {
+  const base: IndexIdentity = {
+    kind: "person",
     slug: book.slug,
     bioguideId: book.bioguideId,
     name: book.name,
@@ -225,7 +297,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
     symbol,
     network: INDEX_NETWORK,
     nativeTokenCap: NATIVE_TOKEN_CAP,
-  } as const;
+  };
 
   // Transaction-derived books are activity, never position sizes: resolve tickers for information
   // only, never a weight, and block vault creation with the reason recorded.
@@ -246,6 +318,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       ...base,
       weightBasis: "none-txn-derived",
       provenance: {
+        kind: "person",
         bookSource: book.bookSource,
         fmpYear: book.fmpYear,
         annualFetchComplete: book.annualFetchComplete,
@@ -262,6 +335,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       structurallyCreatable: false,
       blockedReasons: ["txn-derived-book"],
       status: "BLOCKED",
+      ...blockedDeposit("txn-derived-book"),
     };
   }
 
@@ -275,6 +349,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       ...base,
       weightBasis: "none-no-ticker-holdings",
       provenance: {
+        kind: "person",
         bookSource: book.bookSource,
         fmpYear: book.fmpYear,
         annualFetchComplete: book.annualFetchComplete,
@@ -291,8 +366,59 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       structurallyCreatable: false,
       blockedReasons: ["no-ticker-holdings-in-annual-book"],
       status: "BLOCKED",
+      ...blockedDeposit("no-ticker-holdings-in-annual-book"),
     };
   }
+
+  const provenance: IndexProvenance = {
+    kind: "person",
+    bookSource: book.bookSource,
+    fmpYear: book.fmpYear,
+    annualFetchComplete: book.annualFetchComplete,
+    holdingsCount,
+    tickerHoldingsCount,
+    weightedTickerCount: weighted.length,
+    unweightedTickerCount,
+    note: book.annualFetchComplete === false
+      ? "Annual fetch incomplete: fewer ticker rows than holdings; mapping covers the disclosed rows only."
+      : "Annual holdings mapped by disclosed position-value midpoints.",
+  };
+  return buildWeightedIndexDefinition({
+    identity: base,
+    weighted: weighted.map((t) => ({ ticker: t.ticker, name: t.name, value: t.value })),
+    weightBasis: "annual-holding-value-midpoint",
+    provenance,
+    activity: [],
+    catalog,
+    poolSource,
+  });
+}
+
+/** A blocked definition never opens deposits; the reason mirrors the block. */
+function blockedDeposit(reason: string): { depositsEnabled: false; depositReason: string } {
+  return { depositsEnabled: false, depositReason: `blocked:${reason}` };
+}
+
+/**
+ * Shared derivation for any weighted index (a person's annual book or a constructed multi-member
+ * basket). Resolves each ticker through the same Solana catalog (xStock → verified Backpack `.US` →
+ * unmapped), renormalises target weights across mapped legs only, runs the identical Raydium
+ * pool-readiness evaluation, records catalog coverage vs tradable coverage, enforces the native leg
+ * cap (blocks, never truncates), and derives the closed-by-default deposit gate. There is exactly
+ * one mapping/readiness path; the caller only supplies identity, weighted rows, and provenance.
+ */
+export function buildWeightedIndexDefinition(args: {
+  identity: IndexIdentity;
+  weighted: readonly { ticker: string; name: string | null; value: number }[];
+  weightBasis: WeightBasis;
+  provenance: IndexProvenance;
+  activity?: ActivityTicker[];
+  catalog: CatalogIndex;
+  poolSource: PoolEvidenceSource;
+}): PersonIndexDefinition {
+  const { identity, weightBasis, provenance, catalog, poolSource } = args;
+  const weighted = args.weighted.filter((t) => Number.isFinite(t.value) && t.value > 0);
+  const base = { ...identity };
 
   // Book weights over ALL positive-value tickers (mapped + unmapped) so the unmapped share is honest.
   const bookBps = allocateBps(weighted.map((t) => t.value));
@@ -345,32 +471,22 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
 
   const blockedReasons: string[] = [];
   if (legs.length < MIN_MAPPED_LEGS) blockedReasons.push("too-few-mapped-legs");
-  if (legs.length > NATIVE_TOKEN_CAP) blockedReasons.push("native-token-cap-exceeded");
+  if (legs.length > identity.nativeTokenCap) blockedReasons.push("native-token-cap-exceeded");
   const structurallyCreatable = blockedReasons.length === 0;
   const status: PersonIndexDefinition["status"] = !structurallyCreatable
     ? "BLOCKED"
     : vaultReadyLegCount >= MIN_MAPPED_LEGS
       ? "CREATABLE"
       : "WAIT_POOL_EVIDENCE";
+  const deposit = depositGate({ structurallyCreatable, mappedLegCount: legs.length, vaultReadyLegCount, poolReadyOfMappedBps });
 
   return {
     ...base,
-    weightBasis: "annual-holding-value-midpoint",
-    provenance: {
-      bookSource: book.bookSource,
-      fmpYear: book.fmpYear,
-      annualFetchComplete: book.annualFetchComplete,
-      holdingsCount,
-      tickerHoldingsCount,
-      weightedTickerCount: weighted.length,
-      unweightedTickerCount,
-      note: book.annualFetchComplete === false
-        ? "Annual fetch incomplete: fewer ticker rows than holdings; mapping covers the disclosed rows only."
-        : "Annual holdings mapped by disclosed position-value midpoints.",
-    },
+    weightBasis,
+    provenance,
     legs,
     unmapped,
-    activity: [],
+    activity: args.activity ?? [],
     coverage: {
       tickerCount: weighted.length,
       mappedLegCount: legs.length,
@@ -380,9 +496,11 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       tradableByWeightBps,
       poolReadyOfMappedBps,
     },
-    nativeTokenCap: NATIVE_TOKEN_CAP,
+    nativeTokenCap: identity.nativeTokenCap,
     structurallyCreatable,
     blockedReasons,
     status,
+    depositsEnabled: deposit.enabled,
+    depositReason: deposit.reason,
   };
 }
