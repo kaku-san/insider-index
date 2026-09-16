@@ -1,0 +1,4143 @@
+{
+  "schemaVersion": 1,
+  "brand": "InsiderIndex",
+  "generatedAt": "2026-09-16T05:28:52.817821+00:00",
+  "sourceGeneratedAt": "2026-09-16T05:22:40.771627+00:00",
+  "prefix": "idx-theme-",
+  "productNote": "Person trackers (e.g. full Pelosi profile) remain on /p/[id]. These indexes are multi-member themes \u2014 not celebrity clones.",
+  "constraints": {
+    "noSinglePersonFlagships": true,
+    "catalogOnly": true,
+    "noShorts": true,
+    "noInventedPrices": true,
+    "ptrBandsAsMidpoints": true,
+    "basketBuy": "unavailable (W0 research models)"
+  },
+  "sources": {
+    "primary": [
+      {
+        "id": "house-clerk",
+        "name": "U.S. House Clerk \u2014 Financial Disclosure Reports",
+        "url": "https://disclosures-clerk.house.gov/",
+        "whatWeUse": "Annual financial disclosure PDFs and PTR filings that underlie politician holdings and trades.",
+        "licenseNote": "Public U.S. government records."
+      },
+      {
+        "id": "senate-efd",
+        "name": "U.S. Senate \u2014 Electronic Financial Disclosures (eFD)",
+        "url": "https://efdsearch.senate.gov/",
+        "whatWeUse": "Senate periodic transaction reports and annual disclosures.",
+        "licenseNote": "Public U.S. government records."
+      },
+      {
+        "id": "stock-act",
+        "name": "STOCK Act disclosures",
+        "url": "https://www.congress.gov/bill/112th-congress/senate-bill/2038",
+        "whatWeUse": "Legal basis requiring timely public reporting of member securities transactions (subject to filing lag).",
+        "licenseNote": "U.S. statute / public law."
+      },
+      {
+        "id": "sec-edgar",
+        "name": "SEC EDGAR \u2014 Form 4",
+        "url": "https://www.sec.gov/edgar",
+        "whatWeUse": "Corporate insider (Form 4) open-market activity for InsiderIndex insider lane / future hybrid indexes. Not required for this politician-only basket set.",
+        "licenseNote": "Public SEC filings."
+      }
+    ],
+    "providers": [
+      {
+        "id": "fmp",
+        "name": "Financial Modeling Prep (FMP)",
+        "url": "https://site.financialmodelingprep.com/developer/docs",
+        "endpoints": [
+          "senate-net-worth",
+          "senate-profile",
+          "house-trades-by-id",
+          "senate-trades-by-id"
+        ],
+        "whatWeUse": "Normalized annual net-worth/holdings rows and trades-by-bioguide for model weights. Latest year only for holdings indexes; deduped against known FMP pagination quirks.",
+        "displayAttribution": "Holdings & trade data via Financial Modeling Prep"
+      },
+      {
+        "id": "pelositracker",
+        "name": "PelosiTracker",
+        "url": "https://pelositracker.app",
+        "whatWeUse": "Directory metadata, sector tags, performance charts context, and filing ledgers used to enrich trade activity / member selection. Not used as sole holdings source of truth when FMP annual books exist.",
+        "displayAttribution": "Member directory & activity context via PelosiTracker"
+      },
+      {
+        "id": "ainvest",
+        "name": "AInvest Congressional Trades",
+        "url": "https://www.ainvest.com/",
+        "whatWeUse": "Primary Congress tape source in the live InsiderIndex product (`AINVEST_API_KEY`) for /feed politician prints.",
+        "displayAttribution": "Congressional trade tape via AInvest"
+      }
+    ],
+    "execution": [
+      {
+        "id": "xstocks",
+        "name": "xStocks (tokenized U.S. equities on Solana)",
+        "url": "https://xstocks.fi/",
+        "whatWeUse": "Preferred Solana mint venue for copyable tickers.",
+        "displayAttribution": "Tradable via xStocks on Solana"
+      },
+      {
+        "id": "backpack",
+        "name": "Backpack .US tokenized stocks",
+        "url": "https://backpack.exchange/",
+        "whatWeUse": "Secondary Solana mint venue when xStock mint not present.",
+        "displayAttribution": "Tradable via Backpack .US on Solana"
+      },
+      {
+        "id": "jupiter",
+        "name": "Jupiter",
+        "url": "https://jup.ag/",
+        "whatWeUse": "Swap routing for user-signed single-print copy trades (indexes are research models until native vault Buy is live).",
+        "displayAttribution": "Swaps routed via Jupiter"
+      }
+    ],
+    "websiteFooterBlock": [
+      "Disclosure data: U.S. House Clerk financial disclosures & PTRs; U.S. Senate eFD; STOCK Act filings.",
+      "Normalized holdings/trades: Financial Modeling Prep. Directory/activity context: PelosiTracker. Live tape: AInvest.",
+      "Corporate insiders (separate lane): SEC EDGAR Form 4.",
+      "Only tickers with a Solana mint (xStocks or Backpack .US) enter model weights. Non-tradable holdings stay visible on person pages.",
+      "PTR amounts are disclosed ranges \u2014 we use midpoints for model weights and never invent $0 fills.",
+      "Performance / hit rate: not shown until a verified dated price series exists.",
+      "These baskets are research models. Basket Buy / vault deposit is unavailable until native index release checks pass. Not investment advice."
+    ],
+    "perIndexSourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US)."
+  },
+  "disclaimers": [
+    "Not investment advice. Public disclosures are delayed (STOCK Act allows up to ~45 days) and often report dollar ranges, not exact fills.",
+    "Model indexes are research presentations of disclosed activity. They are not NAV, not audited performance, and not a brokerage product.",
+    "InsiderIndex does not claim members of Congress endorse these baskets.",
+    "Copying a single disclosure print (user-signed swap) is separate from holding a model index.",
+    "Return and hit-rate metrics stay blank until a real dated price series is wired \u2014 we do not invent alpha."
+  ],
+  "indexes": [
+    {
+      "id": "idx-theme-mag7-caucus",
+      "profileId": "theme-mag7-caucus",
+      "name": "Mag7 Caucus",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.3449,
+          "valueUsd": 4636508.0
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.2741,
+          "valueUsd": 3684733.75
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.1151,
+          "valueUsd": 1547096.42
+        },
+        {
+          "ticker": "GOOGL",
+          "venue": "xstock",
+          "venueSymbol": "GOOGLx",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "mintDecimals": 8,
+          "weightPct": 0.1073,
+          "valueUsd": 1442092.92
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.0854,
+          "valueUsd": 1148095.42
+        },
+        {
+          "ticker": "GOOG",
+          "venue": "backpack",
+          "venueSymbol": "GOOG.US",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "mintDecimals": 6,
+          "weightPct": 0.0351,
+          "valueUsd": 472003.5
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.0321,
+          "valueUsd": 431004.0
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.006,
+          "valueUsd": 81002.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-silicon-hill",
+      "profileId": "theme-silicon-hill",
+      "name": "Silicon Hill",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.3237,
+          "valueUsd": 4437506.0
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.2313,
+          "valueUsd": 3172032.73
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.0978,
+          "valueUsd": 1342016.01
+        },
+        {
+          "ticker": "GOOGL",
+          "venue": "xstock",
+          "venueSymbol": "GOOGLx",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "mintDecimals": 8,
+          "weightPct": 0.0896,
+          "valueUsd": 1229012.01
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.0688,
+          "valueUsd": 943015.01
+        },
+        {
+          "ticker": "CRM",
+          "venue": "xstock",
+          "venueSymbol": "CRMx",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "mintDecimals": 8,
+          "weightPct": 0.0531,
+          "valueUsd": 728012.01
+        },
+        {
+          "ticker": "GOOG",
+          "venue": "backpack",
+          "venueSymbol": "GOOG.US",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "mintDecimals": 6,
+          "weightPct": 0.0344,
+          "valueUsd": 472003.5
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.0314,
+          "valueUsd": 431004.0
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.012,
+          "valueUsd": 164803.62
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.0114,
+          "valueUsd": 156803.12
+        },
+        {
+          "ticker": "CRWD",
+          "venue": "xstock",
+          "venueSymbol": "CRWDx",
+          "mint": "Xs7xXqkcK7K8urEqGg52SECi79dRp2cEKKuYjUePYDw",
+          "mintDecimals": 8,
+          "weightPct": 0.0108,
+          "valueUsd": 148802.62
+        },
+        {
+          "ticker": "ORCL",
+          "venue": "xstock",
+          "venueSymbol": "ORCLx",
+          "mint": "XsjFwUPiLofddX5cWFHW35GCbXcSu1BCUGfxoQAQjeL",
+          "mintDecimals": 8,
+          "weightPct": 0.009,
+          "valueUsd": 123502.0
+        },
+        {
+          "ticker": "TSM",
+          "venue": "xstock",
+          "venueSymbol": "TSMx",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "mintDecimals": 8,
+          "weightPct": 0.0061,
+          "valueUsd": 83001.0
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.0059,
+          "valueUsd": 81002.0
+        },
+        {
+          "ticker": "QCOM",
+          "venue": "xstock",
+          "venueSymbol": "QCOMx",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "mintDecimals": 8,
+          "weightPct": 0.0042,
+          "valueUsd": 58027.38
+        },
+        {
+          "ticker": "ADI",
+          "venue": "xstock",
+          "venueSymbol": "ADIx",
+          "mint": "Xs3CytsvJshAYy1TQjq2o2yVWCyEGinNpvkB6f3Qs31",
+          "mintDecimals": 8,
+          "weightPct": 0.0041,
+          "valueUsd": 56502.0
+        },
+        {
+          "ticker": "INTC",
+          "venue": "xstock",
+          "venueSymbol": "INTCx",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "mintDecimals": 8,
+          "weightPct": 0.0035,
+          "valueUsd": 48501.5
+        },
+        {
+          "ticker": "INTU",
+          "venue": "xstock",
+          "venueSymbol": "INTUx",
+          "mint": "XsfodJMz7SyMNsSgATVDcbuMiQDqQoAiRTL1xuyHNUn",
+          "mintDecimals": 8,
+          "weightPct": 0.0017,
+          "valueUsd": 24001.5
+        },
+        {
+          "ticker": "NOW",
+          "venue": "xstock",
+          "venueSymbol": "NOWx",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "mintDecimals": 8,
+          "weightPct": 0.0012,
+          "valueUsd": 16001.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-capitol-cluster",
+      "profileId": "theme-capitol-cluster",
+      "name": "Capitol Cluster",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "AMD",
+          "venue": "xstock",
+          "venueSymbol": "AMDx",
+          "mint": "XsXcJ6GZ9kVnjqGsjBnktRcuwMBmvKWh8S93RefZ1rF",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "HD",
+          "venue": "xstock",
+          "venueSymbol": "HDx",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "NEE",
+          "venue": "xstock",
+          "venueSymbol": "NEEx",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "JNJ",
+          "venue": "xstock",
+          "venueSymbol": "JNJx",
+          "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "UNH",
+          "venue": "xstock",
+          "venueSymbol": "UNHx",
+          "mint": "XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "INTC",
+          "venue": "xstock",
+          "venueSymbol": "INTCx",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "GS",
+          "venue": "xstock",
+          "venueSymbol": "GSx",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "ADBE",
+          "venue": "xstock",
+          "venueSymbol": "ADBEx",
+          "mint": "XsDZMGEU8zadWFCkTtPBoPWYcUX3JHVmghnwf2Mve2q",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "AMAT",
+          "venue": "xstock",
+          "venueSymbol": "AMATx",
+          "mint": "XsQZdaWUAGC4R3fgD2N1fupKvJfJq6YM51ccnsLUWFA",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "DUK",
+          "venue": "xstock",
+          "venueSymbol": "DUKx",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "DVN",
+          "venue": "xstock",
+          "venueSymbol": "DVNx",
+          "mint": "Xs8WNVWbYNsHsqEu9WTb9AazMfG7wFxFat11V6mVK1x",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "NOW",
+          "venue": "xstock",
+          "venueSymbol": "NOWx",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "V",
+          "venue": "xstock",
+          "venueSymbol": "Vx",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "ABBV",
+          "venue": "xstock",
+          "venueSymbol": "ABBVx",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "AMGN",
+          "venue": "xstock",
+          "venueSymbol": "AMGNx",
+          "mint": "XsgKwBMbv8LDzEYRgbKtyqsub6QB56PQVzgTGbiGaNe",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        },
+        {
+          "ticker": "COST",
+          "venue": "backpack",
+          "venueSymbol": "COST.US",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "mintDecimals": 6,
+          "weightPct": 0.04,
+          "valueUsd": 400.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-bipartisan-handshake",
+      "profileId": "theme-bipartisan-handshake",
+      "name": "Bipartisan Handshake",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "valueUsd": 2000.0
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "valueUsd": 2000.0
+        },
+        {
+          "ticker": "CRM",
+          "venue": "xstock",
+          "venueSymbol": "CRMx",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "valueUsd": 2000.0
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "valueUsd": 2000.0
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "valueUsd": 2000.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-fresh-ink",
+      "profileId": "theme-fresh-ink",
+      "name": "Fresh Ink",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.2711,
+          "valueUsd": 22165020.5
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.1925,
+          "valueUsd": 15739522.5
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.1477,
+          "valueUsd": 12072006.5
+        },
+        {
+          "ticker": "BE",
+          "venue": "xstock",
+          "venueSymbol": "BEx",
+          "mint": "XsmGSEqT6VXpVis3aVBDxaNwPgHNXbkjkVUCncsLkNB",
+          "mintDecimals": 8,
+          "weightPct": 0.0917,
+          "valueUsd": 7500002.0
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.0752,
+          "valueUsd": 6152010.5
+        },
+        {
+          "ticker": "INTC",
+          "venue": "xstock",
+          "venueSymbol": "INTCx",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "mintDecimals": 8,
+          "weightPct": 0.0521,
+          "valueUsd": 4261010.0
+        },
+        {
+          "ticker": "GOOGL",
+          "venue": "xstock",
+          "venueSymbol": "GOOGLx",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "mintDecimals": 8,
+          "weightPct": 0.028,
+          "valueUsd": 2290005.0
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.0264,
+          "valueUsd": 2162022.0
+        },
+        {
+          "ticker": "VST",
+          "venue": "backpack",
+          "venueSymbol": "VST.US",
+          "mint": "VST744yvWsHsE7oLLj1x6rcogMvC9HiPbEVpaURqdRR",
+          "mintDecimals": 6,
+          "weightPct": 0.0208,
+          "valueUsd": 1699003.0
+        },
+        {
+          "ticker": "MINT",
+          "venue": "backpack",
+          "venueSymbol": "MINT.US",
+          "mint": "MexfVVvTKfUoEgKkiaiN98T59QJsp3BZzBzfP21xrFV",
+          "mintDecimals": 6,
+          "weightPct": 0.0138,
+          "valueUsd": 1125001.0
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.0126,
+          "valueUsd": 1031514.0
+        },
+        {
+          "ticker": "IBIT",
+          "venue": "backpack",
+          "venueSymbol": "IBIT.US",
+          "mint": "BtZy11yDM76fkku4bgyivbfMpgrdfn7TTdV9WVRKDZeP",
+          "mintDecimals": 6,
+          "weightPct": 0.0125,
+          "valueUsd": 1018509.0
+        },
+        {
+          "ticker": "UBER",
+          "venue": "xstock",
+          "venueSymbol": "UBERx",
+          "mint": "XsAsZLF4MmsvS1sDxRMrUz7REjHfwbC9UAMXSRBqgEB",
+          "mintDecimals": 8,
+          "weightPct": 0.0094,
+          "valueUsd": 766001.5
+        },
+        {
+          "ticker": "ETHA",
+          "venue": "backpack",
+          "venueSymbol": "ETHA.US",
+          "mint": "ETHAACWgDvR6fg3FxaB5S9cM4ZnDKCHCJZ95z31EkKUy",
+          "mintDecimals": 6,
+          "weightPct": 0.0092,
+          "valueUsd": 750000.5
+        },
+        {
+          "ticker": "ITOT",
+          "venue": "backpack",
+          "venueSymbol": "ITOT.US",
+          "mint": "TtG7zYD5TvotiUNkWzCb6NHTy6R6rt3RRqfD9pWKeQ3",
+          "mintDecimals": 6,
+          "weightPct": 0.0091,
+          "valueUsd": 748005.0
+        },
+        {
+          "ticker": "PLTR",
+          "venue": "xstock",
+          "venueSymbol": "PLTRx",
+          "mint": "XsoBhf2ufR8fTyNSjqfU71DYGaE6Z3SUGAidpzriAA4",
+          "mintDecimals": 8,
+          "weightPct": 0.0068,
+          "valueUsd": 560008.0
+        },
+        {
+          "ticker": "TSM",
+          "venue": "xstock",
+          "venueSymbol": "TSMx",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "mintDecimals": 8,
+          "weightPct": 0.0061,
+          "valueUsd": 495505.5
+        },
+        {
+          "ticker": "VT",
+          "venue": "xstock",
+          "venueSymbol": "VTx",
+          "mint": "XsEdDDTcVGJU6nvdRdVnj53eKTrsCkvtrVfXGmUK68V",
+          "mintDecimals": 8,
+          "weightPct": 0.0051,
+          "valueUsd": 415003.0
+        },
+        {
+          "ticker": "DYNF",
+          "venue": "backpack",
+          "venueSymbol": "DYNF.US",
+          "mint": "DYNF9NwbD1qWSapJ3pEhxCMqSYSge8aBts2UW1EihDq1",
+          "mintDecimals": 6,
+          "weightPct": 0.005,
+          "valueUsd": 407002.5
+        },
+        {
+          "ticker": "IVV",
+          "venue": "backpack",
+          "venueSymbol": "IVV.US",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "mintDecimals": 6,
+          "weightPct": 0.0049,
+          "valueUsd": 398004.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-beta-caucus",
+      "profileId": "theme-beta-caucus",
+      "name": "Beta Caucus",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "VOO",
+          "venue": "xstock",
+          "venueSymbol": "VOOx",
+          "mint": "Xsd7TduTbjuYCFL7Uoujb8SbkZLmUsuYNLn7KdvX21x",
+          "mintDecimals": 8,
+          "weightPct": 0.2749,
+          "valueUsd": 2325493.34
+        },
+        {
+          "ticker": "IVV",
+          "venue": "backpack",
+          "venueSymbol": "IVV.US",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "mintDecimals": 6,
+          "weightPct": 0.1816,
+          "valueUsd": 1537321.87
+        },
+        {
+          "ticker": "SPY",
+          "venue": "xstock",
+          "venueSymbol": "SPYx",
+          "mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+          "mintDecimals": 8,
+          "weightPct": 0.0679,
+          "valueUsd": 574637.36
+        },
+        {
+          "ticker": "QQQ",
+          "venue": "xstock",
+          "venueSymbol": "QQQx",
+          "mint": "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ",
+          "mintDecimals": 8,
+          "weightPct": 0.0623,
+          "valueUsd": 527320.37
+        },
+        {
+          "ticker": "PAVE",
+          "venue": "backpack",
+          "venueSymbol": "PAVE.US",
+          "mint": "PAVE8GmghNpPk9e2L7FAodLHKxufXTM4yE1JtfiGUcp",
+          "mintDecimals": 6,
+          "weightPct": 0.0545,
+          "valueUsd": 461624.94
+        },
+        {
+          "ticker": "IJH",
+          "venue": "backpack",
+          "venueSymbol": "IJH.US",
+          "mint": "JHmkX2z8R7ak2uWJZSkfzmDGPpb4msABpGUbakvBbuq",
+          "mintDecimals": 6,
+          "weightPct": 0.0545,
+          "valueUsd": 461624.94
+        },
+        {
+          "ticker": "XLK",
+          "venue": "backpack",
+          "venueSymbol": "XLK.US",
+          "mint": "XLKJut9EA4bnRBRKeJnytbWBbeMXJGC5z3u5L9q8nF8",
+          "mintDecimals": 6,
+          "weightPct": 0.0416,
+          "valueUsd": 351821.37
+        },
+        {
+          "ticker": "EWJ",
+          "venue": "backpack",
+          "venueSymbol": "EWJ.US",
+          "mint": "EWJQvQmWqKUpanexdCGEnNvy8PWnnEMQmSj9rbeGzGPs",
+          "mintDecimals": 6,
+          "weightPct": 0.0409,
+          "valueUsd": 345956.54
+        },
+        {
+          "ticker": "IVW",
+          "venue": "backpack",
+          "venueSymbol": "IVW.US",
+          "mint": "VWZaHvgSkuCP43X6GQAFMskYEx8mmNweZKP1Sdf3g51",
+          "mintDecimals": 6,
+          "weightPct": 0.0387,
+          "valueUsd": 327819.87
+        },
+        {
+          "ticker": "VO",
+          "venue": "backpack",
+          "venueSymbol": "VO.US",
+          "mint": "VrqGozSeEg8WZWEor9z2jURfVcm5bzKxQF8qSMRcy2R",
+          "mintDecimals": 6,
+          "weightPct": 0.0378,
+          "valueUsd": 320220.69
+        },
+        {
+          "ticker": "IWF",
+          "venue": "backpack",
+          "venueSymbol": "IWF.US",
+          "mint": "WFatekWWXWkrHBYKRxaDZak2fiaRRLeTaLGie43PZV7",
+          "mintDecimals": 6,
+          "weightPct": 0.0358,
+          "valueUsd": 303319.87
+        },
+        {
+          "ticker": "EFA",
+          "venue": "backpack",
+          "venueSymbol": "EFA.US",
+          "mint": "EFA8Zrv3SJw7WtBewU6AN9eUWVYcMnrnqdGcdFkYT741",
+          "mintDecimals": 6,
+          "weightPct": 0.0339,
+          "valueUsd": 287318.87
+        },
+        {
+          "ticker": "IJR",
+          "venue": "xstock",
+          "venueSymbol": "IJRx",
+          "mint": "XsyZcb97BzETAqi9BoP2C9D196MiMNBisGMVNje2Thz",
+          "mintDecimals": 8,
+          "weightPct": 0.0304,
+          "valueUsd": 257365.9
+        },
+        {
+          "ticker": "IYW",
+          "venue": "backpack",
+          "venueSymbol": "IYW.US",
+          "mint": "YW2UxGzwpysoDqmPKnEnqb9zHRUWahHGiU5ERuimsLT",
+          "mintDecimals": 6,
+          "weightPct": 0.0245,
+          "valueUsd": 207501.0
+        },
+        {
+          "ticker": "VNQ",
+          "venue": "backpack",
+          "venueSymbol": "VNQ.US",
+          "mint": "VNQQhJE1KDED6FM2nn6ni8Ho3agVoEfkNSs45T8WUdT",
+          "mintDecimals": 6,
+          "weightPct": 0.0207,
+          "valueUsd": 175000.5
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-whips-desk",
+      "profileId": "theme-whips-desk",
+      "name": "Whip's Desk",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "V",
+          "venue": "xstock",
+          "venueSymbol": "Vx",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "mintDecimals": 8,
+          "weightPct": 0.8197,
+          "valueUsd": 2040002.5
+        },
+        {
+          "ticker": "BRK.B",
+          "venue": "xstock",
+          "venueSymbol": "BRK.Bx",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "mintDecimals": 8,
+          "weightPct": 0.0962,
+          "valueUsd": 239503.0
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.0454,
+          "valueUsd": 113004.0
+        },
+        {
+          "ticker": "GS",
+          "venue": "xstock",
+          "venueSymbol": "GSx",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "mintDecimals": 8,
+          "weightPct": 0.0227,
+          "valueUsd": 56502.0
+        },
+        {
+          "ticker": "MA",
+          "venue": "xstock",
+          "venueSymbol": "MAx",
+          "mint": "XsApJFV9MAktqnAc6jqzsHVujxkGm9xcSUffaBoYLKC",
+          "mintDecimals": 8,
+          "weightPct": 0.0096,
+          "valueUsd": 24001.5
+        },
+        {
+          "ticker": "WFC",
+          "venue": "xstock",
+          "venueSymbol": "WFCx",
+          "mint": "XspHXejQ3A4VeimAqR1mAkvgTWgpmmoNR5CUhwCqzqr",
+          "mintDecimals": 8,
+          "weightPct": 0.0064,
+          "valueUsd": 16001.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-capitol-arsenal",
+      "profileId": "theme-capitol-arsenal",
+      "name": "Capitol Arsenal",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "BA",
+          "venue": "xstock",
+          "venueSymbol": "BAx",
+          "mint": "XsBcnKnZMsPaerLiUQ4eMFy4Fjysot4RugYXYDjiqCP",
+          "mintDecimals": 8,
+          "weightPct": 0.5066,
+          "valueUsd": 115501.5
+        },
+        {
+          "ticker": "LMT",
+          "venue": "xstock",
+          "venueSymbol": "LMTx",
+          "mint": "XssULacY8D3z3a8HoQuLid8wdJHcZLGpSST9MkNFzox",
+          "mintDecimals": 8,
+          "weightPct": 0.1754,
+          "valueUsd": 40002.5
+        },
+        {
+          "ticker": "GE",
+          "venue": "xstock",
+          "venueSymbol": "GEx",
+          "mint": "XsfsBjSZoXXKJsxoSt8TyLYsjhBAKFaDPZTCQbFRirP",
+          "mintDecimals": 8,
+          "weightPct": 0.1425,
+          "valueUsd": 32500.5
+        },
+        {
+          "ticker": "HWM",
+          "venue": "xstock",
+          "venueSymbol": "HWMx",
+          "mint": "XsCX8NnXq3qx6zUxXxWwjV2yQnGc9C5y6UyXvE6RG7r",
+          "mintDecimals": 8,
+          "weightPct": 0.1053,
+          "valueUsd": 24001.5
+        },
+        {
+          "ticker": "GEHC",
+          "venue": "xstock",
+          "venueSymbol": "GEHCx",
+          "mint": "XsQoxoLVogLGYRRRcFwjdcFQVLxFpCuYfDtvh3vJ2Ft",
+          "mintDecimals": 8,
+          "weightPct": 0.0351,
+          "valueUsd": 8000.5
+        },
+        {
+          "ticker": "GEV",
+          "venue": "xstock",
+          "venueSymbol": "GEVx",
+          "mint": "XswXzAsMV9kebQjCVtr1btvrQgQ7C4C9kKgH4QYAVzw",
+          "mintDecimals": 8,
+          "weightPct": 0.0351,
+          "valueUsd": 8000.5
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-dual-lock",
+      "profileId": "theme-dual-lock",
+      "name": "Dual Lock",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "GS",
+          "venue": "xstock",
+          "venueSymbol": "GSx",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "CRM",
+          "venue": "xstock",
+          "venueSymbol": "CRMx",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "V",
+          "venue": "xstock",
+          "venueSymbol": "Vx",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "ABBV",
+          "venue": "xstock",
+          "venueSymbol": "ABBVx",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "AJG",
+          "venue": "xstock",
+          "venueSymbol": "AJGx",
+          "mint": "XsYka4UhXnzoqmdPCfqX8EZBQcN2MkrG4gJt4SxGvsN",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "COST",
+          "venue": "backpack",
+          "venueSymbol": "COST.US",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "mintDecimals": 6,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "DUK",
+          "venue": "xstock",
+          "venueSymbol": "DUKx",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "LLY",
+          "venue": "xstock",
+          "venueSymbol": "LLYx",
+          "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "NEE",
+          "venue": "xstock",
+          "venueSymbol": "NEEx",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "NOW",
+          "venue": "xstock",
+          "venueSymbol": "NOWx",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "PH",
+          "venue": "xstock",
+          "venueSymbol": "PHx",
+          "mint": "XskVc7XiWmSqvzbjhA2LqGHQhvBdBNfatfeTpNru6KP",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        },
+        {
+          "ticker": "QCOM",
+          "venue": "xstock",
+          "venueSymbol": "QCOMx",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "valueUsd": 500.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    },
+    {
+      "id": "idx-theme-house-heat",
+      "profileId": "theme-house-heat",
+      "name": "House Heat",
+      "imageUrl": null,
+      "kind": "politician",
+      "party": null,
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "AMD",
+          "venue": "xstock",
+          "venueSymbol": "AMDx",
+          "mint": "XsXcJ6GZ9kVnjqGsjBnktRcuwMBmvKWh8S93RefZ1rF",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "UPS",
+          "venue": "xstock",
+          "venueSymbol": "UPSx",
+          "mint": "XsnqNkeDhvaK8C5B3Z4D1ciCupVAgkw1AdS3U2uEn26",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "BRK.B",
+          "venue": "xstock",
+          "venueSymbol": "BRK.Bx",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "GOOG",
+          "venue": "backpack",
+          "venueSymbol": "GOOG.US",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "mintDecimals": 6,
+          "weightPct": 0.0667,
+          "valueUsd": 667.0
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "valueUsd": 666.0
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "valueUsd": 666.0
+        },
+        {
+          "ticker": "HD",
+          "venue": "xstock",
+          "venueSymbol": "HDx",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "valueUsd": 666.0
+        },
+        {
+          "ticker": "NEE",
+          "venue": "xstock",
+          "venueSymbol": "NEEx",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "valueUsd": 666.0
+        },
+        {
+          "ticker": "JNJ",
+          "venue": "xstock",
+          "venueSymbol": "JNJx",
+          "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "valueUsd": 666.0
+        }
+      ],
+      "lastDisclosureId": null,
+      "lastDisclosureAt": "2026-09-16T05:22:40.771627+00:00"
+    }
+  ],
+  "website": [
+    {
+      "id": "idx-theme-mag7-caucus",
+      "slug": "mag7-caucus",
+      "name": "Mag7 Caucus",
+      "headline": "Congress owns the Mag7",
+      "tagline": "When multiple members of Congress disclose the same mega-cap names, that's a caucus \u2014 not a tip.",
+      "narrative": "Mega-cap tech isn't a secret club trade \u2014 it's what shows up again and again in annual financial disclosures. Mag7 Caucus only includes AAPL, MSFT, NVDA, AMZN, META, GOOGL/GOOG, and TSLA when at least two members hold them on their latest disclosed books. Weights use disclosure band midpoints with a per-person cap so one giant filing doesn't become the whole basket.",
+      "hook": "The S&P royalty club \u2014 as disclosed on Capitol Hill.",
+      "lane": "politician-holdings",
+      "rule": "Ticker \u2208 Mag7 (+ GOOGL); held in \u22652 latest FMP annual books; Solana catalog only; weight = band midpoint; max $5M contribution per member.",
+      "rebalance": "When annual disclosures refresh",
+      "whyItExists": "Person pages already cover individuals. This answers: which mega-caps does Congress collectively own?",
+      "members": [
+        {
+          "slug": "byron-donalds",
+          "name": "Byron Donalds",
+          "party": "Republican",
+          "state": "Florida",
+          "bioguideId": "D000032"
+        },
+        {
+          "slug": "jared-moskowitz",
+          "name": "Jared Moskowitz",
+          "party": "Democrat",
+          "state": "Florida",
+          "bioguideId": "M001217"
+        },
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "kevin-hern",
+          "name": "Kevin Hern",
+          "party": "Republican",
+          "state": "Oklahoma",
+          "bioguideId": "H001082"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "morgan-mcgarvey",
+          "name": "Morgan McGarvey",
+          "party": "Democrat",
+          "state": "Kentucky",
+          "bioguideId": "M001220"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        },
+        {
+          "slug": "patrick-fallon",
+          "name": "Pat Fallon",
+          "party": "Republican",
+          "state": "Texas",
+          "bioguideId": "F000246"
+        },
+        {
+          "slug": "roger-williams",
+          "name": "Roger Williams",
+          "party": "Republican",
+          "state": "Texas",
+          "bioguideId": "W000816"
+        },
+        {
+          "slug": "shri-thanedar",
+          "name": "Shri Thanedar",
+          "party": "Democrat",
+          "state": "Michigan",
+          "bioguideId": "T000488"
+        },
+        {
+          "slug": "susie-lee",
+          "name": "Susie Lee",
+          "party": "Democrat",
+          "state": "Nevada",
+          "bioguideId": "L000590"
+        },
+        {
+          "slug": "thomas-h-kean",
+          "name": "Thomas H. Kean, Jr.",
+          "party": "Republican",
+          "state": "New Jersey",
+          "bioguideId": "K000398"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.3449,
+          "weightBps": 3449,
+          "valueUsd": 4636508.0,
+          "displayName": "Microsoft xStock",
+          "filerCount": 10
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.2741,
+          "weightBps": 2741,
+          "valueUsd": 3684733.75,
+          "displayName": "Apple xStock",
+          "filerCount": 9
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.1151,
+          "weightBps": 1151,
+          "valueUsd": 1547096.42,
+          "displayName": "Amazon xStock",
+          "filerCount": 9
+        },
+        {
+          "ticker": "GOOGL",
+          "venue": "xstock",
+          "venueSymbol": "GOOGLx",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "mintDecimals": 8,
+          "weightPct": 0.1073,
+          "weightBps": 1073,
+          "valueUsd": 1442092.92,
+          "displayName": "Alphabet xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.0854,
+          "weightBps": 854,
+          "valueUsd": 1148095.42,
+          "displayName": "NVIDIA xStock",
+          "filerCount": 6
+        },
+        {
+          "ticker": "GOOG",
+          "venue": "backpack",
+          "venueSymbol": "GOOG.US",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "mintDecimals": 6,
+          "weightPct": 0.0351,
+          "weightBps": 351,
+          "valueUsd": 472003.5,
+          "displayName": "Alphabet Inc.",
+          "filerCount": 4
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.0321,
+          "weightBps": 321,
+          "valueUsd": 431004.0,
+          "displayName": "Meta xStock",
+          "filerCount": 6
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.006,
+          "weightBps": 60,
+          "valueUsd": 81002.0,
+          "displayName": "Tesla xStock",
+          "filerCount": 3
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-mag7-caucus"
+    },
+    {
+      "id": "idx-theme-silicon-hill",
+      "slug": "silicon-hill",
+      "name": "Silicon Hill",
+      "headline": "Tech names Congress keeps on the books",
+      "tagline": "Not one famous portfolio \u2014 the tech stack that shows up across many disclosed books.",
+      "narrative": "InsiderIndex already has full person trackers (including Pelosi). Silicon Hill is the opposite move: take every tradable tech single-name that appears in at least two members' latest annual disclosures, cap each member's dollar influence, and build a Hill-wide tech book. It's the collective software/semiconductor footprint of Congress \u2014 not a celebrity clone.",
+      "hook": "Copy the committee, not the celebrity.",
+      "lane": "politician-holdings",
+      "rule": "Tech single-names (ex-ETFs) in \u22652 latest annual books from tech-tilted members; catalog only; band midpoints; $5M/person cap.",
+      "rebalance": "When annual disclosures refresh",
+      "whyItExists": "Avoids duplicating person pages; sells 'Congress tech exposure' as a theme.",
+      "members": [
+        {
+          "slug": "byron-donalds",
+          "name": "Byron Donalds",
+          "party": "Republican",
+          "state": "Florida",
+          "bioguideId": "D000032"
+        },
+        {
+          "slug": "jared-moskowitz",
+          "name": "Jared Moskowitz",
+          "party": "Democrat",
+          "state": "Florida",
+          "bioguideId": "M001217"
+        },
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "kevin-hern",
+          "name": "Kevin Hern",
+          "party": "Republican",
+          "state": "Oklahoma",
+          "bioguideId": "H001082"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        },
+        {
+          "slug": "shri-thanedar",
+          "name": "Shri Thanedar",
+          "party": "Democrat",
+          "state": "Michigan",
+          "bioguideId": "T000488"
+        },
+        {
+          "slug": "susie-lee",
+          "name": "Susie Lee",
+          "party": "Democrat",
+          "state": "Nevada",
+          "bioguideId": "L000590"
+        },
+        {
+          "slug": "thomas-h-kean",
+          "name": "Thomas H. Kean, Jr.",
+          "party": "Republican",
+          "state": "New Jersey",
+          "bioguideId": "K000398"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.3237,
+          "weightBps": 3237,
+          "valueUsd": 4437506.0,
+          "displayName": "Microsoft xStock",
+          "filerCount": 8
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.2313,
+          "weightBps": 2313,
+          "valueUsd": 3172032.73,
+          "displayName": "Apple xStock",
+          "filerCount": 9
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.0978,
+          "weightBps": 978,
+          "valueUsd": 1342016.01,
+          "displayName": "Amazon xStock",
+          "filerCount": 9
+        },
+        {
+          "ticker": "GOOGL",
+          "venue": "xstock",
+          "venueSymbol": "GOOGLx",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "mintDecimals": 8,
+          "weightPct": 0.0896,
+          "weightBps": 896,
+          "valueUsd": 1229012.01,
+          "displayName": "Alphabet xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.0688,
+          "weightBps": 688,
+          "valueUsd": 943015.01,
+          "displayName": "NVIDIA xStock",
+          "filerCount": 6
+        },
+        {
+          "ticker": "CRM",
+          "venue": "xstock",
+          "venueSymbol": "CRMx",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "mintDecimals": 8,
+          "weightPct": 0.0531,
+          "weightBps": 531,
+          "valueUsd": 728012.01,
+          "displayName": "Salesforce xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "GOOG",
+          "venue": "backpack",
+          "venueSymbol": "GOOG.US",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "mintDecimals": 6,
+          "weightPct": 0.0344,
+          "weightBps": 344,
+          "valueUsd": 472003.5,
+          "displayName": "Alphabet Inc.",
+          "filerCount": 4
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.0314,
+          "weightBps": 314,
+          "valueUsd": 431004.0,
+          "displayName": "Meta xStock",
+          "filerCount": 6
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.012,
+          "weightBps": 120,
+          "valueUsd": 164803.62,
+          "displayName": "Broadcom xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.0114,
+          "weightBps": 114,
+          "valueUsd": 156803.12,
+          "displayName": "Palo Alto Networks xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "CRWD",
+          "venue": "xstock",
+          "venueSymbol": "CRWDx",
+          "mint": "Xs7xXqkcK7K8urEqGg52SECi79dRp2cEKKuYjUePYDw",
+          "mintDecimals": 8,
+          "weightPct": 0.0108,
+          "weightBps": 108,
+          "valueUsd": 148802.62,
+          "displayName": "CrowdStrike xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "ORCL",
+          "venue": "xstock",
+          "venueSymbol": "ORCLx",
+          "mint": "XsjFwUPiLofddX5cWFHW35GCbXcSu1BCUGfxoQAQjeL",
+          "mintDecimals": 8,
+          "weightPct": 0.009,
+          "weightBps": 90,
+          "valueUsd": 123502.0,
+          "displayName": "Oracle xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "TSM",
+          "venue": "xstock",
+          "venueSymbol": "TSMx",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "mintDecimals": 8,
+          "weightPct": 0.0061,
+          "weightBps": 61,
+          "valueUsd": 83001.0,
+          "displayName": "TSMC xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.0059,
+          "weightBps": 59,
+          "valueUsd": 81002.0,
+          "displayName": "Tesla xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "QCOM",
+          "venue": "xstock",
+          "venueSymbol": "QCOMx",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "mintDecimals": 8,
+          "weightPct": 0.0042,
+          "weightBps": 42,
+          "valueUsd": 58027.38,
+          "displayName": "Qualcomm xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "ADI",
+          "venue": "xstock",
+          "venueSymbol": "ADIx",
+          "mint": "Xs3CytsvJshAYy1TQjq2o2yVWCyEGinNpvkB6f3Qs31",
+          "mintDecimals": 8,
+          "weightPct": 0.0041,
+          "weightBps": 41,
+          "valueUsd": 56502.0,
+          "displayName": "Analog Devices xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "INTC",
+          "venue": "xstock",
+          "venueSymbol": "INTCx",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "mintDecimals": 8,
+          "weightPct": 0.0035,
+          "weightBps": 35,
+          "valueUsd": 48501.5,
+          "displayName": "Intel xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "INTU",
+          "venue": "xstock",
+          "venueSymbol": "INTUx",
+          "mint": "XsfodJMz7SyMNsSgATVDcbuMiQDqQoAiRTL1xuyHNUn",
+          "mintDecimals": 8,
+          "weightPct": 0.0017,
+          "weightBps": 17,
+          "valueUsd": 24001.5,
+          "displayName": "Intuit xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "NOW",
+          "venue": "xstock",
+          "venueSymbol": "NOWx",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "mintDecimals": 8,
+          "weightPct": 0.0012,
+          "weightBps": 12,
+          "valueUsd": 16001.0,
+          "displayName": "ServiceNow xStock",
+          "filerCount": 2
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-silicon-hill"
+    },
+    {
+      "id": "idx-theme-capitol-cluster",
+      "slug": "capitol-cluster",
+      "name": "Capitol Cluster",
+      "headline": "Herd buys on the Hill",
+      "tagline": "When 3+ members buy the same ticker, it stops looking like noise.",
+      "narrative": "Periodic transaction reports are messy \u2014 ranges, delays, spouses. Clustering cuts through that. Capitol Cluster only keeps Solana-tradable names bought by multiple members since 2024, then equal-weights them. Filer count is the filter; equal weight keeps one mega-print from dominating.",
+      "hook": "Follow the pile-on.",
+      "lane": "politician-trades",
+      "rule": "PTR/FMP buys since 2024-01-01; \u22653 distinct members; catalog only; equal weight.",
+      "rebalance": "Weekly (model)",
+      "whyItExists": "Classic Quiver-style crowd signal, crypto-native execution path.",
+      "members": [
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "kevin-hern",
+          "name": "Kevin Hern",
+          "party": "Republican",
+          "state": "Oklahoma",
+          "bioguideId": "H001082"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Microsoft xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "NVIDIA xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Amazon xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Tesla xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "AMD",
+          "venue": "xstock",
+          "venueSymbol": "AMDx",
+          "mint": "XsXcJ6GZ9kVnjqGsjBnktRcuwMBmvKWh8S93RefZ1rF",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "AMD xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "JPMorgan Chase xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Apple xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Palo Alto Networks xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Meta xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "HD",
+          "venue": "xstock",
+          "venueSymbol": "HDx",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Home Depot xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "NEE",
+          "venue": "xstock",
+          "venueSymbol": "NEEx",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "NextEra Energy xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "JNJ",
+          "venue": "xstock",
+          "venueSymbol": "JNJx",
+          "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Johnson & Johnson xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "UNH",
+          "venue": "xstock",
+          "venueSymbol": "UNHx",
+          "mint": "XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "UnitedHealth xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "INTC",
+          "venue": "xstock",
+          "venueSymbol": "INTCx",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Intel xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "GS",
+          "venue": "xstock",
+          "venueSymbol": "GSx",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Goldman Sachs xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "ADBE",
+          "venue": "xstock",
+          "venueSymbol": "ADBEx",
+          "mint": "XsDZMGEU8zadWFCkTtPBoPWYcUX3JHVmghnwf2Mve2q",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Adobe xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "AMAT",
+          "venue": "xstock",
+          "venueSymbol": "AMATx",
+          "mint": "XsQZdaWUAGC4R3fgD2N1fupKvJfJq6YM51ccnsLUWFA",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Applied Materials, Inc. xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "DUK",
+          "venue": "xstock",
+          "venueSymbol": "DUKx",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Duke Energy xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "DVN",
+          "venue": "xstock",
+          "venueSymbol": "DVNx",
+          "mint": "Xs8WNVWbYNsHsqEu9WTb9AazMfG7wFxFat11V6mVK1x",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Devon Energy xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "NOW",
+          "venue": "xstock",
+          "venueSymbol": "NOWx",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "ServiceNow xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "V",
+          "venue": "xstock",
+          "venueSymbol": "Vx",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Visa xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "ABBV",
+          "venue": "xstock",
+          "venueSymbol": "ABBVx",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "AbbVie xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Broadcom xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "AMGN",
+          "venue": "xstock",
+          "venueSymbol": "AMGNx",
+          "mint": "XsgKwBMbv8LDzEYRgbKtyqsub6QB56PQVzgTGbiGaNe",
+          "mintDecimals": 8,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Amgen xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "COST",
+          "venue": "backpack",
+          "venueSymbol": "COST.US",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "mintDecimals": 6,
+          "weightPct": 0.04,
+          "weightBps": 400,
+          "valueUsd": 400.0,
+          "displayName": "Costco Wholesale Corporation",
+          "filerCount": 3
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-capitol-cluster"
+    },
+    {
+      "id": "idx-theme-bipartisan-handshake",
+      "slug": "bipartisan-handshake",
+      "name": "Bipartisan Handshake",
+      "headline": "Rare agreement: both parties bought it",
+      "tagline": "The aisle is broken \u2014 except when they buy the same stocks.",
+      "narrative": "Party-tilt products (NANC/GOP) exaggerate differences. Handshake does the reverse: only tickers with disclosed buys from both Democrats and Republicans since 2024. Equal weight. Thin on purpose \u2014 consensus is scarce, and that's the story.",
+      "hook": "The only bipartisan bill that clears committee.",
+      "lane": "politician-trades",
+      "rule": "\u22651 Dem and \u22651 Rep buy since 2024 (strict 2/2 when universe allows); catalog; equal weight.",
+      "rebalance": "Monthly (model)",
+      "whyItExists": "Political risk filter; shareable 'both sides' narrative.",
+      "members": [
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "weightBps": 2000,
+          "valueUsd": 2000.0,
+          "displayName": "Broadcom xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "weightBps": 2000,
+          "valueUsd": 2000.0,
+          "displayName": "NVIDIA xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "CRM",
+          "venue": "xstock",
+          "venueSymbol": "CRMx",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "weightBps": 2000,
+          "valueUsd": 2000.0,
+          "displayName": "Salesforce xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "weightBps": 2000,
+          "valueUsd": 2000.0,
+          "displayName": "Palo Alto Networks xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.2,
+          "weightBps": 2000,
+          "valueUsd": 2000.0,
+          "displayName": "Tesla xStock",
+          "filerCount": 4
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-bipartisan-handshake"
+    },
+    {
+      "id": "idx-theme-fresh-ink",
+      "slug": "fresh-ink",
+      "name": "Fresh Ink",
+      "headline": "Newest Congressional buy prints",
+      "tagline": "Sized by disclosure band midpoints \u2014 the loudest recent ink on the tape.",
+      "narrative": "The feed is for copying one print. Fresh Ink is for scanning many: recent buy disclosures, ranked by dollar-band midpoints, capped to the top 20 Solana-tradable names. It's a research basket that feels like the news cycle.",
+      "hook": "Still drying on the filing.",
+      "lane": "politician-trades",
+      "rule": "Buys \u22652024-06-01 (undated kept); catalog; weight \u221d band midpoint; top 20.",
+      "rebalance": "Weekly (model)",
+      "whyItExists": "Bridges /feed urgency into an index ticket.",
+      "members": [
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "kevin-hern",
+          "name": "Kevin Hern",
+          "party": "Republican",
+          "state": "Oklahoma",
+          "bioguideId": "H001082"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        },
+        {
+          "slug": "shri-thanedar",
+          "name": "Shri Thanedar",
+          "party": "Democrat",
+          "state": "Michigan",
+          "bioguideId": "T000488"
+        },
+        {
+          "slug": "susie-lee",
+          "name": "Susie Lee",
+          "party": "Democrat",
+          "state": "Nevada",
+          "bioguideId": "L000590"
+        },
+        {
+          "slug": "vern-buchanan",
+          "name": "Vern Buchanan",
+          "party": "Republican",
+          "state": "Florida",
+          "bioguideId": "B001260"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.2711,
+          "weightBps": 2711,
+          "valueUsd": 22165020.5,
+          "displayName": "Microsoft xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.1925,
+          "weightBps": 1925,
+          "valueUsd": 15739522.5,
+          "displayName": "NVIDIA xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.1477,
+          "weightBps": 1477,
+          "valueUsd": 12072006.5,
+          "displayName": "Broadcom xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "BE",
+          "venue": "xstock",
+          "venueSymbol": "BEx",
+          "mint": "XsmGSEqT6VXpVis3aVBDxaNwPgHNXbkjkVUCncsLkNB",
+          "mintDecimals": 8,
+          "weightPct": 0.0917,
+          "weightBps": 917,
+          "valueUsd": 7500002.0,
+          "displayName": "Bloom Energy xStock",
+          "filerCount": 1
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.0752,
+          "weightBps": 752,
+          "valueUsd": 6152010.5,
+          "displayName": "Palo Alto Networks xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "INTC",
+          "venue": "xstock",
+          "venueSymbol": "INTCx",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "mintDecimals": 8,
+          "weightPct": 0.0521,
+          "weightBps": 521,
+          "valueUsd": 4261010.0,
+          "displayName": "Intel xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "GOOGL",
+          "venue": "xstock",
+          "venueSymbol": "GOOGLx",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "mintDecimals": 8,
+          "weightPct": 0.028,
+          "weightBps": 280,
+          "valueUsd": 2290005.0,
+          "displayName": "Alphabet xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.0264,
+          "weightBps": 264,
+          "valueUsd": 2162022.0,
+          "displayName": "Amazon xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "VST",
+          "venue": "backpack",
+          "venueSymbol": "VST.US",
+          "mint": "VST744yvWsHsE7oLLj1x6rcogMvC9HiPbEVpaURqdRR",
+          "mintDecimals": 6,
+          "weightPct": 0.0208,
+          "weightBps": 208,
+          "valueUsd": 1699003.0,
+          "displayName": "Vistra Corp.",
+          "filerCount": 3
+        },
+        {
+          "ticker": "MINT",
+          "venue": "backpack",
+          "venueSymbol": "MINT.US",
+          "mint": "MexfVVvTKfUoEgKkiaiN98T59QJsp3BZzBzfP21xrFV",
+          "mintDecimals": 6,
+          "weightPct": 0.0138,
+          "weightBps": 138,
+          "valueUsd": 1125001.0,
+          "displayName": "PIMCO Enhanced Short Maturity Active Exchange-Traded Fund",
+          "filerCount": 1
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.0126,
+          "weightBps": 126,
+          "valueUsd": 1031514.0,
+          "displayName": "Apple xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "IBIT",
+          "venue": "backpack",
+          "venueSymbol": "IBIT.US",
+          "mint": "BtZy11yDM76fkku4bgyivbfMpgrdfn7TTdV9WVRKDZeP",
+          "mintDecimals": 6,
+          "weightPct": 0.0125,
+          "weightBps": 125,
+          "valueUsd": 1018509.0,
+          "displayName": "iShares Bitcoin Trust ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "UBER",
+          "venue": "xstock",
+          "venueSymbol": "UBERx",
+          "mint": "XsAsZLF4MmsvS1sDxRMrUz7REjHfwbC9UAMXSRBqgEB",
+          "mintDecimals": 8,
+          "weightPct": 0.0094,
+          "weightBps": 94,
+          "valueUsd": 766001.5,
+          "displayName": "Uber xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "ETHA",
+          "venue": "backpack",
+          "venueSymbol": "ETHA.US",
+          "mint": "ETHAACWgDvR6fg3FxaB5S9cM4ZnDKCHCJZ95z31EkKUy",
+          "mintDecimals": 6,
+          "weightPct": 0.0092,
+          "weightBps": 92,
+          "valueUsd": 750000.5,
+          "displayName": "iShares Ethereum Trust ETF",
+          "filerCount": 1
+        },
+        {
+          "ticker": "ITOT",
+          "venue": "backpack",
+          "venueSymbol": "ITOT.US",
+          "mint": "TtG7zYD5TvotiUNkWzCb6NHTy6R6rt3RRqfD9pWKeQ3",
+          "mintDecimals": 6,
+          "weightPct": 0.0091,
+          "weightBps": 91,
+          "valueUsd": 748005.0,
+          "displayName": "iShares Core S&P Total U.S. Stock Market ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "PLTR",
+          "venue": "xstock",
+          "venueSymbol": "PLTRx",
+          "mint": "XsoBhf2ufR8fTyNSjqfU71DYGaE6Z3SUGAidpzriAA4",
+          "mintDecimals": 8,
+          "weightPct": 0.0068,
+          "weightBps": 68,
+          "valueUsd": 560008.0,
+          "displayName": "Palantir xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "TSM",
+          "venue": "xstock",
+          "venueSymbol": "TSMx",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "mintDecimals": 8,
+          "weightPct": 0.0061,
+          "weightBps": 61,
+          "valueUsd": 495505.5,
+          "displayName": "TSMC xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "VT",
+          "venue": "xstock",
+          "venueSymbol": "VTx",
+          "mint": "XsEdDDTcVGJU6nvdRdVnj53eKTrsCkvtrVfXGmUK68V",
+          "mintDecimals": 8,
+          "weightPct": 0.0051,
+          "weightBps": 51,
+          "valueUsd": 415003.0,
+          "displayName": "Vanguard Total World xStock",
+          "filerCount": 1
+        },
+        {
+          "ticker": "DYNF",
+          "venue": "backpack",
+          "venueSymbol": "DYNF.US",
+          "mint": "DYNF9NwbD1qWSapJ3pEhxCMqSYSge8aBts2UW1EihDq1",
+          "mintDecimals": 6,
+          "weightPct": 0.005,
+          "weightBps": 50,
+          "valueUsd": 407002.5,
+          "displayName": "iShares U.S. Equity Factor Rotation Active ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "IVV",
+          "venue": "backpack",
+          "venueSymbol": "IVV.US",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "mintDecimals": 6,
+          "weightPct": 0.0049,
+          "weightBps": 49,
+          "valueUsd": 398004.0,
+          "displayName": "iShares Core S&P 500 ETF",
+          "filerCount": 2
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-fresh-ink"
+    },
+    {
+      "id": "idx-theme-beta-caucus",
+      "slug": "beta-caucus",
+      "name": "Beta Caucus",
+      "headline": "Congress buys the market itself",
+      "tagline": "VOO, IVV, QQQ \u2014 the quiet wealth stack hiding in financial disclosures.",
+      "narrative": "Not every story is NVDA. A surprising share of disclosed books is index ETFs. Beta Caucus gathers members with \u22653 catalog ETF holdings and weights those ETF legs by disclosure midpoints. It's the 'adults in the room' basket \u2014 boring on purpose, and that's the joke.",
+      "hook": "The most bipartisan trade: own the market.",
+      "lane": "politician-holdings",
+      "rule": "Members with \u22653 catalog ETF legs; constituents=those ETFs; band midpoints; $3M/person cap.",
+      "rebalance": "When annual disclosures refresh",
+      "whyItExists": "Contrasts meme-tech with how Congress actually indexes.",
+      "members": [
+        {
+          "slug": "jared-moskowitz",
+          "name": "Jared Moskowitz",
+          "party": "Democrat",
+          "state": "Florida",
+          "bioguideId": "M001217"
+        },
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "larry-bucshon",
+          "name": "Larry Bucshon",
+          "party": "Republican",
+          "state": "Indiana",
+          "bioguideId": "B001275"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "michael-r-turner",
+          "name": "Michael R. Turner",
+          "party": "Republican",
+          "state": "Ohio",
+          "bioguideId": "T000463"
+        },
+        {
+          "slug": "mike-carey",
+          "name": "Mike Carey",
+          "party": "Republican",
+          "state": "Ohio",
+          "bioguideId": "C001126"
+        },
+        {
+          "slug": "mikie-sherrill",
+          "name": "Mikie Sherrill",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "S001207"
+        },
+        {
+          "slug": "morgan-mcgarvey",
+          "name": "Morgan McGarvey",
+          "party": "Democrat",
+          "state": "Kentucky",
+          "bioguideId": "M001220"
+        },
+        {
+          "slug": "patrick-fallon",
+          "name": "Pat Fallon",
+          "party": "Republican",
+          "state": "Texas",
+          "bioguideId": "F000246"
+        },
+        {
+          "slug": "susie-lee",
+          "name": "Susie Lee",
+          "party": "Democrat",
+          "state": "Nevada",
+          "bioguideId": "L000590"
+        },
+        {
+          "slug": "vern-buchanan",
+          "name": "Vern Buchanan",
+          "party": "Republican",
+          "state": "Florida",
+          "bioguideId": "B001260"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "VOO",
+          "venue": "xstock",
+          "venueSymbol": "VOOx",
+          "mint": "Xsd7TduTbjuYCFL7Uoujb8SbkZLmUsuYNLn7KdvX21x",
+          "mintDecimals": 8,
+          "weightPct": 0.2749,
+          "weightBps": 2749,
+          "valueUsd": 2325493.34,
+          "displayName": "Vanguard S&P 500 xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "IVV",
+          "venue": "backpack",
+          "venueSymbol": "IVV.US",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "mintDecimals": 6,
+          "weightPct": 0.1816,
+          "weightBps": 1816,
+          "valueUsd": 1537321.87,
+          "displayName": "iShares Core S&P 500 ETF",
+          "filerCount": 4
+        },
+        {
+          "ticker": "SPY",
+          "venue": "xstock",
+          "venueSymbol": "SPYx",
+          "mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+          "mintDecimals": 8,
+          "weightPct": 0.0679,
+          "weightBps": 679,
+          "valueUsd": 574637.36,
+          "displayName": "SP500 xStock",
+          "filerCount": 1
+        },
+        {
+          "ticker": "QQQ",
+          "venue": "xstock",
+          "venueSymbol": "QQQx",
+          "mint": "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ",
+          "mintDecimals": 8,
+          "weightPct": 0.0623,
+          "weightBps": 623,
+          "valueUsd": 527320.37,
+          "displayName": "Nasdaq xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "PAVE",
+          "venue": "backpack",
+          "venueSymbol": "PAVE.US",
+          "mint": "PAVE8GmghNpPk9e2L7FAodLHKxufXTM4yE1JtfiGUcp",
+          "mintDecimals": 6,
+          "weightPct": 0.0545,
+          "weightBps": 545,
+          "valueUsd": 461624.94,
+          "displayName": "Global X U.S. Infrastructure Development ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "IJH",
+          "venue": "backpack",
+          "venueSymbol": "IJH.US",
+          "mint": "JHmkX2z8R7ak2uWJZSkfzmDGPpb4msABpGUbakvBbuq",
+          "mintDecimals": 6,
+          "weightPct": 0.0545,
+          "weightBps": 545,
+          "valueUsd": 461624.94,
+          "displayName": "iShares Core S&P Mid-Cap ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "XLK",
+          "venue": "backpack",
+          "venueSymbol": "XLK.US",
+          "mint": "XLKJut9EA4bnRBRKeJnytbWBbeMXJGC5z3u5L9q8nF8",
+          "mintDecimals": 6,
+          "weightPct": 0.0416,
+          "weightBps": 416,
+          "valueUsd": 351821.37,
+          "displayName": "State Street Technology Select Sector SPDR ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "EWJ",
+          "venue": "backpack",
+          "venueSymbol": "EWJ.US",
+          "mint": "EWJQvQmWqKUpanexdCGEnNvy8PWnnEMQmSj9rbeGzGPs",
+          "mintDecimals": 6,
+          "weightPct": 0.0409,
+          "weightBps": 409,
+          "valueUsd": 345956.54,
+          "displayName": "iShares MSCI Japan ETF",
+          "filerCount": 3
+        },
+        {
+          "ticker": "IVW",
+          "venue": "backpack",
+          "venueSymbol": "IVW.US",
+          "mint": "VWZaHvgSkuCP43X6GQAFMskYEx8mmNweZKP1Sdf3g51",
+          "mintDecimals": 6,
+          "weightPct": 0.0387,
+          "weightBps": 387,
+          "valueUsd": 327819.87,
+          "displayName": "iShares S&P 500 Growth ETF",
+          "filerCount": 3
+        },
+        {
+          "ticker": "VO",
+          "venue": "backpack",
+          "venueSymbol": "VO.US",
+          "mint": "VrqGozSeEg8WZWEor9z2jURfVcm5bzKxQF8qSMRcy2R",
+          "mintDecimals": 6,
+          "weightPct": 0.0378,
+          "weightBps": 378,
+          "valueUsd": 320220.69,
+          "displayName": "Vanguard Mid-Cap Index Fund ETF Shares",
+          "filerCount": 2
+        },
+        {
+          "ticker": "IWF",
+          "venue": "backpack",
+          "venueSymbol": "IWF.US",
+          "mint": "WFatekWWXWkrHBYKRxaDZak2fiaRRLeTaLGie43PZV7",
+          "mintDecimals": 6,
+          "weightPct": 0.0358,
+          "weightBps": 358,
+          "valueUsd": 303319.87,
+          "displayName": "iShares Russell 1000 Growth ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "EFA",
+          "venue": "backpack",
+          "venueSymbol": "EFA.US",
+          "mint": "EFA8Zrv3SJw7WtBewU6AN9eUWVYcMnrnqdGcdFkYT741",
+          "mintDecimals": 6,
+          "weightPct": 0.0339,
+          "weightBps": 339,
+          "valueUsd": 287318.87,
+          "displayName": "iShares MSCI EAFE ETF",
+          "filerCount": 1
+        },
+        {
+          "ticker": "IJR",
+          "venue": "xstock",
+          "venueSymbol": "IJRx",
+          "mint": "XsyZcb97BzETAqi9BoP2C9D196MiMNBisGMVNje2Thz",
+          "mintDecimals": 8,
+          "weightPct": 0.0304,
+          "weightBps": 304,
+          "valueUsd": 257365.9,
+          "displayName": "S&P Small Cap xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "IYW",
+          "venue": "backpack",
+          "venueSymbol": "IYW.US",
+          "mint": "YW2UxGzwpysoDqmPKnEnqb9zHRUWahHGiU5ERuimsLT",
+          "mintDecimals": 6,
+          "weightPct": 0.0245,
+          "weightBps": 245,
+          "valueUsd": 207501.0,
+          "displayName": "iShares U.S. Technology ETF",
+          "filerCount": 2
+        },
+        {
+          "ticker": "VNQ",
+          "venue": "backpack",
+          "venueSymbol": "VNQ.US",
+          "mint": "VNQQhJE1KDED6FM2nn6ni8Ho3agVoEfkNSs45T8WUdT",
+          "mintDecimals": 6,
+          "weightPct": 0.0207,
+          "weightBps": 207,
+          "valueUsd": 175000.5,
+          "displayName": "Vanguard Real Estate Index Fund ETF Shares",
+          "filerCount": 1
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-beta-caucus"
+    },
+    {
+      "id": "idx-theme-whips-desk",
+      "slug": "whips-desk",
+      "name": "Whip's Desk",
+      "headline": "Banks, brokers, cards on the books",
+      "tagline": "The finance names that survive committee markup \u2014 and annual filings.",
+      "narrative": "Financial Services is the most common 'top sector' tag on PelosiTracker hitters. Whip's Desk isolates catalog-tradable banks, brokers, and cards from finance-tilted disclosed books. It's power-broker aesthetics without cloning any single member.",
+      "hook": "Follow the money committee.",
+      "lane": "politician-holdings",
+      "rule": "Finance single-names from finance-tagged / \u22652-finance-holding members; prefer tickers held by \u22652; catalog; band midpoints; $2M/person cap.",
+      "rebalance": "When annual disclosures refresh",
+      "whyItExists": "Sector story with liquid, familiar tickers.",
+      "members": [
+        {
+          "slug": "byron-donalds",
+          "name": "Byron Donalds",
+          "party": "Republican",
+          "state": "Florida",
+          "bioguideId": "D000032"
+        },
+        {
+          "slug": "jared-moskowitz",
+          "name": "Jared Moskowitz",
+          "party": "Democrat",
+          "state": "Florida",
+          "bioguideId": "M001217"
+        },
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        },
+        {
+          "slug": "shri-thanedar",
+          "name": "Shri Thanedar",
+          "party": "Democrat",
+          "state": "Michigan",
+          "bioguideId": "T000488"
+        },
+        {
+          "slug": "thomas-h-kean",
+          "name": "Thomas H. Kean, Jr.",
+          "party": "Republican",
+          "state": "New Jersey",
+          "bioguideId": "K000398"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "V",
+          "venue": "xstock",
+          "venueSymbol": "Vx",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "mintDecimals": 8,
+          "weightPct": 0.8197,
+          "weightBps": 8197,
+          "valueUsd": 2040002.5,
+          "displayName": "Visa xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "BRK.B",
+          "venue": "xstock",
+          "venueSymbol": "BRK.Bx",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "mintDecimals": 8,
+          "weightPct": 0.0962,
+          "weightBps": 962,
+          "valueUsd": 239503.0,
+          "displayName": "Berkshire Hathaway xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.0454,
+          "weightBps": 454,
+          "valueUsd": 113004.0,
+          "displayName": "JPMorgan Chase xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "GS",
+          "venue": "xstock",
+          "venueSymbol": "GSx",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "mintDecimals": 8,
+          "weightPct": 0.0227,
+          "weightBps": 227,
+          "valueUsd": 56502.0,
+          "displayName": "Goldman Sachs xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "MA",
+          "venue": "xstock",
+          "venueSymbol": "MAx",
+          "mint": "XsApJFV9MAktqnAc6jqzsHVujxkGm9xcSUffaBoYLKC",
+          "mintDecimals": 8,
+          "weightPct": 0.0096,
+          "weightBps": 96,
+          "valueUsd": 24001.5,
+          "displayName": "Mastercard xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "WFC",
+          "venue": "xstock",
+          "venueSymbol": "WFCx",
+          "mint": "XspHXejQ3A4VeimAqR1mAkvgTWgpmmoNR5CUhwCqzqr",
+          "mintDecimals": 8,
+          "weightPct": 0.0064,
+          "weightBps": 64,
+          "valueUsd": 16001.0,
+          "displayName": "Wells Fargo xStock",
+          "filerCount": 2
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-whips-desk"
+    },
+    {
+      "id": "idx-theme-capitol-arsenal",
+      "slug": "capitol-arsenal",
+      "name": "Capitol Arsenal",
+      "headline": "Defense & aerospace on disclosure forms",
+      "tagline": "Prime contractors and aerospace names that appear in Congressional books.",
+      "narrative": "Defense committees make headlines; disclosed holdings make this index. Capitol Arsenal collects Solana-tradable aerospace/defense names from the latest annual books across the roster. Sparse by design \u2014 when the set is thin, that honesty is part of the product.",
+      "hook": "Policy meets the primes.",
+      "lane": "politician-holdings",
+      "rule": "Defense/aerospace tickers in latest annual books; catalog only; band midpoints; $2M/person cap.",
+      "rebalance": "When annual disclosures refresh",
+      "whyItExists": "Geopolitics narrative; distinct from tech/finance clones.",
+      "members": [
+        {
+          "slug": "byron-donalds",
+          "name": "Byron Donalds",
+          "party": "Republican",
+          "state": "Florida",
+          "bioguideId": "D000032"
+        },
+        {
+          "slug": "jared-moskowitz",
+          "name": "Jared Moskowitz",
+          "party": "Democrat",
+          "state": "Florida",
+          "bioguideId": "M001217"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "patrick-fallon",
+          "name": "Pat Fallon",
+          "party": "Republican",
+          "state": "Texas",
+          "bioguideId": "F000246"
+        },
+        {
+          "slug": "susie-lee",
+          "name": "Susie Lee",
+          "party": "Democrat",
+          "state": "Nevada",
+          "bioguideId": "L000590"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "BA",
+          "venue": "xstock",
+          "venueSymbol": "BAx",
+          "mint": "XsBcnKnZMsPaerLiUQ4eMFy4Fjysot4RugYXYDjiqCP",
+          "mintDecimals": 8,
+          "weightPct": 0.5066,
+          "weightBps": 5066,
+          "valueUsd": 115501.5,
+          "displayName": "Boeing xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "LMT",
+          "venue": "xstock",
+          "venueSymbol": "LMTx",
+          "mint": "XssULacY8D3z3a8HoQuLid8wdJHcZLGpSST9MkNFzox",
+          "mintDecimals": 8,
+          "weightPct": 0.1754,
+          "weightBps": 1754,
+          "valueUsd": 40002.5,
+          "displayName": "Lockheed Martin xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "GE",
+          "venue": "xstock",
+          "venueSymbol": "GEx",
+          "mint": "XsfsBjSZoXXKJsxoSt8TyLYsjhBAKFaDPZTCQbFRirP",
+          "mintDecimals": 8,
+          "weightPct": 0.1425,
+          "weightBps": 1425,
+          "valueUsd": 32500.5,
+          "displayName": "GE Aerospace xStock",
+          "filerCount": 1
+        },
+        {
+          "ticker": "HWM",
+          "venue": "xstock",
+          "venueSymbol": "HWMx",
+          "mint": "XsCX8NnXq3qx6zUxXxWwjV2yQnGc9C5y6UyXvE6RG7r",
+          "mintDecimals": 8,
+          "weightPct": 0.1053,
+          "weightBps": 1053,
+          "valueUsd": 24001.5,
+          "displayName": "Howmet Aerospace xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "GEHC",
+          "venue": "xstock",
+          "venueSymbol": "GEHCx",
+          "mint": "XsQoxoLVogLGYRRRcFwjdcFQVLxFpCuYfDtvh3vJ2Ft",
+          "mintDecimals": 8,
+          "weightPct": 0.0351,
+          "weightBps": 351,
+          "valueUsd": 8000.5,
+          "displayName": "GE HealthCare Technologies xStock",
+          "filerCount": 1
+        },
+        {
+          "ticker": "GEV",
+          "venue": "xstock",
+          "venueSymbol": "GEVx",
+          "mint": "XswXzAsMV9kebQjCVtr1btvrQgQ7C4C9kKgH4QYAVzw",
+          "mintDecimals": 8,
+          "weightPct": 0.0351,
+          "weightBps": 351,
+          "valueUsd": 8000.5,
+          "displayName": "GE Vernova Inc. xStock",
+          "filerCount": 1
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-capitol-arsenal"
+    },
+    {
+      "id": "idx-theme-dual-lock",
+      "slug": "dual-lock",
+      "name": "Dual Lock",
+      "headline": "Still held. Still buying.",
+      "tagline": "Annual book + fresh purchase \u2014 double confirmation, no celebrity required.",
+      "narrative": "A buy print can be noise. A position on the annual form can be stale. Dual Lock requires both: the ticker is on a member's latest disclosed book and appears in their 2024+ buy tape. Prefer names locked by \u22652 members. Equal weight.",
+      "hook": "Two locks. One key.",
+      "lane": "hybrid-holdings+trades",
+      "rule": "Intersection of latest catalog holdings and 2024+ buys; prefer \u22652 members; equal weight.",
+      "rebalance": "Weekly (model)",
+      "whyItExists": "Highest-conviction hybrid without person-clone UX.",
+      "members": [
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Apple xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Amazon xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "GS",
+          "venue": "xstock",
+          "venueSymbol": "GSx",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Goldman Sachs xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Microsoft xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "NVIDIA xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "CRM",
+          "venue": "xstock",
+          "venueSymbol": "CRMx",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Salesforce xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Meta xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Palo Alto Networks xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "V",
+          "venue": "xstock",
+          "venueSymbol": "Vx",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Visa xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "ABBV",
+          "venue": "xstock",
+          "venueSymbol": "ABBVx",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "AbbVie xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "AJG",
+          "venue": "xstock",
+          "venueSymbol": "AJGx",
+          "mint": "XsYka4UhXnzoqmdPCfqX8EZBQcN2MkrG4gJt4SxGvsN",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Arthur J. Gallagher xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "AVGO",
+          "venue": "xstock",
+          "venueSymbol": "AVGOx",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Broadcom xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "COST",
+          "venue": "backpack",
+          "venueSymbol": "COST.US",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "mintDecimals": 6,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Costco Wholesale Corporation",
+          "filerCount": 2
+        },
+        {
+          "ticker": "DUK",
+          "venue": "xstock",
+          "venueSymbol": "DUKx",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Duke Energy xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "JPMorgan Chase xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "LLY",
+          "venue": "xstock",
+          "venueSymbol": "LLYx",
+          "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Eli Lilly xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "NEE",
+          "venue": "xstock",
+          "venueSymbol": "NEEx",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "NextEra Energy xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "NOW",
+          "venue": "xstock",
+          "venueSymbol": "NOWx",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "ServiceNow xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "PH",
+          "venue": "xstock",
+          "venueSymbol": "PHx",
+          "mint": "XskVc7XiWmSqvzbjhA2LqGHQhvBdBNfatfeTpNru6KP",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Parker Hannifin xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "QCOM",
+          "venue": "xstock",
+          "venueSymbol": "QCOMx",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "mintDecimals": 8,
+          "weightPct": 0.05,
+          "weightBps": 500,
+          "valueUsd": 500.0,
+          "displayName": "Qualcomm xStock",
+          "filerCount": 2
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-dual-lock"
+    },
+    {
+      "id": "idx-theme-house-heat",
+      "slug": "house-heat",
+      "name": "House Heat",
+      "headline": "What Congress can't stop buying",
+      "tagline": "A social heat list \u2014 ranked by raw purchase count, equal weight.",
+      "narrative": "Ignore dollar bands for a second. Sometimes the story is frequency: which tickers keep showing up on purchase disclosures. House Heat ranks by buy count since 2024, takes the top 15 catalog names, and equal-weights. Built for share cards and weekly refresh.",
+      "hook": "The Hill's repeat offenders.",
+      "lane": "politician-trades",
+      "rule": "Top 15 catalog tickers by 2024+ buy count; equal weight.",
+      "rebalance": "Weekly (model)",
+      "whyItExists": "Social/virality surface distinct from midpoint-weighted Fresh Ink.",
+      "members": [
+        {
+          "slug": "josh-gottheimer",
+          "name": "Josh Gottheimer",
+          "party": "Democrat",
+          "state": "New Jersey",
+          "bioguideId": "G000583"
+        },
+        {
+          "slug": "julia-letlow",
+          "name": "Julia Letlow",
+          "party": "Republican",
+          "state": "Louisiana",
+          "bioguideId": "L000595"
+        },
+        {
+          "slug": "kevin-hern",
+          "name": "Kevin Hern",
+          "party": "Republican",
+          "state": "Oklahoma",
+          "bioguideId": "H001082"
+        },
+        {
+          "slug": "lisa-mcclain",
+          "name": "Lisa C. McClain",
+          "party": "Republican",
+          "state": "Michigan",
+          "bioguideId": "M001136"
+        },
+        {
+          "slug": "marjorie-taylor-greene",
+          "name": "Marjorie Taylor Greene",
+          "party": "Republican",
+          "state": "Georgia",
+          "bioguideId": "G000596"
+        },
+        {
+          "slug": "nancy-pelosi",
+          "name": "Nancy Pelosi",
+          "party": "Democrat",
+          "state": "California",
+          "bioguideId": "P000197"
+        }
+      ],
+      "constituents": [
+        {
+          "ticker": "MSFT",
+          "venue": "xstock",
+          "venueSymbol": "MSFTx",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "Microsoft xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "NVDA",
+          "venue": "xstock",
+          "venueSymbol": "NVDAx",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "NVIDIA xStock",
+          "filerCount": 5
+        },
+        {
+          "ticker": "AMZN",
+          "venue": "xstock",
+          "venueSymbol": "AMZNx",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "Amazon xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "TSLA",
+          "venue": "xstock",
+          "venueSymbol": "TSLAx",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "Tesla xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "AMD",
+          "venue": "xstock",
+          "venueSymbol": "AMDx",
+          "mint": "XsXcJ6GZ9kVnjqGsjBnktRcuwMBmvKWh8S93RefZ1rF",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "AMD xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "JPM",
+          "venue": "xstock",
+          "venueSymbol": "JPMx",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "JPMorgan Chase xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "AAPL",
+          "venue": "xstock",
+          "venueSymbol": "AAPLx",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "Apple xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "UPS",
+          "venue": "xstock",
+          "venueSymbol": "UPSx",
+          "mint": "XsnqNkeDhvaK8C5B3Z4D1ciCupVAgkw1AdS3U2uEn26",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "United Parcel Service xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "BRK.B",
+          "venue": "xstock",
+          "venueSymbol": "BRK.Bx",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "mintDecimals": 8,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "Berkshire Hathaway xStock",
+          "filerCount": 2
+        },
+        {
+          "ticker": "GOOG",
+          "venue": "backpack",
+          "venueSymbol": "GOOG.US",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "mintDecimals": 6,
+          "weightPct": 0.0667,
+          "weightBps": 667,
+          "valueUsd": 667.0,
+          "displayName": "Alphabet Inc.",
+          "filerCount": 2
+        },
+        {
+          "ticker": "PANW",
+          "venue": "xstock",
+          "venueSymbol": "PANWx",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "weightBps": 666,
+          "valueUsd": 666.0,
+          "displayName": "Palo Alto Networks xStock",
+          "filerCount": 4
+        },
+        {
+          "ticker": "META",
+          "venue": "xstock",
+          "venueSymbol": "METAx",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "weightBps": 666,
+          "valueUsd": 666.0,
+          "displayName": "Meta xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "HD",
+          "venue": "xstock",
+          "venueSymbol": "HDx",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "weightBps": 666,
+          "valueUsd": 666.0,
+          "displayName": "Home Depot xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "NEE",
+          "venue": "xstock",
+          "venueSymbol": "NEEx",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "weightBps": 666,
+          "valueUsd": 666.0,
+          "displayName": "NextEra Energy xStock",
+          "filerCount": 3
+        },
+        {
+          "ticker": "JNJ",
+          "venue": "xstock",
+          "venueSymbol": "JNJx",
+          "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
+          "mintDecimals": 8,
+          "weightPct": 0.0666,
+          "weightBps": 666,
+          "valueUsd": 666.0,
+          "displayName": "Johnson & Johnson xStock",
+          "filerCount": 4
+        }
+      ],
+      "sourceLine": "Sources: House Clerk / Senate eFD filings via FMP; member context via PelosiTracker; tradability via InsiderIndex Solana catalog (xStocks + Backpack .US).",
+      "badge": "Research model \u00b7 Catalog-tradable only",
+      "apiPath": "/indexes/idx-theme-house-heat"
+    }
+  ],
+  "roster": [
+    {
+      "slug": "jared-moskowitz",
+      "name": "Jared Moskowitz",
+      "party": "Democrat",
+      "state": "Florida",
+      "bioguideId": "M001217",
+      "catalogLegs": 129,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "thomas-h-kean",
+      "name": "Thomas H. Kean, Jr.",
+      "party": "Republican",
+      "state": "New Jersey",
+      "bioguideId": "K000398",
+      "catalogLegs": 68,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "julia-letlow",
+      "name": "Julia Letlow",
+      "party": "Republican",
+      "state": "Louisiana",
+      "bioguideId": "L000595",
+      "catalogLegs": 53,
+      "buys2024": 296,
+      "year": 2024
+    },
+    {
+      "slug": "byron-donalds",
+      "name": "Byron Donalds",
+      "party": "Republican",
+      "state": "Florida",
+      "bioguideId": "D000032",
+      "catalogLegs": 53,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "marjorie-taylor-greene",
+      "name": "Marjorie Taylor Greene",
+      "party": "Republican",
+      "state": "Georgia",
+      "bioguideId": "G000596",
+      "catalogLegs": 52,
+      "buys2024": 777,
+      "year": 2024
+    },
+    {
+      "slug": "lisa-mcclain",
+      "name": "Lisa C. McClain",
+      "party": "Republican",
+      "state": "Michigan",
+      "bioguideId": "M001136",
+      "catalogLegs": 49,
+      "buys2024": 558,
+      "year": 2024
+    },
+    {
+      "slug": "morgan-mcgarvey",
+      "name": "Morgan McGarvey",
+      "party": "Democrat",
+      "state": "Kentucky",
+      "bioguideId": "M001220",
+      "catalogLegs": 45,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "mikie-sherrill",
+      "name": "Mikie Sherrill",
+      "party": "Democrat",
+      "state": "New Jersey",
+      "bioguideId": "S001207",
+      "catalogLegs": 33,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "josh-gottheimer",
+      "name": "Josh Gottheimer",
+      "party": "Democrat",
+      "state": "New Jersey",
+      "bioguideId": "G000583",
+      "catalogLegs": 28,
+      "buys2024": 88,
+      "year": 2024
+    },
+    {
+      "slug": "susie-lee",
+      "name": "Susie Lee",
+      "party": "Democrat",
+      "state": "Nevada",
+      "bioguideId": "L000590",
+      "catalogLegs": 24,
+      "buys2024": 2,
+      "year": 2023
+    },
+    {
+      "slug": "patrick-fallon",
+      "name": "Pat Fallon",
+      "party": "Republican",
+      "state": "Texas",
+      "bioguideId": "F000246",
+      "catalogLegs": 22,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "nancy-pelosi",
+      "name": "Nancy Pelosi",
+      "party": "Democrat",
+      "state": "California",
+      "bioguideId": "P000197",
+      "catalogLegs": 18,
+      "buys2024": 55,
+      "year": 2024
+    },
+    {
+      "slug": "mike-carey",
+      "name": "Mike Carey",
+      "party": "Republican",
+      "state": "Ohio",
+      "bioguideId": "C001126",
+      "catalogLegs": 16,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "michael-r-turner",
+      "name": "Michael R. Turner",
+      "party": "Republican",
+      "state": "Ohio",
+      "bioguideId": "T000463",
+      "catalogLegs": 13,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "kevin-hern",
+      "name": "Kevin Hern",
+      "party": "Republican",
+      "state": "Oklahoma",
+      "bioguideId": "H001082",
+      "catalogLegs": 10,
+      "buys2024": 90,
+      "year": 2024
+    },
+    {
+      "slug": "shri-thanedar",
+      "name": "Shri Thanedar",
+      "party": "Democrat",
+      "state": "Michigan",
+      "bioguideId": "T000488",
+      "catalogLegs": 9,
+      "buys2024": 38,
+      "year": 2024
+    },
+    {
+      "slug": "larry-bucshon",
+      "name": "Larry Bucshon",
+      "party": "Republican",
+      "state": "Indiana",
+      "bioguideId": "B001275",
+      "catalogLegs": 9,
+      "buys2024": 0,
+      "year": 2023
+    },
+    {
+      "slug": "roger-williams",
+      "name": "Roger Williams",
+      "party": "Republican",
+      "state": "Texas",
+      "bioguideId": "W000816",
+      "catalogLegs": 6,
+      "buys2024": 0,
+      "year": 2024
+    },
+    {
+      "slug": "vern-buchanan",
+      "name": "Vern Buchanan",
+      "party": "Republican",
+      "state": "Florida",
+      "bioguideId": "B001260",
+      "catalogLegs": 5,
+      "buys2024": 4,
+      "year": 2024
+    },
+    {
+      "slug": "debbie-wasserman-schultz",
+      "name": "Debbie Wasserman Schultz",
+      "party": "Democrat",
+      "state": "Florida",
+      "bioguideId": "W000797",
+      "catalogLegs": 5,
+      "buys2024": 0,
+      "year": 2024
+    }
+  ]
+}

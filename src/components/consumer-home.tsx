@@ -83,6 +83,61 @@ function PersonCover({ person, featured = false }: { person: ResearchPerson; fea
   </article>;
 }
 
+type ThematicDirectory = {
+  count: number;
+  indexes: {
+    id: string;
+    name: string;
+    headline: string;
+    tagline: string;
+    legs: number;
+    members: number;
+    top5: { ticker: string; weightBps: number }[];
+    href: string;
+  }[];
+};
+
+function ThematicDesk() {
+  const resource = useResource<ThematicDirectory>("/api/thematic-indexes");
+  const indexes = resource.data?.indexes ?? [];
+  return (
+    <section id="themes" className={styles.peopleSection}>
+      <header className={styles.sectionHeader}>
+        <div>
+          <span>THEMES, NOT CELEBRITY CLONES</span>
+          <h2>Indexes with a story.</h2>
+        </div>
+        <p>
+          Multi-member baskets from public filings. Person trackers stay on profile pages — these are Hill-wide themes
+          you can research and share.
+        </p>
+      </header>
+      {resource.loading && !indexes.length ? (
+        <div className={styles.loadingGrid}>{[0, 1, 2, 3].map((i) => <div key={i} />)}</div>
+      ) : resource.error && !indexes.length ? (
+        <PageError error={resource.error} retry={resource.reload} />
+      ) : (
+        <div className={styles.themeGrid}>
+          {indexes.map((index, i) => (
+            <Link key={index.id} href={index.href} className={styles.themeCard}>
+              <span className={styles.themeIndex}>{String(i + 1).padStart(2, "0")}</span>
+              <strong>{index.name}</strong>
+              <p>{index.headline}</p>
+              <small>{index.top5.map((t) => t.ticker).join(" · ")}</small>
+              <span className={styles.themeMeta}>
+                {index.legs} names · {index.members} members
+              </span>
+              <span className={styles.themeCta}>
+                Open theme <Icon name="arrow" size={14} />
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function FilingTape({ disclosures, error, loading = false, retry }: { disclosures: CopySignal[]; error: string | null; loading?: boolean; retry: () => void }) {
   const rows = disclosures.slice(0, 5);
   if (error && !rows.length) return <PageError error={error} retry={retry}/>;
@@ -160,6 +215,7 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
         <p>Public portfolios from politicians and famous operators, turned into clean indexes normal people can actually understand.</p>
         <div className={styles.heroActions}>
           <a href="#people" className={styles.primary}>Explore people <Icon name="arrow" size={16}/></a>
+          <a href="#themes" className={styles.secondary}>Thematic indexes</a>
           <Link href="/feed" className={styles.secondary}>See the disclosure tape</Link>
         </div>
         <div className={styles.heroFoot}><span>Public filings</span><i/><span>Transparent methodology</span><i/><span>You sign every live copy</span></div>
@@ -187,6 +243,8 @@ export function ConsumerHome({ initialData }: { initialData?: PeopleDirectoryRes
         {(spotlight.length ? spotlight : sorted.slice(0,4)).map((person, index) => <PersonCover key={person.id} person={person} featured={index === 0}/>) }
       </div>}
     </section>
+
+    <ThematicDesk />
 
     <section className={styles.tapeSection}>
       <div className={styles.tapeIntro}><span>THE TAPE</span><h2>What moved<br/>this week.</h2><p>Recent public filings, translated from paperwork into something you can scan in ten seconds.</p><Link href="/feed">Open full feed <Icon name="arrow" size={14}/></Link></div>

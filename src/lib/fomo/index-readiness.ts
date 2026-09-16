@@ -16,11 +16,12 @@ export const INDEX_RULES = {
 } as const;
 
 export const CROWD_INDEX_PREFIX = "idx-crowd-";
+export const THEMATIC_INDEX_PREFIX = "idx-theme-";
 
 export type IndexReadiness = {
   ready: boolean;
-  /** "crowd" = many filers in one basket; "person" = one filer's disclosed book. */
-  shape: "crowd" | "person";
+  /** "crowd" = many filers; "thematic" = curated multi-member snapshot; "person" = one filer. */
+  shape: "crowd" | "thematic" | "person";
   filers: number;
   buys: number;
   /** Tradable names in the basket (any venue). */
@@ -31,6 +32,10 @@ export type IndexReadiness = {
 
 export function isCrowdIndex(index: Pick<PersonIndex, "id">): boolean {
   return index.id.startsWith(CROWD_INDEX_PREFIX);
+}
+
+export function isThematicIndex(index: Pick<PersonIndex, "id">): boolean {
+  return index.id.startsWith(THEMATIC_INDEX_PREFIX);
 }
 
 export function withinWindow(row: Pick<Disclosure, "filedAt" | "transactionDate">, now = Date.now()): boolean {
@@ -50,6 +55,18 @@ function plural(n: number, one: string, many = `${one}s`): string {
 
 export function indexReadiness(index: PersonIndex, disclosures: Disclosure[], now = Date.now()): IndexReadiness {
   const names = index.constituents.length;
+  if (isThematicIndex(index)) {
+    // Snapshot models: readiness is catalog coverage of the published weights, not the 90d tape.
+    const ready = names >= INDEX_RULES.crowd.minNames;
+    return {
+      ready,
+      shape: "thematic",
+      filers: 0,
+      buys: 0,
+      names,
+      need: ready ? null : `Needs ${plural(INDEX_RULES.crowd.minNames - names, "more tradable name")} in the published model.`,
+    };
+  }
   if (isCrowdIndex(index)) {
     const rows = disclosures.filter((row) => row.kind === index.kind && isCountableBuy(row, now));
     const filers = new Set(rows.map((row) => row.profileId)).size;
@@ -81,6 +98,9 @@ export function indexReadiness(index: PersonIndex, disclosures: Disclosure[], no
 }
 
 export function readinessSummary(r: IndexReadiness): string {
+  if (r.shape === "thematic") {
+    return `${plural(r.names, "tradable name")} · curated theme`;
+  }
   if (r.shape === "crowd") {
     return `${[plural(r.filers, "filer"), plural(r.buys, "buy"), plural(r.names, "tradable name")].join(" · ")} · ${INDEX_RULES.windowDays}d`;
   }

@@ -9,6 +9,7 @@ import { bookStatus, filterPeople, personContext } from "@/lib/frontend/disclosu
 import type { StoredPerson } from "@/lib/fmp/store";
 import type { TrackerDirectoryView } from "@/lib/tracker/views";
 import { TrackerShelf } from "./tracker-shelf";
+import { ThematicShelf } from "./thematic-shelf";
 import styles from "./disclosure-workspace.module.css";
 
 export type SavedDirectory = { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string };
@@ -33,6 +34,7 @@ export function IndexHome({ initialData, tracker }: { initialData?: SavedDirecto
         <div className={styles.actions}>
           <Link className={styles.primaryButton} href="/feed">Copy one print <Icon name="bolt" size={17} /></Link>
           <a className={styles.quietButton} href="#published">Research indexes</a>
+          <a className={styles.quietButton} href="#thematic">Thematic indexes</a>
           <a className={styles.quietButton} href="#tracker">Tracker top 20</a>
           <a className={styles.quietButton} href="#directory">Find a person</a>
         </div>
@@ -61,6 +63,8 @@ export function IndexHome({ initialData, tracker }: { initialData?: SavedDirecto
         {published.length > 6 && <button className={styles.moreButton} aria-expanded={allIndexes} onClick={() => setAllIndexes(!allIndexes)}>{allIndexes ? "Show fewer indexes" : `See all ${published.length} indexes`} <Icon name={allIndexes ? "up" : "grid"} size={16} /></button>}
       </> : <div className={styles.empty}><h3>The next index starts with a filing.</h3><p>No targets have been published yet. You can still explore the saved disclosure books below.</p><a className={styles.secondaryButton} href="#directory">Browse people</a></div>}
     </section>
+
+    <ThematicShelf />
 
     <TrackerShelf initialData={tracker} />
 
