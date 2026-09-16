@@ -8,13 +8,21 @@
  * supports), highest TVL wins. Mints with no such pool are recorded as unresolved. Nothing is
  * invented and nothing here touches devnet settlement bindings.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { normalizeTrackerHandoff } from "../src/lib/tracker/tracker-parse.ts";
 import { indexCatalog, preferredToken, type CatalogToken } from "../src/lib/venues/catalog-parse.ts";
+import { PENDING_POOL_SOURCE } from "../src/lib/index-vaults/pool-evidence.ts";
+import { deriveAllPersonIndexes, toPersonBook } from "../src/lib/index-vaults/person-index-source.ts";
 import { MAINNET_USDC_MINT, RAYDIUM_CLMM_PROGRAM, RAYDIUM_CPMM_PROGRAM, type MainnetRaydiumPool, type MainnetRaydiumPoolSnapshot } from "../src/lib/index-vaults/raydium-pools-mainnet.ts";
 
 const RAYDIUM_API = "https://api-v3.raydium.io/pools/info/mint";
 const HANDOFF = new URL("../data/insiderindex-source-buckets/pelositracker-top20rere-handoff/top20-agent-brief.json", import.meta.url);
+// The vault-leg source of truth: the FMP annual-holdings bucket the definitions map from. Its
+// resolved leg mints must all be probed, or a leg could sit unresolved only because it was never
+// asked about (distinct from having no pool).
+const FMP_BUCKET = new URL("../data/insiderindex-source-buckets/pelositracker-fmp-latest-top20/holdings", import.meta.url);
 const CATALOG = new URL("../src/lib/venues/catalog-snapshot.json", import.meta.url);
 const OUT = new URL("../src/lib/index-vaults/raydium-pools-mainnet.json", import.meta.url);
 
@@ -29,6 +37,16 @@ async function candidateMints(): Promise<Map<string, string | null>> {
     const token = preferredToken(index, holding.ticker);
     if (token) mints.set(token.mint, token.symbol);
   }
+  // Every mapped leg the vault definitions consume, resolved through the same mapping code so the
+  // snapshot's candidate set is exactly the set of mints those definitions can ask about.
+  const bucketDir = fileURLToPath(FMP_BUCKET);
+  const books = readdirSync(bucketDir).filter((f) => f.endsWith(".json")).sort()
+    .map((f) => toPersonBook(JSON.parse(readFileSync(join(bucketDir, f), "utf8"))));
+  let legMintCount = 0;
+  for (const def of deriveAllPersonIndexes(books, index, PENDING_POOL_SOURCE)) {
+    for (const leg of def.legs) { if (!mints.has(leg.mint)) legMintCount++; mints.set(leg.mint, `${leg.ticker} (${leg.provider})`); }
+  }
+  console.log(`FMP annual bucket: ${legMintCount} additional mapped-leg mints`);
   for (const arg of process.argv.slice(2)) {
     const match = /^--mints=(.+)$/.exec(arg);
     if (match) for (const mint of match[1].split(",")) if (mint.trim()) mints.set(mint.trim(), null);

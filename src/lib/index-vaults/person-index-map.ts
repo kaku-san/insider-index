@@ -115,9 +115,14 @@ export type PersonIndexDefinition = {
     mappedLegCount: number;
     vaultReadyLegCount: number;
     // Whole-book basis: `mappableByWeightBps` + `unmappedByWeightBps` = 10000 over every
-    // positive-value ticker (mapped + unmapped).
+    // positive-value ticker (mapped + unmapped). `mappableByWeightBps` is the CATALOG coverage.
     mappableByWeightBps: number;
     unmappedByWeightBps: number;
+    // Whole-book basis too: the share of the FULL book (`bookWeightBps`) carried by legs that have
+    // a real, tradable Raydium pool. This is the honest TRADABLE coverage and it is directly
+    // comparable to `mappableByWeightBps`: `mappableByWeightBps - tradableByWeightBps` is exactly the
+    // book weight that maps to a mint but has no usable pool behind it. Never re-weighted around.
+    tradableByWeightBps: number;
     // Mapped-only basis: share of the renormalised mapped-leg weights (`targetWeightBps`, which
     // sum to 10000 across mapped legs) that is pool-ready. NOT comparable to the whole-book fields.
     poolReadyOfMappedBps: number;
@@ -253,7 +258,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       legs: [],
       unmapped: [],
       activity,
-      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, poolReadyOfMappedBps: 0 },
+      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, tradableByWeightBps: 0, poolReadyOfMappedBps: 0 },
       structurallyCreatable: false,
       blockedReasons: ["txn-derived-book"],
       status: "BLOCKED",
@@ -282,7 +287,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       legs: [],
       unmapped: [],
       activity: [],
-      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, poolReadyOfMappedBps: 0 },
+      coverage: { tickerCount: 0, mappedLegCount: 0, vaultReadyLegCount: 0, mappableByWeightBps: 0, unmappedByWeightBps: 0, tradableByWeightBps: 0, poolReadyOfMappedBps: 0 },
       structurallyCreatable: false,
       blockedReasons: ["no-ticker-holdings-in-annual-book"],
       status: "BLOCKED",
@@ -333,6 +338,9 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
 
   const mappableByWeightBps = legs.reduce((s, l) => s + l.bookWeightBps, 0);
   const vaultReadyLegCount = legs.filter((l) => l.vaultReady).length;
+  // Whole-book tradable coverage: only legs with a real, tradable pool contribute; a not-ready leg
+  // (thin or absent pool) never adds to tradable coverage even though it still counts as mapped.
+  const tradableByWeightBps = legs.filter((l) => l.vaultReady).reduce((s, l) => s + l.bookWeightBps, 0);
   const poolReadyOfMappedBps = legs.filter((l) => l.vaultReady).reduce((s, l) => s + l.targetWeightBps, 0);
 
   const blockedReasons: string[] = [];
@@ -369,6 +377,7 @@ export function derivePersonIndex(book: PersonBook, catalog: CatalogIndex, poolS
       vaultReadyLegCount,
       mappableByWeightBps,
       unmappedByWeightBps: 10_000 - mappableByWeightBps,
+      tradableByWeightBps,
       poolReadyOfMappedBps,
     },
     nativeTokenCap: NATIVE_TOKEN_CAP,

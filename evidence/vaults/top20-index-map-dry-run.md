@@ -1,35 +1,44 @@
 # Top-20 InsiderIndex vault-init dry-run
 
 Source: `pelositracker-fmp-latest-top20.zip` (sha256 `70d7ebd9615a77df6ff89add9d93f0b31627a1c2d75e262397e3508d5d8cb533`).
-Pool evidence: `pending-raydium-pools-mainnet` — Pending raydium-pools-mainnet; catalog mapping is complete, pool readiness is not.
+Pool evidence: `https://api-v3.raydium.io/pools/info/mint` observed 2026-09-16T06:07:51.565Z (0.02h old, 32 pools / 193 unresolved).
+Live Raydium snapshot. A leg is pool-ready only with a real, tradable USDC Raydium CLMM/CPMM pool above the TVL floor; thin/absent liquidity is a not-ready leg and drops out of tradable coverage.
+Publish bars: tradable >= 50.0% publishes without caveat; tradable < 25.0% would misrepresent the book.
 Catalog: snapshot. No signing, no broadcast, no keeper key.
 
-- Creatable: **0**
-- Awaiting pool evidence (structure ready): **10**
-- Blocked: **10**
+- **Creatable now (>= 50.0% tradable): 2**
+- Creatable but below publish bar: **1**
+- Creatable but would misrepresent the book: **5**
+- Blocked — insufficient tradable liquidity (structure ready): **2**
+- Blocked — no mappable book: **10**
 
-| Person | Index | Status | Book | Mapped legs | Vault-ready | Mappable bps | Unmapped bps | Blocked | Est. lamports |
-|---|---|---|---|--:|--:|--:|--:|---|--:|
-| angus-s-jr-king | IIKING | BLOCKED | fmp-annual-latest+txn | 0 | 0 | 0 | 0 | no-ticker-holdings-in-annual-book | 35000000 |
-| brandon-gill | IIGILL | BLOCKED | txn-derived | 0 | 0 | 0 | 0 | txn-derived-book | 35000000 |
-| cleo-fields | IIFIELDS | BLOCKED | txn-derived | 0 | 0 | 0 | 0 | txn-derived-book | 35000000 |
-| dan-sullivan | IISULLIV | BLOCKED | fmp-annual-latest+txn | 0 | 0 | 0 | 0 | no-ticker-holdings-in-annual-book | 35000000 |
-| gilbert-ray-cisneros | IICISNER | BLOCKED | txn-derived | 0 | 0 | 0 | 0 | txn-derived-book | 35000000 |
-| jefferson-shreve | IISHREVE | BLOCKED | txn-derived | 0 | 0 | 0 | 0 | txn-derived-book | 35000000 |
-| josh-gottheimer | IIGOTTHE | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 25 | 0 | 9109 | 891 | - | 335000000 |
-| julia-letlow | IILETLOW | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 53 | 0 | 8941 | 1059 | - | 671000000 |
-| kevin-hern | IIHERN | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 8 | 0 | 8929 | 1071 | - | 131000000 |
-| lisa-mcclain | IIMCCLAI | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 45 | 0 | 5877 | 4123 | - | 575000000 |
-| marjorie-taylor-greene | IIGREENE | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 52 | 0 | 5971 | 4029 | - | 659000000 |
-| nancy-pelosi | IIPELOSI | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 18 | 0 | 9687 | 313 | - | 251000000 |
-| patrick-fallon | IIFALLON | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 21 | 0 | 3372 | 6628 | - | 287000000 |
-| rick-scott | IISCOTT | BLOCKED | fmp-annual-latest+txn | 0 | 0 | 0 | 0 | no-ticker-holdings-in-annual-book | 35000000 |
-| shelley-moore-capito | IICAPITO | BLOCKED | fmp-annual-latest+txn | 0 | 0 | 0 | 0 | no-ticker-holdings-in-annual-book | 35000000 |
-| shri-thanedar | IITHANED | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 9 | 0 | 8510 | 1490 | - | 143000000 |
-| susie-lee | IILEE | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 18 | 0 | 2420 | 7580 | - | 251000000 |
-| ted-budd | IIBUDD | BLOCKED | fmp-annual-latest | 0 | 0 | 0 | 0 | no-ticker-holdings-in-annual-book | 35000000 |
-| tim-moore | IIMOORE | BLOCKED | txn-derived | 0 | 0 | 0 | 0 | txn-derived-book | 35000000 |
-| vern-buchanan | IIBUCHAN | WAIT_POOL_EVIDENCE | fmp-annual-latest+txn | 5 | 0 | 9233 | 767 | - | 95000000 |
+Catalog coverage = book weight that maps to a Solana mint. Tradable coverage = book weight behind a real, tradable pool (same whole-book basis). The gap is mapped-but-untradable weight, never re-weighted around.
+
+| Person | Index | Verdict | Book | Mapped | Pool-ready | Catalog cov | Tradable cov | Untradable | Unmapped | Est. SOL |
+|---|---|---|---|--:|--:|--:|--:|--:|--:|--:|
+| angus-s-jr-king | IIKING | blocked | fmp-annual-latest+txn | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| brandon-gill | IIGILL | blocked | txn-derived | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| cleo-fields | IIFIELDS | blocked | txn-derived | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| dan-sullivan | IISULLIV | blocked | fmp-annual-latest+txn | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| gilbert-ray-cisneros | IICISNER | blocked | txn-derived | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| jefferson-shreve | IISHREVE | blocked | txn-derived | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| josh-gottheimer | IIGOTTHE | creatable now | fmp-annual-latest+txn | 25 | 4 | 91.1% | 74.8% | 16.3% | 8.9% | 0.083 |
+| julia-letlow | IILETLOW | creatable — WOULD MISREPRESENT (do not publish) | fmp-annual-latest+txn | 53 | 7 | 89.4% | 19.8% | 69.6% | 10.6% | 0.119 |
+| kevin-hern | IIHERN | creatable — WOULD MISREPRESENT (do not publish) | fmp-annual-latest+txn | 8 | 2 | 89.3% | 16.1% | 73.2% | 10.7% | 0.059 |
+| lisa-mcclain | IIMCCLAI | creatable — WOULD MISREPRESENT (do not publish) | fmp-annual-latest+txn | 45 | 9 | 58.8% | 21.4% | 37.4% | 41.2% | 0.143 |
+| marjorie-taylor-greene | IIGREENE | creatable — WOULD MISREPRESENT (do not publish) | fmp-annual-latest+txn | 52 | 8 | 59.7% | 15.1% | 44.6% | 40.3% | 0.131 |
+| nancy-pelosi | IIPELOSI | creatable now | fmp-annual-latest+txn | 18 | 5 | 96.9% | 70.3% | 26.5% | 3.1% | 0.095 |
+| patrick-fallon | IIFALLON | blocked — insufficient tradable liquidity | fmp-annual-latest+txn | 21 | 1 | 33.7% | 2.8% | 30.9% | 66.3% | 0.287 |
+| rick-scott | IISCOTT | blocked | fmp-annual-latest+txn | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| shelley-moore-capito | IICAPITO | blocked | fmp-annual-latest+txn | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| shri-thanedar | IITHANED | creatable — below publish bar | fmp-annual-latest+txn | 9 | 6 | 85.1% | 30.1% | 55.0% | 14.9% | 0.107 |
+| susie-lee | IILEE | creatable — WOULD MISREPRESENT (do not publish) | fmp-annual-latest+txn | 18 | 3 | 24.2% | 5.9% | 18.3% | 75.8% | 0.071 |
+| ted-budd | IIBUDD | blocked | fmp-annual-latest | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| tim-moore | IIMOORE | blocked | txn-derived | 0 | 0 | 0.0% | 0.0% | 0.0% | 0.0% | 0.035 |
+| vern-buchanan | IIBUCHAN | blocked — insufficient tradable liquidity | fmp-annual-latest+txn | 5 | 0 | 92.3% | 0.0% | 92.3% | 7.7% | 0.095 |
+
+**Vaults the captain can honestly create today: 2** (creatable now, tradable coverage >= 50.0%).
+Do not publish (tradable coverage too low, would misrepresent the book): julia-letlow, kevin-hern, lisa-mcclain, marjorie-taylor-greene, susie-lee.
 
 Weights renormalise across mapped legs only; the unmapped share by weight is disclosed above.
-Transaction-derived books carry no weights and are blocked. Cost is an estimate, not a quote.
+A not-ready leg (thin/absent pool) never contributes to tradable coverage. Transaction-derived books carry no weights and are blocked. Cost is an estimate, not a quote.
