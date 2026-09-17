@@ -14,6 +14,9 @@ import {
   assertKakuSanDeployer, type KakuSanAsset,
 } from "./kaku-san.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "./raydium-oracles.ts";
+import {
+  CREATE_SLOT_SUBMIT_MAX_AGE, assertCreateVaultSlotFreshFromRpc, refreshCreateVaultTransaction,
+} from "./create-slot-guard.ts";
 import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
 
 export function kakuSanOracleInput(asset: KakuSanAsset): OracleInput {
@@ -292,6 +295,9 @@ export function assertSignedByDeployer(txBase64: string, expected: string = KAKU
 
 export async function simulateUnsigned(connection: Connection, txBase64: string): Promise<void> {
   const tx = VersionedTransaction.deserialize(Buffer.from(txBase64, "base64"));
+  // The native create's ALT recent_slot must be behind this confirmed simulation bank. This is a
+  // no-op for every non-create transaction, so the normal add-token/weights path is unchanged.
+  await assertCreateVaultSlotFreshFromRpc(connection, tx);
   const result = await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true, commitment: "confirmed" });
   if (result.value.err) throw new Error(`Simulation failed: ${JSON.stringify(result.value.err)}`);
 }
@@ -314,14 +320,12 @@ function prepared(step: KakuSanStep, vault: string | null, shareMint: string | n
   };
 }
 
-/** Reuses the journaled draft's exact accounts/instructions; only the blockhash is refreshed so a stale
- * cached create never fails to simulate/sign. The vault/mint identity is never re-derived on retry. */
+/** Reuses the journaled vault/mint and refreshes its blockhash plus the SDK's coupled ALT
+ * recent_slot/LUT tuple. A retry never calls createVaultTx again or derives another vault. */
 async function refreshedCreateTransaction(connection: Connection, tx: KakuSanPreparedTx): Promise<KakuSanPreparedTx> {
-  const parsed = VersionedTransaction.deserialize(Buffer.from(tx.txBase64, "base64"));
-  if (parsed.signatures.some(signature => signature.some(byte => byte !== 0))) throw new Error("Cached create draft is unexpectedly signed");
-  const { blockhash } = await connection.getLatestBlockhash("confirmed");
-  parsed.message.recentBlockhash = blockhash;
-  return { txBase64: Buffer.from(parsed.serialize()).toString("base64"), messageHash: sha256(parsed.message.serialize()), payer: tx.payer };
+  const txBase64 = await refreshCreateVaultTransaction(connection, tx.txBase64);
+  const parsed = VersionedTransaction.deserialize(Buffer.from(txBase64, "base64"));
+  return { txBase64, messageHash: sha256(parsed.message.serialize()), payer: tx.payer };
 }
 
 export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPrepareRequest>, native: NativeVaultBuilders, simulate = true, journal: CreateDraftStore<CreateDraftState> = kakuSanCreateJournal()): Promise<KakuSanPrepared> {
@@ -343,7 +347,9 @@ export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPr
         creator, start_price: KAKU_SAN.startPrice, name: KAKU_SAN.name, symbol: KAKU_SAN.symbol,
         metadata_uri: KAKU_SAN.metadataUri, host_platform_params: hostParams(creator),
       });
-      const transactions = payloadTransactions(draft, creator);
+      // The SDK samples a confirmed current slot. Retarget its documented recent_slot + LUT tuple
+      // to finalized before simulation, without a second createVaultTx or a changed vault/mint.
+      const transactions = await Promise.all(payloadTransactions(draft, creator).map(tx => refreshedCreateTransaction(native.connection, tx)));
       if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
       state.draft = { vault: draft.vault, mint: draft.mint, transactions, submitted: false };
       return prepared("create", draft.vault, draft.mint, transactions);
@@ -400,6 +406,8 @@ export async function submitKakuSanStep(input: ReturnType<typeof parseKakuSanSub
   let broadcastMarked = false;
   for (const signed of input.signedTransactions) {
     const tx = assertSignedByDeployer(signed, input.creator);
+    // Never broadcast a signed create after its ALT recent_slot fell out of SlotHashes.
+    await assertCreateVaultSlotFreshFromRpc(connection, tx, CREATE_SLOT_SUBMIT_MAX_AGE);
     if (input.step === "create" && !broadcastMarked) {
       await markKakuSanCreateBroadcast(input.vault, input.shareMint, journal);
       broadcastMarked = true;

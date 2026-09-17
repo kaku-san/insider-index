@@ -33,6 +33,9 @@ import {
 } from "./kaku-san-create.ts";
 import { assertNativeTokenCap, KAKU_SAN_NATIVE_TOKEN_CAP } from "./kaku-san-rebalance.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken, type RaydiumOracleKind } from "./raydium-oracles.ts";
+import {
+  CREATE_SLOT_SUBMIT_MAX_AGE, assertCreateVaultSlotFreshFromRpc, refreshCreateVaultTransaction,
+} from "./create-slot-guard.ts";
 import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
 import { readVaultDefinition, readVaultDefinitions, writeVaultCreation, type PersistedVaultDefinition, type PersistedVaultLeg, type VaultDefinitionSummary } from "./vault-definition-store.ts";
 import { createServiceSupabase } from "../supabase.ts";
@@ -312,12 +315,12 @@ function hostParams(creator: string) {
   };
 }
 
+/** Reuses the journaled vault/mint and refreshes its blockhash plus the SDK's coupled ALT
+ * recent_slot/LUT tuple. A retry never calls createVaultTx again or derives another vault. */
 async function refreshedCreateTransaction(connection: Connection, tx: KakuSanPreparedTx): Promise<KakuSanPreparedTx> {
-  const parsed = VersionedTransaction.deserialize(Buffer.from(tx.txBase64, "base64"));
-  if (parsed.signatures.some(signature => signature.some(byte => byte !== 0))) throw new Error("Cached create draft is unexpectedly signed");
-  const { blockhash } = await connection.getLatestBlockhash("confirmed");
-  parsed.message.recentBlockhash = blockhash;
-  return { txBase64: Buffer.from(parsed.serialize()).toString("base64"), messageHash: sha256(parsed.message.serialize()), payer: tx.payer };
+  const txBase64 = await refreshCreateVaultTransaction(connection, tx.txBase64);
+  const parsed = VersionedTransaction.deserialize(Buffer.from(txBase64, "base64"));
+  return { txBase64, messageHash: sha256(parsed.message.serialize()), payer: tx.payer };
 }
 
 export async function prepareIndexStep(
@@ -341,11 +344,14 @@ export async function prepareIndexStep(
         return prepared("create", def, state.draft.vault, state.draft.mint, transactions);
       }
       if (state.draft && state.indexId !== def.indexId) throw new Error(`A create draft for ${state.indexId} is already journaled here; resume or discard it first.`);
+      // This is the one createVaultTx for the index. Before journal/simulation, retarget only the
+      // SDK-documented ALT recent_slot and two derived LUT accounts to a finalized slot; vault/mint
+      // identity and every product parameter remain the SDK's original values.
       const draft = await native.sdk.createVaultTx({
         creator, start_price: def.startPrice, name: def.name, symbol: def.symbol,
         metadata_uri: def.metadataUri, host_platform_params: hostParams(creator),
       });
-      const transactions = payloadTransactions(draft, creator);
+      const transactions = await Promise.all(payloadTransactions(draft, creator).map(tx => refreshedCreateTransaction(native.connection, tx)));
       if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
       state.indexId = def.indexId;
       state.draft = { vault: draft.vault, mint: draft.mint, transactions, submitted: false };
@@ -398,6 +404,8 @@ export async function submitIndexStep(
   let broadcastMarked = false;
   for (const signed of input.signedTransactions) {
     const tx = assertSignedByDeployer(signed, input.creator);
+    // Do not mark a draft broadcast or send a create whose SDK ALT recent_slot has expired.
+    await assertCreateVaultSlotFreshFromRpc(connection, tx, CREATE_SLOT_SUBMIT_MAX_AGE);
     if (input.step === "create" && !broadcastMarked) {
       await markIndexCreateBroadcast(input.indexId, input.vault, input.shareMint, journal);
       broadcastMarked = true;
