@@ -1,8 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { register } from "node:module";
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { createDraftDb, type CreateDraftDb } from "./support/create-draft-db.mts";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
@@ -19,14 +18,15 @@ import {
   parseIndexPrepareRequest, parseIndexSubmitRequest, prepareIndexStep, recordIndexCreation,
   type CreatableIndexLeg,
 } from "../src/lib/index-vaults/index-vault-create.ts";
+import { CreateDraftJournal, type CreateDraftState } from "../src/lib/index-vaults/create-draft-store.ts";
 import {
   applyIndexSubmit, canCreateIndexVault, nextIndexStep, parseIndexReceipt, reconcileIndexCreateDraft,
   saveIndexReceipt, type IndexReceipt,
 } from "../src/lib/frontend/index-vault.ts";
 
-async function temp<T>(fn: (path: string) => Promise<T>): Promise<T> {
-  const dir = await mkdtemp(join(process.cwd(), ".index-vault-test-"));
-  try { return await fn(dir); } finally { await rm(dir, { recursive: true, force: true }); }
+async function temp<T>(fn: (db: CreateDraftDb) => Promise<T>): Promise<T> {
+  const db = await createDraftDb();
+  try { return await fn(db); } finally { await db.close(); }
 }
 
 register("./support/ui-loader.mjs", import.meta.url);
@@ -131,8 +131,8 @@ function verifiedVault(): Vault {
 
 const request = (body: unknown, path = "/api/vaults/index/prepare") => new Request(`http://localhost${path}`, { method: "POST", body: JSON.stringify(body) });
 
-test("creation builds from the persisted definition, not from Kaku San constants", async () => temp(async dir => {
-  const journal = indexCreateJournal(INDEX_ID, join(dir, "index-create.json"));
+test("creation builds from the persisted definition, not from Kaku San constants", async () => temp(async db => {
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
   const prepared = await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, builders(), loader(fakeDefinition()), true, journal);
   assert.equal(prepared.indexId, INDEX_ID);
   assert.equal(prepared.name, "Nancy Pelosi · InsiderIndex");
@@ -153,8 +153,8 @@ test("creation builds from the persisted definition, not from Kaku San constants
   assert.equal(addToken.mint, M2);
 }));
 
-test("only the approved deployer may prepare, submit, observe or discard", async () => temp(async dir => {
-  const journal = indexCreateJournal(INDEX_ID, join(dir, "index-create.json"));
+test("only the approved deployer may prepare, submit, observe or discard", async () => temp(async db => {
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
   assert.equal(canCreateIndexVault({ mode: "live", authenticated: true, solanaAddress: KAKU_SAN_DEPLOYER }), true);
   assert.equal(canCreateIndexVault({ mode: "live", authenticated: true, solanaAddress: OTHER }), false);
   assert.equal(canCreateIndexVault({ mode: "stub", authenticated: true, solanaAddress: KAKU_SAN_DEPLOYER }), false);
@@ -165,18 +165,18 @@ test("only the approved deployer may prepare, submit, observe or discard", async
   const denied = await handleIndexPrepare(request({ creator: OTHER, indexId: INDEX_ID }), () => builders(), loader(fakeDefinition()));
   assert.equal(denied.status, 400);
   assert.equal(denied.headers.get("Cache-Control"), "no-store");
-  const ok = await handleIndexPrepare(request({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID }), () => builders(), loader(fakeDefinition()), undefined);
+  const ok = await handleIndexPrepare(request({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID }), () => builders(), loader(fakeDefinition()), undefined, () => journal);
   assert.equal(ok.status, 200);
-  void journal;
 }));
 
-test("an unsigned or foreign-signed request is refused", async () => temp(async dir => {
-  const journal = indexCreateJournal(INDEX_ID, join(dir, "index-create.json"));
+test("an unsigned or foreign-signed request is refused", async () => temp(async db => {
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
   // Submit with unsigned bytes never broadcasts (503, and the send stub throws if reached).
   const unsigned = await handleIndexSubmit(
     request({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create", vault: VAULT, shareMint: MINT, signedTransactions: [unsignedPayload().tx_b64] }, "/api/vaults/index/submit"),
     () => ({ getGenesisHash: async () => GENESIS["mainnet-beta"], sendRawTransaction: async () => { throw new Error("should not send"); } } as never),
     async () => { throw new Error("should not write back an unsigned create"); },
+    () => journal,
   );
   assert.equal(unsigned.status, 503);
   // Discard requires the deployer Ed25519 signature: unsigned authorization is refused.
@@ -188,7 +188,6 @@ test("an unsigned or foreign-signed request is refused", async () => temp(async 
   }).compileToV0Message());
   foreign.sign([kp]);
   assert.throws(() => parseIndexDiscardRequest({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, vault: VAULT, shareMint: MINT, signedTransaction: Buffer.from(foreign.serialize()).toString("base64") }), /approved deployer/);
-  void journal;
 }));
 
 test("cap violation throws rather than truncating the book", () => {
@@ -256,16 +255,16 @@ test("the vault address is written back to the definition after a confirmed crea
   assert.equal(writes[0].receipt.network, "mainnet-beta");
 });
 
-test("submit only writes back on the create step, and a lost draft aborts before broadcast", async () => temp(async dir => {
-  const journal = indexCreateJournal(INDEX_ID, join(dir, "index-create.json"));
+test("submit only writes back on the create step, and a lost draft aborts before broadcast", async () => temp(async db => {
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
   await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, builders(null), loader(fakeDefinition()), true, journal);
   // A concurrent discard clears the draft; the in-flight submit's latch must throw before sending.
   assert.equal((await discardIndexCreateDraft({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, vault: VAULT, shareMint: MINT }, builders(null), journal)).discarded, true);
   await assert.rejects(markIndexCreateBroadcast(INDEX_ID, VAULT, MINT, journal), /discarded before it could be broadcast/);
 }));
 
-test("discard refuses once broadcast or once the vault is a real Symmetry vault; deposits never open", async () => temp(async dir => {
-  const journal = indexCreateJournal(INDEX_ID, join(dir, "index-create.json"));
+test("discard refuses once broadcast or once the vault is a real Symmetry vault; deposits never open", async () => temp(async db => {
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
   const native = builders(null);
   await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, native, loader(fakeDefinition()), true, journal);
   await markIndexCreateBroadcast(INDEX_ID, VAULT, MINT, journal);
@@ -276,8 +275,8 @@ test("discard refuses once broadcast or once the vault is a real Symmetry vault;
   assert.equal(VAULT_RELEASE.status, "WAIT_FULL_CYCLE_RECEIPT");
 }));
 
-test("discard refuses a draft whose vault is program-owned on-chain", async () => temp(async dir => {
-  const journal = indexCreateJournal(INDEX_ID, join(dir, "index-create.json"));
+test("discard refuses a draft whose vault is program-owned on-chain", async () => temp(async db => {
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
   await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, builders(null), loader(fakeDefinition()), true, journal);
   const confirmed = builders({ data: new Uint8Array(1), owner: new PublicKey(SYMMETRY_PROGRAM_ID) });
   await assert.rejects(discardIndexCreateDraft({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, vault: VAULT, shareMint: MINT }, confirmed, journal), /exists on-chain/);
@@ -370,4 +369,92 @@ test("admin refuses any other wallet and never leaks Kaku San basket constants o
   const allowed = renderAdmin(wallet({ solanaAddress: KAKU_SAN_DEPLOYER }));
   assert.doesNotMatch(allowed, /refused/);
   assert.match(allowed, /Select a persisted index/);
+});
+
+/** Builders that count createVaultTx calls and hand out a distinct vault per call, so a second
+ *  createVaultTx for one draft is observable rather than inferred. */
+function countingBuilders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null, vaults: string[]) {
+  const native = builders(vaultAccount);
+  let calls = 0;
+  native.sdk.createVaultTx = async () => {
+    const vault = vaults[calls++] ?? vaults[vaults.length - 1];
+    return { vault, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] };
+  };
+  return { native, calls: () => calls };
+}
+
+test("a retry resumes the exact journaled vault and never issues a second createVaultTx", async () => temp(async db => {
+  const { native, calls } = countingBuilders(null, [VAULT, OTHER]);
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
+  const first = await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, native, loader(fakeDefinition()), true, journal);
+  assert.equal(first.vault, VAULT);
+  assert.equal(calls(), 1);
+  // A fresh store instance (a new serverless invocation) still resumes the same draft.
+  const second = await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, native, loader(fakeDefinition()), true, indexCreateJournal(INDEX_ID, db.rpc));
+  assert.equal(second.vault, VAULT);
+  assert.equal(second.shareMint, MINT);
+  assert.equal(calls(), 1, "the retry must not call createVaultTx again");
+  // Only one row exists for the index, and it still holds the original vault.
+  const rows = await db.query<{ vault: string; submitted: boolean }>("select vault, submitted from insiderindex_vault_create_drafts where draft_key = $1", [INDEX_ID]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].vault, VAULT);
+}));
+
+test("a journal that cannot be read or written refuses the create instead of proceeding unjournaled", async () => temp(async db => {
+  const { native, calls } = countingBuilders(null, [VAULT, OTHER]);
+  const unavailable = async () => { throw new Error("journal storage unavailable"); };
+  await assert.rejects(
+    prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, native, loader(fakeDefinition()), true, indexCreateJournal(INDEX_ID, unavailable)),
+    /journal storage unavailable/,
+  );
+  assert.equal(calls(), 0, "an unjournaled create must never build a createVaultTx");
+  // A write failure after the draft is built also refuses and leaves no usable draft behind.
+  const lockOnly = indexCreateJournal(INDEX_ID, async (fn, args) => {
+    if (fn === "write_insiderindex_vault_create_draft") throw new Error("journal write refused");
+    return db.rpc(fn, args);
+  });
+  await assert.rejects(
+    prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, native, loader(fakeDefinition()), true, lockOnly),
+    /journal write refused/,
+  );
+  const rows = await db.query<{ vault: string | null }>("select vault from insiderindex_vault_create_drafts where draft_key = $1", [INDEX_ID]);
+  assert.equal(rows[0]?.vault ?? null, null, "a refused write leaves no draft to resume");
+}));
+
+test("a discard is still refused once broadcast and once the vault is a real Symmetry vault on-chain", async () => temp(async db => {
+  const journal = indexCreateJournal(INDEX_ID, db.rpc);
+  await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, builders(null), loader(fakeDefinition()), true, journal);
+  await markIndexCreateBroadcast(INDEX_ID, VAULT, MINT, journal);
+  await assert.rejects(discardIndexCreateDraft({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, vault: VAULT, shareMint: MINT }, builders(null), journal), /already broadcast/);
+  // The store-level latch cannot be cleared by a later write that claims submitted:false.
+  await journal.update(state => { state.draft!.submitted = false; });
+  const submitted = await db.query<{ submitted: boolean }>("select submitted from insiderindex_vault_create_drafts where draft_key = $1", [INDEX_ID]);
+  assert.equal(submitted[0].submitted, true, "the submitted latch is monotonic in the store");
+  // A fresh, never-broadcast draft whose vault is program-owned on-chain is refused too.
+  const fresh = indexCreateJournal("insiderindex-josh-gottheimer", db.rpc);
+  await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, builders(null), loader(fakeDefinition()), true, fresh);
+  const confirmed = builders({ data: new Uint8Array(1), owner: new PublicKey(SYMMETRY_PROGRAM_ID) });
+  await assert.rejects(discardIndexCreateDraft({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, vault: VAULT, shareMint: MINT }, confirmed, fresh), /exists on-chain/);
+}));
+
+test("two concurrent creates for one index cannot both proceed", async () => temp(async db => {
+  const { native, calls } = countingBuilders(null, [VAULT, OTHER]);
+  const shared = indexCreateJournal(INDEX_ID, db.rpc);
+  // Hold the lease directly, exactly as an in-flight create on another invocation would.
+  const held = shared.update(async state => { await new Promise(resolve => setImmediate(resolve)); return state; });
+  await assert.rejects(
+    prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, native, loader(fakeDefinition()), true, indexCreateJournal(INDEX_ID, db.rpc)),
+    /locked by another writer/,
+  );
+  await held;
+  assert.equal(calls(), 0, "the losing writer must never build a createVaultTx");
+  // Once the lease is released, the create proceeds normally.
+  const prepared = await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "create" }, native, loader(fakeDefinition()), true, indexCreateJournal(INDEX_ID, db.rpc));
+  assert.equal(prepared.vault, VAULT);
+  assert.equal(calls(), 1);
+}));
+
+test("the create-draft store is the only journal: it rejects a bad key and needs no local disk", async () => {
+  assert.throws(() => new CreateDraftJournal("", () => ({ indexId: null, draft: null }) as CreateDraftState, async () => null), /1-128 characters/);
+  assert.throws(() => new CreateDraftJournal("x".repeat(129), () => ({ indexId: null, draft: null }), async () => null), /1-128 characters/);
 });

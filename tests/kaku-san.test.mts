@@ -1,8 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { register } from "node:module";
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { createDraftDb, type CreateDraftDb } from "./support/create-draft-db.mts";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
@@ -35,9 +34,9 @@ import { POST as discardRoute } from "../src/app/api/vaults/kaku-san/discard/rou
 import { STUB_WALLET_ADDRESS } from "../src/lib/wallet.ts";
 import robots from "../src/app/robots.ts";
 
-async function temp<T>(fn: (path: string) => Promise<T>): Promise<T> {
-  const dir = await mkdtemp(join(process.cwd(), ".kaku-san-test-"));
-  try { return await fn(dir); } finally { await rm(dir, { recursive: true, force: true }); }
+async function temp<T>(fn: (db: CreateDraftDb) => Promise<T>): Promise<T> {
+  const db = await createDraftDb();
+  try { return await fn(db); } finally { await db.close(); }
 }
 
 register("./support/ui-loader.mjs", import.meta.url);
@@ -174,8 +173,8 @@ test("prepare RPC forbids sends, airdrops and devnet; HERMES/PYTH env fails clos
   assert.throws(() => assertNoPythEnvironment({ HERMES_URL: "https://hermes.example" } as unknown as NodeJS.ProcessEnv), /PYTH_ENV_FORBIDDEN/);
 });
 
-test("prepare returns unsigned create transactions and the public vault + share mint", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("prepare returns unsigned create transactions and the public vault + share mint", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const prepared = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(), true, journal);
   assert.equal(prepared.vault, VAULT);
   assert.equal(prepared.shareMint, MINT);
@@ -188,8 +187,8 @@ test("prepare returns unsigned create transactions and the public vault + share 
   assert.throws(() => payloadTransactions({ batches: [{ transactions: [{ ...unsignedPayload(), payer: OTHER }] }] }, KAKU_SAN_DEPLOYER));
 }));
 
-test("create draft is journaled: a retry resumes the same vault with a refreshed blockhash and never calls createVaultTx twice", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("create draft is journaled: a retry resumes the same vault with a refreshed blockhash and never calls createVaultTx twice", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const native = builders();
   let createCalls = 0;
   const refreshedBlockhash = new PublicKey(new Uint8Array(32).fill(7)).toBase58();
@@ -211,8 +210,8 @@ test("create draft is journaled: a retry resumes the same vault with a refreshed
   assert.equal(secondTx.message.staticAccountKeys[0]?.toBase58(), KAKU_SAN_DEPLOYER);
 }));
 
-test("discard clears an unconfirmed draft and permits exactly one new createVaultTx; a draft with an on-chain vault refuses discard", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("discard clears an unconfirmed draft and permits exactly one new createVaultTx; a draft with an on-chain vault refuses discard", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const native = builders(null);
   let createCalls = 0;
   native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
@@ -233,8 +232,8 @@ test("discard clears an unconfirmed draft and permits exactly one new createVaul
   await assert.rejects(discardKakuSanCreateDraft(discardInput, confirmed, journal), /exists on-chain/);
 }));
 
-test("discard is not fooled by a stray-funded address at the derived vault PDA that is not a real Symmetry vault", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("discard is not fooled by a stray-funded address at the derived vault PDA that is not a real Symmetry vault", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const native = builders(null);
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
 
@@ -245,8 +244,8 @@ test("discard is not fooled by a stray-funded address at the derived vault PDA t
   assert.equal((await discardKakuSanCreateDraft(discardInput, strayFunded, journal)).discarded, true);
 }));
 
-test("discard refuses once the create has been broadcast, even before any on-chain confirmation is observable", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("discard refuses once the create has been broadcast, even before any on-chain confirmation is observable", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const native = builders(null);
   let createCalls = 0;
   native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
@@ -269,8 +268,8 @@ test("discard refuses once the create has been broadcast, even before any on-cha
   assert.equal(createCalls, 1, "a broadcast draft must resume, never re-derive via createVaultTx");
 }));
 
-test("a submit racing a concurrent discard must abort before broadcasting, never re-derive a second vault", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("a submit racing a concurrent discard must abort before broadcasting, never re-derive a second vault", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const native = builders(null);
   let createCalls = 0;
   native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
@@ -290,8 +289,8 @@ test("a submit racing a concurrent discard must abort before broadcasting, never
   assert.equal(createCalls, 2, "discard must allow exactly one fresh createVaultTx, not zero and not more");
 }));
 
-test("a local receipt for a since-discarded draft is reconciled to the server's current draft, never stuck", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("a local receipt for a since-discarded draft is reconciled to the server's current draft, never stuck", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const native = builders(null);
   const vaults = [VAULT, OTHER];
   let createCalls = 0;
@@ -334,8 +333,8 @@ test("a local receipt for a since-discarded draft is reconciled to the server's 
   }
 }));
 
-test("HTTP discard is no-store and refuses a non-deployer", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("HTTP discard is no-store and refuses a non-deployer", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(null), true, journal);
   const denied = await handleKakuSanDiscard(request({ creator: OTHER, vault: VAULT, shareMint: MINT, signedTransaction: unsignedPayload(OTHER).tx_b64 }, "/api/vaults/kaku-san/discard"), () => builders(null), undefined, journal);
   assert.equal(denied.status, 400);
@@ -343,8 +342,8 @@ test("HTTP discard is no-store and refuses a non-deployer", async () => temp(asy
   assert.equal((await discardRoute(request({ creator: OTHER, vault: VAULT, shareMint: MINT }, "/api/vaults/kaku-san/discard"))).status, 400);
 }));
 
-test("discard requires the deployer's Ed25519 signature: unsigned or foreign-signed authorization is refused and leaves the draft resumable", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("discard requires the deployer's Ed25519 signature: unsigned or foreign-signed authorization is refused and leaves the draft resumable", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, builders(null), true, journal);
 
   // An unsigned authorization (deployer payer, but no signature) cannot clear the draft.
@@ -385,8 +384,8 @@ test("signed-by helper accepts a matching keypair and deployer submit refuses un
   assert.throws(() => assertSignedByDeployer(unsignedPayload().tx_b64), /unsigned/);
 });
 
-test("HTTP prepare is no-store and refuses a non-deployer; submit refuses unsigned bytes", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("HTTP prepare is no-store and refuses a non-deployer; submit refuses unsigned bytes", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   const ok = await handleKakuSanPrepare(request({ creator: KAKU_SAN_DEPLOYER }), () => builders(), undefined, journal);
   assert.equal(ok.status, 200);
   assert.equal(ok.headers.get("Cache-Control"), "no-store");
@@ -403,8 +402,8 @@ test("HTTP prepare is no-store and refuses a non-deployer; submit refuses unsign
   assert.equal((await submitRoute(request({ creator: OTHER, step: "create", vault: VAULT, shareMint: MINT, signedTransactions: ["AA"] }, "/api/vaults/kaku-san/submit"))).status, 400);
 }));
 
-test("live deployer may sign; stub, preview and any other wallet are refused. Public Invest Sign stays off", async () => temp(async dir => {
-  const journal = kakuSanCreateJournal(join(dir, "kaku-san-create.json"));
+test("live deployer may sign; stub, preview and any other wallet are refused. Public Invest Sign stays off", async () => temp(async db => {
+  const journal = kakuSanCreateJournal(db.rpc);
   assert.equal(canCreateKakuSan({ mode: "live", authenticated: true, solanaAddress: KAKU_SAN_DEPLOYER }), true);
   assert.equal(canCreateKakuSan({ mode: "stub", authenticated: true, solanaAddress: STUB_WALLET_ADDRESS }), false);
   assert.equal(canCreateKakuSan({ mode: "live", authenticated: true, solanaAddress: OTHER }), false);

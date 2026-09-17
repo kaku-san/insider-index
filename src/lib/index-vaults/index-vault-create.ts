@@ -9,16 +9,19 @@
  *
  * Every existing safety is preserved by reusing the Kaku San primitives: only the approved deployer
  * may create/discard (`assertSignedByDeployer`), every mutating action requires the real Ed25519
- * deployer signature, the create draft is journaled, discard refuses once broadcast or once the vault
- * is a real Symmetry vault on-chain, the creation-time WSOL/USDC Pyth slots are deactivated after
- * create, and only Raydium oracles are installed. Creating a vault never opens deposits.
+ * deployer signature, the create draft is journaled in durable shared storage (`create-draft-store.ts`,
+ * Supabase migration 202609190001), discard refuses once broadcast or once the vault is a real
+ * Symmetry vault on-chain, the creation-time WSOL/USDC Pyth slots are deactivated after create, and
+ * only Raydium oracles are installed. Creating a vault never opens deposits.
  */
 import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import type { AddOrEditTokenInput, OracleInput, Vault } from "@symmetry-hq/sdk";
 import { OracleType } from "@symmetry-hq/sdk/dist/layouts/oracle.js";
 import { address, sha256, weightsValid } from "./amounts.ts";
 import { HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
-import { Journal } from "./journal.ts";
+import {
+  durableCreateDraftJournal, type CreateDraftRpc, type CreateDraftState, type CreateDraftStore,
+} from "./create-draft-store.ts";
 import {
   KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER, KAKU_SAN_METADATA_URI, KAKU_SAN_START_PRICE,
   assertKakuSanDeployer,
@@ -190,14 +193,13 @@ export interface IndexObservation {
 }
 
 export interface IndexCreateDraft { vault: string; mint: string; transactions: KakuSanPreparedTx[]; submitted: boolean }
-interface IndexCreateJournalState { indexId: string | null; draft: IndexCreateDraft | null }
 
-function journalPathFor(indexId: string): string {
-  const safe = indexId.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 96) || "index";
-  return `.data/index-vaults/index-create-${safe}.json`;
-}
-export function indexCreateJournal(indexId: string, path: string = journalPathFor(indexId)): Journal<IndexCreateJournalState> {
-  return new Journal<IndexCreateJournalState>(path, () => ({ indexId: null, draft: null }));
+/** The durable, shared create-draft journal for one index id (Supabase migration 202609190001).
+ *  One row per index id; a writer holds a real lease and fails closed instead of racing. The old
+ *  relative `.data/index-vaults/index-create-<indexId>.json` path is gone: it did not exist on the
+ *  deployed host (read-only filesystem), which is what broke create with ENOENT `mkdir '.data'`. */
+export function indexCreateJournal(indexId: string, rpc?: CreateDraftRpc): CreateDraftStore<CreateDraftState> {
+  return durableCreateDraftJournal(indexId, () => ({ indexId: null, draft: null }), rpc);
 }
 
 const STEPS: readonly IndexCreateStep[] = ["create", "deactivate-default", "add-token", "weights"];
@@ -323,7 +325,7 @@ export async function prepareIndexStep(
   native: NativeVaultBuilders,
   loadDefinition: DefinitionLoader,
   simulate = true,
-  journal: Journal<IndexCreateJournalState> = indexCreateJournal(input.indexId),
+  journal: CreateDraftStore<CreateDraftState> = indexCreateJournal(input.indexId),
 ): Promise<IndexPrepared> {
   assertNoPythEnvironment();
   if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
@@ -374,7 +376,7 @@ export async function prepareIndexStep(
 
 /** Latch the journaled create draft as broadcast before the first send. Throws if a concurrent discard
  *  already cleared it, so submit aborts before ever broadcasting a create whose journal entry is gone. */
-export async function markIndexCreateBroadcast(indexId: string, vault: string, shareMint: string, journal: Journal<IndexCreateJournalState>): Promise<void> {
+export async function markIndexCreateBroadcast(indexId: string, vault: string, shareMint: string, journal: CreateDraftStore<CreateDraftState>): Promise<void> {
   await journal.update(state => {
     if (!state.draft || state.indexId !== indexId || state.draft.vault !== vault || state.draft.mint !== shareMint) {
       throw new Error("Create draft was discarded before it could be broadcast; resume or recreate it");
@@ -387,7 +389,7 @@ export async function submitIndexStep(
   input: ReturnType<typeof parseIndexSubmitRequest>,
   connection: Connection,
   writeBack: CreationWriteBack,
-  journal: Journal<IndexCreateJournalState> = indexCreateJournal(input.indexId),
+  journal: CreateDraftStore<CreateDraftState> = indexCreateJournal(input.indexId),
 ): Promise<IndexSubmitResult> {
   assertNoPythEnvironment();
   if (await connection.getGenesisHash() !== GENESIS["mainnet-beta"]) throw new Error("RPC genesis/network mismatch");
@@ -462,7 +464,7 @@ export async function observeIndexVault(input: { indexId: string; vault: string;
 export async function discardIndexCreateDraft(
   input: ReturnType<typeof parseIndexDiscardRequest>,
   native: NativeVaultBuilders,
-  journal: Journal<IndexCreateJournalState> = indexCreateJournal(input.indexId),
+  journal: CreateDraftStore<CreateDraftState> = indexCreateJournal(input.indexId),
 ): Promise<{ discarded: boolean }> {
   assertNoPythEnvironment();
   if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
@@ -487,6 +489,7 @@ export async function handleIndexPrepare(
   nativeBuilder: () => NativeVaultBuilders = () => kakuSanBuilders(false),
   loadDefinition: DefinitionLoader = supabaseDefinitionLoader(),
   timeoutMs = PREPARE_TIMEOUT_MS,
+  createJournal: (indexId: string) => CreateDraftStore<CreateDraftState> = indexCreateJournal,
 ): Promise<Response> {
   let input: ReturnType<typeof parseIndexPrepareRequest>;
   try {
@@ -497,7 +500,7 @@ export async function handleIndexPrepare(
     return Response.json({ error: error instanceof Error ? error.message : "Invalid index prepare request" }, { status: 400, headers });
   }
   try {
-    const step = await withKakuSanTimeout(() => prepareIndexStep(input, nativeBuilder(), loadDefinition, true, indexCreateJournal(input.indexId)), timeoutMs);
+    const step = await withKakuSanTimeout(() => prepareIndexStep(input, nativeBuilder(), loadDefinition, true, createJournal(input.indexId)), timeoutMs);
     return Response.json(step, { status: 200, headers });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Index prepare unavailable" }, { status: 503, headers });
@@ -508,6 +511,7 @@ export async function handleIndexSubmit(
   request: Request,
   connectionBuilder: () => Connection = () => kakuSanConnection(true),
   writeBack: CreationWriteBack = supabaseCreationWriteBack(),
+  createJournal: (indexId: string) => CreateDraftStore<CreateDraftState> = indexCreateJournal,
 ): Promise<Response> {
   let input: ReturnType<typeof parseIndexSubmitRequest>;
   try {
@@ -518,7 +522,7 @@ export async function handleIndexSubmit(
     return Response.json({ error: error instanceof Error ? error.message : "Invalid index submit request" }, { status: 400, headers });
   }
   try {
-    const result = await submitIndexStep(input, connectionBuilder(), writeBack, indexCreateJournal(input.indexId));
+    const result = await submitIndexStep(input, connectionBuilder(), writeBack, createJournal(input.indexId));
     return Response.json(result, { status: 200, headers });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Index submit unavailable" }, { status: 503, headers });
@@ -551,6 +555,7 @@ export async function handleIndexDiscard(
   request: Request,
   nativeBuilder: () => NativeVaultBuilders = () => kakuSanBuilders(false),
   timeoutMs = PREPARE_TIMEOUT_MS,
+  createJournal: (indexId: string) => CreateDraftStore<CreateDraftState> = indexCreateJournal,
 ): Promise<Response> {
   let input: ReturnType<typeof parseIndexDiscardRequest>;
   try {
@@ -561,7 +566,7 @@ export async function handleIndexDiscard(
     return Response.json({ error: error instanceof Error ? error.message : "Invalid index discard request" }, { status: 400, headers });
   }
   try {
-    const result = await withKakuSanTimeout(() => discardIndexCreateDraft(input, nativeBuilder(), indexCreateJournal(input.indexId)), timeoutMs);
+    const result = await withKakuSanTimeout(() => discardIndexCreateDraft(input, nativeBuilder(), createJournal(input.indexId)), timeoutMs);
     return Response.json(result, { status: 200, headers });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Index discard unavailable" }, { status: 503, headers });
