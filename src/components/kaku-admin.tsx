@@ -57,7 +57,7 @@ export function KakuAdmin() {
           if (!current) throw new Error("Saved vault required.");
           setStatus("Verifying on-chain composition…");
           current = mergeKakuSanObservation(current, await observeKakuSan({ creator, vault: current.vault, shareMint: current.shareMint }));
-          if (!current.verified) throw new Error("On-chain basket is not the 5 xStocks with Raydium CLMM and deactivated WSOL/USDC.");
+          if (!current.verified) throw new Error("On-chain basket does not match the 5 xStocks and zero-target Raydium support-slot contract.");
           if (isCurrent()) setReceipt(current);
           continue;
         }
@@ -78,7 +78,7 @@ export function KakuAdmin() {
           continue;
         }
         if (!current?.created) throw new Error("Create the saved vault before installing the basket.");
-        const label = step.step === "deactivate-default" ? "Removing default WSOL/USDC Pyth slots…"
+        const label = step.step === "deactivate-default" ? "Replacing default Pyth oracles with Raydium support/cash slots…"
           : step.step === "add-token" ? `Adding ${KAKU_SAN_ASSETS.find(asset => asset.mint === step.mint)?.ticker ?? "token"}…`
             : "Setting equal 2000 bps weights…";
         setStatus(label);
@@ -142,7 +142,7 @@ export function KakuAdmin() {
     <h1 id={`${id}-title`}>{KAKU_SAN.name}</h1>
     <p>Creates one mainnet Symmetry V3 test vault for a fixed 5-stock equal-weight basket. This is not a politician filing, not a published index, and does not enable public Invest signing.</p>
     <p>Host {KAKU_SAN.hostEntryFeeBps} bps in / {KAKU_SAN.hostExitFeeBps} out, shown before you sign. Estimated shares are not guaranteed. This page does not redeem or pay USDC out.</p>
-    <p>Raydium CLMM oracles only. Default WSOL/USDC Pyth slots are deactivated after create. Server never holds a key. Retries resume the saved vault; they do not create a second one.</p>
+    <p>Raydium CLMM oracles only. Native WSOL remains active at zero target weight; USDC is inactive at zero target. Both retain Raydium pricing for residual balances. This verifies composition only, not deposits or USDC exit. Server never holds a key. Retries resume the saved vault; they do not create a second one.</p>
     <h2>Basket</h2>
     <ul>{KAKU_SAN_ASSETS.map(asset => <li key={asset.mint}><strong>{asset.ticker}</strong> · {asset.targetWeightBps} bps · <code>{asset.mint}</code> · CLMM <code>{asset.pool}</code></li>)}</ul>
     {wallet.mode === "live" && !owner && <button type="button" disabled={!wallet.ready || busy || PREVIEW_MODE} onClick={() => void wallet.connect().catch(error => setStatus(errorText(error)))}>Connect wallet</button>}

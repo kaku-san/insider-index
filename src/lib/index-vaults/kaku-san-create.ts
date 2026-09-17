@@ -15,6 +15,8 @@ import {
 } from "./kaku-san.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "./raydium-oracles.ts";
 import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
+import { prepareCompositionTransactions, pendingCompositionIntents, compositionResumeStep } from "./composition-transactions.ts";
+import { assertInstalledComposition, assertNativeDefaultPool, configuredDefaults, installedToken, nativeDefaultInput, NATIVE_DEFAULT_BINDINGS } from "./native-defaults.ts";
 
 export function kakuSanOracleInput(asset: KakuSanAsset): OracleInput {
   return {
@@ -51,22 +53,9 @@ export function kakuSanTokenInput(asset: KakuSanAsset): AddOrEditTokenInput {
   return token;
 }
 
-/** Strip creation-time WSOL/USDC Pyth slots. Empty oracles so no Pyth is rewritten. Never invent a pool. */
-export function kakuSanDeactivateInput(mint: string): AddOrEditTokenInput {
-  const slot = KAKU_SAN_DEFAULT_SLOTS.find(row => row.mint === address(mint));
-  if (!slot) throw new Error("Only the creation-time WSOL/USDC slots may be deactivated");
-  const token: AddOrEditTokenInput = {
-    token_mint: slot.mint,
-    active: false,
-    min_oracles_thresh: 0,
-    min_conf_bps: 0,
-    conf_thresh_bps: 0,
-    conf_multiplier: 0,
-    oracles: [],
-  };
-  if (token.oracles.length !== 0 || token.active) throw new Error("Deactivate must clear oracles and set inactive");
-  return token;
-}
+/** Legacy API step name retained. Replace Pyth with valid Raydium inputs: inactive USDC,
+ * native-required active WSOL support. The weights step gives BOTH defaults zero target. */
+export const kakuSanDeactivateInput = nativeDefaultInput;
 
 function allocatedAssets(vault: Pick<Vault, "composition" | "numTokens">) {
   return vault.composition.slice(0, vault.numTokens);
@@ -79,46 +68,12 @@ function installedOracles(asset: Vault["composition"][number]) {
   return aggregator.oracles.slice(0, aggregator.numOracles);
 }
 
-/** Live basket must be the 5 xStocks with Raydium CLMM. No Pyth on any allocated slot. */
+/** Fixed basket uses the SAME native support-slot contract as persisted index definitions. */
 export function assertKakuSanComposition(vault: Pick<Vault, "composition" | "numTokens" | "lutPubkeys">): { activeMints: string[]; inactiveDefaults: string[] } {
+  assertInstalledComposition(vault, KAKU_SAN_ASSETS.map(asset => ({ ...asset, token: kakuSanTokenInput(asset) })));
   const allocated = allocatedAssets(vault);
-  const inactiveDefaults: string[] = [];
-  for (const slot of KAKU_SAN_DEFAULT_SLOTS) {
-    const asset = allocated.find(row => row.mint.toBase58() === slot.mint);
-    if (!asset) { inactiveDefaults.push(slot.mint); continue; }
-    if (isActiveAsset(asset)) throw new Error(`KAKU_SAN_COMPOSITION: default slot ${slot.ticker} is still active`);
-    if (installedOracles(asset).some(oracle => oracle.oracleSettings.oracleType === OracleType.Pyth)) {
-      throw new Error(`ORACLE_TYPE_FORBIDDEN: ${slot.ticker} still has a Pyth oracle`);
-    }
-    inactiveDefaults.push(slot.mint);
-  }
-  for (const asset of allocated) {
-    const mint = asset.mint.toBase58();
-    if (KAKU_SAN_DEFAULT_SLOTS.some(slot => slot.mint === mint)) continue;
-    const spec = KAKU_SAN_ASSETS.find(row => row.mint === mint);
-    if (!spec) throw new Error(`KAKU_SAN_COMPOSITION: unexpected allocated mint ${mint}`);
-    const oracles = installedOracles(asset);
-    if (oracles.some(oracle => oracle.oracleSettings.oracleType === OracleType.Pyth)) {
-      throw new Error(`ORACLE_TYPE_FORBIDDEN: ${spec.ticker} still has a Pyth oracle`);
-    }
-    if (!isActiveAsset(asset)) throw new Error(`KAKU_SAN_COMPOSITION: ${spec.ticker} is not active`);
-    if (asset.weight !== spec.targetWeightBps) throw new Error(`KAKU_SAN_COMPOSITION: ${spec.ticker} weight ${asset.weight}, expected ${spec.targetWeightBps}`);
-    if (oracles.length === 0) throw new Error(`ORACLE_REQUIRED: ${spec.ticker} has no installed oracle`);
-    for (const oracle of oracles) {
-      if (oracle.oracleSettings.oracleType !== OracleType.RaydiumClmm) {
-        throw new Error(`ORACLE_TYPE_FORBIDDEN: ${spec.ticker} installs oracle type ${oracle.oracleSettings.oracleType}; Raydium CLMM only`);
-      }
-      const table = vault.lutPubkeys?.[oracle.accountsToLoadLutIds[0]];
-      const pool = table?.state.addresses[oracle.accountsToLoadLutIndices[0]]?.toBase58();
-      if (!pool || pool !== spec.pool) throw new Error(`RAYDIUM_POOL_MISMATCH: ${spec.ticker} installs ${pool ?? "unresolved"}, expected ${spec.pool}`);
-    }
-  }
-  const activeMints = allocated.filter(isActiveAsset).map(asset => asset.mint.toBase58());
-  const expected = KAKU_SAN_ASSETS.map(asset => asset.mint);
-  if (activeMints.length !== expected.length || expected.some(mint => !activeMints.includes(mint))) {
-    throw new Error(`KAKU_SAN_COMPOSITION: active basket must be the 5 xStocks, got ${activeMints.join(",") || "none"}`);
-  }
-  return { activeMints, inactiveDefaults };
+  return { activeMints: allocated.filter(isActiveAsset).map(a => a.mint.toBase58()),
+    inactiveDefaults: allocated.filter(a => !isActiveAsset(a) && KAKU_SAN_DEFAULT_SLOTS.some(s => s.mint === a.mint.toBase58())).map(a => a.mint.toBase58()) };
 }
 
 const READ_METHODS = /^(get|simulateTransaction$|isBlockhashValid$)/;
@@ -161,6 +116,9 @@ export interface KakuSanObservation {
   exists: boolean;
   activeMints: string[];
   inactiveDefaults: string[];
+  configuredDefaults?: string[];
+  installedMints?: string[];
+  resumeStep?: { step: "weights" } | { step: "deactivate-default" | "add-token"; mint: string };
   pythRemaining: boolean;
   weightsSet: boolean;
   verified: boolean;
@@ -349,25 +307,25 @@ export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPr
       return prepared("create", draft.vault, draft.mint, transactions);
     });
   }
+  const request = { vault: input.vault!, shareMint: input.shareMint!, creator,
+    legs: KAKU_SAN_ASSETS.map(asset => ({ ...asset, token: kakuSanTokenInput(asset) })) };
   if (input.step === "deactivate-default") {
     const token = kakuSanDeactivateInput(input.mint!);
-    const payload = await native.sdk.addOrEditTokenTx({ vault: input.vault!, manager: creator }, token);
-    const transactions = payloadTransactions(payload, creator);
-    if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+    await assertNativeDefaultPool(native.connection);
+    const transactions = await prepareCompositionTransactions(native, { ...request, token },
+      () => native.addToken({ vault: input.vault!, manager: creator }, token, NATIVE_DEFAULT_BINDINGS), simulate);
     return prepared("deactivate-default", input.vault!, input.shareMint!, transactions, token.token_mint);
   }
   if (input.step === "add-token") {
     const asset = KAKU_SAN_ASSETS.find(row => row.mint === input.mint);
     if (!asset) throw new Error("Mint is not in the Kaku San basket");
     const token = kakuSanTokenInput(asset);
-    const payload = await native.addToken({ vault: input.vault!, manager: creator }, token, KAKU_SAN_RAYDIUM_POOLS);
-    const transactions = payloadTransactions(payload, creator);
-    if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+    const transactions = await prepareCompositionTransactions(native, { ...request, token },
+      () => native.addToken({ vault: input.vault!, manager: creator }, token, KAKU_SAN_RAYDIUM_POOLS), simulate);
     return prepared("add-token", input.vault!, input.shareMint!, transactions, asset.mint);
   }
-  const payload = await native.weights({ vault: input.vault!, manager: creator }, KAKU_SAN_ASSETS.map(asset => ({ mint: asset.mint, targetWeightBps: asset.targetWeightBps })));
-  const transactions = payloadTransactions(payload, creator);
-  if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+  const transactions = await prepareCompositionTransactions(native, request,
+    () => native.weights({ vault: input.vault!, manager: creator }, [...KAKU_SAN_ASSETS]), simulate);
   return prepared("weights", input.vault!, input.shareMint!, transactions);
 }
 
@@ -423,8 +381,9 @@ export async function observeKakuSanVault(input: { vault: string; shareMint: str
   const shareMint = address(input.shareMint);
   const account = await native.connection.getAccountInfo(new PublicKey(vault), "confirmed");
   if (!account) return observation(vault, shareMint, false);
+  if (account.owner.toBase58() !== SYMMETRY_PROGRAM_ID) throw new Error("Wrong native vault owner");
   const fetched = await native.sdk.fetchVault(vault);
-  if (fetched.ownAddress.toBase58() !== vault || fetched.mint.toBase58() !== shareMint) throw new Error("Native vault identity mismatch");
+  if (fetched.ownAddress.toBase58() !== vault || fetched.mint.toBase58() !== shareMint || fetched.settings.creator.toBase58() !== KAKU_SAN_DEPLOYER) throw new Error("Native vault identity mismatch");
   const allocated = allocatedAssets(fetched);
   const activeMints = allocated.filter(isActiveAsset).map(asset => asset.mint.toBase58());
   const inactiveDefaults = allocated.filter(asset => KAKU_SAN_DEFAULT_SLOTS.some(slot => slot.mint === asset.mint.toBase58()) && !isActiveAsset(asset)).map(asset => asset.mint.toBase58());
@@ -433,12 +392,13 @@ export async function observeKakuSanVault(input: { vault: string; shareMint: str
     const row = allocated.find(item => item.mint.toBase58() === asset.mint);
     return !!row && isActiveAsset(row) && row.weight === asset.targetWeightBps;
   });
-  try {
-    const verified = assertKakuSanComposition(fetched);
-    return observation(vault, shareMint, true, { ...verified, pythRemaining: false, weightsSet: true, verified: true });
-  } catch {
-    return observation(vault, shareMint, true, { activeMints, inactiveDefaults, pythRemaining, weightsSet, verified: false });
-  }
+  const pending = await pendingCompositionIntents(native, vault);
+  const resumeStep = compositionResumeStep(pending, KAKU_SAN_ASSETS.map(a => a.mint));
+  let verified = false;
+  try { assertKakuSanComposition(fetched); verified = pending.length === 0 && fetched.settings.activeManagements.isZero(); }
+  catch { /* Configuration not installed; never substitute financial readiness. */ }
+  return observation(vault, shareMint, true, { activeMints, inactiveDefaults, pythRemaining, weightsSet, verified, resumeStep,
+    configuredDefaults: configuredDefaults(fetched), installedMints: KAKU_SAN_ASSETS.filter(a => installedToken(fetched, kakuSanTokenInput(a))).map(a => a.mint) });
 }
 
 export async function withKakuSanTimeout<T>(work: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {

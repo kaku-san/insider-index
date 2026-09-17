@@ -1,4 +1,6 @@
 import test from "node:test";
+import { installedCompositionFixture } from "./support/installed-composition.mts";
+import { compositionVm, snapshot } from "./support/composition-vm.mts";
 import assert from "node:assert/strict";
 import { register } from "node:module";
 import { createDraftDb, type CreateDraftDb } from "./support/create-draft-db.mts";
@@ -56,29 +58,13 @@ const VAULT = new PublicKey(new Uint8Array(32).fill(2)).toBase58();
 const MINT = new PublicKey(new Uint8Array(32).fill(3)).toBase58();
 const OTHER = new PublicKey(new Uint8Array(32).fill(9)).toBase58();
 
-function raydiumOracle(poolIndex = 0) {
-  return {
-    oracleSettings: { oracleType: OracleType.RaydiumClmm, numRequiredAccounts: 1 },
-    accountsToLoadLutIds: [0], accountsToLoadLutIndices: [poolIndex],
-  };
-}
-function installedVault(overrides: Partial<{ pyth: boolean; wsolActive: boolean; missingStock: boolean; unresolvedPool: boolean }> = {}): Vault {
-  const lut = KAKU_SAN_ASSETS.map(asset => new PublicKey(asset.pool));
-  const defaults = KAKU_SAN_DEFAULT_SLOTS.map(slot => ({
-    mint: new PublicKey(slot.mint), amount: 0n, weight: 0, active: overrides.wsolActive && slot.mint === KAKU_SAN_WSOL_MINT ? 1 : 0,
-    oracleAggregator: { numOracles: overrides.pyth ? 1 : 0, oracles: overrides.pyth ? [{ oracleSettings: { oracleType: OracleType.Pyth }, accountsToLoadLutIds: [0], accountsToLoadLutIndices: [0] }] : [] },
-  }));
-  const stocks = KAKU_SAN_ASSETS.flatMap((asset, index) => overrides.missingStock && index === 0 ? [] : [{
-    mint: new PublicKey(asset.mint), amount: 0n, weight: asset.targetWeightBps, active: 1,
-    // An out-of-range LUT index simulates a vault snapshot whose lookup table hasn't caught up yet:
-    // vault.lutPubkeys[id].state.addresses[index] resolves to undefined rather than a pool address.
-    oracleAggregator: { numOracles: 1, oracles: [raydiumOracle(overrides.unresolvedPool && index === 0 ? 99 : index)] },
-  }]);
-  const composition = [...defaults, ...stocks];
-  return {
-    ownAddress: new PublicKey(VAULT), mint: new PublicKey(MINT), numTokens: composition.length, composition,
-    lutPubkeys: [{ state: { addresses: lut } }],
-  } as unknown as Vault;
+function installedVault(overrides: Partial<{ pyth: boolean; wsolInactive: boolean; missingStock: boolean; unresolvedPool: boolean }> = {}): Vault {
+  const v = installedCompositionFixture(VAULT, MINT, KAKU_SAN_ASSETS.map(asset => ({ token: kakuSanTokenInput(asset), targetWeightBps: asset.targetWeightBps })));
+  if (overrides.pyth) v.composition[0].oracleAggregator.oracles[0].oracleSettings.oracleType = OracleType.Pyth;
+  if (overrides.wsolInactive) v.composition[0].active = 0;
+  if (overrides.missingStock) { v.composition.splice(2, 1); v.numTokens--; }
+  if (overrides.unresolvedPool) v.composition[2].oracleAggregator.oracles[0].accountsToLoadLutIndices[0] = 99;
+  return v;
 }
 
 function unsignedPayload(payer = KAKU_SAN_DEPLOYER) {
@@ -91,7 +77,7 @@ function unsignedPayload(payer = KAKU_SAN_DEPLOYER) {
   return { tx_b64: Buffer.from(tx.serialize()).toString("base64"), payer, message_version: "0" as const, recent_blockhash: "", lookup_tables: [] as string[], instructions: [] };
 }
 
-function builders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null = { data: new Uint8Array(1) }, fetched: Vault | null = null): NativeVaultBuilders {
+function builders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null = { data: new Uint8Array(1), owner: new PublicKey(SYMMETRY_PROGRAM_ID) }, fetched: Vault | null = null): NativeVaultBuilders {
   const payload = { batches: [{ transactions: [unsignedPayload()] }] };
   return {
     network: "mainnet-beta",
@@ -105,6 +91,7 @@ function builders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null 
       createVaultTx: async () => ({ vault: VAULT, mint: MINT, ...payload }),
       addOrEditTokenTx: async () => payload,
       fetchVault: async () => fetched ?? installedVault(),
+      fetchVaultIntents: async () => [],
     },
     addToken: async () => payload,
     weights: async () => payload,
@@ -457,31 +444,33 @@ test("kaku-admin is unlisted: robots disallow it, the page is noindex, and home 
   assert.doesNotMatch(home, /Create Kaku San/);
 });
 
-test("deactivate input strips oracles and refuses basket mints; prepare uses addOrEditTokenTx", async () => {
+test("default configuration uses valid Raydium inputs and the shared native atomic path", async () => {
   const token = kakuSanDeactivateInput(KAKU_SAN_WSOL_MINT);
-  assert.equal(token.active, false);
-  assert.deepEqual(token.oracles, []);
+  assert.equal(token.active, true);
+  assert.equal(token.oracles[0].weight_bps, 10000);
   assert.equal(kakuSanDeactivateInput(KAKU_SAN_USDC_MINT).token_mint, KAKU_SAN_USDC_MINT);
   assert.throws(() => kakuSanDeactivateInput(KAKU_SAN_ASSETS[0].mint), /creation-time WSOL\/USDC/);
+  const vm = compositionVm();
   const prepared = await prepareKakuSanStep({
-    creator: KAKU_SAN_DEPLOYER, step: "deactivate-default", vault: VAULT, shareMint: MINT, mint: KAKU_SAN_WSOL_MINT,
-  }, builders());
+    creator: snapshot.creator, step: "deactivate-default", vault: snapshot.vault, shareMint: snapshot.shareMint, mint: KAKU_SAN_WSOL_MINT,
+  }, vm.native);
+  vm.apply(prepared.transactions[0].txBase64);
   assert.equal(prepared.step, "deactivate-default");
   assert.equal(prepared.mint, KAKU_SAN_WSOL_MINT);
-  assert.equal(prepared.vault, VAULT);
+  assert.equal(prepared.vault, snapshot.vault);
 });
 
-test("installed composition requires the 5 xStocks, deactivated defaults, and no Pyth", () => {
-  assert.deepEqual(assertKakuSanComposition(installedVault()).activeMints, KAKU_SAN_ASSETS.map(asset => asset.mint));
+test("installed composition requires 5 xStocks plus exact zero-target native support and no Pyth", () => {
+  assert.deepEqual(assertKakuSanComposition(installedVault()).activeMints, [KAKU_SAN_WSOL_MINT, ...KAKU_SAN_ASSETS.map(asset => asset.mint)]);
   assert.throws(() => assertKakuSanComposition(installedVault({ pyth: true })), /ORACLE_TYPE_FORBIDDEN/);
-  assert.throws(() => assertKakuSanComposition(installedVault({ wsolActive: true })), /still active/);
-  assert.throws(() => assertKakuSanComposition(installedVault({ missingStock: true })), /5 xStocks/);
+  assert.throws(() => assertKakuSanComposition(installedVault({ wsolInactive: true })), /COMPOSITION_TOKEN/);
+  assert.throws(() => assertKakuSanComposition(installedVault({ missingStock: true })), /COMPOSITION_MINTS/);
 });
 
 test("installed composition fails closed when a leg's Raydium pool cannot be resolved from the vault's lookup table", () => {
   assert.throws(
     () => assertKakuSanComposition(installedVault({ unresolvedPool: true })),
-    /RAYDIUM_POOL_MISMATCH: AAPLx installs unresolved, expected/,
+    /ORACLE_ACCOUNT_MISSING/,
   );
 });
 

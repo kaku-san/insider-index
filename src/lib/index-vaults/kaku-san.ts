@@ -12,7 +12,7 @@ export const KAKU_SAN_INDEX_ID = "execution-test-kaku-san";
 export const KAKU_SAN_START_PRICE = "1000000";
 export const KAKU_SAN_METADATA_URI = "";
 export const KAKU_SAN_LABEL = "Execution Test — not politician holdings";
-/** Creation-time Symmetry defaults. Must be deactivated after create; never left on Pyth. */
+/** Creation-time Symmetry defaults. They are converted to bounded Raydium support/cash slots; never left on Pyth. */
 export const KAKU_SAN_WSOL_MINT = WSOL_MINT;
 export const KAKU_SAN_USDC_MINT = MINTS.mainnet.USDC.toBase58();
 export const KAKU_SAN_DEFAULT_SLOTS = Object.freeze([

@@ -5,7 +5,7 @@ import { createDraftDb, type CreateDraftDb } from "./support/create-draft-db.mts
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { OracleType } from "@symmetry-hq/sdk/dist/layouts/oracle.js";
+import { installedCompositionFixture } from "./support/installed-composition.mts";
 import type { Vault } from "@symmetry-hq/sdk";
 import { KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER, KAKU_SAN_WSOL_MINT } from "../src/lib/index-vaults/kaku-san.ts";
 import { VAULT_RELEASE } from "../src/lib/index-vaults/release.ts";
@@ -90,7 +90,7 @@ function unsignedPayload(payer = KAKU_SAN_DEPLOYER) {
   return { tx_b64: Buffer.from(tx.serialize()).toString("base64"), payer, message_version: "0" as const, recent_blockhash: "", lookup_tables: [] as string[], instructions: [] };
 }
 
-function builders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null = { data: new Uint8Array(1) }, fetched: Vault | null = null): NativeVaultBuilders {
+function builders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null = { data: new Uint8Array(1), owner: new PublicKey(SYMMETRY_PROGRAM_ID) }, fetched: Vault | null = null): NativeVaultBuilders {
   const payload = { batches: [{ transactions: [unsignedPayload()] }] };
   return {
     network: "mainnet-beta",
@@ -104,29 +104,16 @@ function builders(vaultAccount: { data?: Uint8Array; owner?: PublicKey } | null 
       createVaultTx: async () => ({ vault: VAULT, mint: MINT, ...payload }),
       addOrEditTokenTx: async () => payload,
       fetchVault: async () => fetched ?? verifiedVault(),
+      fetchVaultIntents: async () => [],
     },
     addToken: async () => payload,
     weights: async () => payload,
   } as unknown as NativeVaultBuilders;
 }
 
-function raydiumOracle(poolIndex: number) {
-  return { oracleSettings: { oracleType: OracleType.RaydiumClmm, numRequiredAccounts: 1 }, accountsToLoadLutIds: [0], accountsToLoadLutIndices: [poolIndex] };
-}
-/** A vault whose composition matches the definition: defaults deactivated, three legs active on their
- *  target weights with a Raydium oracle, no Pyth. */
 function verifiedVault(): Vault {
-  const lut = [M1, M2, M3].map(m => new PublicKey(m));
-  const defaults = KAKU_SAN_DEFAULT_SLOTS.map(slot => ({
-    mint: new PublicKey(slot.mint), amount: 0n, weight: 0, active: 0,
-    oracleAggregator: { numOracles: 0, oracles: [] },
-  }));
-  const active = legs().map((leg, index) => ({
-    mint: new PublicKey(leg.mint), amount: 0n, weight: leg.targetWeightBps, active: 1,
-    oracleAggregator: { numOracles: 1, oracles: [raydiumOracle(index)] },
-  }));
-  const composition = [...defaults, ...active];
-  return { ownAddress: new PublicKey(VAULT), mint: new PublicKey(MINT), numTokens: composition.length, composition, lutPubkeys: [{ state: { addresses: lut } }] } as unknown as Vault;
+  const def = assertCreatableDefinition(fakeDefinition(), INDEX_ID);
+  return installedCompositionFixture(VAULT, MINT, def.legs.map(leg => ({ token: indexTokenInput(leg), targetWeightBps: leg.targetWeightBps })));
 }
 
 const request = (body: unknown, path = "/api/vaults/index/prepare") => new Request(`http://localhost${path}`, { method: "POST", body: JSON.stringify(body) });
@@ -146,11 +133,8 @@ test("creation builds from the persisted definition, not from Kaku San constants
   // Not the fixed 5-stock 2000 bps basket.
   assert.notEqual(prepared.legs.length, 5);
   assert.doesNotMatch(prepared.name, /Kaku San/);
-  // Add-token and weights build from the definition legs.
-  const weights = await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "weights", vault: VAULT, shareMint: MINT }, builders(), loader(fakeDefinition()), true, journal);
-  assert.equal(weights.step, "weights");
-  const addToken = await prepareIndexStep({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, step: "add-token", vault: VAULT, shareMint: MINT, mint: M2 }, builders(), loader(fakeDefinition()), true, journal);
-  assert.equal(addToken.mint, M2);
+  // Composition prepare is covered by real program execution in composition-resume.test.mts,
+  // not by a mocked successful simulation of an unrelated SystemProgram transfer.
 }));
 
 test("only the approved deployer may prepare, submit, observe or discard", async () => temp(async db => {
@@ -196,6 +180,10 @@ test("cap violation throws rather than truncating the book", () => {
     provider: "xstock", decimals: 8, pool: P1, kind: "raydium_clmm", tvlUsd: 1, targetWeightBps: 99,
   }));
   assert.throws(() => assertCreatableDefinition(fakeDefinition({ vaultLegs: tooMany }), INDEX_ID), /NATIVE_TOKEN_CAP/);
+  const atCap = Array.from({ length: 98 }, (_, i) => ({ ...tooMany[i], targetWeightBps: i === 0 ? 300 : 100 }));
+  assert.equal(assertCreatableDefinition(fakeDefinition({ vaultLegs: atCap }), INDEX_ID).legs.length, 98, "98 investment legs + two native allocated slots = 100");
+  assert.throws(() => assertCreatableDefinition(fakeDefinition({ vaultLegs: [...atCap, tooMany[98]] }), INDEX_ID), /NATIVE_TOKEN_CAP/);
+  assert.throws(() => assertCreatableDefinition(fakeDefinition({ vaultLegs: [{ ...legs()[0], mint: KAKU_SAN_WSOL_MINT }, ...legs().slice(1)] }), INDEX_ID), /not investment legs/);
 });
 
 test("refuses clearly: unreadable definition, non-CREATABLE status, and no pool-ready legs", () => {
@@ -290,7 +278,7 @@ test("observe reports missing accounts and verifies the definition composition",
   assert.equal(ok.exists, true);
   assert.equal(ok.verified, true);
   assert.equal(ok.pythRemaining, false);
-  assert.deepEqual(ok.activeMints.sort(), [M1, M2, M3].sort());
+  assert.deepEqual(ok.activeMints.sort(), [M1, M2, M3, KAKU_SAN_WSOL_MINT].sort());
   const denied = await handleIndexPreview(request({ creator: OTHER, indexId: INDEX_ID }, "/api/vaults/index/preview"), loader(fakeDefinition()));
   assert.equal(denied.status, 400);
 });

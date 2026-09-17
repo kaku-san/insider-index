@@ -7,7 +7,7 @@ import {
   KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER,
   applyIndexSubmit, canCreateIndexVault, clearIndexReceipt, discardIndex, listIndexDefinitions,
   loadIndexReceipt, mergeIndexObservation, nextIndexStep, observeIndex, prepareIndex, previewIndexDefinition,
-  reconcileIndexCreateDraft, signPreparedIndex, submitIndex,
+  reconcileIndexCreateDraft, resumeIndexReceipt, signPreparedIndex, submitIndex,
   type IndexPreview, type IndexReceipt, type IndexSummary,
 } from "@/lib/frontend/index-vault";
 import styles from "./kaku-admin.module.css";
@@ -60,7 +60,7 @@ export function IndexVaultAdmin() {
     try {
       const loaded = await previewIndexDefinition({ creator: wallet.solanaAddress, indexId });
       setPreview(loaded);
-      setReceipt(loadIndexReceipt(indexId));
+      setReceipt(resumeIndexReceipt(loaded, loadIndexReceipt(indexId)));
     } catch (error) {
       setStatus(errorText(error));
     } finally {
@@ -97,7 +97,7 @@ export function IndexVaultAdmin() {
           if (!current) throw new Error("Saved vault required.");
           setStatus("Verifying on-chain composition…");
           current = mergeIndexObservation(current, await observeIndex({ creator, indexId, vault: current.vault, shareMint: current.shareMint }), legMints);
-          if (!current.verified) throw new Error("On-chain composition does not match the definition legs, weights and deactivated defaults.");
+          if (!current.verified) throw new Error("On-chain composition does not match the definition and zero-target Raydium support-slot contract.");
           if (isCurrent()) setReceipt(current);
           continue;
         }
@@ -118,7 +118,7 @@ export function IndexVaultAdmin() {
           continue;
         }
         if (!current?.created) throw new Error("Create the vault before installing the composition.");
-        const label = step.step === "deactivate-default" ? "Removing default WSOL/USDC Pyth slots…"
+        const label = step.step === "deactivate-default" ? "Replacing default Pyth oracles with Raydium support/cash slots…"
           : step.step === "add-token" ? `Adding ${preview.legs.find(leg => leg.mint === step.mint)?.ticker ?? "token"}…`
             : "Setting target weights…";
         setStatus(label);
@@ -168,7 +168,7 @@ export function IndexVaultAdmin() {
     <span className={styles.badge}>Deployer admin · create any persisted index</span>
     <h2 id={`${id}-title`}>Create an index vault from a persisted definition</h2>
     <p>Builds one mainnet Symmetry V3 vault from a saved InsiderIndex definition — name, symbol, pool-ready legs and target weights read live from that record, never from constants. The native leg cap is enforced by refusing, never truncating. Creating a vault does not open deposits; the public Invest release flag stays authoritative.</p>
-    <p>Raydium oracles only. Default WSOL/USDC Pyth slots are deactivated after create. Only the approved deployer may sign; the server never holds a key. Retries resume the saved vault; they do not create a second one.</p>
+    <p>Raydium oracles only. Native WSOL remains active at zero target; USDC is inactive at zero target. Residual balances still require pricing and USDC conversion. Composition verification does not enable deposits. Only the approved deployer may sign; the server never holds a key. Retries resume the saved vault; they do not create a second one.</p>
 
     {wallet.mode === "live" && !owner && <button type="button" disabled={!wallet.ready || busy || PREVIEW_MODE} onClick={() => void wallet.connect().catch(error => setStatus(errorText(error)))}>Connect wallet</button>}
     {refused && <p className={styles.refuse} role="alert">Connected wallet {owner} is refused. Only {KAKU_SAN_DEPLOYER} may create index vaults.</p>}
@@ -207,7 +207,7 @@ export function IndexVaultAdmin() {
         <p className={styles.refuse}>No tradable pool — excluded from the vault (not silently re-weighted):</p>
         <ul>{preview.poolExcludedLegs.map(leg => <li key={leg.mint}><strong>{leg.ticker}</strong> · <code>{leg.mint}</code> · {leg.reason}</li>)}</ul>
       </div>}
-      <p>Default slots deactivated after create: {KAKU_SAN_DEFAULT_SLOTS.map(slot => slot.ticker).join(", ")}.</p>
+      <p>Native support/cash slots (not investment legs): {KAKU_SAN_DEFAULT_SLOTS.map(slot => slot.ticker).join(", ")}. Exact index weights stay unchanged.</p>
     </div>}
 
     {preview && <div className={styles.actions}>

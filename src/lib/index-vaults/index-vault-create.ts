@@ -11,8 +11,8 @@
  * may create/discard (`assertSignedByDeployer`), every mutating action requires the real Ed25519
  * deployer signature, the create draft is journaled in durable shared storage (`create-draft-store.ts`,
  * Supabase migration 202609190001), discard refuses once broadcast or once the vault is a real
- * Symmetry vault on-chain, the creation-time WSOL/USDC Pyth slots are deactivated after create, and
- * only Raydium oracles are installed. Creating a vault never opens deposits.
+ * Symmetry vault on-chain, Pyth defaults become Raydium-only zero-target native support/cash slots,
+ * and only Raydium oracles are installed (see docs/composition-resume.md). Creating a vault never opens deposits.
  */
 import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import type { AddOrEditTokenInput, OracleInput, Vault } from "@symmetry-hq/sdk";
@@ -39,6 +39,8 @@ import {
 import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
 import { readVaultDefinition, readVaultDefinitions, writeVaultCreation, type PersistedVaultDefinition, type PersistedVaultLeg, type VaultDefinitionSummary } from "./vault-definition-store.ts";
 import { createServiceSupabase } from "../supabase.ts";
+import { prepareCompositionTransactions, pendingCompositionIntents, compositionResumeStep } from "./composition-transactions.ts";
+import { assertInstalledComposition, assertNativeDefaultPool, configuredDefaults, installedToken, NATIVE_DEFAULT_BINDINGS } from "./native-defaults.ts";
 
 /** The approved deployer is the same wallet the execution-test path enforces; the server holds no key. */
 export const INDEX_VAULT_DEPLOYER = KAKU_SAN_DEPLOYER;
@@ -92,10 +94,11 @@ export function assertCreatableDefinition(record: PersistedVaultDefinition | nul
   const raw = Array.isArray(record.vaultLegs) ? record.vaultLegs : [];
   if (raw.length === 0) throw new Error(`Index ${indexId} has no pool-ready legs; nothing to create.`);
   // The cap is enforced by throwing, never by truncating the book to fit.
-  assertNativeTokenCap(raw.length, "vault legs");
+  assertNativeTokenCap(raw.length + NATIVE_DEFAULT_BINDINGS.length, "allocated slots (including native defaults)");
   if (raw.length < MIN_LEGS) throw new Error(`Index ${indexId} has ${raw.length} pool-ready leg(s); a vault needs at least ${MIN_LEGS}.`);
   const legs: CreatableIndexLeg[] = raw.map((leg: PersistedVaultLeg) => {
     if (!leg || typeof leg.mint !== "string" || typeof leg.pool !== "string") throw new Error(`Index ${indexId} has a malformed leg; refusing to create.`);
+    if (NATIVE_DEFAULT_BINDINGS.some(b => b.mint === leg.mint)) throw new Error("Native support/cash mints are not investment legs");
     if (!Number.isInteger(leg.decimals) || leg.decimals < 0) throw new Error(`Index ${indexId} leg ${leg.ticker} has invalid decimals.`);
     if (!Number.isInteger(leg.targetWeightBps) || leg.targetWeightBps <= 0) throw new Error(`Index ${indexId} leg ${leg.ticker} has invalid target weight.`);
     return {
@@ -190,6 +193,9 @@ export interface IndexObservation {
   exists: boolean;
   activeMints: string[];
   inactiveDefaults: string[];
+  configuredDefaults?: string[];
+  installedMints?: string[];
+  resumeStep?: { step: "weights" } | { step: "deactivate-default" | "add-token"; mint: string };
   pythRemaining: boolean;
   weightsSet: boolean;
   verified: boolean;
@@ -334,7 +340,10 @@ export async function prepareIndexStep(
   if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
   await native.assertNetwork();
   const creator = assertKakuSanDeployer(input.creator);
-  const def = assertCreatableDefinition(await loadDefinition(input.indexId), input.indexId);
+  const record = await loadDefinition(input.indexId);
+  const def = assertCreatableDefinition(record, input.indexId);
+  if (input.step === "create" && record?.vaultAddress) throw new Error(`VAULT_ALREADY_CREATED: resume ${record.vaultAddress}; never create a replacement`);
+  if (input.step !== "create" && ((record?.vaultAddress && record.vaultAddress !== input.vault) || (record?.shareMint && record.shareMint !== input.shareMint))) throw new Error("COMPOSITION_IDENTITY: resume the persisted vault and share mint");
 
   if (input.step === "create") {
     return journal.update(async state => {
@@ -358,25 +367,25 @@ export async function prepareIndexStep(
       return prepared("create", def, draft.vault, draft.mint, transactions);
     });
   }
+  const request = { vault: input.vault!, shareMint: input.shareMint!, creator,
+    legs: def.legs.map(leg => ({ ...leg, token: indexTokenInput(leg) })) };
   if (input.step === "deactivate-default") {
     const token = kakuSanDeactivateInput(input.mint!);
-    const payload = await native.sdk.addOrEditTokenTx({ vault: input.vault!, manager: creator }, token);
-    const transactions = payloadTransactions(payload, creator);
-    if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+    await assertNativeDefaultPool(native.connection);
+    const transactions = await prepareCompositionTransactions(native, { ...request, token },
+      () => native.addToken({ vault: input.vault!, manager: creator }, token, NATIVE_DEFAULT_BINDINGS), simulate);
     return prepared("deactivate-default", def, input.vault!, input.shareMint!, transactions, token.token_mint);
   }
   if (input.step === "add-token") {
     const leg = def.legs.find(l => l.mint === input.mint);
     if (!leg) throw new Error(`Mint ${input.mint} is not a pool-ready leg of ${def.indexId}.`);
     const token = indexTokenInput(leg);
-    const payload = await native.addToken({ vault: input.vault!, manager: creator }, token, [{ mint: leg.mint, pool: leg.pool, kind: leg.kind }]);
-    const transactions = payloadTransactions(payload, creator);
-    if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+    const transactions = await prepareCompositionTransactions(native, { ...request, token },
+      () => native.addToken({ vault: input.vault!, manager: creator }, token, [leg]), simulate);
     return prepared("add-token", def, input.vault!, input.shareMint!, transactions, leg.mint);
   }
-  const payload = await native.weights({ vault: input.vault!, manager: creator }, def.legs.map(leg => ({ mint: leg.mint, targetWeightBps: leg.targetWeightBps })));
-  const transactions = payloadTransactions(payload, creator);
-  if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
+  const transactions = await prepareCompositionTransactions(native, request,
+    () => native.weights({ vault: input.vault!, manager: creator }, def.legs), simulate);
   return prepared("weights", def, input.vault!, input.shareMint!, transactions);
 }
 
@@ -444,15 +453,17 @@ export async function observeIndexVault(input: { indexId: string; vault: string;
   assertNoPythEnvironment();
   if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
   await native.assertNetwork();
-  const def = assertCreatableDefinition(await loadDefinition(input.indexId), input.indexId);
+  const record = await loadDefinition(input.indexId);
+  const def = assertCreatableDefinition(record, input.indexId);
+  if ((record?.vaultAddress && record.vaultAddress !== input.vault) || (record?.shareMint && record.shareMint !== input.shareMint)) throw new Error("Native persisted identity mismatch");
   const vault = address(input.vault);
   const shareMint = address(input.shareMint);
   const account = await native.connection.getAccountInfo(new PublicKey(vault), "confirmed");
   if (!account) return observationOf(def.indexId, vault, shareMint, false);
+  if (account.owner.toBase58() !== SYMMETRY_PROGRAM_ID) throw new Error("Wrong native vault owner");
   const fetched = await native.sdk.fetchVault(vault);
-  if (fetched.ownAddress.toBase58() !== vault || fetched.mint.toBase58() !== shareMint) throw new Error("Native vault identity mismatch");
+  if (fetched.ownAddress.toBase58() !== vault || fetched.mint.toBase58() !== shareMint || fetched.settings.creator.toBase58() !== INDEX_VAULT_DEPLOYER) throw new Error("Native vault identity mismatch");
   const allocated = allocatedAssets(fetched);
-  const legMints = new Set(def.legs.map(l => l.mint));
   const activeMints = allocated.filter(isActiveAsset).map(asset => asset.mint.toBase58());
   const inactiveDefaults = allocated.filter(asset => KAKU_SAN_DEFAULT_SLOTS.some(slot => slot.mint === asset.mint.toBase58()) && !isActiveAsset(asset)).map(asset => asset.mint.toBase58());
   const pythRemaining = allocated.some(asset => installedOracles(asset).some(oracle => oracle.oracleSettings.oracleType === OracleType.Pyth));
@@ -460,13 +471,16 @@ export async function observeIndexVault(input: { indexId: string; vault: string;
     const row = allocated.find(item => item.mint.toBase58() === leg.mint);
     return !!row && isActiveAsset(row) && Number(row.weight) === leg.targetWeightBps;
   });
-  const activeLegMints = activeMints.filter(mint => legMints.has(mint));
-  const defaultsClear = KAKU_SAN_DEFAULT_SLOTS.every(slot => {
-    const row = allocated.find(item => item.mint.toBase58() === slot.mint);
-    return !row || !isActiveAsset(row);
-  });
-  const verified = !pythRemaining && weightsSet && defaultsClear && activeLegMints.length === def.legs.length && def.legs.every(l => legMints.has(l.mint) && activeLegMints.includes(l.mint)) && activeMints.every(mint => legMints.has(mint));
-  return observationOf(def.indexId, vault, shareMint, true, { activeMints, inactiveDefaults, pythRemaining, weightsSet, verified });
+  const pending = await pendingCompositionIntents(native, vault);
+  const resumeStep = compositionResumeStep(pending, def.legs.map(l => l.mint));
+  let verified = false;
+  try {
+    assertInstalledComposition(fetched, def.legs.map(leg => ({ ...leg, token: indexTokenInput(leg) })));
+    verified = pending.length === 0 && fetched.settings.activeManagements.isZero();
+  } catch { /* Not installed; never promote target weights alone to financial readiness. */ }
+  return observationOf(def.indexId, vault, shareMint, true, { activeMints, inactiveDefaults,
+    configuredDefaults: configuredDefaults(fetched), installedMints: def.legs.filter(l => installedToken(fetched, indexTokenInput(l))).map(l => l.mint),
+    pythRemaining, weightsSet, verified, resumeStep });
 }
 
 export async function discardIndexCreateDraft(

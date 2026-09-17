@@ -1,12 +1,12 @@
 import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, type Connection } from "@solana/web3.js";
-import { isRebalanceRequired } from "@symmetry-hq/sdk";
 import type { Vault } from "@symmetry-hq/sdk";
 import { MAX_SUPPORTED_TOKENS_PER_VAULT } from "@symmetry-hq/sdk/dist/constants.js";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { loadVaultPrice } from "@symmetry-hq/sdk/dist/states/basket.js";
 import Decimal from "decimal.js";
 import { address } from "./amounts.ts";
+import { assertNativeSupportTargets, hasUnreconciledSupportBalance, NATIVE_SUPPORT_BALANCE_REASON, NATIVE_DEFAULT_BINDINGS } from "./native-defaults.ts";
 import { feeSnapshot, HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
 import type { VaultIdentity } from "./adapter-contract.ts";
 import { KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEPLOYER, KAKU_SAN_INDEX_ID, KAKU_SAN_RAYDIUM_POOLS, assertKakuSanDeployer, assertKakuSanKeeper } from "./kaku-san.ts";
@@ -21,6 +21,7 @@ import { GENESIS, NativeVaultBuilders, SYMMETRY_PROGRAM_ID } from "./symmetry-ad
 import { keeperConfigurationHash, planKeeperObservation } from "../../../workers/stocklana-keeper.ts";
 import type { KeeperIntentObservation, KeeperObservation } from "../../../workers/stocklana-keeper.ts";
 
+const KAKU_SAN_PRICING_BINDINGS = [...KAKU_SAN_RAYDIUM_POOLS, ...NATIVE_DEFAULT_BINDINGS];
 export const KAKU_SAN_NATIVE_TOKEN_CAP = MAX_SUPPORTED_TOKENS_PER_VAULT;
 const headers = KAKU_SAN_HEADERS;
 /** Scale for converting an SDK Decimal price into the shared module's bigint "quote units per 1 raw token". */
@@ -138,12 +139,10 @@ export async function forbidPythNetwork<T>(work: () => Promise<T>): Promise<T> {
 
 /** Keeper eligibility: SDK early gates, then Raydium `loadVaultPrice` — never Hermes. */
 export async function kakuSanRebalanceEligibility(vault: Vault, connection: NativeVaultBuilders["connection"]): Promise<KakuSanEligibility> {
+  if (hasUnreconciledSupportBalance(vault)) return { required: null, reason: NATIVE_SUPPORT_BALANCE_REASON };
   const nowSeconds = Math.floor(Date.now() / 1000);
   const gates = nativeRebalanceGates(vault, nowSeconds);
-  if (gates.required === false) {
-    if (await isRebalanceRequired(vault, connection)) throw new Error("Keeper eligibility mismatch: SDK required a rebalance after a failed native gate");
-    return gates;
-  }
+  if (gates.required === false) return gates;
   return forbidPythNetwork(() => raydiumValueRebalanceRequired(vault, connection, nowSeconds));
 }
 
@@ -181,7 +180,8 @@ export async function observeKakuSanVault(input: { creator: string; vault: strin
   const { vault, mint } = await native.read(identity);
   if (vault.settings.creator.toBase58() !== creator) throw new Error("Vault creator is not the approved deployer");
   assertNativeTokenCap(vault.numTokens);
-  assertRaydiumOnlyVault(vault, KAKU_SAN_RAYDIUM_POOLS);
+  assertRaydiumOnlyVault(vault, KAKU_SAN_PRICING_BINDINGS);
+  assertNativeSupportTargets(vault);
   const intents = intentSummaries(native, identity, await native.sdk.fetchVaultRebalanceIntents(identity.vaultAccount));
   const eligibility = intents.length
     ? { required: null, reason: "Existing intents take priority over a new rebalance" } satisfies KakuSanEligibility
@@ -219,9 +219,10 @@ export async function prepareKakuSanKeeperStep(
   const status = await observeKakuSanVault({ creator: KAKU_SAN_DEPLOYER, vault: input.vault, shareMint: input.shareMint }, native);
   const identity = await kakuSanIdentity(native, input.vault, input.shareMint);
   const { vault } = await native.read(identity);
+  if (hasUnreconciledSupportBalance(vault)) return preparedKeeper(input.step, status, [], { eligible: false, reason: NATIVE_SUPPORT_BALANCE_REASON });
   if (input.step === "prices") {
     const intent = status.keeper.intents[0]?.address ?? getRebalanceIntentPda(new PublicKey(identity.vaultAccount), new PublicKey(identity.vaultAccount)).toBase58();
-    const { payload } = await native.priceUpdateFromVault(vault, keeper, intent, KAKU_SAN_RAYDIUM_POOLS);
+    const { payload } = await native.priceUpdateFromVault(vault, keeper, intent, KAKU_SAN_PRICING_BINDINGS);
     const transactions = payloadTransactions(payload, keeper);
     if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
     return preparedKeeper("prices", status, transactions, {
