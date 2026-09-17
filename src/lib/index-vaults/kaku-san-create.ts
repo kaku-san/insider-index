@@ -6,9 +6,11 @@ import { OracleType } from "@symmetry-hq/sdk/dist/layouts/oracle.js";
 import { getHeliusRpcUrl } from "../helius.ts";
 import { address, sha256, weightsValid } from "./amounts.ts";
 import { HOST_ENTRY_FEE_BPS, HOST_EXIT_FEE_BPS } from "./fees.ts";
-import { Journal } from "./journal.ts";
 import {
-  KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER, KAKU_SAN_RAYDIUM_POOLS,
+  durableCreateDraftJournal, type CreateDraftRpc, type CreateDraftState, type CreateDraftStore,
+} from "./create-draft-store.ts";
+import {
+  KAKU_SAN, KAKU_SAN_ASSETS, KAKU_SAN_DEFAULT_SLOTS, KAKU_SAN_DEPLOYER, KAKU_SAN_INDEX_ID, KAKU_SAN_RAYDIUM_POOLS,
   assertKakuSanDeployer, type KakuSanAsset,
 } from "./kaku-san.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyToken } from "./raydium-oracles.ts";
@@ -168,10 +170,11 @@ export interface KakuSanObservation {
  * `submitted` is latched true before the create transaction is ever broadcast (see submitKakuSanStep),
  * so a lost confirmation can never be mistaken for "never broadcast" by a later discard call. */
 export interface KakuSanCreateDraft { vault: string; mint: string; transactions: KakuSanPreparedTx[]; submitted: boolean }
-interface KakuSanCreateJournalState { draft: KakuSanCreateDraft | null }
-export const KAKU_SAN_CREATE_JOURNAL_PATH = ".data/index-vaults/kaku-san-create.json";
-export function kakuSanCreateJournal(path: string = KAKU_SAN_CREATE_JOURNAL_PATH): Journal<KakuSanCreateJournalState> {
-  return new Journal<KakuSanCreateJournalState>(path, () => ({ draft: null }));
+
+/** The durable, shared create-draft journal for the fixed Kaku San execution-test basket, keyed by
+ *  `KAKU_SAN_INDEX_ID` so it lives in the same one-row-per-index store (migration 202609190001). */
+export function kakuSanCreateJournal(rpc?: CreateDraftRpc): CreateDraftStore<CreateDraftState> {
+  return durableCreateDraftJournal(KAKU_SAN_INDEX_ID, () => ({ indexId: KAKU_SAN_INDEX_ID, draft: null }), rpc);
 }
 
 const KAKU_SAN_STEPS: readonly KakuSanCreateStep[] = ["create", "deactivate-default", "add-token", "weights"];
@@ -321,7 +324,7 @@ async function refreshedCreateTransaction(connection: Connection, tx: KakuSanPre
   return { txBase64: Buffer.from(parsed.serialize()).toString("base64"), messageHash: sha256(parsed.message.serialize()), payer: tx.payer };
 }
 
-export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPrepareRequest>, native: NativeVaultBuilders, simulate = true, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<KakuSanPrepared> {
+export async function prepareKakuSanStep(input: ReturnType<typeof parseKakuSanPrepareRequest>, native: NativeVaultBuilders, simulate = true, journal: CreateDraftStore<CreateDraftState> = kakuSanCreateJournal()): Promise<KakuSanPrepared> {
   assertNoPythEnvironment();
   if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
   await native.assertNetwork();
@@ -380,7 +383,7 @@ export async function confirmWalletTransaction(connection: Connection, signature
  * transaction may still land after this call returns, so discard must refuse from this point on.
  * Throws (never silently no-ops) if a concurrent discard already cleared or reused this draft slot, so
  * submitKakuSanStep aborts before ever broadcasting a create transaction whose journal entry is gone. */
-export async function markKakuSanCreateBroadcast(vault: string, shareMint: string, journal: Journal<KakuSanCreateJournalState>): Promise<void> {
+export async function markKakuSanCreateBroadcast(vault: string, shareMint: string, journal: CreateDraftStore<CreateDraftState>): Promise<void> {
   await journal.update(state => {
     if (!state.draft || state.draft.vault !== vault || state.draft.mint !== shareMint) {
       throw new Error("Create draft was discarded before it could be broadcast; resume or recreate it");
@@ -389,7 +392,7 @@ export async function markKakuSanCreateBroadcast(vault: string, shareMint: strin
   });
 }
 
-export async function submitKakuSanStep(input: ReturnType<typeof parseKakuSanSubmitRequest>, connection: Connection, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<KakuSanSubmitResult> {
+export async function submitKakuSanStep(input: ReturnType<typeof parseKakuSanSubmitRequest>, connection: Connection, journal: CreateDraftStore<CreateDraftState> = kakuSanCreateJournal()): Promise<KakuSanSubmitResult> {
   assertNoPythEnvironment();
   if (await connection.getGenesisHash() !== GENESIS["mainnet-beta"]) throw new Error("RPC genesis/network mismatch");
   const signatures: string[] = [];
@@ -452,7 +455,7 @@ export async function withKakuSanTimeout<T>(work: (signal: AbortSignal) => Promi
   finally { if (timer) clearTimeout(timer); if (!controller.signal.aborted) controller.abort(); }
 }
 
-export async function handleKakuSanPrepare(request: Request, nativeBuilder: (signal?: AbortSignal) => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<Response> {
+export async function handleKakuSanPrepare(request: Request, nativeBuilder: (signal?: AbortSignal) => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS, journal: CreateDraftStore<CreateDraftState> = kakuSanCreateJournal()): Promise<Response> {
   let input: ReturnType<typeof parseKakuSanPrepareRequest>;
   try {
     const text = await request.text();
@@ -469,7 +472,7 @@ export async function handleKakuSanPrepare(request: Request, nativeBuilder: (sig
   }
 }
 
-export async function handleKakuSanSubmit(request: Request, connectionBuilder: () => Connection = () => kakuSanConnection(true), journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<Response> {
+export async function handleKakuSanSubmit(request: Request, connectionBuilder: () => Connection = () => kakuSanConnection(true), journal: CreateDraftStore<CreateDraftState> = kakuSanCreateJournal()): Promise<Response> {
   let input: ReturnType<typeof parseKakuSanSubmitRequest>;
   try {
     const text = await request.text();
@@ -507,7 +510,7 @@ export async function handleKakuSanObserve(request: Request, nativeBuilder: () =
 /** Only clears a journaled draft that was never broadcast; refuses once submitKakuSanStep has sent the
  * create transaction (the durable `submitted` latch, immune to a lost confirmation) or once the draft's
  * vault is observably a real Symmetry vault on-chain (owned by the vault program, not merely funded). */
-export async function discardKakuSanCreateDraft(input: ReturnType<typeof parseKakuSanDiscardRequest>, native: NativeVaultBuilders, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<{ discarded: boolean }> {
+export async function discardKakuSanCreateDraft(input: ReturnType<typeof parseKakuSanDiscardRequest>, native: NativeVaultBuilders, journal: CreateDraftStore<CreateDraftState> = kakuSanCreateJournal()): Promise<{ discarded: boolean }> {
   assertNoPythEnvironment();
   if (native.network !== "mainnet-beta") throw new Error("Mainnet builder required");
   await native.assertNetwork();
@@ -525,7 +528,7 @@ export async function discardKakuSanCreateDraft(input: ReturnType<typeof parseKa
   });
 }
 
-export async function handleKakuSanDiscard(request: Request, nativeBuilder: () => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS, journal: Journal<KakuSanCreateJournalState> = kakuSanCreateJournal()): Promise<Response> {
+export async function handleKakuSanDiscard(request: Request, nativeBuilder: () => NativeVaultBuilders = () => kakuSanBuilders(false), timeoutMs = PREPARE_TIMEOUT_MS, journal: CreateDraftStore<CreateDraftState> = kakuSanCreateJournal()): Promise<Response> {
   let input: ReturnType<typeof parseKakuSanDiscardRequest>;
   try {
     const text = await request.text();

@@ -149,9 +149,10 @@ end $$;
 revoke all on function public.release_insiderindex_vault_create_draft(text, text) from public, anon, authenticated;
 grant execute on function public.release_insiderindex_vault_create_draft(text, text) to service_role;
 
--- Discard the never-broadcast draft (delete the row) under the lease. Refuses while `submitted` is
--- true so a broadcast create can never be discarded. The on-chain Symmetry-vault refusal is decided
--- by the caller, which has the RPC connection to observe it.
+-- Discard the never-broadcast draft (reset the row to empty) under the lease. Refuses while
+-- `submitted` is true so a broadcast create can never be discarded. The row is kept (not deleted) so
+-- the caller's lease release still has a row to release; one row per key is the invariant.
+-- The on-chain Symmetry-vault refusal is decided by the caller, which has the RPC connection.
 create or replace function public.clear_insiderindex_vault_create_draft(p_draft_key text, p_lock_token text) returns jsonb
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare
@@ -168,7 +169,9 @@ begin
   if is_submitted then
     raise exception 'create draft % was already broadcast; it cannot be discarded', p_draft_key;
   end if;
-  delete from insiderindex_vault_create_drafts where draft_key = p_draft_key;
+  update insiderindex_vault_create_drafts
+    set index_id = null, vault = null, share_mint = null, transactions = '[]'::jsonb, submitted = false, updated_at = now()
+    where draft_key = p_draft_key;
   return jsonb_build_object('draftKey', p_draft_key, 'cleared', true);
 end $$;
 revoke all on function public.clear_insiderindex_vault_create_draft(text, text) from public, anon, authenticated;
