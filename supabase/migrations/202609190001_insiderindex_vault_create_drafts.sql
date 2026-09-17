@@ -22,6 +22,17 @@
 --   * unreadable/unwritable journal  -> the RPCs raise, so create refuses rather than proceeding
 -- No secrets live here: the row holds the unsigned create transaction bytes + identity, never key
 -- material. This table never opens deposits and touches no release flag.
+--
+-- Why this store (the alternatives were weighed):
+--   * /tmp on Vercel: not durable and not shared across invocations -- this is the bug, not a fix.
+--   * object storage (Blob/S3): no compare-and-swap read-modify-write, so "one draft per index"
+--     cannot be enforced without an external lock and the latch cannot commit atomically.
+--   * Redis/KV conditional SET NX: can lock, but the draft and its submitted latch must commit
+--     together, and the draft belongs next to the definition row the same create writes back.
+--   * Supabase Postgres (chosen): already owns insiderindex_vault_definitions, already uses the
+--     service-role security-definer RPC pattern for every other write, gives one-row-per-index via
+--     the primary key, gives a real fence via UPDATE ... WHERE lock_token = $token, and commits the
+--     state + latch in one transaction under the row lock.
 begin;
 
 create table if not exists public.insiderindex_vault_create_drafts (
