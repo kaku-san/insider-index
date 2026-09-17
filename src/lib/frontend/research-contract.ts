@@ -87,7 +87,9 @@ export type PublishedConstituent = {
   book_weight_bps?: number;
   /** True only when an observed supported pool makes this mapped token usable by the native vault. */
   vault_ready?: boolean;
+  /** Persisted Raydium–USDC pool status: `observed` (qualifying pool), `thin` (pool below the TVL safety floor), or `none` (no observed pool). */
   pool_status?: "observed" | "thin" | "none";
+  /** Observed pool TVL in USD when known; `null` when no pool or TVL is unavailable. */
   pool_tvl_usd?: number | null;
   payload?: {
     evidencedMidpoint?: number | null;
