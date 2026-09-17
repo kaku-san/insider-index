@@ -1643,9 +1643,9 @@
           "venueSymbol": "GOOGLx",
           "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
           "mintDecimals": 8,
-          "weightPct": 0.1073,
-          "weightBps": 1073,
-          "valueUsd": 1442092.92,
+          "weightPct": 0.1424,
+          "weightBps": 1424,
+          "valueUsd": 1914096.42,
           "displayName": "Alphabet xStock",
           "filerCount": 4
         },
@@ -1660,18 +1660,6 @@
           "valueUsd": 1148095.42,
           "displayName": "NVIDIA xStock",
           "filerCount": 6
-        },
-        {
-          "ticker": "GOOG",
-          "venue": "backpack",
-          "venueSymbol": "GOOG.US",
-          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
-          "mintDecimals": 6,
-          "weightPct": 0.0351,
-          "weightBps": 351,
-          "valueUsd": 472003.5,
-          "displayName": "Alphabet Inc.",
-          "filerCount": 4
         },
         {
           "ticker": "META",
@@ -1836,9 +1824,9 @@
           "venueSymbol": "GOOGLx",
           "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
           "mintDecimals": 8,
-          "weightPct": 0.0896,
-          "weightBps": 896,
-          "valueUsd": 1229012.01,
+          "weightPct": 0.1240,
+          "weightBps": 1240,
+          "valueUsd": 1701015.51,
           "displayName": "Alphabet xStock",
           "filerCount": 3
         },
@@ -1864,18 +1852,6 @@
           "weightBps": 531,
           "valueUsd": 728012.01,
           "displayName": "Salesforce xStock",
-          "filerCount": 4
-        },
-        {
-          "ticker": "GOOG",
-          "venue": "backpack",
-          "venueSymbol": "GOOG.US",
-          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
-          "mintDecimals": 6,
-          "weightPct": 0.0344,
-          "weightBps": 344,
-          "valueUsd": 472003.5,
-          "displayName": "Alphabet Inc.",
           "filerCount": 4
         },
         {

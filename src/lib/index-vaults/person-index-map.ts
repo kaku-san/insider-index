@@ -14,6 +14,7 @@
  */
 import { baseIndexName } from "../fmp/index-name.ts";
 import { normalizeTicker, preferredToken, type CatalogIndex, type CatalogToken } from "../venues/catalog-parse.ts";
+import { canonicalUnderlying } from "./share-classes.ts";
 import type { PoolEvidenceSource, PoolReadinessResult } from "./pool-evidence.ts";
 
 /** Symmetry `MAX_SUPPORTED_TOKENS_PER_VAULT`. The vault-init builder throws past this; here it blocks. */
@@ -122,6 +123,22 @@ export type IndexProvenance = {
   memberCount?: number;
   members?: { slug: string; name: string; party?: string | null; state?: string | null; bioguideId?: string | null }[];
   constituentCount?: number;
+  // Set when the duplicate-underlying guard collapsed two+ legs that resolve to the same company
+  // (e.g. Alphabet's GOOGL + GOOG) into one leg. Empty/absent when nothing was collapsed. Recorded
+  // so a collapse is never silent.
+  collapsedShareClasses?: CollapsedShareClass[];
+};
+
+/** One deliberate collapse of same-company share-class legs into a single leg. */
+export type CollapsedShareClass = {
+  /** Canonical underlying id the members share. */
+  underlying: string;
+  /** The surviving leg's ticker (the tradable/xStock one is preferred). */
+  keptTicker: string;
+  /** The duplicate tickers whose weight was folded into the survivor and then dropped. */
+  droppedTickers: string[];
+  /** The survivor's merged value basis (sum of every member's value). */
+  mergedValueBasis: number;
 };
 
 /** Shared identity for a weighted index definition, independent of whether it is a person or basket. */
@@ -263,6 +280,61 @@ function isTxnDerived(book: PersonBook): boolean {
 
 function resolveTicker(catalog: CatalogIndex, ticker: string): CatalogToken | null {
   return preferredToken(catalog, ticker);
+}
+
+/**
+ * Tradability-preference rank of a ticker's catalog resolution: xStock (0) beats a Backpack `.US`
+ * token (1) beats unmapped (2). The duplicate-underlying guard keeps the lowest-rank member so a
+ * collapsed leg is the tradable one, not the illiquid duplicate. Ties break to first-seen order.
+ */
+function resolutionRank(catalog: CatalogIndex, ticker: string): number {
+  const token = resolveTicker(catalog, ticker);
+  if (!token) return 2;
+  return token.issuer === "xstock" ? 0 : 1;
+}
+
+/**
+ * Collapse legs that resolve to the same underlying company (a share-class pair such as Alphabet's
+ * GOOGL + GOOG) into one leg. Members are grouped by `canonicalUnderlying`; a group of one passes
+ * through unchanged. For a group of two+ the survivor is the best-tradable member (xStock, then
+ * Backpack, then unmapped; ties break to first-seen order), the survivor's value becomes the sum of
+ * every member's value, and the duplicates are dropped. Output order follows first-seen position so
+ * the derivation stays deterministic. Returns the collapses so the caller can record them.
+ */
+function collapseShareClasses(
+  weighted: readonly { ticker: string; name: string | null; value: number }[],
+  catalog: CatalogIndex,
+): { weighted: { ticker: string; name: string | null; value: number }[]; collapses: CollapsedShareClass[] } {
+  type Group = { canonical: string; firstIndex: number; members: { ticker: string; name: string | null; value: number }[] };
+  const groups = new Map<string, Group>();
+  weighted.forEach((row, i) => {
+    const canonical = canonicalUnderlying(row.ticker);
+    const group = groups.get(canonical);
+    if (group) group.members.push(row);
+    else groups.set(canonical, { canonical, firstIndex: i, members: [row] });
+  });
+  const ordered = [...groups.values()].sort((a, b) => a.firstIndex - b.firstIndex);
+  const out: { ticker: string; name: string | null; value: number }[] = [];
+  const collapses: CollapsedShareClass[] = [];
+  for (const group of ordered) {
+    if (group.members.length === 1) {
+      out.push({ ...group.members[0] });
+      continue;
+    }
+    // Pick the survivor: best tradable resolution, ties to first-seen (input) order.
+    const survivor = group.members.reduce((best, cur) =>
+      resolutionRank(catalog, cur.ticker) < resolutionRank(catalog, best.ticker) ? cur : best,
+    );
+    const mergedValue = group.members.reduce((s, m) => s + m.value, 0);
+    out.push({ ticker: survivor.ticker, name: survivor.name, value: mergedValue });
+    collapses.push({
+      underlying: group.canonical,
+      keptTicker: survivor.ticker,
+      droppedTickers: group.members.filter((m) => m !== survivor).map((m) => m.ticker),
+      mergedValueBasis: mergedValue,
+    });
+  }
+  return { weighted: out, collapses };
 }
 
 /** Aggregate ticker → { name, value } from annual holdings; only positive-value ticker rows weight. */
@@ -416,8 +488,22 @@ export function buildWeightedIndexDefinition(args: {
   catalog: CatalogIndex;
   poolSource: PoolEvidenceSource;
 }): PersonIndexDefinition {
-  const { identity, weightBasis, provenance, catalog, poolSource } = args;
-  const weighted = args.weighted.filter((t) => Number.isFinite(t.value) && t.value > 0);
+  const { identity, weightBasis, catalog, poolSource } = args;
+  const positive = args.weighted.filter((t) => Number.isFinite(t.value) && t.value > 0);
+  // Duplicate-underlying guard: two legs that resolve to the same company (a share-class pair such
+  // as Alphabet's GOOGL + GOOG) are collapsed into one leg deliberately, never shipped as two. The
+  // survivor is the tradable/xStock resolution; the duplicate's weight is folded in and the collapse
+  // is recorded on provenance so it is visible, not silent.
+  const { weighted, collapses } = collapseShareClasses(positive, catalog);
+  const provenance: IndexProvenance = collapses.length
+    ? {
+        ...args.provenance,
+        collapsedShareClasses: collapses,
+        note: `${args.provenance.note} Collapsed duplicate share-class legs: ${collapses
+          .map((c) => `${c.droppedTickers.join("+")}→${c.keptTicker}`)
+          .join(", ")}.`,
+      }
+    : args.provenance;
   const base = { ...identity };
 
   // Book weights over ALL positive-value tickers (mapped + unmapped) so the unmapped share is honest.

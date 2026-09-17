@@ -188,6 +188,35 @@ test("a non-Raydium pool kind fails closed, never coerced to CLMM", () => {
   assert.throws(() => buildPersonVaultInit(def), /ORACLE_KIND_FORBIDDEN/);
 });
 
+test("duplicate underlyings in one basket are caught: same-company share classes collapse to one leg", () => {
+  // GOOGL (Class A) resolves to a tradable xStock; GOOG (Class C) only to an illiquid Backpack
+  // token. They are ONE company (Alphabet), so the basket must carry one Alphabet leg, not two.
+  const catalog = indexCatalog([xstock("GOOGL", "GOOGLx", A.mint), backpack("GOOG", "GOOG.US", B.mint), xstock("AAPL", "AAPLx", C.mint)]);
+  const def = derivePersonIndex(
+    book({ slug: "dup", holdings: [{ ticker: "GOOGL", value: 600 }, { ticker: "GOOG", value: 300 }, { ticker: "AAPL", value: 100 }] }),
+    catalog,
+    PENDING_POOL_SOURCE,
+  );
+  // Exactly one Alphabet leg, and it is the tradable xStock (GOOGL), never the illiquid GOOG.
+  const alphabet = def.legs.filter((l) => l.ticker === "GOOGL" || l.ticker === "GOOG");
+  assert.equal(alphabet.length, 1);
+  assert.equal(alphabet[0].ticker, "GOOGL");
+  assert.equal(alphabet[0].provider, "xstock");
+  assert.ok(!def.legs.some((l) => l.ticker === "GOOG"), "the illiquid GOOG duplicate must be gone");
+  // Its weight is folded in, not discarded: GOOGL now carries the merged GOOGL+GOOG value (900).
+  assert.equal(alphabet[0].valueBasis, 900);
+  // The collapse is recorded on provenance so it is deliberate, never silent.
+  assert.deepEqual(def.provenance.collapsedShareClasses, [{ underlying: "GOOGL", keptTicker: "GOOGL", droppedTickers: ["GOOG"], mergedValueBasis: 900 }]);
+  assert.match(def.provenance.note, /Collapsed duplicate share-class legs: GOOG\u2192GOOGL/);
+  // Weights still sum correctly after the collapse: target weights over mapped legs total 10000,
+  // and book weights over mapped + unmapped total 10000.
+  assert.equal(def.legs.reduce((s, l) => s + l.targetWeightBps, 0), 10_000);
+  assert.equal(
+    def.legs.reduce((s, l) => s + l.bookWeightBps, 0) + def.unmapped.reduce((s, u) => s + u.bookWeightBps, 0),
+    10_000,
+  );
+});
+
 test("native leg cap: a book mapping past the cap throws, never truncates", () => {
   const tokens: CatalogToken[] = [];
   const holdings = [];
