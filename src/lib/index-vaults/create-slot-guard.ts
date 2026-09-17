@@ -10,6 +10,7 @@
  * SlotHashes window. This is deliberately applied to the cached draft too: refreshing only its
  * blockhash leaves the old LUT slot stale. No retry calls `createVaultTx` again.
  */
+import bs58 from "bs58";
 import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 import type { Connection } from "@solana/web3.js";
 import { VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
@@ -24,11 +25,15 @@ export const CREATE_SLOT_MAX_AGE = 400;
 /** A signed transaction is sent immediately, so it may use more of the real 512-slot window. */
 export const CREATE_SLOT_SUBMIT_MAX_AGE = 500;
 
+function instructionData(data: string): Buffer {
+  return Buffer.from(bs58.decode(data));
+}
+
 function createVaultIxIndex(tx: VersionedTransaction): number {
   for (let index = 0; index < tx.message.compiledInstructions.length; index++) {
     const ix = tx.message.compiledInstructions[index];
     const program = tx.message.staticAccountKeys[ix.programIdIndex];
-    if (program?.equals(VAULTS_V3_PROGRAM_ID) && Buffer.from(ix.data).subarray(0, SLOT_OFFSET).equals(CREATE_VAULT_DISCRIMINATOR)) return index;
+    if (program?.equals(VAULTS_V3_PROGRAM_ID) && instructionData(ix.data).subarray(0, SLOT_OFFSET).equals(CREATE_VAULT_DISCRIMINATOR)) return index;
   }
   return -1;
 }
@@ -37,7 +42,7 @@ function createVaultIxIndex(tx: VersionedTransaction): number {
 export function createVaultSlotOf(tx: VersionedTransaction): number | null {
   const index = createVaultIxIndex(tx);
   if (index < 0) return null;
-  const data = Buffer.from(tx.message.compiledInstructions[index].data);
+  const data = instructionData(tx.message.compiledInstructions[index].data);
   if (data.length < SLOT_OFFSET + 8) throw new Error("CREATE_SLOT_LAYOUT: createVaultIx has no u64 recent_slot.");
   const slot = Number(data.readBigUInt64LE(SLOT_OFFSET));
   if (!Number.isSafeInteger(slot) || slot < 1) throw new Error("CREATE_SLOT_LAYOUT: createVaultIx recent_slot is not a positive safe integer.");
@@ -106,9 +111,9 @@ export function retargetCreateVaultSlot(tx: VersionedTransaction, recentSlot: nu
   if (!lookup0.equals(expectedOld0) || !lookup1.equals(expectedOld1)) {
     throw new Error("CREATE_SLOT_LAYOUT: createVaultIx lookup-table accounts do not match the SDK vault/recent_slot derivation; refusing to alter the transaction.");
   }
-  const data = Buffer.from(ix.data);
+  const data = instructionData(ix.data);
   data.writeBigUInt64LE(BigInt(recentSlot), SLOT_OFFSET);
-  ix.data = data;
+  ix.data = bs58.encode(data);
   tx.message.staticAccountKeys[lookup0Index] = getLookupTableAccount(vault, recentSlot);
   tx.message.staticAccountKeys[lookup1Index] = getLookupTableAccount(vault, recentSlot - 1);
   return createVaultSlotOf(tx);
