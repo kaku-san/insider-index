@@ -25,8 +25,12 @@ export const CREATE_SLOT_MAX_AGE = 400;
 /** A signed transaction is sent immediately, so it may use more of the real 512-slot window. */
 export const CREATE_SLOT_SUBMIT_MAX_AGE = 500;
 
-function instructionData(data: string): Buffer {
-  return Buffer.from(bs58.decode(data));
+function instructionData(data: string | Uint8Array): Buffer {
+  return typeof data === "string" ? Buffer.from(bs58.decode(data)) : Buffer.from(data);
+}
+
+function encodedInstructionData(data: Buffer, original: string | Uint8Array): string | Buffer {
+  return typeof original === "string" ? bs58.encode(data) : data;
 }
 
 function createVaultIxIndex(tx: VersionedTransaction): number {
@@ -113,7 +117,9 @@ export function retargetCreateVaultSlot(tx: VersionedTransaction, recentSlot: nu
   }
   const data = instructionData(ix.data);
   data.writeBigUInt64LE(BigInt(recentSlot), SLOT_OFFSET);
-  ix.data = bs58.encode(data);
+  // web3.js types compiled instruction data as bytes, while deserialized SDK payloads may
+  // expose the wire base58 form; preserve whichever representation was present at runtime.
+  ix.data = encodedInstructionData(data, ix.data) as typeof ix.data;
   tx.message.staticAccountKeys[lookup0Index] = getLookupTableAccount(vault, recentSlot);
   tx.message.staticAccountKeys[lookup1Index] = getLookupTableAccount(vault, recentSlot - 1);
   return createVaultSlotOf(tx);
