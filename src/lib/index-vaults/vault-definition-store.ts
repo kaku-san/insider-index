@@ -153,6 +153,12 @@ export type PublicVaultLeg = {
   bookWeightBps: number;
   targetWeightBps: number;
   vaultReady: boolean;
+  pool?: {
+    status: "observed" | "thin" | "none";
+    pool?: string | null;
+    tvlUsd?: number | null;
+    observedAt?: string | null;
+  } | null;
 };
 
 export type PublicVaultDefinition = {

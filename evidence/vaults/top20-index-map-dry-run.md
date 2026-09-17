@@ -1,7 +1,7 @@
 # All-20 InsiderIndex vault-init dry-run
 
 Source: `pelositracker-fmp-latest-top20.zip` (sha256 `70d7ebd9615a77df6ff89add9d93f0b31627a1c2d75e262397e3508d5d8cb533`) for the 10 person books; the 10 thematic baskets come from the merged research feed.
-Pool evidence: `https://api-v3.raydium.io/pools/info/mint` observed 2026-09-17T05:02:22.498Z (0.13h old, 34 pools / 194 unresolved).
+Pool evidence: `https://api-v3.raydium.io/pools/info/mint` observed 2026-09-17T06:19:38.462Z (0.02h old, 34 pools / 194 unresolved).
 Live Raydium snapshot. A leg is pool-ready only with a real, tradable USDC Raydium CLMM/CPMM pool above the TVL floor; thin/absent liquidity is a not-ready leg and drops out of tradable coverage.
 Publish bars: tradable >= 50.0% publishes without caveat; tradable < 25.0% would misrepresent the book.
 Catalog: snapshot. No signing, no broadcast, no keeper key.

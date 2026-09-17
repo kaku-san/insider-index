@@ -44,6 +44,16 @@ function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
 }
 
+export function poolReadinessLabel(item: PublishedIndex["constituents"][number]) {
+  if (item.pool_status === "observed" || item.vault_ready) return "Pool ready";
+  if (item.pool_status === "thin") {
+    const tvl = item.pool_tvl_usd == null ? null : item.pool_tvl_usd.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    return tvl ? `Thin pool · ${tvl} TVL` : "Pool below $10k TVL";
+  }
+  if (item.pool_status === "none") return "No Raydium–USDC pool";
+  return "Pool evidence unavailable";
+}
+
 export function IndexPerformancePlaceholder() {
   return <section className={styles.performance} aria-label="Index performance">
     <div className={styles.performanceTop}>
@@ -99,7 +109,7 @@ function HoldingsTab({ index }: { index: PublishedIndex }) {
       <b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b>
       <b>{item.book_weight_bps == null ? "—" : `${(item.book_weight_bps / 100).toFixed(item.book_weight_bps >= 1000 ? 1 : 2)}%`}</b>
       <span>{item.issuer === "xstock" ? "xStock" : "Backpack"}</span>
-      <em className={item.vault_ready ? undefined : styles.routeMissing}>{item.vault_ready ? "Pool ready" : "No observed pool"}</em>
+      <em className={item.vault_ready ? undefined : styles.routeMissing}>{poolReadinessLabel(item)}</em>
     </div>)}
   </div>;
 }
@@ -120,7 +130,7 @@ export function CoverageBreakdown({ coverage, unmapped }: { coverage?: IndexCove
       <div><strong>{poolReady}</strong><span>pool ready</span><small>{tradablePct.toFixed(1)}% of disclosed weight</small></div>
     </div>
     <div className={styles.coverageNotes}>
-      <p><strong>{waiting} mapped token{waiting === 1 ? "" : "s"} awaiting pools.</strong> A verified xStock or Backpack mint does not by itself guarantee a usable vault entry and USDC exit route.</p>
+      <p><strong>{waiting} mapped token{waiting === 1 ? "" : "s"} without qualifying Raydium–USDC pools.</strong> Issuance does not guarantee a pool; absent pools and pools below $10k TVL stay outside the native vault route.</p>
       {unmapped.length ? <div><span>NO VERIFIED TOKEN</span>{unmapped.map((item) => <span className={styles.unmappedPill} key={item.ticker}>{item.ticker}{item.bookWeightBps ? ` · ${(item.bookWeightBps / 100).toFixed(2)}%` : ""}</span>)}</div> : <div><span>NO VERIFIED TOKEN</span><b>None</b></div>}
     </div>
   </section>;

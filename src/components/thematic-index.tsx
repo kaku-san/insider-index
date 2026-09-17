@@ -8,7 +8,7 @@ import type { ThematicIndexView } from "@/lib/thematic/views";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { Icon } from "./social/icon";
-import { CoverageBreakdown, IndexPerformancePlaceholder, type IndexResourceResponse } from "./consumer-index";
+import { CoverageBreakdown, IndexPerformancePlaceholder, poolReadinessLabel, type IndexResourceResponse } from "./consumer-index";
 import styles from "./consumer-index.module.css";
 
 type Payload = { index: ThematicIndexView; storage: string };
@@ -36,7 +36,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
   const catalogCoverage = coverage?.mappableByWeightBps == null ? null : coverage.mappableByWeightBps / 100;
   const poolReadyCount = coverage?.vaultReadyLegCount ?? 0;
   const tradableCoverage = coverage?.tradableByWeightBps == null ? null : coverage.tradableByWeightBps / 100;
-  const readinessByTicker = new Map(vaultResource.data?.index.constituents.map((item) => [item.ticker, item.vault_ready]) ?? []);
+  const readinessByTicker = new Map(vaultResource.data?.index.constituents.map((item) => [item.ticker, item]) ?? []);
 
   async function share() {
     const url = window.location.href;
@@ -101,8 +101,8 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
         <div className={styles.holdingsNote}>Research weights are the published thematic target. Pool readiness separately shows whether each mapped token has an observed native vault route.</div>
         <div className={styles.holdingsHead}><span>Asset</span><span>Target</span><span>Research</span><span>Token</span><span>Vault route</span></div>
         {holdings.map((item) => {
-          const ready = readinessByTicker.get(item.ticker);
-          return <div className={styles.fullHolding} key={item.mint}><div><StockIcon ticker={item.ticker} size="md" /><span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.name)}</small></span></div><b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b><b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b><span>{item.issuer === "xstock" ? "xStock" : "Backpack"}</span><em className={ready === true ? undefined : styles.routeMissing}>{ready === true ? "Pool ready" : ready === false ? "No observed pool" : "Route unavailable"}</em></div>;
+          const readiness = readinessByTicker.get(item.ticker);
+          return <div className={styles.fullHolding} key={item.mint}><div><StockIcon ticker={item.ticker} size="md" /><span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.name)}</small></span></div><b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b><b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b><span>{item.issuer === "xstock" ? "xStock" : "Backpack"}</span><em className={readiness?.vault_ready ? undefined : styles.routeMissing}>{readiness ? poolReadinessLabel(readiness) : "Pool evidence unavailable"}</em></div>;
         })}
       </div> : null}
       {tab === "activity" ? <div className={styles.activityEmpty}><div className={styles.activityIcon}><Icon name="file" size={22} /></div><h3>This theme is built from disclosed evidence.</h3><p>The basket is a research model, not a transaction-led portfolio. Individual public prints remain on the separate feed.</p><Link href="/feed">Open disclosure feed <Icon name="arrow" size={13} /></Link></div> : null}

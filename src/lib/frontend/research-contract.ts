@@ -87,6 +87,8 @@ export type PublishedConstituent = {
   book_weight_bps?: number;
   /** True only when an observed supported pool makes this mapped token usable by the native vault. */
   vault_ready?: boolean;
+  pool_status?: "observed" | "thin" | "none";
+  pool_tvl_usd?: number | null;
   payload?: {
     evidencedMidpoint?: number | null;
   } | null;

@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-09-17T05:02:22.498Z",
+  "fetchedAt": "2026-09-17T06:19:38.462Z",
   "source": "https://api-v3.raydium.io/pools/info/mint",
   "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
   "pools": [
@@ -10,9 +10,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 4.3,
+      "tvlUsd": 4.29,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "MGMuubtUEirmkhfEQdmGUh4pr7HuUdMWcZXFtpPbVJD",
@@ -21,9 +21,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 72553.61,
-      "dayVolumeUsd": 48028.95,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 72122.44,
+      "dayVolumeUsd": 45599.33,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "SH55hfaipFAbwT42nQYhRoM5o5t61QpkmJ6p62vXB3m",
@@ -32,9 +32,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 61447.31,
-      "dayVolumeUsd": 25036.39,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 61469.84,
+      "dayVolumeUsd": 24219.86,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xs151QeqTCiuKtinzfRATnUESM2xTU6V9Wy8Vy538ci",
@@ -45,7 +45,7 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 7156.04,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
@@ -54,9 +54,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 299356.35,
-      "dayVolumeUsd": 116434.42,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 299356.28,
+      "dayVolumeUsd": 108670.65,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xs5UJzmCRQ8DWZjskExdSQDnbE6iLkRu2jjrRAB1JSU",
@@ -67,7 +67,7 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 77.91,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
@@ -76,9 +76,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 93865.19,
-      "dayVolumeUsd": 40008.08,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 93862.75,
+      "dayVolumeUsd": 38486.41,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xs8drBWy3Sd5QY3aifG9kt9KFs2K3PGZmx7jWrsrk57",
@@ -89,7 +89,7 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 50.71,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ",
@@ -98,9 +98,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2175282.09,
-      "dayVolumeUsd": 340241.42,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 2173955.95,
+      "dayVolumeUsd": 353239.59,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
@@ -109,9 +109,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 289465.67,
-      "dayVolumeUsd": 488129.45,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 289706.67,
+      "dayVolumeUsd": 500750.14,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsaBXg8dU5cPM6ehmVctMkVqoiRG2ZjMo1cyBJ3AykQ",
@@ -120,9 +120,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 47009.56,
-      "dayVolumeUsd": 13009.78,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 46386.52,
+      "dayVolumeUsd": 13046.03,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsApJFV9MAktqnAc6jqzsHVujxkGm9xcSUffaBoYLKC",
@@ -132,8 +132,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 658.14,
-      "dayVolumeUsd": 215.61,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 200.07,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
@@ -142,9 +142,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 245160.92,
-      "dayVolumeUsd": 139158.31,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 245289.26,
+      "dayVolumeUsd": 140588.88,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
@@ -153,9 +153,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2161758.65,
-      "dayVolumeUsd": 630731.7,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 2160666.53,
+      "dayVolumeUsd": 598882.75,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
@@ -164,9 +164,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 412541.14,
-      "dayVolumeUsd": 115968.64,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 412533.55,
+      "dayVolumeUsd": 108933.14,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
@@ -177,7 +177,7 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 51.77,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
@@ -186,9 +186,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2092148.62,
-      "dayVolumeUsd": 672285.78,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 2089972.46,
+      "dayVolumeUsd": 631071.58,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsEH7wWfJJu2ZT3UCFeVfALnVA6CP5ur7Ee11KmzVpL",
@@ -197,9 +197,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 10833.6,
-      "dayVolumeUsd": 2264.5,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 10833.52,
+      "dayVolumeUsd": 2101.75,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
@@ -209,8 +209,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 137605.63,
-      "dayVolumeUsd": 2101.89,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 1952.74,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
@@ -221,7 +221,7 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 33.49,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
@@ -230,9 +230,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 42571.62,
-      "dayVolumeUsd": 19963.06,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 42574.16,
+      "dayVolumeUsd": 18626.71,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsHtf5RpxsQ7jeJ9ivNewouZKJHbPxhPoEy6yYvULr7",
@@ -242,8 +242,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 1713.47,
-      "dayVolumeUsd": 8.52,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 7.91,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsjFwUPiLofddX5cWFHW35GCbXcSu1BCUGfxoQAQjeL",
@@ -253,8 +253,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 19910.49,
-      "dayVolumeUsd": 819.46,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 767.41,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
@@ -264,8 +264,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 1775.5,
-      "dayVolumeUsd": 284.26,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 264.2,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsNNMt7WTNA2sV3jrb1NNfNgapxRF5i4i6GcnTRRHts",
@@ -275,8 +275,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 4225.8,
-      "dayVolumeUsd": 2185.72,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 2028.79,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
@@ -286,8 +286,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 5316.72,
-      "dayVolumeUsd": 181.84,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 168.82,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsoBhf2ufR8fTyNSjqfU71DYGaE6Z3SUGAidpzriAA4",
@@ -296,9 +296,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 58380.16,
-      "dayVolumeUsd": 54584.79,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 57915.94,
+      "dayVolumeUsd": 53051.67,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
@@ -307,9 +307,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 2689100.51,
-      "dayVolumeUsd": 2959459.59,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 2688422.98,
+      "dayVolumeUsd": 2890145.07,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsP7xzNPvEHS1m6qfanPUGjNmdnmsLKEoNAnHjdxxyZ",
@@ -318,9 +318,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 546257.9,
-      "dayVolumeUsd": 408424.59,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 545594.5,
+      "dayVolumeUsd": 386452.03,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
@@ -329,9 +329,9 @@
       "kind": "raydium_clmm",
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "tvlUsd": 386092.09,
-      "dayVolumeUsd": 376055.49,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "tvlUsd": 386086.46,
+      "dayVolumeUsd": 350555.61,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
@@ -341,8 +341,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 3503.19,
-      "dayVolumeUsd": 672.86,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 624.53,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsQLZycSZ7QnBBdBXQaTbQdiUcbRqjNJgyBGAMzhHav",
@@ -353,7 +353,7 @@
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 0.43,
       "dayVolumeUsd": 0,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XsYdjDjNUygZ7yGKfQaB6TxLh2gC6RRjzLtLAGJrhzV",
@@ -363,8 +363,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 2843.91,
-      "dayVolumeUsd": 39.58,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 36.73,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     },
     {
       "mint": "XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe",
@@ -374,8 +374,8 @@
       "programId": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
       "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "tvlUsd": 13198.72,
-      "dayVolumeUsd": 264.13,
-      "observedAt": "2026-09-17T05:02:22.498Z"
+      "dayVolumeUsd": 245.84,
+      "observedAt": "2026-09-17T06:19:38.462Z"
     }
   ],
   "unresolved": [

@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-09-17T05:10:01.926Z",
+  "generatedAt": "2026-09-17T06:20:42.010Z",
   "source": {
     "zip": "pelositracker-fmp-latest-top20.zip",
     "sha256": "70d7ebd9615a77df6ff89add9d93f0b31627a1c2d75e262397e3508d5d8cb533",
-    "generatedAt": "2026-09-17T05:10:01.926Z"
+    "generatedAt": "2026-09-17T06:20:42.010Z"
   },
   "poolEvidence": {
     "source": "https://api-v3.raydium.io/pools/info/mint",
-    "fetchedAt": "2026-09-17T05:02:22.498Z",
+    "fetchedAt": "2026-09-17T06:19:38.462Z",
     "pools": 34,
     "unresolved": 194,
     "freshness": {
-      "ageHours": 0.13,
+      "ageHours": 0.02,
       "maxAgeHours": 24,
       "stale": false
     },

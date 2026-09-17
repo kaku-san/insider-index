@@ -34,6 +34,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           weight_bps: leg.targetWeightBps,
           book_weight_bps: leg.bookWeightBps,
           vault_ready: leg.vaultReady,
+          pool_status: leg.pool?.status,
+          pool_tvl_usd: leg.pool?.tvlUsd ?? null,
         })),
       },
       coverageBps: index.coverage.mappableByWeightBps ?? null,

@@ -9,6 +9,7 @@ import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-defini
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { ConsumerHome, FilingTape } = await import("../src/components/consumer-home.tsx");
+const { poolReadinessLabel } = await import("../src/components/consumer-index.tsx");
 const { FmpPerson, PublishedTarget } = await import("../src/components/fmp-person.tsx");
 const { PrivySolanaProvider, usePrivySolana } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
@@ -93,6 +94,13 @@ test("disclosure presentation preserves missing and open-ended bands", () => {
   assert.equal(disclosedRange({ low: 1000000, high: null }), "$1,000,000+");
   assert.equal(bookStatus("not-ingested"), "Book pending");
   assert.equal(personContext(person), "House · CA");
+});
+
+test("pool readiness distinguishes absent, thin, and qualifying Raydium liquidity", () => {
+  const leg = { ticker: "TEST", mint: "test-mint", issuer: "xstock", weight_bps: 10_000 };
+  assert.equal(poolReadinessLabel({ ...leg, pool_status: "none", vault_ready: false }), "No Raydium–USDC pool");
+  assert.equal(poolReadinessLabel({ ...leg, pool_status: "thin", pool_tvl_usd: 4200, vault_ready: false }), "Thin pool · $4,200 TVL");
+  assert.equal(poolReadinessLabel({ ...leg, pool_status: "observed", pool_tvl_usd: 12_000, vault_ready: true }), "Pool ready");
 });
 
 test("person with no saved book does not claim zero holdings or permit a deposit", () => {
