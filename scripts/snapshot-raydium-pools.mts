@@ -1,7 +1,8 @@
 /**
  * Refresh `src/lib/index-vaults/raydium-pools-mainnet.json` from Raydium's public pool API.
  *
- *   npm run raydium:snapshot                 # tracker top-holding mints (+ FMP constituents when Supabase env is set)
+ *   npm run raydium:snapshot                 # tracker top-holdings + FMP person-book legs + thematic constituents
+ *                                            #   (+ published FMP constituents when Supabase env is set)
  *   npm run raydium:snapshot -- --mints=<mint>,<mint>
  *
  * Policy: mainnet USDC quote only, Raydium CLMM/CPMM programs only (the oracle kinds Symmetry
@@ -15,6 +16,7 @@ import { normalizeTrackerHandoff } from "../src/lib/tracker/tracker-parse.ts";
 import { indexCatalog, preferredToken, type CatalogToken } from "../src/lib/venues/catalog-parse.ts";
 import { PENDING_POOL_SOURCE } from "../src/lib/index-vaults/pool-evidence.ts";
 import { deriveAllPersonIndexes, toPersonBook } from "../src/lib/index-vaults/person-index-source.ts";
+import { deriveAllThematicIndexes } from "../src/lib/index-vaults/thematic-index-map.ts";
 import { MAINNET_USDC_MINT, RAYDIUM_CLMM_PROGRAM, RAYDIUM_CPMM_PROGRAM, type MainnetRaydiumPool, type MainnetRaydiumPoolSnapshot } from "../src/lib/index-vaults/raydium-pools-mainnet.ts";
 
 const RAYDIUM_API = "https://api-v3.raydium.io/pools/info/mint";
@@ -28,7 +30,7 @@ const OUT = new URL("../src/lib/index-vaults/raydium-pools-mainnet.json", import
 
 type RaydiumPoolRow = { id: string; type: string; programId: string; tvl: number; day?: { volume?: number }; mintA: { address: string }; mintB: { address: string } };
 
-async function candidateMints(): Promise<Map<string, string | null>> {
+export async function candidateMints(): Promise<Map<string, string | null>> {
   const catalog = JSON.parse(readFileSync(CATALOG, "utf8")) as { xstocks: CatalogToken[]; backpack: CatalogToken[] };
   const index = indexCatalog([...catalog.xstocks, ...catalog.backpack]);
   const mints = new Map<string, string | null>();
@@ -47,6 +49,15 @@ async function candidateMints(): Promise<Map<string, string | null>> {
     for (const leg of def.legs) { if (!mints.has(leg.mint)) legMintCount++; mints.set(leg.mint, `${leg.ticker} (${leg.provider})`); }
   }
   console.log(`FMP annual bucket: ${legMintCount} additional mapped-leg mints`);
+  // Thematic-only constituents live in no person book, so a thematic leg (e.g. ORCL on
+  // silicon-hill) would be marked untradable purely because the snapshot never asked about it.
+  // Resolve them through the SAME mapping code (`deriveAllThematicIndexes`) so the candidate set is
+  // exactly the set of mints the thematic definitions can reference.
+  let thematicMintCount = 0;
+  for (const def of deriveAllThematicIndexes(index, PENDING_POOL_SOURCE)) {
+    for (const leg of def.legs) { if (!mints.has(leg.mint)) thematicMintCount++; mints.set(leg.mint, `${leg.ticker} (${leg.provider})`); }
+  }
+  console.log(`Thematic baskets: ${thematicMintCount} additional constituent mints`);
   for (const arg of process.argv.slice(2)) {
     const match = /^--mints=(.+)$/.exec(arg);
     if (match) for (const mint of match[1].split(",")) if (mint.trim()) mints.set(mint.trim(), null);
@@ -73,6 +84,7 @@ async function fetchPools(mint: string): Promise<RaydiumPoolRow[]> {
   return json.data?.data ?? [];
 }
 
+async function main() {
 const mints = await candidateMints();
 console.log(`${mints.size} candidate mints`);
 const observedAt = new Date().toISOString();
@@ -101,3 +113,8 @@ for (const [mint, symbol] of [...mints.entries()].sort((a, b) => a[0].localeComp
 const out: MainnetRaydiumPoolSnapshot = { fetchedAt: observedAt, source: RAYDIUM_API, quoteMint: MAINNET_USDC_MINT, pools, unresolved };
 writeFileSync(OUT, `${JSON.stringify(out, null, 2)}\n`);
 console.log(`Wrote ${pools.length} pools, ${unresolved.length} unresolved → ${OUT.pathname}`);
+}
+
+// Only run the live-Raydium fetch loop when executed directly (npm run raydium:snapshot); importing
+// this module (e.g. from a test) exposes `candidateMints` without probing the network.
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) await main();
