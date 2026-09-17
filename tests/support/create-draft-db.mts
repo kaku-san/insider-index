@@ -22,6 +22,10 @@ export async function createDraftDb(): Promise<CreateDraftDb> {
       const { rows } = await db.query(`select ${fn}(${names.map((_, i) => `$${i + 1}`).join(",")}) as result`, names.map(name => args[name]));
       return (rows[0] as { result?: unknown } | undefined)?.result ?? null;
     },
-    query: async <R = Record<string, unknown>,>(sql: string, params: unknown[] = []) => (await db.query<R>(sql, params)).rows,    close: () => db.close(),
+    // Harness inspection only: the owner role can see the table, while RPCs stay service_role-only.
+    query: async <R = Record<string, unknown>,>(sql: string, params: unknown[] = []) => {
+      await db.exec("reset role");
+      try { return (await db.query<R>(sql, params)).rows; } finally { await db.exec("set role service_role"); }
+    },    close: () => db.close(),
   };
 }
