@@ -27,6 +27,7 @@ import { Keypair, PublicKey, VersionedTransaction, type Connection } from "@sola
 import type { Vault } from "@symmetry-hq/sdk";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { address } from "./amounts.ts";
+import { assertNativeSupportTargets, hasUnreconciledSupportBalance, NATIVE_SUPPORT_BALANCE_REASON, NATIVE_DEFAULT_BINDINGS } from "./native-defaults.ts";
 import {
   KAKU_SAN_NATIVE_TOKEN_CAP, assertNativeTokenCap, kakuSanDrift, kakuSanRebalanceEligibility,
   type KakuSanDriftRow, type KakuSanEligibility,
@@ -161,9 +162,11 @@ export async function observeIndexVault(record: PersistedVaultDefinition, native
   if (!account || account.owner.toBase58() !== SYMMETRY_PROGRAM_ID) throw new Error("Missing or wrong-owner native vault on-chain");
   const vault = await native.sdk.fetchVault(vaultAddress);
   if (vault.ownAddress.toBase58() !== vaultAddress || vault.mint.toBase58() !== shareMint) throw new Error("On-chain vault identity does not match the DB record");
-  const bindings = legBindings(record.vaultLegs);
+  // Include native cash/support slots for pricing AND residual balances, never for investment weights.
+  const bindings = [...legBindings(record.vaultLegs), ...NATIVE_DEFAULT_BINDINGS];
   assertNativeTokenCap(vault.numTokens);
   assertRaydiumOnlyVault(vault, bindings);
+  assertNativeSupportTargets(vault);
   const targets = keeperTargets(record);
   const drift = kakuSanDrift(vault, targets);
   const intents = await native.sdk.fetchVaultRebalanceIntents(vaultAddress);
@@ -212,6 +215,7 @@ export async function prepareIndexKeeperStep(
   simulate = true,
 ): Promise<IndexKeeperRebalancePlan> {
   const keeperPk = address(keeper);
+  if (hasUnreconciledSupportBalance(observation.vault)) return { step: "rebalance", eligible: false, reason: NATIVE_SUPPORT_BALANCE_REASON, transactions: [] };
   if (observation.intents > 0) {
     const intent = getRebalanceIntentPda(new PublicKey(observation.vaultAddress), new PublicKey(observation.vaultAddress)).toBase58();
     const { payload } = await native.priceUpdateFromVault(observation.vault, keeperPk, intent, observation.bindings);

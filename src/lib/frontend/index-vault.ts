@@ -51,6 +51,10 @@ export interface IndexObservation {
   exists: boolean;
   activeMints: string[];
   inactiveDefaults: string[];
+  /** Legacy step 'deactivate-default' now configures zero-target native support/cash slots. */
+  configuredDefaults?: string[];
+  installedMints?: string[];
+  resumeStep?: { step: "weights" } | { step: "deactivate-default" | "add-token"; mint: string };
   pythRemaining: boolean;
   weightsSet: boolean;
   verified: boolean;
@@ -105,6 +109,8 @@ export interface IndexReceipt {
   created: boolean;
   deactivated: string[];
   added: string[];
+  /** Fresh server observation only; never restored from untrusted local progress. */
+  resumeStep?: IndexObservation["resumeStep"];
   weightsSet: boolean;
   verified: boolean;
 }
@@ -146,7 +152,7 @@ export function parseIndexReceipt(value: unknown): IndexReceipt | null {
     created: input.created === true,
     deactivated: strings(input.deactivated), added: strings(input.added),
     weightsSet: input.weightsSet === true,
-    verified: input.verified === true,
+    verified: false, // A saved verification is not a fresh chain observation.
   };
 }
 
@@ -174,8 +180,21 @@ export function clearIndexReceipt(indexId: string): void {
   } catch { /* private-mode browsers keep the in-memory receipt */ }
 }
 
+/** Recover the existing identity from the persisted definition after a lost browser receipt.
+ * A conflicting local identity is retained for inspection, never silently overwritten. */
+export function resumeIndexReceipt(preview: Pick<IndexPreview, "indexId" | "vaultAddress" | "shareMint">, current: IndexReceipt | null): IndexReceipt | null {
+  if (!preview.vaultAddress && !preview.shareMint) return current;
+  if (!preview.vaultAddress || !preview.shareMint) throw new Error("Incomplete persisted vault identity; inspect before resuming. Do not recreate.");
+  if (current && (current.indexId !== preview.indexId || current.vault !== preview.vaultAddress || current.shareMint !== preview.shareMint)) throw new Error("Saved receipt conflicts with the persisted vault; preserve both and inspect. Do not recreate.");
+  return saveIndexReceipt(current ? { ...current, created: true, verified: false } : {
+    indexId: preview.indexId, vault: preview.vaultAddress, shareMint: preview.shareMint, created: true,
+    signatures: [], slot: null, deactivated: [], added: [], weightsSet: false, verified: false,
+  });
+}
+
 export function nextIndexStep(receipt: IndexReceipt | null, legMints: readonly string[]): IndexNext {
   if (!receipt?.vault || !receipt.created) return { step: "create" };
+  if (receipt.resumeStep) return receipt.resumeStep;
   for (const mint of DEFAULT_SLOT_MINTS) {
     if (!receipt.deactivated.includes(mint)) return { step: "deactivate-default", mint };
   }
@@ -191,14 +210,16 @@ export function mergeIndexObservation(receipt: IndexReceipt, observed: IndexObse
   if (observed.indexId !== receipt.indexId || observed.vault !== receipt.vault || observed.shareMint !== receipt.shareMint) {
     throw new Error("Will not create a second vault. Resume the saved vault.");
   }
-  const deactivated = [...new Set([...receipt.deactivated, ...observed.inactiveDefaults])];
-  const added = [...new Set([...receipt.added, ...observed.activeMints.filter(mint => legMints.includes(mint))])];
+  // Current chain state replaces optimistic submit flags. Keep identity/signatures, not stale progress.
+  const deactivated = observed.configuredDefaults ?? observed.inactiveDefaults;
+  const added = (observed.installedMints ?? observed.activeMints).filter(mint => legMints.includes(mint));
   return saveIndexReceipt({
     ...receipt,
     created: receipt.created || observed.exists,
     deactivated, added,
-    weightsSet: receipt.weightsSet || observed.weightsSet,
+    weightsSet: observed.weightsSet,
     verified: observed.verified,
+    resumeStep: observed.resumeStep,
     slot: receipt.slot,
   });
 }
@@ -208,7 +229,7 @@ export function applyIndexSubmit(receipt: IndexReceipt, result: IndexSubmitResul
     throw new Error("Will not create a second vault. Resume the saved vault.");
   }
   const signatures = [...receipt.signatures, ...result.signatures];
-  const next: IndexReceipt = { ...receipt, signatures, slot: result.slot };
+  const next: IndexReceipt = { ...receipt, signatures, slot: result.slot, resumeStep: undefined };
   if (result.step === "create") next.created = true;
   if (result.step === "deactivate-default" && mint && !next.deactivated.includes(mint)) next.deactivated = [...next.deactivated, mint];
   if (result.step === "add-token" && mint && !next.added.includes(mint)) next.added = [...next.added, mint];

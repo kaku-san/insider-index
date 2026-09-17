@@ -31,6 +31,9 @@ export interface KakuSanObservation {
   exists: boolean;
   activeMints: string[];
   inactiveDefaults: string[];
+  configuredDefaults?: string[];
+  installedMints?: string[];
+  resumeStep?: { step: "weights" } | { step: "deactivate-default" | "add-token"; mint: string };
   pythRemaining: boolean;
   weightsSet: boolean;
   verified: boolean;
@@ -43,6 +46,7 @@ export interface KakuSanReceipt {
   created: boolean;
   deactivated: string[];
   added: string[];
+  resumeStep?: KakuSanObservation["resumeStep"];
   weightsSet: boolean;
   verified: boolean;
 }
@@ -109,7 +113,7 @@ export function parseKakuSanReceipt(value: unknown): KakuSanReceipt | null {
     created: input.created === true,
     deactivated, added,
     weightsSet: input.weightsSet === true,
-    verified: input.verified === true,
+    verified: false, // Always re-observe a saved receipt before declaring installation complete.
   };
 }
 
@@ -138,20 +142,22 @@ export function clearKakuSanReceipt(): void {
 
 export function mergeKakuSanObservation(receipt: KakuSanReceipt, observed: KakuSanObservation): KakuSanReceipt {
   if (observed.vault !== receipt.vault || observed.shareMint !== receipt.shareMint) throw new Error("Will not create a second vault. Resume the saved vault.");
-  const deactivated = [...new Set([...receipt.deactivated, ...observed.inactiveDefaults])];
-  const added = [...new Set([...receipt.added, ...observed.activeMints.filter(mint => KAKU_SAN_ASSETS.some(asset => asset.mint === mint))])];
+  const deactivated = observed.configuredDefaults ?? observed.inactiveDefaults;
+  const added = (observed.installedMints ?? observed.activeMints).filter(mint => KAKU_SAN_ASSETS.some(asset => asset.mint === mint));
   return saveKakuSanReceipt({
     ...receipt,
     created: receipt.created || observed.exists,
     deactivated, added,
-    weightsSet: receipt.weightsSet || observed.weightsSet,
+    weightsSet: observed.weightsSet,
     verified: observed.verified,
+    resumeStep: observed.resumeStep,
     slot: receipt.slot,
   });
 }
 
 export function nextKakuSanStep(receipt: KakuSanReceipt | null): KakuSanNext {
   if (!receipt?.vault || !receipt.created) return { step: "create" };
+  if (receipt.resumeStep) return receipt.resumeStep;
   for (const slot of KAKU_SAN_DEFAULT_SLOTS) {
     if (!receipt.deactivated.includes(slot.mint)) return { step: "deactivate-default", mint: slot.mint };
   }
@@ -166,7 +172,7 @@ export function nextKakuSanStep(receipt: KakuSanReceipt | null): KakuSanNext {
 export function applyKakuSanSubmit(receipt: KakuSanReceipt, result: KakuSanSubmitResult, mint?: string): KakuSanReceipt {
   if (result.vault !== receipt.vault || result.shareMint !== receipt.shareMint) throw new Error("Will not create a second vault. Resume the saved vault.");
   const signatures = [...receipt.signatures, ...result.signatures];
-  const next: KakuSanReceipt = { ...receipt, signatures, slot: result.slot };
+  const next: KakuSanReceipt = { ...receipt, signatures, slot: result.slot, resumeStep: undefined };
   if (result.step === "create") next.created = true;
   if (result.step === "deactivate-default" && mint && !next.deactivated.includes(mint)) next.deactivated = [...next.deactivated, mint];
   if (result.step === "add-token" && mint && !next.added.includes(mint)) next.added = [...next.added, mint];
