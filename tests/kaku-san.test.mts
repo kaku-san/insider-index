@@ -191,11 +191,9 @@ test("create draft is journaled: a retry resumes the same vault with a refreshed
   const journal = kakuSanCreateJournal(db.rpc);
   const native = builders();
   let createCalls = 0;
-  let blockhashRefreshes = 0;
+  const refreshedBlockhash = new PublicKey(new Uint8Array(32).fill(7)).toBase58();
   native.sdk.createVaultTx = async () => { createCalls++; return { vault: VAULT, mint: MINT, batches: [{ transactions: [unsignedPayload()] }] }; };
-  native.connection.getLatestBlockhash = async () => ({
-    blockhash: new PublicKey(new Uint8Array(32).fill(7 + blockhashRefreshes++)).toBase58(), lastValidBlockHeight: 1,
-  });
+  native.connection.getLatestBlockhash = async () => ({ blockhash: refreshedBlockhash, lastValidBlockHeight: 1 });
 
   const first = await prepareKakuSanStep({ creator: KAKU_SAN_DEPLOYER, step: "create" }, native, true, journal);
   assert.equal(createCalls, 1);
