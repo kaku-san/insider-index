@@ -27,6 +27,12 @@ export const ledgerBuild = JSON.parse(fixture("jup-ledger-build.json").toString(
 export const ledgerQuote = JSON.parse(fixture("jup-ledger-quote.json").toString()).quote as {
   inputMint: string; outputMint: string; inAmount: string; outAmount: string; otherAmountThreshold: string;
 };
+export const exitBuild = JSON.parse(fixture("jup-exit-build.json").toString()).built as {
+  swapInstruction: JsonInstruction; addressLookupTableAddresses: string[];
+};
+export const exitQuote = JSON.parse(fixture("jup-exit-quote.json").toString()).quote as {
+  inputMint: string; outputMint: string; inAmount: string; otherAmountThreshold: string;
+};
 export const pk = (key: string) => new PublicKey(key);
 export const owner = snapshot.creator;
 // A public test address, never a keypair, never funded outside this in-memory VM.
@@ -98,9 +104,9 @@ export function mag7CycleVm() {
     applyPayload((await vm.native.priceUpdateFromVault(await vm.native.sdk.fetchVault(vaultAddress), keeper, intentAddress, bindings)).payload);
     return (await vm.native.sdk.fetchRebalanceIntent(intentAddress)).chain_data;
   }
-  function loadDex() {
-    load(JSON.parse(fixture("jup-ledger-accounts.json").toString()) as Capture, true);
-    const programs = JSON.parse(fixture("jup-ledger-programs.json").toString()).programs as { id: string; sha256: string }[];
+  function loadDex(kind: "ledger" | "exit" = "ledger") {
+    load(JSON.parse(fixture(`jup-${kind}-accounts.json`).toString()) as Capture, true);
+    const programs = JSON.parse(fixture(`jup-${kind}-programs.json`).toString()).programs as { id: string; sha256: string }[];
     for (const p of programs) {
       const binary = fixture(`${p.id}.so`);
       assert.equal(createHash("sha256").update(binary).digest("hex"), p.sha256);

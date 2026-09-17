@@ -1,12 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { ComputeBudgetProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { FailedTransactionMetadata } from "litesvm";
 import { getAta } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import { completeKeepTokens } from "../src/lib/index-vaults/symmetry-adapter.ts";
 import { WSOL_MINT } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { VAULT_RELEASE } from "../src/lib/index-vaults/release.ts";
-import { mag7CycleVm, withVmTime, owner, keeper, vaultAddress, shareMint, intentAddress, definition, MAINNET_USDC, ledgerBuild, ledgerQuote, decodeInstruction, pk } from "./support/mag7-cycle-vm.mts";
+import { mag7CycleVm, withVmTime, owner, keeper, vaultAddress, shareMint, intentAddress, definition, MAINNET_USDC, ledgerBuild, ledgerQuote, exitBuild, exitQuote, decodeInstruction, pk } from "./support/mag7-cycle-vm.mts";
 
 test("native Mag7 accounting and interrupted redemption: synthetic inventory control, not DEX liquidity or USDC exit", async () => {
   const vm = mag7CycleVm();
@@ -72,8 +74,39 @@ test("native Mag7 accounting and interrupted redemption: synthetic inventory con
     assert.equal(repeat.batches.flatMap(b => b.transactions).length, 0);
     for (const leg of definition.vaultLegs) assert.equal(await vm.balance(owner, leg.mint, TOKEN_2022_PROGRAM_ID), holdings.get(leg.mint)! + 123n);
     assert.equal(await vm.balance(owner, MAINNET_USDC), 995043n);
+    // Prove one executable exact-credit conversion against the real deployed DEX; no wallet
+    // total is used as the sale amount. Other six legs still need independent route evidence.
+    vm.loadDex("exit");
+    const credit = holdings.get(exitQuote.inputMint)!;
+    assert.equal(BigInt(exitQuote.inAmount), credit);
+    assert.equal(exitQuote.outputMint, MAINNET_USDC);
+    const tables = await Promise.all(exitBuild.addressLookupTableAddresses.map(async key => {
+      const table = (await vm.connection.getAddressLookupTable(pk(key))).value;
+      assert(table); return table;
+    }));
+    const swap = decodeInstruction(exitBuild.swapInstruction);
+    // Captured Jupiter Route wire contract: one 4-byte route-plan entry, then u64 input,
+    // u64 quoted output, u16 slippage and u8 platform fee. The real program, not an
+    // implementation-source match, demonstrates that a raised output floor rejects the sale.
+    assert.equal(swap.data.length, 35);
+    assert.equal(swap.data.readBigUInt64LE(16), credit);
+    const refused = decodeInstruction(exitBuild.swapInstruction);
+    refused.data.writeBigUInt64LE(2_000_000n, 24);
+    const transaction = (ix: typeof swap) => new VersionedTransaction(new TransactionMessage({ payerKey: pk(owner), recentBlockhash: vm.svm.latestBlockhash(), instructions: [ix, ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })] }).compileToV0Message(tables));
+    const beforeUsdc = await vm.balance(owner, MAINNET_USDC);
+    const failure = vm.simulate(transaction(refused));
+    assert(failure instanceof FailedTransactionMetadata);
+    assert.match(failure.err().toString(), /code: 6001/, "Jupiter rejects the raised output floor atomically");
+    assert.equal(await vm.balance(owner, exitQuote.inputMint, TOKEN_2022_PROGRAM_ID), credit + 123n);
+    assert.equal(await vm.balance(owner, MAINNET_USDC), beforeUsdc);
+    vm.apply(Buffer.from(transaction(swap).serialize()).toString("base64"));
+    assert.equal(await vm.balance(owner, exitQuote.inputMint, TOKEN_2022_PROGRAM_ID), 123n, "all unrelated preexisting stock survives the exact-credit sale");
+    const converted = (await vm.balance(owner, MAINNET_USDC)) - beforeUsdc;
+    assert.equal(converted, 609167n);
+    assert(converted >= BigInt(exitQuote.otherAmountThreshold));
+    for (const leg of definition.vaultLegs.filter(l => l.mint !== exitQuote.inputMint)) assert.equal(await vm.balance(owner, leg.mint, TOKEN_2022_PROGRAM_ID), holdings.get(leg.mint)! + 123n, "unrelated remaining credits not sold by another leg's conversion");
     assert.equal(VAULT_RELEASE.publicFundsEnabled, false);
-    assert.equal(VAULT_RELEASE.nativeUsdcExitVerified, false, "in-kind replay is not a USDC-only exit");
+    assert.equal(VAULT_RELEASE.nativeUsdcExitVerified, false, "one converted credit is not a seven-leg USDC-only exit");
   });
 });
 

@@ -5,5 +5,9 @@
   "jup-ledger-accounts.json": "5831d13de0ef13cf4af5754ba1bd9c5bcab9db1f93a06c3ffbbc5bc536f968c4",
   "jup-ledger-programs.json": "25f6c4f2e4eb7a7797de4f5c5c2acf999d37d5a1f292a08c20d6aef0bc1ec445",
   "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4.so": "b019147b18ce4f4dd689272c136c192a33e468a6cca7be2c8bacac74607ac7ec",
-  "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK.so": "c8fa1d9f02c63123c118b27a96a4e73ec4c015f16b093872afceb7657bfac4b0"
+  "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK.so": "c8fa1d9f02c63123c118b27a96a4e73ec4c015f16b093872afceb7657bfac4b0",
+  "jup-exit-quote.json": "e45268f5c353992f0784bb05e7975b0f0181d70fef91aa55a9a83c8b7b7c53a9",
+  "jup-exit-build.json": "4ae8dbc8f7e3bda364ff45492193e479586e464ba2620bd405dec785fb48727b",
+  "jup-exit-accounts.json": "1980adf497efd2a8d1d1ad98fc86371f4c5902a5023f931a7582e32f2629606f",
+  "jup-exit-programs.json": "ed2956882d8d3a4719f3440f4845b9aa8a8cd3ee420ea45cf48c76673efde0c4"
 }
