@@ -2,7 +2,7 @@
 
 ## Recommended go-live path
 
-Ship the research/index-discovery experience and a **composition-only admin demonstration** of the existing Mag7 vault. Keep public Invest/deposits/exit disabled. Do not advertise a funded index roundtrip: configuration verification is not financial readiness. A separately approved funded full-cycle test is the next release dependency, not an excuse to replace the vault or relax exit guarantees.
+Ship the research/index-discovery experience and keep public Invest/deposits/exit disabled. The existing Mag7 vault has a private, separately authorized native-cycle implementation, but it is not activated or a live-roundtrip claim; see the [private-cycle runbook](private-native-cycle.md). Configuration verification and offline evidence are not financial readiness, and do not replace exit guarantees.
 
 No production configuration, journal, definition, transaction or funds were changed to develop this repair. Tests use unsigned, offline simulations. The operator steps below require separate signing/broadcast authorization; they are not authorization themselves.
 

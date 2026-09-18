@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePrivySolana } from "./providers/privy-provider";
 import { validateCycleAccessMessage, type CycleAccessChallenge, type CycleAccessProof } from "../lib/index-vaults/cycle-access-parse";
 import { cycleActivationBlockers, cyclePolicyHash, type CyclePolicy } from "../lib/index-vaults/cycle-policy-parse";
@@ -16,11 +16,18 @@ export function PrivateCycleAdmin() {
   const [reply, setReply] = useState<Reply | null>(null);
   const [auth, setAuth] = useState<CycleAccessProof | null>(null);
   const [busy, setBusy] = useState(false), [status, setStatus] = useState("Private operation configuration is required. Public funds remain disabled.");
+  const [now, setNow] = useState(0), [retainedSignedStepId, setRetainedSignedStepId] = useState<string | null>(null);
   const running = useRef(false), signed = useRef(new Map<string, { stepId: string; wire: string }>());
   const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.trim();
   const policy = reply?.policy, state = reply?.state, pending = state?.pending;
   const liveOwner = wallet.mode === "live" && !wallet.previewConnection && !!wallet.solanaAddress && (!policy || policy.owner === wallet.solanaAddress);
-  const canSpend = liveOwner && !!policy && cycleActivationBlockers(policy).length === 0 && policy.expiresAt > Date.now();
+  const canSpend = liveOwner && !!policy && cycleActivationBlockers(policy).length === 0 && policy.expiresAt > now;
+  useEffect(() => {
+    const update = () => setNow(Date.now());
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, []);
   async function work(task: () => Promise<void>) {
     if (running.current) return;
     running.current = true; setBusy(true);
@@ -33,7 +40,10 @@ export function PrivateCycleAdmin() {
     if (!response.ok || body.error) throw new Error(body.error ?? "CYCLE_REQUEST_FAILED");
     if (body.policy.operationId !== operationId || body.policy.owner !== wallet.solanaAddress || (policy && cyclePolicyHash(body.policy) !== cyclePolicyHash(policy))) throw new Error("CYCLE_CLIENT_POLICY_CHANGED_REVIEW_REQUIRED");
     setReply(body);
-    if (body.state && body.state.pending?.stepId !== signed.current.get(operationId)?.stepId) signed.current.delete(operationId);
+    if (body.state && body.state.pending?.stepId !== signed.current.get(operationId)?.stepId) {
+      signed.current.delete(operationId);
+      setRetainedSignedStepId(null);
+    }
     return body;
   }
   async function review() {
@@ -60,6 +70,7 @@ export function PrivateCycleAdmin() {
     if (transaction.message.header.numRequiredSignatures !== 1 || sha256(transaction.message.serialize()) !== validated.messageHash || transaction.message.staticAccountKeys[0].toBase58() !== policy.owner || !ed25519.verify(transaction.signatures[0], transaction.message.serialize(), new PublicKey(policy.owner).toBytes(), { zip215: false })) throw new Error("CYCLE_WALLET_CHANGED_SIGNED_MESSAGE");
     // Retain exact bytes across an ambiguous HTTP response. Never ask for a replacement wire.
     signed.current.set(operationId, { stepId: pending.stepId, wire });
+    setRetainedSignedStepId(pending.stepId);
     const result = await call("submit", { signedTransaction: wire });
     setStatus(`Submitted ${result.submission?.signature ?? "exact signed message"}. Reconcile finalized evidence before the next step.`);
   }
@@ -74,7 +85,7 @@ export function PrivateCycleAdmin() {
     <p className="text-sm text-neutral-400">Operator-only, definition-driven workflow. Public funds remain off. Native settlement and issuer risks remain; no guaranteed return or loss protection. Do not fund until exit/recovery and exact budgets are separately approved.</p>
     <div className="flex flex-wrap gap-2">
       <button disabled={busy} onClick={() => void work(() => wallet.connect("wallet"))}>Connect owner wallet</button>
-      <input aria-label="Approved private operation UUID" className="min-w-72 rounded border bg-transparent p-2" placeholder="Approved operation UUID" value={operationId} disabled={busy} onChange={e => { setOperationId(e.target.value.trim()); setReply(null); setAuth(null); }} />
+      <input aria-label="Approved private operation UUID" className="min-w-72 rounded border bg-transparent p-2" placeholder="Approved operation UUID" value={operationId} disabled={busy} onChange={e => { setOperationId(e.target.value.trim()); setReply(null); setAuth(null); setRetainedSignedStepId(null); }} />
       <button disabled={busy || !liveOwner || !operationId} onClick={() => void work(review)}>Review / renew access</button>
       <button disabled={busy || !liveOwner || !reply?.challenge} onClick={() => void work(authorize)}>Sign access message</button>
     </div>
@@ -93,8 +104,8 @@ export function PrivateCycleAdmin() {
         <p>Pending: {pending.action} · Payer: {pending.payer} · Expires: {new Date(pending.expiresAt).toISOString()}</p>
         <p>Message: {pending.messageHash} · Exact input: {pending.exactInputRaw ?? "none"} · Minimum USDC output: {pending.minOutputRaw ?? "not a conversion"}</p>
         <p>Signature: {pending.signature ?? "not latched; issued drafts still require recovery evidence"}</p>
-        <button disabled={busy || !auth || !canSpend || !rpc || pending.payer !== wallet.solanaAddress || !!pending.signature || pending.expiresAt <= Date.now()} onClick={() => void work(signStep)}>Validate independently & sign this step</button>{" "}
-        <button disabled={busy || !auth || !liveOwner || pending.payer !== wallet.solanaAddress || !(pending.signedTransaction || signed.current.has(operationId))} onClick={() => void work(retry)}>Retry exact signed bytes</button>
+        <button disabled={busy || !auth || !canSpend || !rpc || pending.payer !== wallet.solanaAddress || !!pending.signature || pending.expiresAt <= now} onClick={() => void work(signStep)}>Validate independently & sign this step</button>{" "}
+        <button disabled={busy || !auth || !liveOwner || pending.payer !== wallet.solanaAddress || !(pending.signedTransaction || retainedSignedStepId === pending.stepId)} onClick={() => void work(retry)}>Retry exact signed bytes</button>
       </div>}
     </>}
     <p role="status" className="text-sm text-amber-200">{busy ? "Working — do not start another operation. " : ""}{status}</p>

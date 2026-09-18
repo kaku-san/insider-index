@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Vault } from "@symmetry-hq/sdk";
 import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
-import { getAta, getVaultFeesPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { getVaultFeesPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackMint } from "@solana/spl-token";
 import { ComputeBudgetProgram } from "@solana/web3.js";
 import { allSevenVm, definition, pk } from "./support/all-seven-vm.mts";

@@ -143,7 +143,6 @@ test("definition-driven controller uses estimate-based prefunding admission", as
     // this is intentionally earlier than its shared preflight (and still refuses signing).
     await assert.rejects(validateCycleOwnerTransaction({ connection: vm.connection, policy: walletPolicy, record: malformedRecord, state: walletState, pending: { ...contribution.pending, policyHash: walletState.policyHash }, wallet: policy.owner, metadata: vm.metadata }), /CYCLE_WALLET_DEFINITION_CHANGED/);
     await assert.rejects(prepareCycleStep({ ...input, actor: "owner", request: "withdraw" }), /WITHDRAW_REQUIRES_HELD_SHARES/);
-    const held = await journal.read();
     await execute("owner", "contribute"); await execute("owner", "lock");
     let intent = (await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data;
     vm.time(Number(intent.executionStartTime.toString()));

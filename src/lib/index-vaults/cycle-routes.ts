@@ -3,7 +3,7 @@ import { ClmmInstrument, PoolInfoLayout, ClmmConfigLayout, PoolUtils, TickArrayU
 import { AddressLookupTableAccount, AddressLookupTableProgram, PublicKey, type Connection } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync, unpackMint, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { assertCycleMint } from "./cycle-mint-parse.ts";
-import { CYCLE_CLMM_PROGRAM, assertCycleRouteInstruction, type CycleRoute } from "./cycle-route-parse.ts";
+import { CYCLE_CLMM_PROGRAM, type CycleRoute } from "./cycle-route-parse.ts";
 export { assertCycleMint } from "./cycle-mint-parse.ts";
 export { CYCLE_CLMM_PROGRAM, assertCycleRouteInstruction, type CycleRoute } from "./cycle-route-parse.ts";
 import { rawAmount } from "./amounts.ts";
