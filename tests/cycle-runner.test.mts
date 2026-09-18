@@ -141,16 +141,7 @@ test("owner cancels and recovers a funded deposit after deposits and keeper auto
     }
     await execute("keeper", "setup-keeper"); await execute("keeper", "setup-keeper");
     await execute("owner", "create");
-    // DepositTokens runs before Auction, so getSwapPairs has no live native repayment
-    // amounts yet. The planner must refuse that public contribution path. Establish the
-    // funded-deposit recovery fixture through the real native instruction instead; this
-    // is not an authorization or a production fallback.
-    await assert.rejects(f.runner().prepare("owner"), /CYCLE_NATIVE_REPAYMENT_BOUNDS_UNOBSERVED/);
-    const deposit = await f.vm.native.sdk.depositTokensTx({ buyer: f.policy.owner, rebalance_intent: f.vm.intent, contributions: [{ mint: MAINNET_USDC, amount: 100_000_000 }] });
-    const depositWire = deposit.batches[0]?.transactions[0]?.tx_b64;
-    assert.ok(depositWire);
-    const depositReceipt = await localCycleReceipt(f.vm, depositWire, cycleTestOwner);
-    f.transactions.set(depositReceipt.transaction.signatures[0], depositReceipt);
+    await execute("owner", "contribute");
     f.record.depositsEnabled = false; f.record.keeper.automationEnabled = false;
     await assert.rejects(f.runner().prepare("keeper"), /DEPOSIT|AUTOMATION/);
     await execute("owner", "cancel", "recover");

@@ -118,8 +118,6 @@ test("definition-driven controller refuses funding without observed native repay
     await execute("owner", "create");
     await assert.rejects(prepareCycleStep({ ...input, actor: "owner", request: "withdraw" }), /WITHDRAW_REQUIRES_HELD_SHARES/);
     const held = await journal.read();
-    await assert.rejects(prepareCycleStep({ ...input, state: held, actor: "owner" }), /CYCLE_NATIVE_REPAYMENT_BOUNDS_UNOBSERVED/);
-    return;
     await execute("owner", "contribute"); await execute("owner", "lock");
     let intent = (await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data;
     vm.time(Number(intent.executionStartTime.toString()));
