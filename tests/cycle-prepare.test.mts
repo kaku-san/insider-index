@@ -51,6 +51,10 @@ test("definition-driven controller uses estimate-based prefunding admission", as
     vm.seed(policy.owner, MAINNET_USDC, 100_000_123n);
     for (const l of record.vaultLegs) vm.seed(policy.owner, l.mint, 123n, TOKEN_2022_PROGRAM_ID);
     const input = { native: vm.native, record, policy, state, metadata: vm.metadata };
+    async function thinMetadata(poolId: string) {
+      const metadata = await vm.metadata(poolId);
+      return { ...metadata, pool: { ...metadata.pool, tvl: 9999 } };
+    }
     database = await cycleDb();
     const journal = new CycleJournal(policy, database.rpc);
     const runner = new CycleRunner({ native: vm.native, policy, journal, loadDefinition: async () => record, metadata: vm.metadata });
@@ -95,6 +99,7 @@ test("definition-driven controller uses estimate-based prefunding admission", as
         const walletInput = { connection: vm.connection, policy, record, state: await journal.read(), pending: p, wallet: policy.owner, metadata: vm.metadata };
         await validateCycleOwnerTransaction(walletInput);
         if (expected === "contribute") {
+          await assert.rejects(validateCycleOwnerTransaction({ ...walletInput, metadata: thinMetadata }), /CYCLE_POOL_FLOOR_OR_STALE/);
           await assert.rejects(validateCycleOwnerTransaction({ ...walletInput, pending: { ...p, exactInputRaw: "100000001" } }), /CYCLE_WALLET_CONTRIBUTION/);
           await assert.rejects(validateCycleOwnerTransaction({ ...walletInput, state: { ...walletInput.state, ownerSolDebitLamports: "0" } }), /HISTORY_DIVERGENCE/);
           const altered = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64"));
@@ -130,6 +135,7 @@ test("definition-driven controller uses estimate-based prefunding admission", as
     const contributionState = await journal.read();
     const contribution = await prepareCycleStep({ ...input, actor: "owner", state: contributionState });
     assert.equal(contribution.action, "contribute"); assert(contribution.pending);
+    await assert.rejects(prepareCycleStep({ ...input, state: await journal.read(), actor: "owner", metadata: thinMetadata }), /CYCLE_POOL_FLOOR_OR_STALE/);
     await assert.rejects(prepareCycleStep({ ...input, record: malformedRecord, actor: "owner", state: contributionState }), /Unique mints and integer weights totaling 10000 required/);
     const walletPolicy = { ...policy, definitionHash: cycleDefinitionHash(malformedRecord) };
     const walletState = { ...contributionState, definitionHash: walletPolicy.definitionHash, policyHash: cyclePolicyHash(walletPolicy) };
