@@ -92,7 +92,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
           <div className={styles.allocationLegend}>{top.map((item, position) => <div key={item.mint}><i style={{ background: palette[position % palette.length] }} /><StockIcon ticker={item.ticker} size="sm" /><span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.name)}</small></span><b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b></div>)}</div>
         </div>
         <CoverageBreakdown coverage={coverage} unmapped={vaultResource.data?.unmapped ?? []} />
-        <div className={styles.summaryCard}><span>PORTFOLIO SUMMARY</span><p>{index.narrative}</p><small>This multi-member thematic basket is a research model. It has no deposit, basket Buy or NAV.</small></div>
+        <div className={styles.summaryCard}><span>PORTFOLIO SUMMARY</span><p>{index.narrative}</p><small>{live ? "This multi-member thematic basket is a research model. Deposit preparation is available when the native vault gate is open." : "This multi-member thematic basket is a research model. It has no deposit, basket Buy or NAV."}</small></div>
       </div> : null}
       {tab === "holdings" ? <div className={styles.holdingsTable}>
         <div className={styles.holdingsNote}>Research weights are the published thematic target. Pool readiness separately shows whether each mapped token has an observed native vault route.</div>
