@@ -19,8 +19,17 @@ import { sha256 } from "../src/lib/index-vaults/amounts.ts";
 import { validateCycleOwnerTransaction } from "../src/lib/frontend/cycle-wallet.ts";
 import { auditCycleWalletHistory, readCycleWalletHistory } from "../src/lib/frontend/cycle-history.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
+import { preflightCycleConnectionRoutes } from "../src/lib/index-vaults/cycle-route-preflight.ts";
+import { preflightCycleRoutes } from "../src/lib/index-vaults/cycle-prepare.ts";
 
-test("definition-driven controller refuses funding without observed native repayment bounds", async () => {
+test("prefunding rejects malformed weights instead of renormalizing estimates", async () => {
+  const policy = cycleTestPolicy();
+  const malformed = { ...definition, vaultLegs: definition.vaultLegs.map((leg, n) => n === 0 ? { ...leg, targetWeightBps: leg.targetWeightBps - 1 } : leg) };
+  await assert.rejects(preflightCycleConnectionRoutes({} as never, malformed, policy, undefined, []), /Unique mints and integer weights totaling 10000 required/);
+  await assert.rejects(preflightCycleRoutes({ connection: {} as never } as never, malformed, policy, undefined, []), /Unique mints and integer weights totaling 10000 required/);
+});
+
+test("definition-driven controller uses estimate-based prefunding admission", async () => {
   const realNow = Date.now;
   let database: Awaited<ReturnType<typeof cycleDb>> | undefined;
   try {

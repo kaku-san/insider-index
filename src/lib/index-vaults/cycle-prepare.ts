@@ -112,8 +112,8 @@ export async function prepareCycleStep(input: {
     const credited = i.tokens.find(t => t.mint.toBase58() === MAINNET_USDC)?.amount.toString() ?? "0";
     if (state.contributedUsdcRaw === "0") {
       if (credited !== "0") throw new Error("CYCLE_EXTERNAL_CONTRIBUTION_REQUIRES_RECEIPT");
-      // Funding is admitted only after every live native repayment has an executable
-      // buy/reverse-route bound. Nominal weights are not a prefunding proof.
+      // Funding uses fresh all-leg buy/reverse-route estimates. They are admission
+      // bounds, not a guarantee of the later native auction repayment.
       const repayments = getSwapPairs(i, chain.vault).filter(pair => pair.outMint === MAINNET_USDC);
       const exits = await preflightCycleRoutes(native, record, policy, input.metadata, repayments);
       deadline = Math.min(deadline, exits.expiresAt);
