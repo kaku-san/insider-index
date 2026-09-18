@@ -187,8 +187,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   if (!index) return null;
 
   const image = portraitFor(resource.data?.personSlug ?? index.person_id);
-  // The vault endpoint owns effective release and per-vault scope; catalog coverage is not a funds gate.
-  const live = depositIsEnabled(vault);
+  const live = depositIsEnabled(vault) && (id ? Boolean(resource.data?.depositsEnabled && resource.data.publicFundsEnabled) : true);
   const status = live ? "Live" : "Coming soon";
   const following = ui.deviceFollows.includes(index.person_id);
   const unmapped = resource.data?.unmapped ?? (index.definition?.excluded ?? []).map((item) => ({
