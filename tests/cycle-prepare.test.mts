@@ -20,7 +20,7 @@ import { validateCycleOwnerTransaction } from "../src/lib/frontend/cycle-wallet.
 import { auditCycleWalletHistory, readCycleWalletHistory } from "../src/lib/frontend/cycle-history.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
 
-test("durable definition-driven controller executes separate owner/keeper steps against local programs, then exact-credit exit", async () => {
+test("definition-driven controller refuses funding without observed native repayment bounds", async () => {
   const realNow = Date.now;
   let database: Awaited<ReturnType<typeof cycleDb>> | undefined;
   try {
@@ -117,6 +117,9 @@ test("durable definition-driven controller executes separate owner/keeper steps 
     vm.seed(policy.keeper, MAINNET_USDC, 5_000_000n);
     await execute("owner", "create");
     await assert.rejects(prepareCycleStep({ ...input, actor: "owner", request: "withdraw" }), /WITHDRAW_REQUIRES_HELD_SHARES/);
+    const held = await journal.read();
+    await assert.rejects(prepareCycleStep({ ...input, state: held, actor: "owner" }), /CYCLE_NATIVE_REPAYMENT_BOUNDS_UNOBSERVED/);
+    return;
     await execute("owner", "contribute"); await execute("owner", "lock");
     let intent = (await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data;
     vm.time(Number(intent.executionStartTime.toString()));

@@ -112,9 +112,11 @@ export async function prepareCycleStep(input: {
     const credited = i.tokens.find(t => t.mint.toBase58() === MAINNET_USDC)?.amount.toString() ?? "0";
     if (state.contributedUsdcRaw === "0") {
       if (credited !== "0") throw new Error("CYCLE_EXTERNAL_CONTRIBUTION_REQUIRES_RECEIPT");
-      // Native repayment pairs do not exist until the intent reaches its auction phase.
-      // Contribution must not pretend nominal weights are executable; the keeper's auction
-      // branch gates each observed pair with its actual repayment bound before filling.
+      // Funding is admitted only after every live native repayment has an executable
+      // buy/reverse-route bound. Nominal weights are not a prefunding proof.
+      const repayments = getSwapPairs(i, chain.vault).filter(pair => pair.outMint === MAINNET_USDC);
+      const exits = await preflightCycleRoutes(native, record, policy, input.metadata, repayments);
+      deadline = Math.min(deadline, exits.expiresAt);
       action = "contribute"; inputMint = MAINNET_USDC; exactInputRaw = policy.limits.depositUsdcRaw;
       if (chain.balance(payer, MAINNET_USDC) < rawAmount(exactInputRaw)) throw new Error("CYCLE_INSUFFICIENT_USDC");
       payload = await native.sdk.depositTokensTx({ buyer: payer, rebalance_intent: chain.intentAddress, contributions: [{ mint: MAINNET_USDC, amount: sdkRawAmount(exactInputRaw) }] });
