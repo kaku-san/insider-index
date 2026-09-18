@@ -54,6 +54,12 @@ export function evaluateRebalanceRequired(input: RebalanceGateInput): RebalanceD
   if (input.lastAutomationExecutionTimestamp + input.rebalanceActivationCooldown >= now) return { required: false, reason: "cooldown" };
   if (!input.quotesLoaded) return { required: null, reason: "prices-unavailable-hermes-forbidden" };
 
+  return evaluateRebalanceDrift(input);
+}
+
+/** Shared price/weight drift check without changing or fabricating automation eligibility.
+ * Settlement may audit its proposed post-mint book using the same thresholds. */
+export function evaluateRebalanceDrift(input: Pick<RebalanceGateInput, "bountyMint" | "tokens" | "rebalanceActivationThresholdRelBps" | "rebalanceActivationThresholdAbsBps">, options: { nativeThresholdInflation?: boolean } = {}): RebalanceDecision {
   const bounty = address(input.bountyMint);
   for (const token of input.tokens) {
     address(token.mint);
@@ -74,7 +80,7 @@ export function evaluateRebalanceRequired(input: RebalanceGateInput): RebalanceD
 
   const relThresh = BigInt(input.rebalanceActivationThresholdRelBps);
   const absThresh = BigInt(input.rebalanceActivationThresholdAbsBps);
-  const bps = BigInt(HUNDRED_PERCENT_BPS);
+  const bps = BigInt(HUNDRED_PERCENT_BPS), inflation = options.nativeThresholdInflation === false ? 100n : 101n;
   for (const { token, value } of values) {
     if (token.mint === bounty) continue;
     const target = tvl * BigInt(token.weight) / BigInt(weightSum);
@@ -82,8 +88,8 @@ export function evaluateRebalanceRequired(input: RebalanceGateInput): RebalanceD
     if (diff === 0n) continue;
     const maxValue = value < target ? target : value;
     // SDK inflates thresholds by 1.01. Exact form: diff/max * 10000 >= thresh * 101/100
-    const relHits = diff * bps * 100n >= relThresh * 101n * maxValue;
-    const absHits = diff * bps * 100n >= absThresh * 101n * tvl;
+    const relHits = diff * bps * 100n >= relThresh * inflation * maxValue;
+    const absHits = diff * bps * 100n >= absThresh * inflation * tvl;
     if (relHits && absHits) return { required: true, reason: `drift:${token.mint}` };
   }
   return { required: false, reason: "on-target" };

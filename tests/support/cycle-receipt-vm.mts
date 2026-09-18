@@ -18,7 +18,7 @@ export async function localCycleReceipt(vm: ReturnType<typeof allSevenVm>, wire:
   const simulated = vm.svm.simulateTransaction(getTransactionDecoder().decode(tx.serialize()));
   assert(!(simulated instanceof FailedTransactionMetadata), simulated instanceof FailedTransactionMetadata ? simulated.meta().logs().join("\n") : "");
   const post = simulated.postAccounts();
-  for (const a of post) vm.svm.setAccount(a);
+  for (const a of post) if (!a.executable && !a.address.startsWith("Sysvar")) { vm.svm.setAccount(a); vm.knownAddresses.add(a.address); }
   const after = await vm.connection.getMultipleAccountsInfo(allKeys);
   async function tokens(accounts: typeof pre): Promise<TokenBalance[]> {
     const rows: TokenBalance[] = [];
@@ -33,7 +33,7 @@ export async function localCycleReceipt(vm: ReturnType<typeof allSevenVm>, wire:
   }
   return { slot: Number(vm.svm.getClock().slot), blockTime: Number(vm.svm.getClock().unixTimestamp), version: tx.message.version,
     transaction: { message: tx.message, signatures: tx.signatures.map(s => bs58.encode(s)) },
-    meta: { err: null, fee: Number((pre[0]?.lamports ?? 0) - (after[0]?.lamports ?? 0)),
+    meta: { err: null, fee: (await vm.connection.getFeeForMessage(tx.message)).value!,
       preBalances: pre.map(a => a?.lamports ?? 0), postBalances: after.map(a => a?.lamports ?? 0), preTokenBalances: await tokens(pre), postTokenBalances: await tokens(after),
       innerInstructions: simulated.meta().innerInstructions().map((instructions, index) => ({ index, instructions: instructions.map(i => ({ programIdIndex: i.instruction().programIdIndex(), accounts: [...i.instruction().accounts()], data: bs58.encode(i.instruction().data()), stackHeight: i.stackHeight() })) })),
       logMessages: simulated.meta().logs(), loadedAddresses: lookups, computeUnitsConsumed: Number(simulated.meta().computeUnitsConsumed()) },

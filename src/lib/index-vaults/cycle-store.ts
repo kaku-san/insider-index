@@ -2,17 +2,20 @@ import { randomUUID } from "node:crypto";
 import bs58 from "bs58";
 import { VersionedTransaction } from "@solana/web3.js";
 import { createServiceSupabase } from "../supabase.ts";
-import { address, hashObject, rawAmount, sha256 } from "./amounts.ts";
+import { address, rawAmount, sha256 } from "./amounts.ts";
 import { assertSignedBy } from "./kaku-san-create.ts";
 import { creditSaleAmount, type CycleCredit } from "./cycle-accounting.ts";
-import type { CyclePolicy } from "./cycle-policy.ts";
+import { cyclePolicyHash, type CyclePolicy } from "./cycle-policy.ts";
 import type { CycleWire } from "./cycle-wire.ts";
 
-export type CycleAction = "create" | "contribute" | "lock" | "prices" | "fill" | "mint" | "cleanup" | "withdraw" | "claim" | "convert" | "cancel";
+export type CycleAction = "setup-keeper" | "create" | "contribute" | "lock" | "prices" | "fill" | "mint" | "cleanup" | "withdraw" | "claim" | "convert" | "cancel";
 export interface CyclePending extends CycleWire {
   stepId: string; action: CycleAction; policyHash: string; expiresAt: number; lastValidBlockHeight: number;
   beforeStateHash: string; simulatedPayerDebitLamports: string;
   inputMint?: string; exactInputRaw?: string; minOutputRaw?: string;
+  minSlot: number;
+  surplusPricesQ?: Record<string, string>;
+  bounty?: { account: string; restoreWsolRaw: string; fundingRaw: string };
   signature: string | null; signedTransaction: string | null;
 }
 export interface CycleReceiptRecord {
@@ -26,20 +29,20 @@ export interface CycleState {
   phase: "new" | "investing" | "holding" | "exiting" | "recovering" | "complete";
   depositGenerationSignature: string | null; exitGenerationSignature: string | null;
   contributedUsdcRaw: string; mintedSharesRaw: string; burnedSharesRaw: string; recoveredUsdcRaw: string;
-  ownerSolDebitLamports: string; keeperSolDebitLamports: string;
+  ownerSolDebitLamports: string; keeperSolDebitLamports: string; keeperSurplusUsdcRaw: string; bountyFundingRaw: string;
   nativeClaimsClear: boolean; credits: CycleCredit[]; receipts: CycleReceiptRecord[];
   pending: CyclePending | null; recoveryRequired: string | null;
 }
 export function initialCycleState(policy: CyclePolicy): CycleState {
   return { schema: "insiderindex-native-cycle-v1", indexId: policy.indexId, vault: policy.vault, shareMint: policy.shareMint, owner: policy.owner, keeper: policy.keeper, operationId: policy.operationId,
-    policyHash: hashObject(policy), definitionHash: policy.definitionHash, phase: "new", depositGenerationSignature: null, exitGenerationSignature: null,
-    contributedUsdcRaw: "0", mintedSharesRaw: "0", burnedSharesRaw: "0", recoveredUsdcRaw: "0", ownerSolDebitLamports: "0", keeperSolDebitLamports: "0",
+    policyHash: cyclePolicyHash(policy), definitionHash: policy.definitionHash, phase: "new", depositGenerationSignature: null, exitGenerationSignature: null,
+    contributedUsdcRaw: "0", mintedSharesRaw: "0", burnedSharesRaw: "0", recoveredUsdcRaw: "0", ownerSolDebitLamports: "0", keeperSolDebitLamports: "0", keeperSurplusUsdcRaw: "0", bountyFundingRaw: "0",
     nativeClaimsClear: true, credits: [], receipts: [], pending: null, recoveryRequired: null };
 }
 export function assertCycleState(state: CycleState, initial: CycleState): void {
   if (!state || state.schema !== initial.schema || ["indexId", "vault", "shareMint", "owner", "keeper", "operationId", "definitionHash", "policyHash"].some(k => state[k as keyof CycleState] !== initial[k as keyof CycleState])) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
   for (const key of ["vault", "shareMint", "owner", "keeper"] as const) address(state[key]);
-  for (const key of ["contributedUsdcRaw", "mintedSharesRaw", "burnedSharesRaw", "recoveredUsdcRaw", "ownerSolDebitLamports", "keeperSolDebitLamports"] as const) rawAmount(state[key]);
+  for (const key of ["contributedUsdcRaw", "mintedSharesRaw", "burnedSharesRaw", "recoveredUsdcRaw", "ownerSolDebitLamports", "keeperSolDebitLamports", "keeperSurplusUsdcRaw", "bountyFundingRaw"] as const) rawAmount(state[key]);
   if (!["new", "investing", "holding", "exiting", "recovering", "complete"].includes(state.phase) || !Array.isArray(state.credits) || !Array.isArray(state.receipts) || typeof state.nativeClaimsClear !== "boolean") throw new Error("CYCLE_JOURNAL_SHAPE");
   for (const mint of new Set(state.credits.map(c => c.mint))) {
     const remaining = creditSaleAmount(state.credits, state, mint);
@@ -50,9 +53,13 @@ export function assertCycleState(state: CycleState, initial: CycleState): void {
     if (signatures.has(r.signature) || !/^[1-9A-HJ-NP-Za-km-z]{64,88}$/.test(r.signature) || !/^[a-f0-9]{64}$/.test(r.messageHash) || !Number.isSafeInteger(r.slot) || r.slot < 0 || ![state.owner, state.keeper].includes(r.payer) || !["finalized", "failed", "expired-unexecuted"].includes(r.status)) throw new Error("CYCLE_JOURNAL_RECEIPT");
     rawAmount(r.payerDebitLamports); signatures.add(r.signature);
   }
+  for (const [payer, field] of [[state.owner, "ownerSolDebitLamports"], [state.keeper, "keeperSolDebitLamports"]] as const) {
+    const debit = state.receipts.filter(r => r.payer === payer).reduce((sum, r) => sum + rawAmount(r.payerDebitLamports), 0n);
+    if (rawAmount(state[field]) !== debit) throw new Error("CYCLE_JOURNAL_FEE_TOTAL_DIVERGENCE");
+  }
   if (state.pending) {
     const p = state.pending, tx = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64"));
-    if (p.messageHash !== sha256(tx.message.serialize()) || p.policyHash !== state.policyHash || ![state.owner, state.keeper].includes(p.payer) || tx.message.staticAccountKeys[0].toBase58() !== p.payer || tx.message.header.numRequiredSignatures !== 1 || tx.signatures.some(s => s.some(b => b !== 0)) || !Number.isSafeInteger(p.expiresAt) || !Number.isSafeInteger(p.lastValidBlockHeight) || p.lastValidBlockHeight < 0) throw new Error("CYCLE_JOURNAL_PENDING_MESSAGE");
+    if (p.messageHash !== sha256(tx.message.serialize()) || p.blockhash !== tx.message.recentBlockhash || !Number.isSafeInteger(p.minSlot) || p.minSlot < 0 || p.policyHash !== state.policyHash || ![state.owner, state.keeper].includes(p.payer) || tx.message.staticAccountKeys[0].toBase58() !== p.payer || tx.message.header.numRequiredSignatures !== 1 || tx.signatures.some(s => s.some(b => b !== 0)) || !Number.isSafeInteger(p.expiresAt) || !Number.isSafeInteger(p.lastValidBlockHeight) || p.lastValidBlockHeight < 0) throw new Error("CYCLE_JOURNAL_PENDING_MESSAGE");
     rawAmount(p.simulatedPayerDebitLamports);
     if ((p.signature === null) !== (p.signedTransaction === null)) throw new Error("CYCLE_JOURNAL_SIGNATURE_LATCH");
     if (p.signedTransaction) {

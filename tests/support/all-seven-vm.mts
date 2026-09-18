@@ -44,6 +44,14 @@ export function allSevenVm(options: { owner?: string; keeper?: string } = {}) {
     }
     return { context: { slot: Number(vm.svm.getClock().slot) }, value };
   };
+  vm.connection.getLatestBlockhashAndContext = async () => ({ context: { slot: Number(vm.svm.getClock().slot) }, value: await vm.connection.getLatestBlockhash() });
+  vm.connection.getFeeForMessage = async message => {
+    let units = 200000n, micro = 0n;
+    for (const ix of message.compiledInstructions) if (message.staticAccountKeys[ix.programIdIndex]?.toBase58() === "ComputeBudget111111111111111111111111111111") {
+      const data = Buffer.from(ix.data); if (data[0] === 2) units = BigInt(data.readUInt32LE(1)); if (data[0] === 3) micro = data.readBigUInt64LE(1);
+    }
+    return { context: { slot: Number(vm.svm.getClock().slot) }, value: Number(BigInt(message.header.numRequiredSignatures) * 5000n + (units * micro + 999999n) / 1000000n) };
+  };
   vm.connection.getBlockTime = async () => Number(vm.svm.getClock().unixTimestamp);
   vm.connection.getSlot = async () => Number(vm.svm.getClock().slot);
   function wire(instructions: TransactionInstruction[], payer = owner) { return Buffer.from(new VersionedTransaction(new TransactionMessage({ payerKey: pk(payer), recentBlockhash: vm.svm.latestBlockhash(), instructions }).compileToV0Message()).serialize()).toString("base64"); }
@@ -56,7 +64,10 @@ export function allSevenVm(options: { owner?: string; keeper?: string } = {}) {
   function seed(who: string, mint: string, amount: bigint, program = TOKEN_PROGRAM_ID) {
     const ata = getAta(pk(who), pk(mint), program); tracked.add(ata.toBase58());
     vm.apply(wire([createAssociatedTokenAccountIdempotentInstruction(pk(who), ata, pk(who), pk(mint), program)], who));
-    const a = vm.svm.getAccount(address(ata.toBase58())); assert(a.exists); const d = Buffer.from(a.data); d.writeBigUInt64LE(amount, 64); vm.svm.setAccount({ ...a, data: d });
+    const a = vm.svm.getAccount(address(ata.toBase58())); assert(a.exists); const d = Buffer.from(a.data), previous = d.readBigUInt64LE(64);
+    const token = unpackAccount(ata, { data: d, owner: program, lamports: Number(a.lamports), executable: false }, program);
+    d.writeBigUInt64LE(amount, 64);
+    vm.svm.setAccount({ ...a, data: d, lamports: token.isNative ? lamports(BigInt(a.lamports) + amount - previous) : a.lamports });
   }
   return { ...vm, owner, keeper, vault, shareMint, wire, apply, balance, time, now, metadata, seed, tracked, intent: getRebalanceIntentPda(pk(vault), pk(owner)).toBase58() };
 }

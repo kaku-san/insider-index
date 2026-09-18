@@ -33,7 +33,7 @@ export function assertMintEffects(input: {
 /** Native accounting buckets versus ALL actual vault-owned token balances. Vault-rebalance
  * intents describe existing backing, unlike separate investor contribution/withdrawal credits.
  * Unknown/residual assets never vanish because their target weight is zero. */
-export function assertCycleBacking(vault: Vault, intents: readonly UIRebalanceIntent[], actual: ReadonlyMap<string, bigint>): void {
+export function assertCycleBacking(vault: Vault, intents: readonly UIRebalanceIntent[], actual: ReadonlyMap<string, bigint>, purpose: "strict" | "recovery" = "strict"): Map<string, bigint> {
   const composition = vault.composition.slice(0, vault.numTokens);
   const expected = new Map(composition.map(t => [t.mint.toBase58(), BigInt(t.amount.toString())]));
   if (expected.size !== composition.length) throw new Error("CYCLE_DUPLICATE_NATIVE_SLOT");
@@ -49,8 +49,16 @@ export function assertCycleBacking(vault: Vault, intents: readonly UIRebalanceIn
   // Native addBounty transfers to the global bounty PDA, NOT this vault's token account.
   // Its counter is never added to index NAV. Actual support tokens still reconcile like any
   // other asset, even when their target is zero; an unsynced or unattributed balance blocks.
-  if ((actual.get(WSOL_MINT) ?? 0n) !== (expected.get(WSOL_MINT) ?? 0n)) throw new Error("CYCLE_SUPPORT_BOUNTY_RECONCILIATION_REQUIRED");
-  for (const mint of new Set([...expected.keys(), ...actual.keys()])) if ((expected.get(mint) ?? 0n) !== (actual.get(mint) ?? 0n)) throw new Error(`CYCLE_UNRECONCILED_BACKING:${mint}`);
+  const surplus = new Map<string, bigint>();
+  for (const mint of new Set([...expected.keys(), ...actual.keys()])) {
+    const excess = (actual.get(mint) ?? 0n) - (expected.get(mint) ?? 0n);
+    // Permissionless dust donations must not prevent return of independently accounted claims.
+    // Surplus is retained explicitly as UNACCOUNTED, never added to shares/NAV or sale credits.
+    // Investment/keeper execution remains blocked. Deficits never receive this exception.
+    if (excess > 0n && purpose === "recovery") { surplus.set(mint, excess); continue; }
+    if (excess !== 0n) throw new Error(mint === WSOL_MINT ? "CYCLE_SUPPORT_BOUNTY_RECONCILIATION_REQUIRED" : `CYCLE_UNRECONCILED_BACKING:${mint}`);
+  }
+  return surplus;
 }
 export interface CycleCredit {
   mint: string; tokenProgram: string; receivedRaw: string; soldRaw: string; operationId: string;

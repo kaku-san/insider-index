@@ -17,14 +17,23 @@ export interface CyclePolicy {
     shareQuantization: "unapproved" | "bounded-native-units";
     residualCash: "unapproved" | "native-backing";
     issuerAuthorityRiskApproved: boolean;
+    /** Native mint is permissionless and has no atomic min-share/max-surplus parameter.
+     * Client simulation/audit bounds must not be advertised as program-enforced guarantees. */
+    nativeSettlementRiskApproved: boolean;
   };
   limits: {
     depositUsdcRaw: string; minNetSharesRaw: string; minExitUsdcRaw: string;
     maxOwnerSolDebitLamports: string; maxKeeperSolDebitLamports: string; maxBountyRaw: string;
     maxRoundingLossUsdcRaw: string; maxKeeperSurplusUsdcRaw: string;
     swapSlippageBps: number; rebalanceSlippageBps: number; perTradeSlippageBps: number;
+    maxSettlementDriftBps: number;
     maxComputeUnits: number; maxMicroLamports: string; quoteMaxAgeMs: number;
   };
+}
+/** An explicit deadline/reference renewal may resume the SAME operation and money limits.
+ * Changing any identity, economic acceptance or amount/cost limit remains a different authority. */
+export function cyclePolicyHash(policy: CyclePolicy): string {
+  return hashObject({ ...policy, expiresAt: 0, approvalReference: null });
 }
 export function cycleDefinitionHash(record: PersistedVaultDefinition): string {
   return hashObject({ indexId: record.indexId, network: record.network, vault: record.vaultAddress, shareMint: record.shareMint,
@@ -57,23 +66,24 @@ export function assertCyclePolicy(policy: CyclePolicy, record: PersistedVaultDef
   const l = policy.limits;
   for (const key of ["depositUsdcRaw", "minNetSharesRaw", "minExitUsdcRaw", "maxOwnerSolDebitLamports", "maxKeeperSolDebitLamports", "maxBountyRaw", "maxRoundingLossUsdcRaw", "maxKeeperSurplusUsdcRaw", "maxMicroLamports"] as const) rawAmount(l[key], ["depositUsdcRaw", "minNetSharesRaw", "minExitUsdcRaw"].includes(key));
   sdkRawAmount(l.depositUsdcRaw);
-  for (const key of ["swapSlippageBps", "rebalanceSlippageBps", "perTradeSlippageBps"] as const) if (!Number.isInteger(l[key]) || l[key] < 0 || l[key] >= 10000) throw new Error(`CYCLE_INVALID_LIMIT:${key}`);
+  for (const key of ["swapSlippageBps", "rebalanceSlippageBps", "perTradeSlippageBps", "maxSettlementDriftBps"] as const) if (!Number.isInteger(l[key]) || l[key] < 0 || l[key] >= 10000) throw new Error(`CYCLE_INVALID_LIMIT:${key}`);
   if (l.perTradeSlippageBps > l.rebalanceSlippageBps || !Number.isInteger(l.maxComputeUnits) || l.maxComputeUnits < 1 || l.maxComputeUnits > 1_400_000 || !Number.isInteger(l.quoteMaxAgeMs) || l.quoteMaxAgeMs < 1 || l.quoteMaxAgeMs > 60_000) throw new Error("CYCLE_INVALID_EXECUTION_LIMITS");
 }
 export function cycleActivationBlockers(policy: CyclePolicy): string[] {
   return [
-    ...(!policy.financialExecutionAuthorized || !policy.approvalReference?.trim() ? ["EXACT_OPERATOR_AUTHORITY_REQUIRED"] : []),
+    ...(policy.financialExecutionAuthorized !== true || !policy.approvalReference?.trim() ? ["EXACT_OPERATOR_AUTHORITY_REQUIRED"] : []),
     ...(policy.economics.keeperSurplus !== "native-filler-retains" ? ["KEEPER_SURPLUS_POLICY_UNAPPROVED"] : []),
     ...(policy.economics.shareQuantization !== "bounded-native-units" ? ["NATIVE_SHARE_QUANTIZATION_UNAPPROVED"] : []),
     ...(policy.economics.residualCash !== "native-backing" ? ["NATIVE_RESIDUAL_BACKING_UNAPPROVED"] : []),
-    ...(!policy.economics.issuerAuthorityRiskApproved ? ["ISSUER_FREEZE_PAUSE_DELEGATE_RISK_UNAPPROVED"] : []),
+    ...(policy.economics.issuerAuthorityRiskApproved !== true ? ["ISSUER_FREEZE_PAUSE_DELEGATE_RISK_UNAPPROVED"] : []),
+    ...(policy.economics.nativeSettlementRiskApproved !== true ? ["PERMISSIONLESS_NATIVE_SETTLEMENT_LIMITS_UNAPPROVED"] : []),
   ];
 }
 export function assertCycleExecutionAuthorized(policy: CyclePolicy, record: PersistedVaultDefinition, purpose: "deposit" | "recovery" = "deposit"): void {
   assertCyclePolicy(policy, record, Date.now(), purpose);
   const blockers = cycleActivationBlockers(policy);
   if (blockers.length) throw new Error(`CYCLE_EXECUTION_DISABLED:${blockers.join(",")}`);
-  if (purpose === "deposit" && (record.keeper.pubkey !== policy.keeper || !record.keeper.automationEnabled)) throw new Error("CYCLE_PERSISTED_KEEPER_AUTHORITY_REQUIRED");
+  if (purpose === "deposit" && (record.keeper.pubkey !== policy.keeper || record.keeper.automationEnabled !== true)) throw new Error("CYCLE_PERSISTED_KEEPER_AUTHORITY_REQUIRED");
 }
 export function cycleScope(policy: Pick<CyclePolicy, "indexId" | "vault" | "shareMint" | "owner" | "operationId">): string {
   return hashObject([policy.indexId, policy.vault, policy.shareMint, policy.owner, policy.operationId]);

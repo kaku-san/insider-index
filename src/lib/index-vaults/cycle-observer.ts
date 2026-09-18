@@ -2,7 +2,7 @@ import { PublicKey, type AccountInfo } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, unpackAccount, unpackMint } from "@solana/spl-token";
 import { getRebalanceIntentPda, getVaultFeesPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { VaultLayout } from "@symmetry-hq/sdk/dist/layouts/basket.js";
-import { RebalanceIntentLayout } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
+import { RebalanceIntentLayout, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { formatRebalanceIntent } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import type { Vault, UIRebalanceIntent } from "@symmetry-hq/sdk";
 import { hashObject, sha256 } from "./amounts.ts";
@@ -21,7 +21,7 @@ import type { CycleMintBinding } from "./cycle-receipts.ts";
 export interface CycleChain {
   slot: number; timestamp: number; vault: Vault; intent: UIRebalanceIntent | null; intentAddress: string;
   mintBindings: CycleMintBinding[]; accounts: Map<string, AccountInfo<Buffer> | null>;
-  stateHash: string; shareSupply: bigint; actualBacking: Map<string, bigint>;
+  stateHash: string; shareSupply: bigint; actualBacking: Map<string, bigint>; unaccountedBacking: Map<string, bigint>;
   balance(owner: string, mint: string): bigint;
 }
 const pk = (s: string) => new PublicKey(s);
@@ -29,7 +29,7 @@ export const cycleAta = (owner: string, m: CycleMintBinding) => getAssociatedTok
 
 /** One slot-consistent account snapshot after discovering ALL native intents and vault-owned token
  * accounts. Never equate weights, ATAs, bounty counters or a purchase journal with owned backing. */
-export async function observeCycle(native: NativeVaultBuilders, record: PersistedVaultDefinition, policy: CyclePolicy): Promise<CycleChain> {
+export async function observeCycle(native: NativeVaultBuilders, record: PersistedVaultDefinition, policy: CyclePolicy, purpose: "strict" | "recovery" = "strict"): Promise<CycleChain> {
   assertCycleDefinition(record, policy.indexId, "recovery"); await native.assertNetwork();
   if (native.network !== "mainnet-beta" || record.vaultAddress !== policy.vault || record.shareMint !== policy.shareMint) throw new Error("CYCLE_NETWORK_OR_IDENTITY");
   if ((await pendingCompositionIntents(native, policy.vault)).length) throw new Error("CYCLE_PENDING_CONFIGURATION_RECOVERY_REQUIRED");
@@ -68,7 +68,11 @@ export async function observeCycle(native: NativeVaultBuilders, record: Persiste
   });
   const intent = intents.find(i => i.chain_data.ownAddress?.toBase58() === intentAddress) ?? null;
   if (intent && (intent.chain_data.owner.toBase58() !== policy.owner || intent.chain_data.vault.toBase58() !== policy.vault)) throw new Error("CYCLE_NATIVE_INTENT_IDENTITY");
-  if (intents.some(i => i.chain_data.ownAddress?.toBase58() !== intentAddress)) throw new Error("CYCLE_OTHER_NATIVE_INTENT_REQUIRES_RECONCILIATION");
+  if (intents.some(i => i.chain_data.rebalanceType === RebalanceType.Vault)) throw new Error("CYCLE_ACTIVE_VAULT_REBALANCE_REQUIRES_RECONCILIATION");
+  // Other investors' deposits/claims are separate liabilities, not a reason to strand this
+  // owner's recovery. Include every one, and reject discovery races rather than undercount.
+  const currentIntentRows = await native.connection.getProgramAccounts(pk(SYMMETRY_PROGRAM_ID), { commitment: "confirmed", filters: [{ dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 8, bytes: policy.vault } }] });
+  if (hashObject(currentIntentRows.map(r => r.pubkey.toBase58()).sort()) !== hashObject(intentRows.map(r => r.pubkey.toBase58()).sort())) throw new Error("CYCLE_INTENT_DISCOVERY_RACE_RETRY");
   const actualBacking = new Map<string, bigint>();
   const ownedTokenAccounts = new Set([...tokenRows.map(row => row.pubkey.toBase58()), ...mintBindings.map(m => cycleAta(policy.vault, m)).filter(key => accounts.get(key))]);
   for (const key of ownedTokenAccounts) {
@@ -77,7 +81,7 @@ export async function observeCycle(native: NativeVaultBuilders, record: Persiste
     if (!token.isInitialized || token.isFrozen || token.owner.toBase58() !== policy.vault) throw new Error("CYCLE_VAULT_TOKEN_STATE");
     actualBacking.set(token.mint.toBase58(), (actualBacking.get(token.mint.toBase58()) ?? 0n) + token.amount);
   }
-  assertCycleBacking(vault, intents, actualBacking);
+  const unaccountedBacking = assertCycleBacking(vault, intents, actualBacking, purpose);
   const share = mintBindings.find(m => m.mint === policy.shareMint)!;
   const shareSupply = unpackMint(pk(share.mint), accounts.get(share.mint)!, pk(share.tokenProgram)).supply;
   if (shareSupply !== BigInt(vault.supplyOutstanding.toString())) throw new Error("CYCLE_SHARE_SUPPLY_DIVERGENCE");
@@ -92,5 +96,5 @@ export async function observeCycle(native: NativeVaultBuilders, record: Persiste
     return token.amount;
   }
   const stateHash = hashObject([...accounts].map(([key, a]) => [key, a ? [a.owner.toBase58(), sha256(a.data), a.lamports.toString()] : null]));
-  return { slot, timestamp, vault, intent, intentAddress, mintBindings, accounts, stateHash, shareSupply, actualBacking, balance };
+  return { slot, timestamp, vault, intent, intentAddress, mintBindings, accounts, stateHash, shareSupply, actualBacking, unaccountedBacking, balance };
 }
