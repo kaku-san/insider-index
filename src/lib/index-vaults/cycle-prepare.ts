@@ -13,8 +13,8 @@ import { address, hashObject, rawAmount, sdkRawAmount, sha256 } from "./amounts.
 import { assertCycleExecutionAuthorized, cyclePolicyHash, type CyclePolicy } from "./cycle-policy.ts";
 import { assertMintEffects, creditSaleAmount, fractionRaw } from "./cycle-accounting.ts";
 import { observeCycle, cycleAta, type CycleChain } from "./cycle-observer.ts";
-import { preflightCycleConnectionRoutes } from "./cycle-route-preflight.ts";
 import { buildCycleRoute, assertCycleRouteInstruction, type PoolMetadata } from "./cycle-routes.ts";
+import { preflightCycleConnectionRoutes } from "./cycle-route-preflight.ts";
 import { buildCycleFillWire, cycleInstructions, encodeCycleWire, type CycleWire } from "./cycle-wire.ts";
 import { MAINNET_USDC, NATIVE_DEFAULT_BINDINGS } from "./native-defaults.ts";
 import { legBindings } from "./keeper-tick.ts";
@@ -112,8 +112,9 @@ export async function prepareCycleStep(input: {
     const credited = i.tokens.find(t => t.mint.toBase58() === MAINNET_USDC)?.amount.toString() ?? "0";
     if (state.contributedUsdcRaw === "0") {
       if (credited !== "0") throw new Error("CYCLE_EXTERNAL_CONTRIBUTION_REQUIRES_RECEIPT");
-      const repayments = getSwapPairs(i, chain.vault).filter(pair => pair.outMint === MAINNET_USDC);
-      const exits = await preflightCycleRoutes(native, record, policy, input.metadata, repayments); deadline = Math.min(deadline, exits.expiresAt);
+      // Native repayment pairs do not exist until the intent reaches its auction phase.
+      // Contribution must not pretend nominal weights are executable; the keeper's auction
+      // branch gates each observed pair with its actual repayment bound before filling.
       action = "contribute"; inputMint = MAINNET_USDC; exactInputRaw = policy.limits.depositUsdcRaw;
       if (chain.balance(payer, MAINNET_USDC) < rawAmount(exactInputRaw)) throw new Error("CYCLE_INSUFFICIENT_USDC");
       payload = await native.sdk.depositTokensTx({ buyer: payer, rebalance_intent: chain.intentAddress, contributions: [{ mint: MAINNET_USDC, amount: sdkRawAmount(exactInputRaw) }] });

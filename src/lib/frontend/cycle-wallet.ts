@@ -4,7 +4,6 @@ import { VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import { VaultLayout } from "@symmetry-hq/sdk/dist/layouts/basket.js";
 import { GlobalConfigLayout } from "@symmetry-hq/sdk/dist/layouts/config.js";
 import { RebalanceIntentLayout, RebalanceType, type RebalanceIntent } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
-import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import { getRebalanceIntentPda, getGlobalConfigPda, getRentPayerPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { createRebalanceIntentIx, resizeRebalanceIntentIx, initRebalanceIntentIx, cancelRebalanceIx } from "@symmetry-hq/sdk/dist/instructions/automation/rebalanceIntent.js";
 import { depositTokensIx, lockDepositsIx } from "@symmetry-hq/sdk/dist/instructions/user/deposit.js";
@@ -18,7 +17,6 @@ import { cycleMemo, CYCLE_OWNER_ACTIONS, type CycleOwnerAction } from "../index-
 import { assertCycleMint } from "../index-vaults/cycle-mint-parse.ts";
 import { buildCycleRoute, type PoolMetadata } from "../index-vaults/cycle-routes.ts";
 import { isolateCycleBounty } from "../index-vaults/cycle-bounty.ts";
-import { preflightCycleConnectionRoutes } from "../index-vaults/cycle-route-preflight.ts";
 import { assertCycleBacking } from "../index-vaults/cycle-accounting.ts";
 import { feeSnapshot } from "../index-vaults/fees.ts";
 import { assertNativeSupportTargets, MAINNET_USDC, NATIVE_DEFAULT_BINDINGS } from "../index-vaults/native-defaults.ts";
@@ -120,10 +118,7 @@ export async function validateCycleOwnerTransaction(input: {
   }
   if (hashObject((await discover()).map(r => [r.pubkey.toBase58(), sha256(r.account.data)]).sort()) !== hashObject(rows.map(r => [r.pubkey.toBase58(), sha256(r.account.data)]).sort())) throw new Error("CYCLE_WALLET_INTENT_DISCOVERY_RACE");
   assertCycleBacking(vault, liabilities, actual, investing ? "strict" : "recovery");
-  if (p.action === "contribute") {
-    if (!intent) throw new Error("CYCLE_WALLET_CONTRIBUTION");
-    await preflightCycleConnectionRoutes(connection, record, policy, input.metadata, getSwapPairs(intent, vault).filter(pair => pair.outMint === MAINNET_USDC));
-  }
+  if (p.action === "contribute" && !intent) throw new Error("CYCLE_WALLET_CONTRIBUTION");
   const history = await readCycleWalletHistory(connection, policy, bindings);
   assertHistoryMatchesState(history, state);
   const original = TransactionMessage.decompile(tx.message, { addressLookupTableAccounts: tables });
