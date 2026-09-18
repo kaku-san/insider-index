@@ -12,6 +12,7 @@ import { CycleRunner } from "../src/lib/index-vaults/cycle-runner.ts";
 import { initialCycleState, CycleJournal } from "../src/lib/index-vaults/cycle-store.ts";
 import { observeCycle } from "../src/lib/index-vaults/cycle-observer.ts";
 import { decodeCycleReceipt } from "../src/lib/index-vaults/cycle-receipts.ts";
+import { auditCycleWalletHistory, readCycleWalletHistory } from "../src/lib/frontend/cycle-history.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
 
 test("durable definition-driven controller executes separate owner/keeper steps against local programs, then exact-credit exit", async () => {
@@ -95,6 +96,28 @@ test("durable definition-driven controller executes separate owner/keeper steps 
     await execute("owner", "cleanup"); // owner recovery does not require a live keeper
     for (let n = 0; n < 7; n++) await execute("owner", "convert");
     assert.equal((await runner.prepare("owner")).action, "complete");
+    const bindings = (await observeCycle(vm.native, record, policy, "recovery")).mintBindings;
+    const walletHistory = auditCycleWalletHistory([...transactions.values()], policy, bindings);
+    assert.equal(walletHistory.contributedUsdcRaw.toString(), state.contributedUsdcRaw);
+    assert.equal(walletHistory.mintedSharesRaw.toString(), state.mintedSharesRaw);
+    assert.equal(walletHistory.burnedSharesRaw.toString(), state.burnedSharesRaw);
+    assert.equal(walletHistory.recoveredUsdcRaw.toString(), state.recoveredUsdcRaw);
+    assert.equal(walletHistory.ownerSolDebitLamports.toString(), state.ownerSolDebitLamports);
+    assert.equal(walletHistory.bountyFundingRaw.toString(), state.bountyFundingRaw);
+    assert.equal(walletHistory.externalCreditDisposal, false);
+    assert([...walletHistory.remainingCredits.values()].every(n => n === 0n));
+    assert.equal(auditCycleWalletHistory([...transactions.values()], { ...policy, operationId: "77777777-7777-4777-8777-777777777777" }, bindings).remainingCredits.size, 0, "another operation cannot reuse these claims");
+    vm.connection.getSignaturesForAddress = async (address, options) => {
+      const matching = [...transactions.values()].reverse().filter(t => {
+        const keys = t.transaction.message.getAccountKeys({ accountKeysFromLookups: t.meta!.loadedAddresses });
+        return Array.from({ length: keys.length }, (_, n) => keys.get(n)!.toBase58()).includes(address.toBase58());
+      });
+      const from = options?.before ? matching.findIndex(t => t.transaction.signatures[0] === options.before) + 1 : 0;
+      return matching.slice(from, from + (options?.limit ?? 100)).map(t => ({ signature: t.transaction.signatures[0], slot: t.slot, err: null, memo: null, blockTime: t.blockTime, confirmationStatus: "finalized" }));
+    };
+    // Program metadata is real local execution. This ordering header is synthetic, not mainnet finality.
+    vm.connection.getBlockSignatures = async () => ({ blockhash: vm.svm.latestBlockhash(), previousBlockhash: vm.svm.latestBlockhash(), parentSlot: Number(vm.svm.getClock().slot) - 1, signatures: [...transactions.keys()], blockTime: null });
+    assert.deepEqual(await readCycleWalletHistory(vm.connection, policy, bindings), walletHistory);
     assert.equal((await journal.read()).phase, "complete");
     assert(BigInt(state.recoveredUsdcRaw) >= BigInt(policy.limits.minExitUsdcRaw));
     assert.equal(await vm.balance(policy.owner, MAINNET_USDC), 123n + BigInt(state.recoveredUsdcRaw));

@@ -2,7 +2,8 @@ import { PublicKey, SystemInstruction, SystemProgram, type Connection, type Tran
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createSyncNativeInstruction, createCloseAccountInstruction, getAssociatedTokenAddressSync, unpackAccount } from "@solana/spl-token";
 import { rawAmount } from "./amounts.ts";
 import { WSOL_MINT } from "./raydium-oracles.ts";
-import { SYMMETRY_PROGRAM_ID } from "./symmetry-adapter.ts";
+import { VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
+const SYMMETRY_PROGRAM_ID = VAULTS_V3_PROGRAM_ID.toBase58();
 const INIT = Buffer.from([127, 215, 41, 110, 244, 179, 131, 7]);
 
 /** Native requires the canonical WSOL ATA (a temporary source fails native 6057). Reset that

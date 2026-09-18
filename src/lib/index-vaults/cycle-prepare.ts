@@ -1,11 +1,13 @@
-import { PublicKey, VersionedTransaction, type AccountInfo, type AddressLookupTableAccount } from "@solana/web3.js";
+import { PublicKey, TransactionMessage, VersionedTransaction, type AccountInfo, type AddressLookupTableAccount } from "@solana/web3.js";
 import { createAssociatedTokenAccountIdempotentInstruction, unpackAccount, unpackMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { VaultLayout } from "@symmetry-hq/sdk/dist/layouts/basket.js";
 import { RebalanceAction, RebalanceType, RebalanceIntentLayout } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { computeRebalanceIntentBountyAmount, getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
+import { redeemTokensIx } from "@symmetry-hq/sdk/dist/instructions/user/withdraw.js";
 import { getVaultFeesPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import type { TxPayloadBatchSequence, Vault } from "@symmetry-hq/sdk";
 import { randomUUID } from "node:crypto";
+import { cycleMemo, CYCLE_OWNER_ACTIONS, type CycleOwnerAction } from "./cycle-memo-parse.ts";
 import { isolateCycleBounty } from "./cycle-bounty.ts";
 import { address, hashObject, rawAmount, sdkRawAmount, sha256 } from "./amounts.ts";
 import { assertCycleExecutionAuthorized, cyclePolicyHash, type CyclePolicy } from "./cycle-policy.ts";
@@ -166,7 +168,13 @@ export async function prepareCycleStep(input: {
     }
   } else if (i && (i.rebalanceType === RebalanceType.Withdraw || state.mintedSharesRaw !== "0" || recovering)) {
     const claims = i.tokens.filter(t => !t.amount.isZero());
-    if (claims.length) { ownerOnly(); action = "claim"; payload = first(await native.sdk.redeemTokensTx({ keeper: payer, rebalance_intent: chain.intentAddress })); }
+    if (claims.length) {
+      ownerOnly(); action = "claim";
+      // The SDK batches seven without provenance. Five leaves packet space for the owner
+      // operation marker; subsequent finalized observations resume every remaining credit.
+      const batch = claims.slice(0, 5), latest = await native.connection.getLatestBlockhash("confirmed");
+      wire = encodeCycleWire({ ...wireOptions, blockhash: latest.blockhash, instructions: [redeemTokensIx({ keeper: pk(payer), owner: pk(policy.owner), vault: pk(policy.vault), tokenMints: batch.map(t => t.mint), tokenPrograms: batch.map(t => pk(chain.mintBindings.find(m => m.mint === t.mint.toBase58())!.tokenProgram)) })] });
+    }
     else {
       if (!recovering) keeperOnly(); // Recovery/closure never depends on the keeper remaining online.
       action = "cleanup"; payload = first(await native.sdk.claimBountyTx({ keeper: payer, rebalance_intent: chain.intentAddress }));
@@ -220,10 +228,17 @@ export async function prepareCycleStep(input: {
     wire = encodeCycleWire({ ...wireOptions, blockhash: latest.blockhash, ...decoded });
   }
   if (!wire || deadline <= Date.now()) throw new Error("CYCLE_PREPARATION_EXPIRED");
-  const tx = VersionedTransaction.deserialize(Buffer.from(wire.txBase64, "base64")); tx.message.recentBlockhash = latest.blockhash;
-  wire = { ...wire, txBase64: Buffer.from(tx.serialize()).toString("base64"), messageHash: sha256(tx.message.serialize()), blockhash: latest.blockhash };
+  if (block.context.slot < policy.notBeforeSlot) throw new Error("CYCLE_RPC_BEFORE_AUTHORITY_ANCHOR");
+  let tx = VersionedTransaction.deserialize(Buffer.from(wire.txBase64, "base64")); tx.message.recentBlockhash = latest.blockhash;
   const tables: AddressLookupTableAccount[] = [];
   for (const lookup of tx.message.addressTableLookups) { const t = await native.connection.getAddressLookupTable(lookup.accountKey); if (!t.value) throw new Error("CYCLE_LOOKUP_UNAVAILABLE"); tables.push(t.value); }
+  if (input.actor === "owner" && !input.revalidate) {
+    if (!(CYCLE_OWNER_ACTIONS as readonly string[]).includes(action)) throw new Error("CYCLE_OWNER_ACTION_UNSUPPORTED");
+    const message = TransactionMessage.decompile(tx.message, { addressLookupTableAccounts: tables });
+    tx = new VersionedTransaction(new TransactionMessage({ ...message, instructions: [...message.instructions, cycleMemo(policy, action as CycleOwnerAction)] }).compileToV0Message(tables));
+  }
+  const serialized = tx.serialize(); if (serialized.length > 1232) throw new Error("CYCLE_PACKET_TOO_LARGE");
+  wire = { ...wire, txBase64: Buffer.from(serialized).toString("base64"), messageHash: sha256(tx.message.serialize()), blockhash: latest.blockhash };
   const messageKeys = tx.message.getAccountKeys({ addressLookupTableAccounts: tables });
   const watch = Array.from({ length: messageKeys.length }, (_, n) => messageKeys.get(n)!);
   const pre = await native.connection.getMultipleAccountsInfoAndContext(watch, "confirmed");

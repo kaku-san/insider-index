@@ -1,24 +1,15 @@
 import BN from "bn.js";
 import { ClmmInstrument, PoolInfoLayout, ClmmConfigLayout, PoolUtils, TickArrayUtil, swapInternal, type ApiV3PoolInfoConcentratedItem } from "@raydium-io/raydium-sdk-v2";
-import { AddressLookupTableAccount, AddressLookupTableProgram, PublicKey, type Connection, type TransactionInstruction } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync, unpackMint, getExtensionTypes, ExtensionType, getTransferHook, getPausableConfig, getDefaultAccountState, AccountState, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
-import { rawAmount, sha256 } from "./amounts.ts";
+import { AddressLookupTableAccount, AddressLookupTableProgram, PublicKey, type Connection } from "@solana/web3.js";
+import { getAssociatedTokenAddressSync, unpackMint, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { assertCycleMint } from "./cycle-mint-parse.ts";
+import { CYCLE_CLMM_PROGRAM, assertCycleRouteInstruction, type CycleRoute } from "./cycle-route-parse.ts";
+export { assertCycleMint } from "./cycle-mint-parse.ts";
+export { CYCLE_CLMM_PROGRAM, assertCycleRouteInstruction, type CycleRoute } from "./cycle-route-parse.ts";
+import { rawAmount } from "./amounts.ts";
 import type { PersistedVaultLeg } from "./vault-definition-store.ts";
 import { MAINNET_USDC } from "./native-defaults.ts";
 
-export const CYCLE_CLMM_PROGRAM = "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK";
-export interface CycleRoute {
-  pool: string; inputMint: string; outputMint: string; amountInRaw: string; expectedOutRaw: string; minOutRaw: string;
-  inputProgram: string; outputProgram: string; quotedAt: number; expiresAt: number; tvlUsd: number;
-  instruction: TransactionInstruction; lookupTables: AddressLookupTableAccount[];
-}
-export function assertCycleRouteInstruction(route: CycleRoute, owner: string): void {
-  const ix = route.instruction, inputProgram = new PublicKey(route.inputProgram), outputProgram = new PublicKey(route.outputProgram);
-  if (![inputProgram, outputProgram].every(p => p.equals(TOKEN_PROGRAM_ID) || p.equals(TOKEN_2022_PROGRAM_ID)) || ix.programId.toBase58() !== CYCLE_CLMM_PROGRAM || ix.keys.length < 14 || ix.data.length !== 41 || !ix.data.subarray(0, 8).equals(Buffer.from(sha256("global:swap_v2").slice(0, 16), "hex")) || ix.data[40] !== 1 || ix.data.subarray(24, 40).some(b => b !== 0)) throw new Error("CYCLE_ROUTE_INSTRUCTION_SHAPE");
-  if (ix.data.readBigUInt64LE(8) !== rawAmount(route.amountInRaw, true) || ix.data.readBigUInt64LE(16) !== rawAmount(route.minOutRaw, true)) throw new Error("CYCLE_ROUTE_INSTRUCTION_AMOUNTS");
-  if (ix.keys[0].pubkey.toBase58() !== owner || !ix.keys[0].isSigner || ix.keys.some((k, n) => n !== 0 && k.isSigner) || ix.keys[2].pubkey.toBase58() !== route.pool || ix.keys[11].pubkey.toBase58() !== route.inputMint || ix.keys[12].pubkey.toBase58() !== route.outputMint ||
-    !getAssociatedTokenAddressSync(new PublicKey(route.inputMint), new PublicKey(owner), false, inputProgram).equals(ix.keys[3].pubkey) || !getAssociatedTokenAddressSync(new PublicKey(route.outputMint), new PublicKey(owner), false, outputProgram).equals(ix.keys[4].pubkey)) throw new Error("CYCLE_ROUTE_INSTRUCTION_RECIPIENT");
-}
 export type PoolMetadata = (pool: string) => Promise<{ pool: ApiV3PoolInfoConcentratedItem; observedAt: number; lookupTable?: string }>;
 export async function readCyclePoolMetadata(pool: string): ReturnType<PoolMetadata> {
   const response = await fetch(`https://api-v3.raydium.io/pools/info/ids?ids=${encodeURIComponent(pool)}`, { cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15_000) });
@@ -29,18 +20,6 @@ export async function readCyclePoolMetadata(pool: string): ReturnType<PoolMetada
   const keys = await keysResponse.json();
   if (!keysResponse.ok || !keys.success || keys.data?.length !== 1 || keys.data[0]?.id !== pool) throw new Error("CYCLE_POOL_KEYS_UNAVAILABLE");
   return { pool: body.data[0], observedAt, lookupTable: keys.data[0].lookupTableAccount };
-}
-export function assertCycleMint(mint: ReturnType<typeof unpackMint>): void {
-  if (!mint.isInitialized) throw new Error("CYCLE_MINT_UNINITIALIZED");
-  const allowed = new Set<number>([ExtensionType.MetadataPointer, ExtensionType.TokenMetadata, ExtensionType.PermanentDelegate, ExtensionType.DefaultAccountState,
-    ExtensionType.ConfidentialTransferMint, ExtensionType.TransferHook, ExtensionType.InterestBearingConfig, ExtensionType.ScaledUiAmountConfig, ExtensionType.PausableConfig]);
-  for (const extension of getExtensionTypes(mint.tlvData)) if (!allowed.has(extension)) throw new Error(`CYCLE_UNPROVED_MINT_EXTENSION:${extension}`);
-  const hook = getTransferHook(mint);
-  if (hook && !hook.programId.equals(PublicKey.default)) throw new Error("CYCLE_ACTIVE_TRANSFER_HOOK_UNSUPPORTED");
-  if (getPausableConfig(mint)?.paused) throw new Error("CYCLE_MINT_PAUSED");
-  const defaults = getDefaultAccountState(mint);
-  if (defaults && defaults.state !== AccountState.Initialized) throw new Error("CYCLE_FROZEN_DEFAULT_ACCOUNT");
-  // Raw Token-2022 amounts are authoritative. Never apply scaled-UI multipliers to native raw prices.
 }
 
 /** Direct swap on the persisted Raydium pool, not the aggregator's best-price pool (which may
