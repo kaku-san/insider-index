@@ -5,6 +5,7 @@ import { VersionedTransaction, TransactionMessage, PublicKey, SystemProgram, typ
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { allSevenVm, definition } from "./support/all-seven-vm.mts";
 import { cycleTestPolicy, cycleTestOwner, cycleTestKeeper } from "./support/cycle-policy.mts";
+import { cycleDefinitionHash, cyclePolicyHash } from "../src/lib/index-vaults/cycle-policy-parse.ts";
 import { localCycleReceipt } from "./support/cycle-receipt-vm.mts";
 import { prepareCycleStep } from "../src/lib/index-vaults/cycle-prepare.ts";
 import { cycleDb } from "./support/cycle-db.mts";
@@ -125,6 +126,16 @@ test("definition-driven controller uses estimate-based prefunding admission", as
     for (const l of record.vaultLegs) vm.seed(policy.keeper, l.mint, 321n, TOKEN_2022_PROGRAM_ID);
     vm.seed(policy.keeper, MAINNET_USDC, 5_000_000n);
     await execute("owner", "create");
+    const malformedRecord = { ...record, vaultLegs: record.vaultLegs.map((leg, n) => n === 0 ? { ...leg, targetWeightBps: leg.targetWeightBps - 1 } : leg) };
+    const contributionState = await journal.read();
+    const contribution = await prepareCycleStep({ ...input, actor: "owner", state: contributionState });
+    assert.equal(contribution.action, "contribute"); assert(contribution.pending);
+    await assert.rejects(prepareCycleStep({ ...input, record: malformedRecord, actor: "owner", state: contributionState }), /Unique mints and integer weights totaling 10000 required/);
+    const walletPolicy = { ...policy, definitionHash: cycleDefinitionHash(malformedRecord) };
+    const walletState = { ...contributionState, definitionHash: walletPolicy.definitionHash, policyHash: cyclePolicyHash(walletPolicy) };
+    // The independent wallet gate rejects the same malformed definition before route admission;
+    // this is intentionally earlier than its shared preflight (and still refuses signing).
+    await assert.rejects(validateCycleOwnerTransaction({ connection: vm.connection, policy: walletPolicy, record: malformedRecord, state: walletState, pending: { ...contribution.pending, policyHash: walletState.policyHash }, wallet: policy.owner, metadata: vm.metadata }), /CYCLE_WALLET_DEFINITION_CHANGED/);
     await assert.rejects(prepareCycleStep({ ...input, actor: "owner", request: "withdraw" }), /WITHDRAW_REQUIRES_HELD_SHARES/);
     const held = await journal.read();
     await execute("owner", "contribute"); await execute("owner", "lock");
