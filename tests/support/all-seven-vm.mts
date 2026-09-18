@@ -17,7 +17,7 @@ export const bank = JSON.parse(bytes("all-seven-bank.json").toString());
 export const pools = JSON.parse(bytes("all-seven-pools.json").toString()) as { at: number; pools: ApiV3PoolInfoConcentratedItem[] };
 const lookups = JSON.parse(bytes("all-seven-lookups.json").toString()) as { keys: string[]; response: { value: { lamports: number; owner: string; data: [string, string] }[] }; poolKeys: { data: { id: string; lookupTableAccount: string }[] } };
 export const pk = (x: string) => new PublicKey(x);
-export function allSevenVm() {
+export function allSevenVm(options: { owner?: string; keeper?: string } = {}) {
   const vm = compositionVm(), tracked = new Set(bank.keys);
   for (let n = 0; n < bank.keys.length; n++) {
     const a = bank.response.value[n], id = bank.keys[n];
@@ -30,7 +30,7 @@ export function allSevenVm() {
   const c = Buffer.from(bank.response.value[bank.keys.indexOf("SysvarC1ock11111111111111111111111111111111")].data[0], "base64");
   vm.svm.setClock(new Clock(BigInt(bank.response.context.slot), c.readBigInt64LE(8), c.readBigUInt64LE(16), c.readBigUInt64LE(24), c.readBigInt64LE(32)));
   vm.svm.addProgramWithLoader(address("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK"), bytes("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK.so"), address("BPFLoaderUpgradeab1e11111111111111111111111"));
-  const owner = snapshot.creator, keeper = new PublicKey(new Uint8Array(32).fill(17)).toBase58(), vault = snapshot.vault, shareMint = snapshot.shareMint;
+  const owner = options.owner ?? snapshot.creator, keeper = options.keeper ?? new PublicKey(new Uint8Array(32).fill(17)).toBase58(), vault = snapshot.vault, shareMint = snapshot.shareMint;
   for (const id of [owner, keeper]) vm.svm.setAccount({ address: address(id), lamports: lamports(5_000_000_000n), data: new Uint8Array(), programAddress: address("11111111111111111111111111111111"), executable: false, space: 0n });
   vm.connection.getBlockTime = async () => Number(vm.svm.getClock().unixTimestamp);
   vm.connection.getSlot = async () => Number(vm.svm.getClock().slot);
