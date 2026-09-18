@@ -6,6 +6,7 @@ import {
   useCreateWallet,
   useSignAndSendTransaction,
   useSignTransaction,
+  useSignMessage,
   useWallets,
 } from "@privy-io/react-auth/solana";
 import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
@@ -100,6 +101,7 @@ function PrivyLiveBridge({
   const { wallets } = useWallets();
   const { createWallet } = useCreateWallet();
   const { signTransaction: signWithPrivy } = useSignTransaction();
+  const { signMessage: signMessageWithPrivy } = useSignMessage();
   const { signAndSendTransaction: signAndSendWithPrivy } = useSignAndSendTransaction();
   const [connectionMethod, setConnectionMethod] = useState<WalletConnectMethod | null>(null);
   const wallet = wallets[0] ?? null;
@@ -146,6 +148,12 @@ function PrivyLiveBridge({
     [authenticated, signWithPrivy, wallet],
   );
 
+  const signMessage = useCallback(async (message: string) => {
+    if (!authenticated || !wallet || !message) throw new Error("Connect a Solana wallet before authorizing access.");
+    const result = await signMessageWithPrivy({ wallet, message: new TextEncoder().encode(message), options: { uiOptions: { showWalletUIs: true } } });
+    return bytesToBase58(result.signature);
+  }, [authenticated, signMessageWithPrivy, wallet]);
+
   const signAndSendTransaction = useCallback(
     async (transactionBase64: string, network: "mainnet-beta" | "devnet" = "mainnet-beta") => {
       if (!authenticated || !wallet) {
@@ -178,6 +186,7 @@ function PrivyLiveBridge({
       connect,
       disconnect,
       signTransaction,
+      signMessage,
       signAndSendTransaction,
     }),
     [
@@ -187,6 +196,7 @@ function PrivyLiveBridge({
       connectionMethod,
       disconnect,
       ready,
+      signMessage,
       signAndSendTransaction,
       signTransaction,
       wallet?.address,

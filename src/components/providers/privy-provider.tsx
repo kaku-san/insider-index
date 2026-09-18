@@ -24,6 +24,8 @@ export type PrivySolanaWallet = {
   connectionMethod: WalletConnectMethod | null;
   connect: (method?: WalletConnectMethod) => Promise<void>;
   disconnect: () => Promise<void>;
+  /** Explicit access-only message signature; fixtures never synthesize authorization. */
+  signMessage: (message: string) => Promise<string>;
   /** Always requires an explicit user signature. Never signs discretionary/unattended trades. */
   signTransaction: (transactionBase64: string, network?: "mainnet-beta" | "devnet") => Promise<string>;
   /** Broadcast stays off for fixtures. Live wallets send only user-approved payloads. */
@@ -103,6 +105,7 @@ export function PrivySolanaProvider({
       connect,
       disconnect,
       signTransaction,
+      signMessage: async () => { throw new Error("A live wallet is required for access authorization."); },
       signAndSendTransaction,
     }),
     [allowStub, authenticated, connectionMethod, connect, disconnect, pendingLive, signAndSendTransaction, signTransaction],

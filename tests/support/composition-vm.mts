@@ -92,5 +92,5 @@ export function compositionVm() {
     svm.warpToSlot(svm.getClock().slot + 1n);
     return result;
   }
-  return { svm, native, connection, simulate, apply };
+  return { svm, native, connection, simulate, apply, knownAddresses: known };
 }

@@ -1,4 +1,5 @@
-import { createHash } from "node:crypto";
+import { sha256 as digest } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import { PublicKey } from "@solana/web3.js";
 
 export function rawAmount(value: string, positive = false): bigint {
@@ -18,7 +19,7 @@ export function address(value: string): string {
   return value;
 }
 export function sha256(bytes: string | Uint8Array): string {
-  return createHash("sha256").update(bytes).digest("hex");
+  return bytesToHex(digest(typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes));
 }
 /** Stable JSON hashing: no floats/non-JSON values, no dependence on object insertion order. */
 export function canonicalJson(value: unknown): string {
