@@ -40,7 +40,7 @@ test("signature is durable before relay; ambiguous broadcasts cannot be forgotte
     // Local storage test only: this transfer is NOT a cycle-authorized message and is never sent.
     const message = new TransactionMessage({ payerKey: cycleTestOwner.publicKey, recentBlockhash: PublicKey.default.toBase58(), instructions: [SystemProgram.transfer({ fromPubkey: cycleTestOwner.publicKey, toPubkey: cycleTestOwner.publicKey, lamports: 1 })] }).compileToV0Message();
     const tx = new VersionedTransaction(message), unsigned = Buffer.from(tx.serialize()).toString("base64");
-    const pending: CyclePending = { stepId: randomUUID(), action: "create", policyHash: cyclePolicyHash(p), txBase64: unsigned, messageHash: sha256(message.serialize()), payer: p.owner, blockhash: message.recentBlockhash, expiresAt: Date.now() + 60000, lastValidBlockHeight: 100, minSlot: 0, beforeStateHash: "0".repeat(64), simulatedPayerDebitLamports: "1", signature: null, signedTransaction: null };
+    const pending: CyclePending = { stepId: randomUUID(), action: "create", policyHash: cyclePolicyHash(p), txBase64: unsigned, messageHash: sha256(message.serialize()), payer: p.owner, blockhash: message.recentBlockhash, expiresAt: Date.now() + 60000, lastValidBlockHeight: 100, minSlot: 0, mints: [], expectedOwnerShareDelta: "0", expectedFeeShareDelta: "0", beforeStateHash: "0".repeat(64), simulatedPayerDebitLamports: "1", signature: null, signedTransaction: null };
     await journal.update(s => { s.pending = pending; });
     tx.sign([cycleTestOwner]); const signed = Buffer.from(tx.serialize()).toString("base64");
     const signature = await journal.update(s => bindCycleSubmission(s, signed));

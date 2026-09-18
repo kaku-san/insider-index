@@ -55,6 +55,22 @@ export function decodeCycleReceipt(transaction: VersionedTransactionResponse, ex
     if ((b && (b.owner !== owner || b.mint !== mint)) || (a && (a.owner !== owner || a.mint !== mint))) throw new Error("CYCLE_RECEIPT_ATA_OWNER");
     return (a?.amount ?? 0n) - (b?.amount ?? 0n);
   }
+  let mintedShares = 0n, burnedShares = 0n;
+  for (const group of meta.innerInstructions) {
+    const top = message.compiledInstructions[group.index];
+    if (!top || keyAt(top.programIdIndex) !== SYMMETRY_PROGRAM_ID) continue;
+    for (const inner of group.instructions) {
+      const program = keyAt(inner.programIdIndex); if (program !== mints.get(expected.shareMint)!.tokenProgram) continue;
+      const data = Buffer.from(bs58.decode(inner.data)), minting = data[0] === 7 || data[0] === 14, burning = data[0] === 8 || data[0] === 15;
+      if ((!minting && !burning) || keyAt(inner.accounts[minting ? 0 : 1]) !== expected.shareMint) continue;
+      if (data.length !== (data[0] === 14 || data[0] === 15 ? 10 : 9) || (data.length === 10 && data[9] !== mints.get(expected.shareMint)!.decimals)) throw new Error("CYCLE_RECEIPT_SHARE_CPI_SHAPE");
+      const tokenAccount = keyAt(inner.accounts[minting ? 1 : 0]), authority = keyAt(inner.accounts[2]);
+      const ownerAta = ata(expected.owner, mints.get(expected.shareMint)!), feeAta = ata(getVaultFeesPda(pk(expected.vault)).toBase58(), mints.get(expected.shareMint)!);
+      if (minting && (authority !== expected.vault || ![ownerAta, feeAta].includes(tokenAccount))) throw new Error("CYCLE_RECEIPT_MINT_RECIPIENT");
+      if (burning && (authority !== expected.owner || tokenAccount !== ownerAta)) throw new Error("CYCLE_RECEIPT_BURN_OWNER");
+      if (minting) mintedShares += data.readBigUInt64LE(1); else burnedShares += data.readBigUInt64LE(1);
+    }
+  }
   const credits: CycleCredit[] = [];
   for (const group of meta.innerInstructions) {
     const top = message.compiledInstructions[group.index];
@@ -89,7 +105,7 @@ export function decodeCycleReceipt(transaction: VersionedTransactionResponse, ex
   const beforeLamports = meta.preBalances[0], afterLamports = meta.postBalances[0];
   if (!Number.isSafeInteger(beforeLamports) || !Number.isSafeInteger(afterLamports) || beforeLamports < 0 || afterLamports < 0) throw new Error("CYCLE_RECEIPT_LAMPORT_PRECISION");
   return { signature: expected.signature, slot, credits, tokenDelta,
-    ownerShareDelta: shareDelta, feeShareDelta: feeDelta, networkFeeLamports: BigInt(meta.fee),
+    ownerShareDelta: shareDelta, feeShareDelta: feeDelta, mintedShares, burnedShares, networkFeeLamports: BigInt(meta.fee),
     payerNetDebitLamports: BigInt(Math.max(meta.fee, beforeLamports - afterLamports)),
     /** Actual token movements, not SDK estimates or a wallet balance substituted for native claims. */
     assertConversion(mint: string, exactDebitRaw: string, minimumUsdcRaw: string) {

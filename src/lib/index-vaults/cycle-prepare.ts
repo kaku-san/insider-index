@@ -53,6 +53,8 @@ export async function preflightCycleRoutes(native: NativeVaultBuilders, record: 
 export async function prepareCycleStep(input: {
   native: NativeVaultBuilders; record: PersistedVaultDefinition; policy: CyclePolicy; state: CycleState;
   actor: "owner" | "keeper"; request?: "next" | "withdraw" | "recover"; metadata?: PoolMetadata;
+  /** Internal journal-owned draft only: audit the EXACT old message, never refresh signed bytes. */
+  revalidate?: CyclePending;
 }): Promise<CyclePreparation> {
   const { native, record, policy, state } = input;
   const recovering = input.request === "recover" || input.request === "withdraw" || state.phase === "recovering" || state.phase === "exiting";
@@ -61,9 +63,11 @@ export async function prepareCycleStep(input: {
   assertCycleExecutionAuthorized(policy, record, recovering || input.request === "withdraw" ? "recovery" : "deposit");
   if (state.policyHash !== cyclePolicyHash(policy) || state.definitionHash !== policy.definitionHash || state.operationId !== policy.operationId || state.vault !== policy.vault || state.owner !== policy.owner || state.indexId !== policy.indexId) throw new Error("CYCLE_OPERATION_SCOPE");
   if (state.recoveryRequired && !recovering) throw new Error(`CYCLE_RECOVERY_REQUIRED:${state.recoveryRequired}`);
-  if (state.pending) return { action: "wait", reason: "Resolve the existing draft/signature; never prepare a duplicate contribution or burn." };
+  if (input.revalidate && input.revalidate !== state.pending) throw new Error("CYCLE_REVALIDATION_NOT_JOURNAL_OWNED");
+  if (state.pending && !input.revalidate) return { action: "wait", reason: "Resolve the existing draft/signature; never prepare a duplicate contribution or burn." };
   if (state.phase === "complete") return { action: "complete", reason: "This operation is complete. Native token accounts, not this journal, remain ownership truth." };
   const chain = await observeCycle(native, record, policy, recovering || input.request === "withdraw" ? "recovery" : "strict"), i = chain.intent?.chain_data;
+  if ((!recovering || input.request === "withdraw") && policy.feeScheduleHash !== chain.feeScheduleHash) throw new Error("CYCLE_NATIVE_FEE_SCHEDULE_CHANGED");
   if (state.phase === "new" && !i && !recovering) {
     const hasBacking = chain.vault.composition.slice(0, chain.vault.numTokens).some(t => !t.amount.isZero());
     if ((chain.shareSupply === 0n) === hasBacking) throw new Error("CYCLE_UNOWNED_OR_EMPTY_NATIVE_BACKING");
@@ -80,7 +84,7 @@ export async function prepareCycleStep(input: {
   if (spent >= budget) throw new Error("CYCLE_SOL_BUDGET_EXHAUSTED");
   const remaining = (budget - spent).toString();
   const wireOptions = { payer, computeUnits: policy.limits.maxComputeUnits, microLamports: policy.limits.maxMicroLamports, maxPriorityFeeLamports: remaining };
-  const stepId = randomUUID();
+  const stepId = input.revalidate?.stepId ?? randomUUID();
   let bounty: CyclePending["bounty"];
   let action: CycleAction, payload: TxPayloadBatchSequence | undefined, wire: CycleWire | undefined;
   let exactInputRaw: string | undefined, inputMint: string | undefined, minOutputRaw: string | undefined;
@@ -89,7 +93,14 @@ export async function prepareCycleStep(input: {
   let surplusPricesQ: Record<string, string> | undefined;
   const ownerOnly = () => { if (input.actor !== "owner") throw new Error("CYCLE_OWNER_SIGNATURE_REQUIRED"); };
   const keeperOnly = () => { if (input.actor !== "keeper") throw new Error("CYCLE_SEPARATE_KEEPER_REQUIRED"); };
-  if (recovering && i && i.rebalanceType === RebalanceType.Deposit && state.mintedSharesRaw === "0") {
+  if (input.revalidate) {
+    const p = input.revalidate;
+    if (p.payer !== payer || p.policyHash !== state.policyHash || p.expiresAt <= Date.now()) throw new Error("CYCLE_OLD_DRAFT_AUTHORITY_OR_EXPIRY");
+    const old = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64"));
+    if (sha256(old.message.serialize()) !== p.messageHash || old.message.staticAccountKeys[0].toBase58() !== payer || old.message.header.numRequiredSignatures !== 1 || old.signatures.some(s => s.some(n => n !== 0))) throw new Error("CYCLE_OLD_DRAFT_MESSAGE");
+    action = p.action; wire = p; bounty = p.bounty; inputMint = p.inputMint; exactInputRaw = p.exactInputRaw; minOutputRaw = p.minOutputRaw;
+    deadline = Math.min(deadline, p.expiresAt);
+  } else if (recovering && i && i.rebalanceType === RebalanceType.Deposit && !state.receipts.some(r => r.action === "mint" && r.status === "finalized")) {
     ownerOnly(); action = "cancel"; payload = await native.sdk.cancelRebalanceIntentTx({ keeper: payer, rebalance_intent: chain.intentAddress });
   } else if (recovering && state.phase === "new" && !i) {
     return { action: "complete", reason: "No native generation or invested assets; reconcile setup costs only." };
@@ -192,7 +203,7 @@ export async function prepareCycleStep(input: {
     payload = first(await native.sdk.sellVaultTx({ seller: payer, vault_mint: policy.shareMint, withdraw_amount: sdkRawAmount(exactInputRaw), keep_tokens: completeKeepTokens(chain.vault), rebalance_slippage_bps: policy.limits.rebalanceSlippageBps, per_trade_rebalance_slippage_bps: policy.limits.perTradeSlippageBps }));
   } else return { action: "wait", reason: "Native state needs reconciliation; no inferred funding, mint, burn or refund." };
 
-  const block = await native.connection.getLatestBlockhashAndContext("finalized"), latest = block.value;
+  const block = input.revalidate ? { context: { slot: input.revalidate.minSlot }, value: { blockhash: input.revalidate.blockhash, lastValidBlockHeight: input.revalidate.lastValidBlockHeight } } : await native.connection.getLatestBlockhashAndContext("finalized"), latest = block.value;
   if (payload) {
     const decoded = await cycleInstructions(native, payload, payer);
     if (action === "create" || action === "withdraw") {
@@ -231,7 +242,21 @@ export async function prepareCycleStep(input: {
     if (d < 0n && !(action === "contribute" && m.mint === MAINNET_USDC && -d === rawAmount(policy.limits.depositUsdcRaw)) && !(action === "withdraw" && m.mint === policy.shareMint && -d === rawAmount(exactInputRaw!)) && !(action === "convert" && m.mint === inputMint && -d === rawAmount(exactInputRaw!))) throw new Error("CYCLE_UNAUTHORIZED_TOKEN_DEBIT");
   }
   if (action === "contribute" && delta(policy.owner, MAINNET_USDC) !== -rawAmount(policy.limits.depositUsdcRaw)) throw new Error("CYCLE_CONTRIBUTION_DEBIT_MISMATCH");
-  if (action === "withdraw" && delta(policy.owner, policy.shareMint) !== -rawAmount(exactInputRaw!)) throw new Error("CYCLE_BURN_AMOUNT_MISMATCH");
+  if (action === "withdraw") {
+    if (delta(policy.owner, policy.shareMint) !== -rawAmount(exactInputRaw!)) throw new Error("CYCLE_BURN_AMOUNT_MISMATCH");
+    const account = after.get(chain.intentAddress); if (!account) throw new Error("CYCLE_WITHDRAW_CLAIM_MISSING");
+    const claim = RebalanceIntentLayout.decode(account.data.subarray(8));
+    let minimum = rawAmount(state.recoveredUsdcRaw);
+    for (const token of claim.tokens) {
+      const amount = BigInt(token.amount.toString()); if (amount === 0n) continue;
+      if (token.mint.toBase58() === MAINNET_USDC) { minimum += amount; continue; }
+      const leg = record.vaultLegs.find(l => l.mint === token.mint.toBase58());
+      if (!leg) throw new Error("CYCLE_SUPPORT_EXIT_NOT_PROVED");
+      const route = await buildCycleRoute({ connection: native.connection, leg, owner: payer, inputMint: leg.mint, outputMint: MAINNET_USDC, amountInRaw: amount.toString(), slippageBps: policy.limits.swapSlippageBps, maxAgeMs: policy.limits.quoteMaxAgeMs, metadata: input.metadata });
+      minimum += rawAmount(route.minOutRaw); deadline = Math.min(deadline, route.expiresAt);
+    }
+    if (minimum < rawAmount(policy.limits.minExitUsdcRaw)) throw new Error("CYCLE_EXIT_AFTER_FEES_OR_ROUNDING_BELOW_MINIMUM");
+  }
   if (action === "convert" && (delta(policy.owner, inputMint!) !== -rawAmount(exactInputRaw!) || delta(policy.owner, MAINNET_USDC) < rawAmount(minOutputRaw!))) throw new Error("CYCLE_CONVERSION_BOUNDS");
   if (action === "create" || action === "withdraw") {
     const a = after.get(chain.intentAddress); if (!a || !bounty) throw new Error("CYCLE_NATIVE_INTENT_NOT_CREATED");
@@ -261,6 +286,10 @@ export async function prepareCycleStep(input: {
   // Conservative upper bound: add the network fee even if this RPC's simulation included it.
   const debit = BigInt(Math.max(0, preLamports! - postLamports!)) + BigInt(fee);
   if (debit > rawAmount(remaining) || deadline <= Date.now()) throw new Error("CYCLE_SOL_CAP_OR_EXPIRED_SIMULATION");
-  const beforeStateHash = hashObject(watch.map(k => { const a = before.get(k.toBase58()); return [k.toBase58(), a ? [a.owner.toBase58(), sha256(a.data), a.lamports.toString()] : null]; }));
-  return { action, reason: "Verified unsigned native step; signature and finalized reconciliation remain separate.", pending: { ...wire, stepId, bounty, action, policyHash: state.policyHash, expiresAt: deadline, lastValidBlockHeight: latest.lastValidBlockHeight, minSlot: block.context.slot, surplusPricesQ, beforeStateHash, simulatedPayerDebitLamports: debit.toString(), inputMint, exactInputRaw, minOutputRaw, signature: null, signedTransaction: null } };
+  // Pool ticks/reserves may move: rerun actual simulation and retain the SIGNED minima. Owned
+  // balances and the native generation may not change unnoticed between prepare and relay.
+  const bound = new Set([policy.vault, policy.shareMint, chain.intentAddress, payer, ...[policy.owner, policy.keeper, policy.vault].flatMap(owner => chain.mintBindings.map(m => cycleAta(owner, m)))]);
+  const beforeStateHash = hashObject(watch.filter(k => bound.has(k.toBase58())).map(k => { const a = before.get(k.toBase58()); return [k.toBase58(), a ? [a.owner.toBase58(), sha256(a.data), a.lamports.toString()] : null]; }));
+  if (input.revalidate && beforeStateHash !== input.revalidate.beforeStateHash) throw new Error("CYCLE_PENDING_STATE_CHANGED_RECONCILE_DO_NOT_REPLACE");
+  return { action, reason: "Verified unsigned native step; signature and finalized reconciliation remain separate.", pending: { ...wire, stepId, bounty, action, policyHash: state.policyHash, expiresAt: deadline, lastValidBlockHeight: latest.lastValidBlockHeight, minSlot: block.context.slot, mints: chain.mintBindings, expectedOwnerShareDelta: delta(policy.owner, policy.shareMint).toString(), expectedFeeShareDelta: delta(getVaultFeesPda(pk(policy.vault)).toBase58(), policy.shareMint).toString(), surplusPricesQ, beforeStateHash, simulatedPayerDebitLamports: debit.toString(), inputMint, exactInputRaw, minOutputRaw, signature: null, signedTransaction: null } };
 }

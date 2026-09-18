@@ -11,6 +11,7 @@ export interface CyclePolicy {
   indexId: string; vault: string; shareMint: string; definitionHash: string;
   owner: string; keeper: string; operationId: string; expiresAt: number;
   approvalReference: string | null;
+  feeScheduleHash: string | null;
   financialExecutionAuthorized: boolean;
   economics: {
     keeperSurplus: "unapproved" | "native-filler-retains";
@@ -30,10 +31,10 @@ export interface CyclePolicy {
     maxComputeUnits: number; maxMicroLamports: string; quoteMaxAgeMs: number;
   };
 }
-/** An explicit deadline/reference renewal may resume the SAME operation and money limits.
- * Changing any identity, economic acceptance or amount/cost limit remains a different authority. */
+/** Deadlines/references may be explicitly renewed and authorization may be shut off without
+ * losing the SAME operation's recovery journal. Identity, economics and money limits stay bound. */
 export function cyclePolicyHash(policy: CyclePolicy): string {
-  return hashObject({ ...policy, expiresAt: 0, approvalReference: null });
+  return hashObject({ ...policy, expiresAt: 0, approvalReference: null, financialExecutionAuthorized: false });
 }
 export function cycleDefinitionHash(record: PersistedVaultDefinition): string {
   return hashObject({ indexId: record.indexId, network: record.network, vault: record.vaultAddress, shareMint: record.shareMint,
@@ -72,6 +73,7 @@ export function assertCyclePolicy(policy: CyclePolicy, record: PersistedVaultDef
 export function cycleActivationBlockers(policy: CyclePolicy): string[] {
   return [
     ...(policy.financialExecutionAuthorized !== true || !policy.approvalReference?.trim() ? ["EXACT_OPERATOR_AUTHORITY_REQUIRED"] : []),
+    ...(!policy.feeScheduleHash || !/^[a-f0-9]{64}$/.test(policy.feeScheduleHash) ? ["EXACT_NATIVE_FEE_SCHEDULE_UNAPPROVED"] : []),
     ...(policy.economics.keeperSurplus !== "native-filler-retains" ? ["KEEPER_SURPLUS_POLICY_UNAPPROVED"] : []),
     ...(policy.economics.shareQuantization !== "bounded-native-units" ? ["NATIVE_SHARE_QUANTIZATION_UNAPPROVED"] : []),
     ...(policy.economics.residualCash !== "native-backing" ? ["NATIVE_RESIDUAL_BACKING_UNAPPROVED"] : []),

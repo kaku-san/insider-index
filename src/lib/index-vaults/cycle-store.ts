@@ -6,6 +6,7 @@ import { address, rawAmount, sha256 } from "./amounts.ts";
 import { assertSignedBy } from "./kaku-san-create.ts";
 import { creditSaleAmount, type CycleCredit } from "./cycle-accounting.ts";
 import { cyclePolicyHash, type CyclePolicy } from "./cycle-policy.ts";
+import type { CycleMintBinding } from "./cycle-receipts.ts";
 import type { CycleWire } from "./cycle-wire.ts";
 
 export type CycleAction = "setup-keeper" | "create" | "contribute" | "lock" | "prices" | "fill" | "mint" | "cleanup" | "withdraw" | "claim" | "convert" | "cancel";
@@ -13,7 +14,9 @@ export interface CyclePending extends CycleWire {
   stepId: string; action: CycleAction; policyHash: string; expiresAt: number; lastValidBlockHeight: number;
   beforeStateHash: string; simulatedPayerDebitLamports: string;
   inputMint?: string; exactInputRaw?: string; minOutputRaw?: string;
-  minSlot: number;
+  minSlot: number; mints: CycleMintBinding[];
+  expectedOwnerShareDelta: string; expectedFeeShareDelta: string;
+  expiryScan?: { nextSlot: number; throughBlockHeight: number; lastSlot: number; blockhash: string };
   surplusPricesQ?: Record<string, string>;
   bounty?: { account: string; restoreWsolRaw: string; fundingRaw: string };
   signature: string | null; signedTransaction: string | null;
@@ -31,13 +34,14 @@ export interface CycleState {
   contributedUsdcRaw: string; mintedSharesRaw: string; burnedSharesRaw: string; recoveredUsdcRaw: string;
   ownerSolDebitLamports: string; keeperSolDebitLamports: string; keeperSurplusUsdcRaw: string; bountyFundingRaw: string;
   nativeClaimsClear: boolean; credits: CycleCredit[]; receipts: CycleReceiptRecord[];
+  expiredDrafts: { stepId: string; messageHash: string; throughSlot: number; throughBlockHeight: number }[];
   pending: CyclePending | null; recoveryRequired: string | null;
 }
 export function initialCycleState(policy: CyclePolicy): CycleState {
   return { schema: "insiderindex-native-cycle-v1", indexId: policy.indexId, vault: policy.vault, shareMint: policy.shareMint, owner: policy.owner, keeper: policy.keeper, operationId: policy.operationId,
     policyHash: cyclePolicyHash(policy), definitionHash: policy.definitionHash, phase: "new", depositGenerationSignature: null, exitGenerationSignature: null,
     contributedUsdcRaw: "0", mintedSharesRaw: "0", burnedSharesRaw: "0", recoveredUsdcRaw: "0", ownerSolDebitLamports: "0", keeperSolDebitLamports: "0", keeperSurplusUsdcRaw: "0", bountyFundingRaw: "0",
-    nativeClaimsClear: true, credits: [], receipts: [], pending: null, recoveryRequired: null };
+    nativeClaimsClear: true, credits: [], receipts: [], expiredDrafts: [], pending: null, recoveryRequired: null };
 }
 export function assertCycleState(state: CycleState, initial: CycleState): void {
   if (!state || state.schema !== initial.schema || ["indexId", "vault", "shareMint", "owner", "keeper", "operationId", "definitionHash", "policyHash"].some(k => state[k as keyof CycleState] !== initial[k as keyof CycleState])) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
@@ -53,6 +57,8 @@ export function assertCycleState(state: CycleState, initial: CycleState): void {
     if (signatures.has(r.signature) || !/^[1-9A-HJ-NP-Za-km-z]{64,88}$/.test(r.signature) || !/^[a-f0-9]{64}$/.test(r.messageHash) || !Number.isSafeInteger(r.slot) || r.slot < 0 || ![state.owner, state.keeper].includes(r.payer) || !["finalized", "failed", "expired-unexecuted"].includes(r.status)) throw new Error("CYCLE_JOURNAL_RECEIPT");
     rawAmount(r.payerDebitLamports); signatures.add(r.signature);
   }
+  if (!Array.isArray(state.expiredDrafts)) throw new Error("CYCLE_JOURNAL_EXPIRY_AUDIT_MALFORMED");
+  for (const d of state.expiredDrafts) if (!/^[0-9a-f-]{36}$/.test(d.stepId) || !/^[a-f0-9]{64}$/.test(d.messageHash) || !Number.isSafeInteger(d.throughSlot) || d.throughSlot < 0 || !Number.isSafeInteger(d.throughBlockHeight) || d.throughBlockHeight < 0) throw new Error("CYCLE_JOURNAL_EXPIRY_AUDIT_MALFORMED");
   for (const [payer, field] of [[state.owner, "ownerSolDebitLamports"], [state.keeper, "keeperSolDebitLamports"]] as const) {
     const debit = state.receipts.filter(r => r.payer === payer).reduce((sum, r) => sum + rawAmount(r.payerDebitLamports), 0n);
     if (rawAmount(state[field]) !== debit) throw new Error("CYCLE_JOURNAL_FEE_TOTAL_DIVERGENCE");
@@ -61,6 +67,12 @@ export function assertCycleState(state: CycleState, initial: CycleState): void {
     const p = state.pending, tx = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64"));
     if (p.messageHash !== sha256(tx.message.serialize()) || p.blockhash !== tx.message.recentBlockhash || !Number.isSafeInteger(p.minSlot) || p.minSlot < 0 || p.policyHash !== state.policyHash || ![state.owner, state.keeper].includes(p.payer) || tx.message.staticAccountKeys[0].toBase58() !== p.payer || tx.message.header.numRequiredSignatures !== 1 || tx.signatures.some(s => s.some(b => b !== 0)) || !Number.isSafeInteger(p.expiresAt) || !Number.isSafeInteger(p.lastValidBlockHeight) || p.lastValidBlockHeight < 0) throw new Error("CYCLE_JOURNAL_PENDING_MESSAGE");
     rawAmount(p.simulatedPayerDebitLamports);
+    if (!Array.isArray(p.mints) || new Set(p.mints.map(m => m.mint)).size !== p.mints.length || p.mints.some(m => { address(m.mint); address(m.tokenProgram); return !Number.isInteger(m.decimals) || m.decimals < 0 || m.decimals > 255; })) throw new Error("CYCLE_JOURNAL_MINT_BINDINGS");
+    for (const d of [p.expectedOwnerShareDelta, p.expectedFeeShareDelta]) if (!/^(0|-?[1-9]\d{0,19})$/.test(d)) throw new Error("CYCLE_JOURNAL_EXPECTED_SHARE_EFFECT");
+    if (p.expiryScan) {
+      const s = p.expiryScan; address(s.blockhash);
+      if (![s.nextSlot, s.lastSlot, s.throughBlockHeight].every(n => Number.isSafeInteger(n) && n >= 0) || s.nextSlot <= s.lastSlot || s.lastSlot < p.minSlot) throw new Error("CYCLE_JOURNAL_EXPIRY_CURSOR");
+    }
     if ((p.signature === null) !== (p.signedTransaction === null)) throw new Error("CYCLE_JOURNAL_SIGNATURE_LATCH");
     if (p.signedTransaction) {
       const signed = assertSignedBy(p.signedTransaction, p.payer);
