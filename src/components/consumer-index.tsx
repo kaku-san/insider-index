@@ -13,6 +13,7 @@ import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { useUI } from "./providers/ui-provider";
 import { VaultFlow } from "./vault-flow";
+import { ShareCard } from "./share-card";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import styles from "./consumer-index.module.css";
@@ -39,6 +40,13 @@ export type IndexResourceResponse = PublishedIndexResponse & {
   publicFundsEnabled?: boolean;
 };
 type ActivityResponse = { disclosures: Disclosure[]; total: number; hasMore?: boolean };
+
+function depositStatusCopy(reason: string | null | undefined, live: boolean) {
+  if (live) return "Deposit preparation may return validated native transactions.";
+  if (!reason) return "Funding remains unavailable until the native vault and release checks complete.";
+  const detail = reason.replace(/^blocked:/i, "").replaceAll("_", " ").replaceAll("-", " ").replace(/\s+/g, " ").trim();
+  return detail ? `Investing is not available yet: ${detail}.` : "Funding remains unavailable until the native vault and release checks complete.";
+}
 
 function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
@@ -154,7 +162,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const [vault, setVault] = useState<VaultReadiness | null>(null);
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [investOpen, setInvestOpen] = useState(false);
-  const [shareLabel, setShareLabel] = useState("Share");
+  const [shareOpen, setShareOpen] = useState(false);
   const ui = useUI();
   const index = resource.data?.index;
 
@@ -179,7 +187,8 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   if (!index) return null;
 
   const image = portraitFor(resource.data?.personSlug ?? index.person_id);
-  const live = depositIsEnabled(vault) && (id ? Boolean(resource.data?.depositsEnabled && resource.data.publicFundsEnabled) : true);
+  // The vault endpoint owns effective release and per-vault scope; catalog coverage is not a funds gate.
+  const live = depositIsEnabled(vault);
   const status = live ? "Live" : "Coming soon";
   const following = ui.deviceFollows.includes(index.person_id);
   const unmapped = resource.data?.unmapped ?? (index.definition?.excluded ?? []).map((item) => ({
@@ -196,20 +205,6 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const tradableCoverage = resource.data?.coverage?.tradableByWeightBps;
   const activityProfileId = id ? resource.data?.activityProfileId : index.person_id;
 
-  async function share() {
-    const url = window.location.href;
-    try {
-      if (navigator.share) await navigator.share({ title: index?.indexName ?? "InsiderIndex", url });
-      else {
-        await navigator.clipboard.writeText(url);
-        setShareLabel("Copied");
-        window.setTimeout(() => setShareLabel("Share"), 1800);
-      }
-    } catch {
-      // Cancelling the native share sheet does not need an error state.
-    }
-  }
-
   return <div className={styles.page}>
     <div className={styles.breadcrumb}><Link href="/"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />All indexes</Link><span>{index.indexName ?? "Person index"}</span></div>
     <section className={styles.hero}>
@@ -221,7 +216,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         <div className={styles.proof}>{index.constituents.length} of {disclosedCount} tickers token mapped{coverage == null ? "" : ` · ${coverage.toFixed(1)}% of disclosed weight`} · definition updated {updated}</div>
         <div className={styles.actions}>
           <button type="button" className={styles.primary} onClick={() => setInvestOpen(true)}>{live ? "Invest in index" : "Preview index"}<Icon name="arrow" size={14} /></button>
-          <button type="button" className={styles.secondary} onClick={share}><Icon name="share" size={14} />{shareLabel}</button>
+          <button type="button" className={styles.secondary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
           <button type="button" className={styles.tertiary} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(index.person_id)}><Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}</button>
         </div>
       </div>
@@ -251,9 +246,10 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       {tab === "about" ? <div className={styles.aboutGrid}>
         <section><span>METHODOLOGY</span><h3>How the index is built</h3><p>{index.definition?.label ?? "Mapped annual holdings are normalized into a published target."}</p><p>{excluded.length} disclosed rows are excluded from the mapped target.</p></section>
         <section><span>SOURCE</span><h3>Public annual disclosure</h3><p>{index.period ? `Annual holdings year ${index.period}` : "Holdings year unavailable"} · definition updated {updated}. The model is not a live brokerage balance or NAV.</p></section>
-        <section className={styles.disclaimer}><span>VAULT STATUS</span><h3>{status}</h3><p>{vaultError ?? resource.data?.depositReason ?? (live ? "Deposit preparation may return validated native transactions." : "Funding remains disabled until the native vault and public release checks are complete.")}</p></section>
+        <section className={styles.disclaimer}><span>VAULT STATUS</span><h3>{status}</h3><p>{vaultError ?? depositStatusCopy(resource.data?.depositReason, live)}</p></section>
       </div> : null}
     </section>
+    <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} mapped names · public annual disclosure model`} image={image} />
     <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={vault} />
   </div>;
 }
