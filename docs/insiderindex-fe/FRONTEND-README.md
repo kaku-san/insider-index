@@ -98,8 +98,8 @@ A partial exit converts the entered share amount to raw units using the share mi
 The typed frontend adapter lives in `src/lib/frontend/vault-api.ts` and covers:
 
 ```text
-GET  /api/indexes/:id/vault
-GET  /api/indexes/:id/position?owner=...
+GET  /api/vault-indexes/:id                 # published index readiness, release gate, vault/share identity
+GET  /api/indexes/:id/position?owner=...     # wallet-scoped share position
 POST /api/indexes/:id/deposit/prepare
 POST /api/indexes/:id/withdraw/prepare
 POST /api/operations/:id/receipts
@@ -124,14 +124,9 @@ POST /api/indexes/execute
 
 ## Important implementation boundary
 
-The recovered frontend snapshot does **not** contain the production native vault backend or a generic upstream gateway. The rework includes a production Privy Solana adapter boundary and typed same-origin client contracts. Native lifecycle calls fail closed unless matching server routes are implemented in this application.
+The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Index pages expose preparation only when the published per-vault deposit gate, `publicFundsEnabled` release flag, and vault/share identity all validate; otherwise lifecycle calls fail closed and the page remains a preview.
 
-This package therefore does two things deliberately:
-
-1. completes the consumer UX, typed endpoint contract and operation state machine;
-2. **fails closed for native index funds** until the server adapter, wallet ownership proof/session validation, RPC simulation, chain reconciliation and keeper infrastructure exist.
-
-It would be incorrect to label the native vault as production-ready solely because all screens are present.
+The preparation UI is not a production-readiness claim: wallet ownership proof/session validation, RPC simulation, chain reconciliation and keeper infrastructure remain required before public funds are enabled.
 
 ## Design principles
 

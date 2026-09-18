@@ -50,6 +50,8 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState<string|null>(null);
   const [connectOpen,setConnectOpen]=useState(false);
+  // Reset the reusable modal when a new operation opens; derived state cannot preserve this boundary.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(()=>{if(open){setScreen("amount");setPrepared(null);setOperation(null);setError(null);setAmount(mode==="deposit"?"1000":(position?.sharesText??"0"));}},[open,mode,indexId,position?.sharesText]);
   const live=mode==="deposit"?depositIsEnabled(readiness):Boolean(readiness?.redeemEnabled);
   const blocked=(readiness?.blockers??[]).length>0 && !live;
