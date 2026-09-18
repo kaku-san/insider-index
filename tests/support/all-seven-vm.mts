@@ -20,7 +20,7 @@ export const pk = (x: string) => new PublicKey(x);
 export function allSevenVm(options: { owner?: string; keeper?: string } = {}) {
   const vm = compositionVm(), tracked = new Set(bank.keys);
   for (let n = 0; n < bank.keys.length; n++) {
-    const a = bank.response.value[n], id = bank.keys[n];
+    const a = bank.response.value[n], id = bank.keys[n]; vm.knownAddresses.add(id);
     if (a && !a.executable && !id.startsWith("Sysvar")) vm.svm.setAccount({ address: address(id), lamports: lamports(BigInt(a.lamports)), data: Buffer.from(a.data[0], "base64"), programAddress: address(a.owner), executable: false, space: BigInt(Buffer.from(a.data[0], "base64").length) });
   }
   for (let n = 0; n < lookups.keys.length; n++) {
@@ -32,6 +32,18 @@ export function allSevenVm(options: { owner?: string; keeper?: string } = {}) {
   vm.svm.addProgramWithLoader(address("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK"), bytes("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK.so"), address("BPFLoaderUpgradeab1e11111111111111111111111"));
   const owner = options.owner ?? snapshot.creator, keeper = options.keeper ?? new PublicKey(new Uint8Array(32).fill(17)).toBase58(), vault = snapshot.vault, shareMint = snapshot.shareMint;
   for (const id of [owner, keeper]) vm.svm.setAccount({ address: address(id), lamports: lamports(5_000_000_000n), data: new Uint8Array(), programAddress: address("11111111111111111111111111111111"), executable: false, space: 0n });
+  vm.connection.getMultipleAccountsInfoAndContext = async keys => ({ context: { slot: Number(vm.svm.getClock().slot) }, value: await vm.connection.getMultipleAccountsInfo(keys) });
+  vm.connection.getTokenAccountsByOwner = async (owner, filter) => {
+    const value = [];
+    for (const id of vm.knownAddresses) {
+      const pubkey = pk(id), account = await vm.connection.getAccountInfo(pubkey);
+      if (!account || account.data.length < 165 || ![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].some(p => p.equals(account.owner))) continue;
+      if ("programId" in filter && !account.owner.equals(filter.programId)) continue;
+      let decoded; try { decoded = unpackAccount(pubkey, account, account.owner); } catch { continue; }
+      if (decoded.owner.equals(owner) && (!("mint" in filter) || decoded.mint.equals(filter.mint))) value.push({ pubkey, account });
+    }
+    return { context: { slot: Number(vm.svm.getClock().slot) }, value };
+  };
   vm.connection.getBlockTime = async () => Number(vm.svm.getClock().unixTimestamp);
   vm.connection.getSlot = async () => Number(vm.svm.getClock().slot);
   function wire(instructions: TransactionInstruction[], payer = owner) { return Buffer.from(new VersionedTransaction(new TransactionMessage({ payerKey: pk(payer), recentBlockhash: vm.svm.latestBlockhash(), instructions }).compileToV0Message()).serialize()).toString("base64"); }

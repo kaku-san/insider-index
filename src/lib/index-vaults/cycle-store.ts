@@ -1,0 +1,112 @@
+import { randomUUID } from "node:crypto";
+import bs58 from "bs58";
+import { VersionedTransaction } from "@solana/web3.js";
+import { createServiceSupabase } from "../supabase.ts";
+import { address, hashObject, rawAmount, sha256 } from "./amounts.ts";
+import { assertSignedBy } from "./kaku-san-create.ts";
+import { creditSaleAmount, type CycleCredit } from "./cycle-accounting.ts";
+import type { CyclePolicy } from "./cycle-policy.ts";
+import type { CycleWire } from "./cycle-wire.ts";
+
+export type CycleAction = "create" | "contribute" | "lock" | "prices" | "fill" | "mint" | "cleanup" | "withdraw" | "claim" | "convert" | "cancel";
+export interface CyclePending extends CycleWire {
+  stepId: string; action: CycleAction; policyHash: string; expiresAt: number; lastValidBlockHeight: number;
+  beforeStateHash: string; simulatedPayerDebitLamports: string;
+  inputMint?: string; exactInputRaw?: string; minOutputRaw?: string;
+  signature: string | null; signedTransaction: string | null;
+}
+export interface CycleReceiptRecord {
+  signature: string; messageHash: string; action: CycleAction; slot: number;
+  status: "finalized" | "failed" | "expired-unexecuted"; payer: string; payerDebitLamports: string;
+}
+export interface CycleState {
+  schema: "insiderindex-native-cycle-v1";
+  indexId: string; vault: string; shareMint: string; owner: string; keeper: string; operationId: string;
+  policyHash: string; definitionHash: string;
+  phase: "new" | "investing" | "holding" | "exiting" | "recovering" | "complete";
+  depositGenerationSignature: string | null; exitGenerationSignature: string | null;
+  contributedUsdcRaw: string; mintedSharesRaw: string; burnedSharesRaw: string; recoveredUsdcRaw: string;
+  ownerSolDebitLamports: string; keeperSolDebitLamports: string;
+  nativeClaimsClear: boolean; credits: CycleCredit[]; receipts: CycleReceiptRecord[];
+  pending: CyclePending | null; recoveryRequired: string | null;
+}
+export function initialCycleState(policy: CyclePolicy): CycleState {
+  return { schema: "insiderindex-native-cycle-v1", indexId: policy.indexId, vault: policy.vault, shareMint: policy.shareMint, owner: policy.owner, keeper: policy.keeper, operationId: policy.operationId,
+    policyHash: hashObject(policy), definitionHash: policy.definitionHash, phase: "new", depositGenerationSignature: null, exitGenerationSignature: null,
+    contributedUsdcRaw: "0", mintedSharesRaw: "0", burnedSharesRaw: "0", recoveredUsdcRaw: "0", ownerSolDebitLamports: "0", keeperSolDebitLamports: "0",
+    nativeClaimsClear: true, credits: [], receipts: [], pending: null, recoveryRequired: null };
+}
+export function assertCycleState(state: CycleState, initial: CycleState): void {
+  if (!state || state.schema !== initial.schema || ["indexId", "vault", "shareMint", "owner", "keeper", "operationId", "definitionHash", "policyHash"].some(k => state[k as keyof CycleState] !== initial[k as keyof CycleState])) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
+  for (const key of ["vault", "shareMint", "owner", "keeper"] as const) address(state[key]);
+  for (const key of ["contributedUsdcRaw", "mintedSharesRaw", "burnedSharesRaw", "recoveredUsdcRaw", "ownerSolDebitLamports", "keeperSolDebitLamports"] as const) rawAmount(state[key]);
+  if (!["new", "investing", "holding", "exiting", "recovering", "complete"].includes(state.phase) || !Array.isArray(state.credits) || !Array.isArray(state.receipts) || typeof state.nativeClaimsClear !== "boolean") throw new Error("CYCLE_JOURNAL_SHAPE");
+  for (const mint of new Set(state.credits.map(c => c.mint))) {
+    const remaining = creditSaleAmount(state.credits, state, mint);
+    if (state.phase === "complete" && remaining !== 0n) throw new Error("CYCLE_OUTSTANDING_CREDITS");
+  }
+  const signatures = new Set<string>();
+  for (const r of state.receipts) {
+    if (signatures.has(r.signature) || !/^[1-9A-HJ-NP-Za-km-z]{64,88}$/.test(r.signature) || !/^[a-f0-9]{64}$/.test(r.messageHash) || !Number.isSafeInteger(r.slot) || r.slot < 0 || ![state.owner, state.keeper].includes(r.payer) || !["finalized", "failed", "expired-unexecuted"].includes(r.status)) throw new Error("CYCLE_JOURNAL_RECEIPT");
+    rawAmount(r.payerDebitLamports); signatures.add(r.signature);
+  }
+  if (state.pending) {
+    const p = state.pending, tx = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64"));
+    if (p.messageHash !== sha256(tx.message.serialize()) || p.policyHash !== state.policyHash || ![state.owner, state.keeper].includes(p.payer) || tx.message.staticAccountKeys[0].toBase58() !== p.payer || tx.message.header.numRequiredSignatures !== 1 || tx.signatures.some(s => s.some(b => b !== 0)) || !Number.isSafeInteger(p.expiresAt) || !Number.isSafeInteger(p.lastValidBlockHeight) || p.lastValidBlockHeight < 0) throw new Error("CYCLE_JOURNAL_PENDING_MESSAGE");
+    rawAmount(p.simulatedPayerDebitLamports);
+    if ((p.signature === null) !== (p.signedTransaction === null)) throw new Error("CYCLE_JOURNAL_SIGNATURE_LATCH");
+    if (p.signedTransaction) {
+      const signed = assertSignedBy(p.signedTransaction, p.payer);
+      if (sha256(signed.message.serialize()) !== p.messageHash || bs58.encode(signed.signatures[0]) !== p.signature) throw new Error("CYCLE_JOURNAL_SIGNATURE_LATCH");
+    }
+  }
+  if (state.phase === "complete" && (rawAmount(state.burnedSharesRaw) < rawAmount(state.mintedSharesRaw) || (rawAmount(state.contributedUsdcRaw) > 0n && !state.exitGenerationSignature && !state.receipts.some(r => r.action === "cancel" && r.status === "finalized")))) throw new Error("CYCLE_NATIVE_EXIT_OUTSTANDING");
+  if (state.phase === "complete" && (state.pending || !state.nativeClaimsClear || state.recoveryRequired)) throw new Error("CYCLE_OUTSTANDING_OBLIGATIONS");
+}
+/** Mutate only under the durable lease. The caller MUST await the journal commit before sending. */
+export function bindCycleSubmission(state: CycleState, signedTransaction: string, now = Date.now()): string {
+  const p = state.pending; if (!p || p.expiresAt <= now) throw new Error("CYCLE_DRAFT_MISSING_OR_EXPIRED");
+  const signed = assertSignedBy(signedTransaction, p.payer);
+  if (sha256(signed.message.serialize()) !== p.messageHash || signed.message.header.numRequiredSignatures !== 1) throw new Error("CYCLE_SIGNED_MESSAGE_CHANGED");
+  const signature = bs58.encode(signed.signatures[0]);
+  if (p.signature && p.signature !== signature) throw new Error("CYCLE_INFLIGHT_SIGNATURE_CONFLICT");
+  p.signature = signature; p.signedTransaction = signedTransaction;
+  return signature;
+}
+export type CycleRpc = (fn: string, args: Record<string, unknown>) => Promise<unknown>;
+export function cycleRpcFromEnv(): CycleRpc {
+  return async (fn, args) => {
+    const db = createServiceSupabase(); if (!db) throw new Error("CYCLE_DURABLE_SERVICE_ROLE_REQUIRED");
+    const { data, error } = await db.rpc(fn, args);
+    if (error) throw new Error(`CYCLE_JOURNAL_UNAVAILABLE:${error.code ?? "storage"}`);
+    return data;
+  };
+}
+/** Shared Postgres row + non-expiring lease. Never /tmp, a relative .data path, or process memory. */
+export class CycleJournal {
+  private initial: CycleState;
+  private rpc: CycleRpc;
+  constructor(policy: CyclePolicy, rpc: CycleRpc = cycleRpcFromEnv()) { this.initial = initialCycleState(policy); this.rpc = rpc; }
+  async read(): Promise<CycleState> {
+    const value = await this.rpc("read_insiderindex_cycle", { p_operation_id: this.initial.operationId });
+    if (value === null) return structuredClone(this.initial);
+    if (!value || typeof value !== "object" || !("state" in value)) throw new Error("CYCLE_JOURNAL_UNREADABLE");
+    const state = value.state as CycleState; assertCycleState(state, this.initial); return state;
+  }
+  async update<R>(fn: (state: CycleState) => R | Promise<R>): Promise<R> {
+    const token = randomUUID(), identity = { p_operation_id: this.initial.operationId, p_token: token };
+    const raw = await this.rpc("lock_insiderindex_cycle", { ...identity, p_initial: this.initial });
+    let failed = false;
+    try {
+      if (!raw || typeof raw !== "object" || !("state" in raw) || !("revision" in raw) || !Number.isSafeInteger(raw.revision)) throw new Error("CYCLE_JOURNAL_UNREADABLE");
+      const state = raw.state as CycleState; assertCycleState(state, this.initial);
+      const result = await fn(state); assertCycleState(state, this.initial);
+      await this.rpc("write_insiderindex_cycle", { ...identity, p_revision: raw.revision, p_state: state });
+      return result;
+    } catch (error) { failed = true; throw error; }
+    finally {
+      try { await this.rpc("release_insiderindex_cycle", identity); }
+      catch { if (!failed) throw new Error("CYCLE_JOURNAL_RELEASE_FAILED_RECOVERY_REQUIRED"); }
+    }
+  }
+}
