@@ -8,6 +8,7 @@ import { cycleTestPolicy, cycleTestOwner, cycleTestKeeper } from "./support/cycl
 import { localCycleReceipt } from "./support/cycle-receipt-vm.mts";
 import { prepareCycleStep } from "../src/lib/index-vaults/cycle-prepare.ts";
 import { cycleDb } from "./support/cycle-db.mts";
+import { cycleKeeperTick } from "../src/lib/index-vaults/cycle-keeper.ts";
 import { CycleRunner } from "../src/lib/index-vaults/cycle-runner.ts";
 import { initialCycleState, CycleJournal } from "../src/lib/index-vaults/cycle-store.ts";
 import { observeCycle } from "../src/lib/index-vaults/cycle-observer.ts";
@@ -96,7 +97,8 @@ test("durable definition-driven controller executes separate owner/keeper steps 
       }
       const signer = actor === "owner" ? cycleTestOwner : cycleTestKeeper, signed = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64")); signed.sign([signer]);
       const signedTransaction = Buffer.from(signed.serialize()).toString("base64");
-      const submitted = actor === "owner" ? (await api({ action: "submit", auth, signedTransaction })).submission : await runner.submit(actor, signedTransaction);
+      const submitted = actor === "owner" ? (await api({ action: "submit", auth, signedTransaction })).submission : await cycleKeeperTick(runner, { execute: true, signer: cycleTestKeeper });
+      assert("signature" in submitted && typeof submitted.signature === "string");
       const rpc = transactions.get(submitted.signature)!;
       assert.equal(rpc.transaction.signatures[0], bs58.encode(signed.signatures[0]));
       const receipt = decodeCycleReceipt(rpc, { signature: rpc.transaction.signatures[0], messageHash: p.messageHash, payer: p.payer, owner: policy.owner, vault: policy.vault, shareMint: policy.shareMint, operationId: policy.operationId, minSlot: p.minSlot, mints: chain.mintBindings });
@@ -105,6 +107,10 @@ test("durable definition-driven controller executes separate owner/keeper steps 
       assert.equal(state.pending, null);
       return receipt;
     }
+    const dryState = await journal.read();
+    const dry = await cycleKeeperTick(runner); assert.equal(dry.mode, "dry-run");
+    assert.deepEqual(await journal.read(), dryState, "dry run does not write a draft or account a rebalance");
+    await assert.rejects(cycleKeeperTick(runner, { execute: true, signer: cycleTestOwner }), /EXTERNAL_KEY_REQUIRED/);
     await execute("keeper", "setup-keeper"); await execute("keeper", "setup-keeper");
     assert.equal((await prepareCycleStep({ ...input, actor: "keeper" })).action, "wait");
     for (const l of record.vaultLegs) vm.seed(policy.keeper, l.mint, 321n, TOKEN_2022_PROGRAM_ID);

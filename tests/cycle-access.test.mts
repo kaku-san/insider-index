@@ -4,6 +4,7 @@ import bs58 from "bs58";
 import { ed25519 } from "@noble/curves/ed25519";
 import { cycleTestPolicy, cycleTestOwner, cycleTestKeeper } from "./support/cycle-policy.mts";
 import { createCycleAccessChallenge, assertCycleAccess } from "../src/lib/index-vaults/cycle-access.ts";
+import { validateCycleAccessMessage } from "../src/lib/index-vaults/cycle-access-parse.ts";
 import { configuredCyclePolicy, parseCyclePolicy } from "../src/lib/index-vaults/cycle-config.ts";
 import { handleCycleRequest } from "../src/lib/index-vaults/cycle-api.ts";
 const origin = "https://insiderindex.xyz", env = { STOCKLANA_CYCLE_AUTH_SECRET: "SYNTHETIC-TEST-AUTH-SECRET-NOT-PRODUCTION" };
@@ -12,6 +13,9 @@ function signature(message: string, key = cycleTestOwner) { return bs58.encode(e
 test("private access requires actual owner message signature and binds origin, operation, policy and deadline", () => {
   const p = policy(), challenge = createCycleAccessChallenge(p, origin, env, 10000), proof = { token: challenge.token, signature: signature(challenge.message) };
   assertCycleAccess(proof, p, origin, env, 10001);
+  assert.equal(validateCycleAccessMessage(challenge, p, origin, p.owner, 10001), challenge.message);
+  assert.throws(() => validateCycleAccessMessage({ ...challenge, message: "Authorize unrelated spending" }, p, origin, p.owner, 10001), /CHALLENGE_TEXT/);
+  assert.throws(() => validateCycleAccessMessage(challenge, p, origin, p.keeper, 10001), /CHALLENGE_SCOPE/);
   assert.throws(() => assertCycleAccess({ ...proof, signature: signature(challenge.message, cycleTestKeeper) }, p, origin, env, 10001), /ACCESS_SIGNATURE/);
   assert.throws(() => assertCycleAccess({ ...proof, token: `${proof.token}a` }, p, origin, env, 10001), /ACCESS_INVALID/);
   assert.throws(() => assertCycleAccess(proof, p, "https://other.example", env, 10001), /ACCESS_EXPIRED_OR_SCOPE/);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { KakuAdmin } from "@/components/kaku-admin";
 import { IndexVaultAdmin } from "@/components/index-vault-admin";
+import { PrivateCycleAdmin } from "@/components/private-cycle-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -13,5 +14,6 @@ export default function KakuAdminPage() {
   return <>
     <KakuAdmin />
     <IndexVaultAdmin />
+    <PrivateCycleAdmin />
   </>;
 }

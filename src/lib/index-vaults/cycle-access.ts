@@ -4,17 +4,13 @@ import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import { canonicalJson } from "./amounts.ts";
 import { cyclePolicyHash, type CyclePolicy } from "./cycle-policy-parse.ts";
-export interface CycleAccessChallenge { token: string; message: string; expiresAt: number; }
-export interface CycleAccessProof { token: string; signature: string; }
-type Claims = { origin: string; owner: string; operationId: string; policyHash: string; nonce: string; issuedAt: number; expiresAt: number; };
+import { cycleAccessMessage as message, type CycleAccessClaims as Claims, type CycleAccessChallenge } from "./cycle-access-parse.ts";
+export type { CycleAccessChallenge, CycleAccessProof } from "./cycle-access-parse.ts";
 const LIFETIME_MS = 120000;
 function secret(env: Record<string, string | undefined>): string {
   const value = env.STOCKLANA_CYCLE_AUTH_SECRET;
   if (!value || value.length < 32 || value.length > 1024) throw new Error("CYCLE_ACCESS_UNCONFIGURED");
   return value;
-}
-function message(c: Claims): string {
-  return `InsiderIndex.xyz private native cycle access\nOrigin: ${c.origin}\nWallet: ${c.owner}\nOperation: ${c.operationId}\nPolicy: ${c.policyHash}\nNonce: ${c.nonce}\nExpires: ${new Date(c.expiresAt).toISOString()}\nRead, prepare unsigned steps and reconcile this operation. Relay ONLY my separately signed exact transaction. This message is not a transaction, token approval, or discretionary spending authority.`;
 }
 function mac(encoded: string, env: Record<string, string | undefined>): Buffer { return createHmac("sha256", secret(env)).update(`insiderindex-cycle-access-v1:${encoded}`).digest(); }
 export function createCycleAccessChallenge(policy: CyclePolicy, origin: string, env: Record<string, string | undefined> = process.env, now = Date.now()): CycleAccessChallenge {
