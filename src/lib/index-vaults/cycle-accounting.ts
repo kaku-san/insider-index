@@ -33,7 +33,7 @@ export function assertMintEffects(input: {
 /** Native accounting buckets versus ALL actual vault-owned token balances. Vault-rebalance
  * intents describe existing backing, unlike separate investor contribution/withdrawal credits.
  * Unknown/residual assets never vanish because their target weight is zero. */
-export function assertCycleBacking(vault: Vault, intents: readonly UIRebalanceIntent[], actual: ReadonlyMap<string, bigint>, purpose: "strict" | "recovery" = "strict"): Map<string, bigint> {
+export function assertCycleBacking(vault: Vault, intents: readonly Pick<UIRebalanceIntent, "chain_data">[], actual: ReadonlyMap<string, bigint>, purpose: "strict" | "recovery" = "strict"): Map<string, bigint> {
   const composition = vault.composition.slice(0, vault.numTokens);
   const expected = new Map(composition.map(t => [t.mint.toBase58(), BigInt(t.amount.toString())]));
   if (expected.size !== composition.length) throw new Error("CYCLE_DUPLICATE_NATIVE_SLOT");

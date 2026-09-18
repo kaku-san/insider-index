@@ -13,6 +13,7 @@ import { address, hashObject, rawAmount, sdkRawAmount, sha256 } from "./amounts.
 import { assertCycleExecutionAuthorized, cyclePolicyHash, type CyclePolicy } from "./cycle-policy.ts";
 import { assertMintEffects, creditSaleAmount, fractionRaw } from "./cycle-accounting.ts";
 import { observeCycle, cycleAta, type CycleChain } from "./cycle-observer.ts";
+import { preflightCycleConnectionRoutes } from "./cycle-route-preflight.ts";
 import { buildCycleRoute, assertCycleRouteInstruction, type PoolMetadata } from "./cycle-routes.ts";
 import { buildCycleFillWire, cycleInstructions, encodeCycleWire, type CycleWire } from "./cycle-wire.ts";
 import { MAINNET_USDC, NATIVE_DEFAULT_BINDINGS } from "./native-defaults.ts";
@@ -37,17 +38,7 @@ function localBalance(chain: CycleChain, accounts: Map<string, AccountInfo<Buffe
 
 /** Read-only both-direction prerequisite, not a guarantee of market prices at a later redemption. */
 export async function preflightCycleRoutes(native: NativeVaultBuilders, record: PersistedVaultDefinition, policy: CyclePolicy, metadata?: PoolMetadata) {
-  let minimum = 0n;
-  const routes = [];
-  for (const leg of record.vaultLegs) {
-    const input = rawAmount(policy.limits.depositUsdcRaw) * BigInt(leg.targetWeightBps) / 10000n;
-    if (input === 0n) throw new Error("CYCLE_AMOUNT_CANNOT_REPRESENT_EVERY_LEG");
-    const buy = await buildCycleRoute({ connection: native.connection, leg, owner: policy.keeper, inputMint: MAINNET_USDC, outputMint: leg.mint, amountInRaw: input.toString(), slippageBps: policy.limits.swapSlippageBps, maxAgeMs: policy.limits.quoteMaxAgeMs, metadata });
-    const exit = await buildCycleRoute({ connection: native.connection, leg, owner: policy.owner, inputMint: leg.mint, outputMint: MAINNET_USDC, amountInRaw: buy.minOutRaw, slippageBps: policy.limits.swapSlippageBps, maxAgeMs: policy.limits.quoteMaxAgeMs, metadata });
-    minimum += rawAmount(exit.minOutRaw); routes.push(buy, exit);
-  }
-  if (routes.some(r => r.expiresAt <= Date.now()) || minimum < rawAmount(policy.limits.minExitUsdcRaw)) throw new Error("CYCLE_EXIT_PREREQUISITE_NOT_MET");
-  return { quotedExitMinimumUsdcRaw: minimum.toString(), expiresAt: Math.min(...routes.map(r => r.expiresAt)) };
+  return preflightCycleConnectionRoutes(native.connection, record, policy, metadata);
 }
 
 /** Internal native execution planner. Every returned wire is unsigned and actually simulated.

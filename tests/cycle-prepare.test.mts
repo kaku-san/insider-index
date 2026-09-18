@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import bs58 from "bs58";
-import { VersionedTransaction, type VersionedTransactionResponse } from "@solana/web3.js";
+import { VersionedTransaction, TransactionMessage, PublicKey, SystemProgram, type VersionedTransactionResponse } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { allSevenVm, definition } from "./support/all-seven-vm.mts";
 import { cycleTestPolicy, cycleTestOwner, cycleTestKeeper } from "./support/cycle-policy.mts";
@@ -12,6 +12,10 @@ import { CycleRunner } from "../src/lib/index-vaults/cycle-runner.ts";
 import { initialCycleState, CycleJournal } from "../src/lib/index-vaults/cycle-store.ts";
 import { observeCycle } from "../src/lib/index-vaults/cycle-observer.ts";
 import { decodeCycleReceipt } from "../src/lib/index-vaults/cycle-receipts.ts";
+import { ed25519 } from "@noble/curves/ed25519";
+import { handleCycleRequest } from "../src/lib/index-vaults/cycle-api.ts";
+import { sha256 } from "../src/lib/index-vaults/amounts.ts";
+import { validateCycleOwnerTransaction } from "../src/lib/frontend/cycle-wallet.ts";
 import { auditCycleWalletHistory, readCycleWalletHistory } from "../src/lib/frontend/cycle-history.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
 
@@ -23,6 +27,7 @@ test("durable definition-driven controller executes separate owner/keeper steps 
     Date.now = vm.now;
     // Synthetic authorization ONLY inside a no-network VM. These are NOT pilot recommendations
     // or captain approvals; no real key, RPC send, production write or wallet is involved.
+    policy.notBeforeSlot = Number(vm.svm.getClock().slot);
     policy.expiresAt = vm.now() + 3600000;
     policy.financialExecutionAuthorized = true; policy.approvalReference = "LOCAL-TEST-ONLY-NOT-LIVE-AUTHORITY";
     policy.economics = { keeperSurplus: "native-filler-retains", shareQuantization: "bounded-native-units", residualCash: "native-backing", issuerAuthorityRiskApproved: true, nativeSettlementRiskApproved: true };
@@ -39,6 +44,17 @@ test("durable definition-driven controller executes separate owner/keeper steps 
     const journal = new CycleJournal(policy, database.rpc);
     const runner = new CycleRunner({ native: vm.native, policy, journal, loadDefinition: async () => record, metadata: vm.metadata });
     const transactions = new Map<string, VersionedTransactionResponse>();
+    vm.connection.isBlockhashValid = async () => ({ context: { slot: Number(vm.svm.getClock().slot) }, value: true });
+    vm.connection.getSignaturesForAddress = async (address, options) => {
+      const matching = [...transactions.values()].reverse().filter(t => {
+        const keys = t.transaction.message.getAccountKeys({ accountKeysFromLookups: t.meta!.loadedAddresses });
+        return Array.from({ length: keys.length }, (_, n) => keys.get(n)!.toBase58()).includes(address.toBase58());
+      });
+      const from = options?.before ? matching.findIndex(t => t.transaction.signatures[0] === options.before) + 1 : 0;
+      return matching.slice(from, from + (options?.limit ?? 100)).map(t => ({ signature: t.transaction.signatures[0], slot: t.slot, err: null, memo: null, blockTime: t.blockTime, confirmationStatus: "finalized" }));
+    };
+    // Program metadata is real local execution. Ordering/validity headers are synthetic, not mainnet finality.
+    vm.connection.getBlockSignatures = async () => ({ blockhash: vm.svm.latestBlockhash(), previousBlockhash: vm.svm.latestBlockhash(), parentSlot: Number(vm.svm.getClock().slot) - 1, signatures: [...transactions.keys()], blockTime: null });
     vm.connection.getTransaction = (async (signature: string) => transactions.get(signature) ?? null) as typeof vm.connection.getTransaction;
     vm.connection.getSignatureStatuses = async signatures => ({ context: { slot: Number(vm.svm.getClock().slot) }, value: signatures.map(s => transactions.has(s) ? { slot: transactions.get(s)!.slot, confirmations: null, err: null, confirmationStatus: "finalized" } : null) });
     vm.connection.getBlockHeight = async () => Number(vm.svm.getClock().slot);
@@ -53,16 +69,38 @@ test("durable definition-driven controller executes separate owner/keeper steps 
     await assert.rejects(prepareCycleStep({ ...input, actor: "owner" }), /KEEPER_SETUP_REQUIRED/);
     const tiny = { ...policy, limits: { ...policy.limits, depositUsdcRaw: "500000" } };
     await assert.rejects(prepareCycleStep({ ...input, policy: tiny, state: initialCycleState(tiny), actor: "keeper" }), /AMOUNT_CANNOT_REPRESENT_MINIMUM_SHARES/);
+    const apiEnv = { STOCKLANA_CYCLE_AUTH_SECRET: "SYNTHETIC-LOCAL-ONLY-ACCESS-NOT-LIVE-AUTHORITY", STOCKLANA_CYCLE_POLICIES_JSON: JSON.stringify([policy]) };
+    async function api(body: Record<string, unknown>) {
+      const response = await handleCycleRequest(new Request("https://insiderindex.xyz/api/vaults/cycle", { method: "POST", headers: { origin: "https://insiderindex.xyz", "content-type": "application/json" }, body: JSON.stringify({ operationId: policy.operationId, ...body }) }), { env: apiEnv, runner: () => runner });
+      const result = await response.json(); assert.equal(response.status, 200, JSON.stringify(result)); return result;
+    }
     async function execute(actor: "owner" | "keeper", expected: string, request: "next" | "withdraw" = "next") {
-      const prepared = await runner.prepare(actor, request);
+      const access = actor === "owner" ? await api({ action: "challenge", wallet: policy.owner }) : null;
+      const auth = access ? { token: access.challenge.token, signature: bs58.encode(ed25519.sign(new TextEncoder().encode(access.challenge.message), cycleTestOwner.secretKey.subarray(0, 32))) } : null;
+      const prepared = actor === "owner" ? (await api({ action: "prepare", request, auth })).preparation as Awaited<ReturnType<typeof runner.prepare>> : await runner.prepare(actor, request);
       assert.equal(prepared.action, expected, prepared.reason); assert(prepared.pending);
       const p = prepared.pending, chain = await observeCycle(vm.native, record, policy, request === "withdraw" || state.phase === "exiting" ? "recovery" : "strict");
+      if (actor === "owner") {
+        const walletInput = { connection: vm.connection, policy, record, state: await journal.read(), pending: p, wallet: policy.owner, metadata: vm.metadata };
+        await validateCycleOwnerTransaction(walletInput);
+        if (expected === "contribute") {
+          await assert.rejects(validateCycleOwnerTransaction({ ...walletInput, pending: { ...p, exactInputRaw: "100000001" } }), /CYCLE_WALLET_CONTRIBUTION/);
+          await assert.rejects(validateCycleOwnerTransaction({ ...walletInput, state: { ...walletInput.state, ownerSolDebitLamports: "0" } }), /HISTORY_DIVERGENCE/);
+          const altered = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64"));
+          const message = TransactionMessage.decompile(altered.message);
+          const malicious = new VersionedTransaction(new TransactionMessage({ ...message, instructions: [...message.instructions, SystemProgram.transfer({ fromPubkey: new PublicKey(policy.owner), toPubkey: new PublicKey(policy.keeper), lamports: 1 })] }).compileToV0Message());
+          const changed = { ...p, txBase64: Buffer.from(malicious.serialize()).toString("base64"), messageHash: sha256(malicious.message.serialize()) };
+          await assert.rejects(validateCycleOwnerTransaction({ ...walletInput, pending: changed, state: { ...walletInput.state, pending: changed } }), /SEMANTIC_MESSAGE_MISMATCH/, "even a consistent server hash/summary cannot authorize an extra recipient");
+        }
+        if (expected === "withdraw") await assert.rejects(validateCycleOwnerTransaction({ ...walletInput, pending: { ...p, exactInputRaw: (BigInt(p.exactInputRaw!) + 1n).toString() } }), /BURN_AMOUNT/);
+      }
       const signer = actor === "owner" ? cycleTestOwner : cycleTestKeeper, signed = VersionedTransaction.deserialize(Buffer.from(p.txBase64, "base64")); signed.sign([signer]);
-      const submitted = await runner.submit(actor, Buffer.from(signed.serialize()).toString("base64"));
+      const signedTransaction = Buffer.from(signed.serialize()).toString("base64");
+      const submitted = actor === "owner" ? (await api({ action: "submit", auth, signedTransaction })).submission : await runner.submit(actor, signedTransaction);
       const rpc = transactions.get(submitted.signature)!;
       assert.equal(rpc.transaction.signatures[0], bs58.encode(signed.signatures[0]));
       const receipt = decodeCycleReceipt(rpc, { signature: rpc.transaction.signatures[0], messageHash: p.messageHash, payer: p.payer, owner: policy.owner, vault: policy.vault, shareMint: policy.shareMint, operationId: policy.operationId, minSlot: p.minSlot, mints: chain.mintBindings });
-      Object.assign(state, await runner.reconcile());
+      Object.assign(state, actor === "owner" ? (await api({ action: "reconcile", auth })).state : await runner.reconcile());
       assert.equal(state.recoveryRequired, null);
       assert.equal(state.pending, null);
       return receipt;
@@ -107,16 +145,6 @@ test("durable definition-driven controller executes separate owner/keeper steps 
     assert.equal(walletHistory.externalCreditDisposal, false);
     assert([...walletHistory.remainingCredits.values()].every(n => n === 0n));
     assert.equal(auditCycleWalletHistory([...transactions.values()], { ...policy, operationId: "77777777-7777-4777-8777-777777777777" }, bindings).remainingCredits.size, 0, "another operation cannot reuse these claims");
-    vm.connection.getSignaturesForAddress = async (address, options) => {
-      const matching = [...transactions.values()].reverse().filter(t => {
-        const keys = t.transaction.message.getAccountKeys({ accountKeysFromLookups: t.meta!.loadedAddresses });
-        return Array.from({ length: keys.length }, (_, n) => keys.get(n)!.toBase58()).includes(address.toBase58());
-      });
-      const from = options?.before ? matching.findIndex(t => t.transaction.signatures[0] === options.before) + 1 : 0;
-      return matching.slice(from, from + (options?.limit ?? 100)).map(t => ({ signature: t.transaction.signatures[0], slot: t.slot, err: null, memo: null, blockTime: t.blockTime, confirmationStatus: "finalized" }));
-    };
-    // Program metadata is real local execution. This ordering header is synthetic, not mainnet finality.
-    vm.connection.getBlockSignatures = async () => ({ blockhash: vm.svm.latestBlockhash(), previousBlockhash: vm.svm.latestBlockhash(), parentSlot: Number(vm.svm.getClock().slot) - 1, signatures: [...transactions.keys()], blockTime: null });
     assert.deepEqual(await readCycleWalletHistory(vm.connection, policy, bindings), walletHistory);
     assert.equal((await journal.read()).phase, "complete");
     assert(BigInt(state.recoveredUsdcRaw) >= BigInt(policy.limits.minExitUsdcRaw));
