@@ -2,7 +2,7 @@
 
 Day-1 executable product: `/feed` → one catalog-listed xStock/Backpack print → Jupiter `/order` → explicit Privy wallet signature → Jupiter `/execute` → saved copy receipt. At least $1 USDC notional. Sells debit the stock token and receive USDC; they require an existing token balance. No basket Buy, multi-leg execution, native-vault release, Pyth or Hermes setup is part of W0.
 
-Home and person/index pages are research surfaces. Their trade CTA leads to the separate feed, not an inferred FMP-to-tape identity match. `/api/indexes/quote` and `/api/indexes/execute` remain `503`. Compliance banner and client self-attestation remain UX-only, not server-enforced identity or geography verification.
+Home and person/index pages remain research-first surfaces. Their trade CTA leads to the separate feed, not an inferred FMP-to-tape identity match; a native index CTA appears only when the per-vault deposit gate, public release flag and vault identity validate. `/api/indexes/quote` and `/api/indexes/execute` remain `503`. Compliance banner and client self-attestation remain UX-only, not server-enforced identity or geography verification.
 
 ## Receipt contract
 
@@ -23,7 +23,7 @@ Use the **Live product** URL at the top of `README.md`; the Barely Stable / Hetz
 2. Configure `NEXT_PUBLIC_PRIVY_APP_ID` at **build time**, mainnet `HELIUS_API_KEY`, `JUPITER_MODE=live` (optional `JUPITER_API_KEY`), server `FMP_API_KEY`, valid/rotated `AINVEST_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL` and server `SUPABASE_SERVICE_ROLE_KEY`. Allow the production origin in Privy. Production ignores stub/mock/preview overrides; still set `STOCKLANA_ALLOW_MOCKS=0` and remove `NEXT_PUBLIC_STOCKLANA_PREVIEW` to avoid accidental development previews. Never set `PYTH_*` or `HERMES_*`.
 3. Redeploy the reviewed commit; rebuild whenever public env changes. `/api/health` must report live Jupiter, Privy, Helius, no mocks, a nonempty catalog and `launch.receipts=true`. `ok`/`copyReady` mean configuration + storage readiness, **not** provider credential verification or proof a trade filled.
 4. Check `/api/disclosures`: the feed body is served from the committed PelosiTracker/FMP bundle (research-only rows, no mock source), with the live EDGAR/AInvest lanes reported `off` as provenance in `lanes` rather than probed or retried. Check `/api/people` reads saved FMP people. A key's presence alone is not evidence it works.
-5. Verify `/`, person and index pages say research-only, link to `/feed`, and cannot open a basket investment. POST both legacy basket endpoints and confirm `503`.
+5. Verify `/` remains indexes-first, person/index pages keep research disclosures and release-gated native preparation, and no legacy basket investment opens. POST both legacy basket endpoints and confirm `503`.
 6. An eligible participant connects a real Privy wallet, funds at least $1 USDC plus required network costs, opens a catalog-eligible print, attests, reviews the live quote and signs explicitly. Check the successful signature on mainnet and `persistence: "saved"`.
 7. Reload `/positions`, reconnect the same wallet, and confirm the receipt remains through a cold deployment/process. Check another address cannot be confused with this wallet. Never infer remaining holdings from receipts.
 

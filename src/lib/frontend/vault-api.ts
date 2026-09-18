@@ -1,4 +1,4 @@
-import { ApiError, PREVIEW_MODE, readApi, writeApi } from "./api";
+import { ApiError, readApi, writeApi } from "./api";
 
 export type Network = "devnet" | "mainnet-beta";
 export type RawAmount = string;
@@ -160,13 +160,30 @@ export function uiStateFrom(readiness: VaultReadiness | null, position?: IndexSh
   return "PREVIEW_ONLY";
 }
 
+type VaultIndexResponse = {
+  index?: {
+    vaultAddress?: string | null;
+    shareMint?: string | null;
+  };
+  depositsEnabled?: boolean;
+  depositReason?: string | null;
+  publicFundsEnabled?: boolean;
+};
+
 export async function getVaultReadiness(indexId: string): Promise<VaultReadiness | null> {
-  if (PREVIEW_MODE) {
-    const payload = await readApi<VaultReadiness>(`/api/indexes/${encodeURIComponent(indexId)}/vault`);
-    return payload;
-  }
   try {
-    return await readApi<VaultReadiness>(`/api/indexes/${encodeURIComponent(indexId)}/vault`);
+    const payload = await readApi<VaultIndexResponse>(`/api/vault-indexes/${encodeURIComponent(indexId)}`);
+    const publicFundsEnabled = payload.publicFundsEnabled === true;
+    const vaultAddress = payload.index?.vaultAddress;
+    const shareMint = payload.index?.shareMint;
+    const depositEnabled = payload.depositsEnabled === true && publicFundsEnabled && Boolean(vaultAddress && shareMint);
+    return {
+      indexId,
+      depositEnabled,
+      ready: depositEnabled,
+      blockers: depositEnabled ? [] : [payload.depositReason ?? (publicFundsEnabled ? "deposit-gate-closed" : "public-funds-disabled")],
+      identity: vaultAddress && shareMint ? { network: "mainnet-beta", vaultAccount: vaultAddress, shareMint, indexId } : null,
+    };
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;

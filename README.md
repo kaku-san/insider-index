@@ -21,7 +21,7 @@ In V1:
 - Every filer gets a **Pelosi-Tracker-style disclosed book** on `/p/[id]`: every ticker on their PTRs / Form 4s (`src/lib/fomo/book.ts`), sized from the reported bands as a range, tradable or not. A profile renders with one holding; basket buying remains unavailable regardless of book size
 - Day-1 alternative to research-only baskets: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
-- One-trade copying remains available separately. Native index entry is disabled until deployer setup, settlement and claim-recovery evidence pass
+- One-trade copying remains available separately. Native index entry is release-gated until deployer setup, settlement and claim-recovery evidence pass; enabled indexes expose the validated preparation flow
 - Performance is never invented: return / hit rate stay `—` until a real dated-trade price series exists
 - Native vaults are deployer-created/named; holders authorize entry/redemption, never fund rebalances. Policy-valid strategy/keeper automation is planned but currently read-only; see [native integration status](src/lib/index-vaults/README.md)
 - Social frontend: lime editorial discover, party-tinted profiles, person-index tickets, light/dark theme (`src/app` pages + `src/components` + `src/lib/frontend`)
@@ -53,7 +53,7 @@ EDGAR Form 4 + AInvest PTRs  →  book per filer (venue-tagged via the Solana ca
 | Book | `src/lib/fomo/book.ts` (pure): running net of PTR bands per ticker, Form 4 shares-after × price; `insights.ts` tags venue + copy eligibility |
 | Buy catalog | `src/lib/venues/solana-catalog.ts` — live xStocks + Backpack mints, `catalog-snapshot.json` fallback; `resolve.ts` picks xStock → Backpack → none; `prices.ts` Jupiter Price v3 |
 | Swaps | Individual trades: Jupiter Swap V2 `/order` → sign → `/execute` in `src/lib/jupiter.ts` (live keyless or keyed; stub in dev) |
-| Native indexes | `src/lib/index-vaults/adapter-contract.ts`; SDK `1.0.22`, read-only builders, durable create-draft journal (Supabase, `create-draft-store.ts`), public funds and USDC exits disabled. No second share mint. |
+| Native indexes | `src/lib/index-vaults/adapter-contract.ts`; SDK `1.0.22`, durable create-draft journal (Supabase, `create-draft-store.ts`), release-gated deposits and USDC exits. No second share mint. |
 | RPC | Helius URL helper + `@solana/kit` `createSolanaRpc`; browser reaches Helius via `POST /api/rpc` without seeing the key |
 | Cache | `src/lib/cache.ts` in-process memo (TTL, stale-while-revalidate); `src/instrumentation.ts` warms the tape at boot |
 | Persistence | Supabase saved FMP books + immutable holdings targets + persisted politician profile rankings + copy order contexts/receipts; production copy execution requires service-role storage, never memory fallback |
@@ -84,7 +84,7 @@ UI routes:
 - `/feed` the disclosure tape served from the committed PelosiTracker/FMP bundle (research-only rows, live lanes reported off); Everything / Following, search, buy/sell filter
 - `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges; for the 20 PelosiTracker handoff people the page is tracker-first (shown book, vault-ready index, FMP comparison, trades as info) with the FMP annual filing labelled as the older disclosure
 - `/indexes/tracker-[bioguide]` tracker-positions index: weights, mints, Raydium USDC pools, readiness, disabled Invest (exit is USDC only; nothing enabled)
-- `/indexes/[id]` model allocation, native lifecycle/fee disclosure and disabled investment panel; no holder rebalance button
+- `/indexes/[id]` model allocation, native lifecycle/fee disclosure and release-gated investment preparation; no holder rebalance button
 - `/disclosures/[id]` inspect
 - `/trade/[id]` one-print live Jupiter quote + explicit Privy approval/signature
 - `/positions` connected wallet’s saved copy receipts, no invented balances or NAV; existing devnet share diagnostic is separate and opt-in
@@ -157,7 +157,7 @@ Without keys, saved-data surfaces report unavailable data rather than inventing 
 
 Home shows saved FMP people and published holdings targets. Search covers the entire returned directory before the display limit; the show-more controls expose the remaining rows. Profiles use provider portraits and show the full annual book before separate published model targets. `/positions` is scoped to the connected wallet; opening the wallet address menu offers copy, positions and disconnect without logging out on a normal click.
 
-W0 trading is **one catalog-listed stock token per user-signed swap**, not basket ownership. Home/person/index CTAs are research-only with a primary link to `/feed`; devnet investment previews are not promoted on these surfaces. Native vault APIs remain unchanged and fail closed. Legacy basket quote/execute remain `503`. See [W0 launch checklist](docs/track-a-w0.md), [native integration status](src/lib/index-vaults/README.md) and [UI direction](docs/ui-design.md).
+W0 trading is **one catalog-listed stock token per user-signed swap**, not basket ownership. Native index pages expose only the release-gated preparation flow when the per-vault deposit gate, public-funds release flag, and vault identity are valid; otherwise they remain research/preview surfaces. Legacy basket quote/execute remain `503`. See [W0 launch checklist](docs/track-a-w0.md), [native integration status](src/lib/index-vaults/README.md) and [UI direction](docs/ui-design.md).
 
 ```bash
 npm run build

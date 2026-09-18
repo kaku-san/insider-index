@@ -21,6 +21,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         version: 1,
         status: index.status,
         published_at: index.updatedAt,
+        vaultAddress: index.vaultAddress,
+        shareMint: index.shareMint,
         definition: {
           basis: index.weightBasis,
           methodology: index.weightBasis,
