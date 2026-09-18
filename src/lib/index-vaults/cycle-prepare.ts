@@ -37,8 +37,8 @@ function localBalance(chain: CycleChain, accounts: Map<string, AccountInfo<Buffe
 }
 
 /** Read-only both-direction prerequisite, not a guarantee of market prices at a later redemption. */
-export async function preflightCycleRoutes(native: NativeVaultBuilders, record: PersistedVaultDefinition, policy: CyclePolicy, metadata?: PoolMetadata) {
-  return preflightCycleConnectionRoutes(native.connection, record, policy, metadata);
+export async function preflightCycleRoutes(native: NativeVaultBuilders, record: PersistedVaultDefinition, policy: CyclePolicy, metadata: PoolMetadata | undefined, repayments: Parameters<typeof preflightCycleConnectionRoutes>[4]) {
+  return preflightCycleConnectionRoutes(native.connection, record, policy, metadata, repayments);
 }
 
 /** Internal native execution planner. Every returned wire is unsigned and actually simulated.
@@ -105,7 +105,6 @@ export async function prepareCycleStep(input: {
   } else if (!i && state.phase === "new") {
     ownerOnly();
     if (setup.length) throw new Error("CYCLE_KEEPER_SETUP_REQUIRED_BEFORE_DEPOSIT");
-    const exits = await preflightCycleRoutes(native, record, policy, input.metadata); deadline = Math.min(deadline, exits.expiresAt);
     action = "create"; payload = first(await native.sdk.buyVaultTx({ buyer: payer, vault_mint: policy.shareMint, contributions: [{ mint: MAINNET_USDC, amount: sdkRawAmount(policy.limits.depositUsdcRaw) }], rebalance_slippage_bps: policy.limits.rebalanceSlippageBps, per_trade_rebalance_slippage_bps: policy.limits.perTradeSlippageBps }));
   } else if (i?.rebalanceType === RebalanceType.Deposit && i.currentAction === RebalanceAction.DepositTokens) {
     ownerOnly();
@@ -113,7 +112,8 @@ export async function prepareCycleStep(input: {
     const credited = i.tokens.find(t => t.mint.toBase58() === MAINNET_USDC)?.amount.toString() ?? "0";
     if (state.contributedUsdcRaw === "0") {
       if (credited !== "0") throw new Error("CYCLE_EXTERNAL_CONTRIBUTION_REQUIRES_RECEIPT");
-      const exits = await preflightCycleRoutes(native, record, policy, input.metadata); deadline = Math.min(deadline, exits.expiresAt);
+      const repayments = getSwapPairs(i, chain.vault).filter(pair => pair.outMint === MAINNET_USDC);
+      const exits = await preflightCycleRoutes(native, record, policy, input.metadata, repayments); deadline = Math.min(deadline, exits.expiresAt);
       action = "contribute"; inputMint = MAINNET_USDC; exactInputRaw = policy.limits.depositUsdcRaw;
       if (chain.balance(payer, MAINNET_USDC) < rawAmount(exactInputRaw)) throw new Error("CYCLE_INSUFFICIENT_USDC");
       payload = await native.sdk.depositTokensTx({ buyer: payer, rebalance_intent: chain.intentAddress, contributions: [{ mint: MAINNET_USDC, amount: sdkRawAmount(exactInputRaw) }] });
