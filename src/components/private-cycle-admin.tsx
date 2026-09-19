@@ -18,7 +18,6 @@ export function PrivateCycleAdmin() {
   const [busy, setBusy] = useState(false), [status, setStatus] = useState("Private operation configuration is required. Public funds remain disabled.");
   const [now, setNow] = useState(0), [retainedSignedStepId, setRetainedSignedStepId] = useState<string | null>(null);
   const running = useRef(false), signed = useRef(new Map<string, { stepId: string; wire: string }>());
-  const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.trim();
   const policy = reply?.policy, state = reply?.state, pending = state?.pending;
   const liveOwner = wallet.mode === "live" && !wallet.previewConnection && !!wallet.solanaAddress && (!policy || policy.owner === wallet.solanaAddress);
   const canSpend = liveOwner && !!policy && cycleActivationBlockers(policy).length === 0 && policy.expiresAt > now;
@@ -61,9 +60,8 @@ export function PrivateCycleAdmin() {
   }
   async function signStep() {
     if (!canSpend || !auth || !policy || !state || !reply?.record || !pending || pending.payer !== wallet.solanaAddress || pending.signature) throw new Error("No authorized unsigned owner step");
-    if (!rpc) throw new Error("Configure a browser-visible read-only NEXT_PUBLIC_SOLANA_RPC_URL before signing");
-    const [{ Connection, VersionedTransaction, PublicKey }, { validateCycleOwnerTransaction }, { sha256 }, { ed25519 }] = await Promise.all([import("@solana/web3.js"), import("../lib/frontend/cycle-wallet"), import("../lib/index-vaults/amounts"), import("@noble/curves/ed25519")]);
-    const connection = new Connection(rpc, { commitment: "confirmed", disableRetryOnRateLimit: true });
+    const [{ VersionedTransaction, PublicKey }, { validateCycleOwnerTransaction }, { createCycleReadConnection }, { sha256 }, { ed25519 }] = await Promise.all([import("@solana/web3.js"), import("../lib/frontend/cycle-wallet"), import("../lib/frontend/cycle-rpc"), import("../lib/index-vaults/amounts"), import("@noble/curves/ed25519")]);
+    const connection = createCycleReadConnection(window.location.origin);
     const validated = await validateCycleOwnerTransaction({ connection, policy, record: reply.record, state, pending, wallet: wallet.solanaAddress! });
     setStatus(`Validated ${pending.action}. Approve only the displayed exact owner transaction in your wallet.`);
     const wire = await wallet.signTransaction(pending.txBase64, "mainnet-beta"), transaction = VersionedTransaction.deserialize(Buffer.from(wire, "base64"));
@@ -104,7 +102,7 @@ export function PrivateCycleAdmin() {
         <p>Pending: {pending.action} · Payer: {pending.payer} · Expires: {new Date(pending.expiresAt).toISOString()}</p>
         <p>Message: {pending.messageHash} · Exact input: {pending.exactInputRaw ?? "none"} · Minimum USDC output: {pending.minOutputRaw ?? "not a conversion"}</p>
         <p>Signature: {pending.signature ?? "not latched; issued drafts still require recovery evidence"}</p>
-        <button disabled={busy || !auth || !canSpend || !rpc || pending.payer !== wallet.solanaAddress || !!pending.signature || pending.expiresAt <= now} onClick={() => void work(signStep)}>Validate independently & sign this step</button>{" "}
+        <button disabled={busy || !auth || !canSpend || pending.payer !== wallet.solanaAddress || !!pending.signature || pending.expiresAt <= now} onClick={() => void work(signStep)}>Validate independently & sign this step</button>{" "}
         <button disabled={busy || !auth || !liveOwner || pending.payer !== wallet.solanaAddress || !(pending.signedTransaction || retainedSignedStepId === pending.stepId)} onClick={() => void work(retry)}>Retry exact signed bytes</button>
       </div>}
     </>}
