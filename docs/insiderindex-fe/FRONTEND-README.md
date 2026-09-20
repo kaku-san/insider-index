@@ -14,12 +14,12 @@ People create discovery. Public disclosures create trust. The person index is th
 
 ## Compact person portfolio
 
-`/p/[id]` is intentionally short now:
+`/p/[id]` is one tabbed profile (`src/components/profile-view.tsx`):
 
-1. person identity + real portrait + performance surface + Follow / Share / Index CTA;
-2. tabs for Overview, Holdings, Moves and Sources;
-3. Overview keeps holdings and recent moves in one compact band;
-4. methodology, evidence and four-clock details live behind the Sources tab instead of extending the default page.
+1. person identity + real portrait + performance surface + Follow / Share;
+2. tabs for Stocks, Breakdown, Moves and About;
+3. Invest on that same view when the person index has a live vault (`publicIndexIsLive`); otherwise no fake Invest;
+4. methodology and source filings live behind About instead of extra pages.
 
 The offline performance curve is explicitly labelled `DESIGN PREVIEW CURVE`; it is not represented as production NAV.
 
@@ -124,7 +124,7 @@ POST /api/indexes/execute
 
 ## Important implementation boundary
 
-The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Index pages expose preparation only when the published per-vault deposit gate, `publicFundsEnabled` release flag, supported network, and vault/share identity all validate. Otherwise lifecycle calls fail closed; pages distinguish a missing vault (`Research only`) from a created but closed vault (`Deposits closed`) and link to holdings instead of presenting a fake investment action.
+The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Public pages show **Live / Invest** when `publicIndexIsLive` is true (created vault identity + per-index deposit gate). Wallet signing still requires `depositIsEnabled` (that gate plus `publicFundsEnabled`). Lifecycle calls fail closed; indexes without a vault stay Research with no fake Invest. Do not print internal flag names in the UI.
 
 The preparation UI is not a production-readiness claim: wallet ownership proof/session validation, RPC simulation, chain reconciliation and keeper infrastructure remain required before public funds are enabled.
 
