@@ -24,10 +24,14 @@ export async function handlePublicCycleRequest(request: Request, indexId: string
       if (Object.keys(input).length !== 2 || typeof input.wallet !== "string" || input.wallet.length > 44) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
       const wallet = new PublicKey(input.wallet);
       if (wallet.toBase58() !== input.wallet || !PublicKey.isOnCurve(wallet.toBytes())) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
-      const policies = configuredCyclePolicies(env).filter(p => p.indexId === indexId && p.owner === input.wallet);
-      if (!policies.length) throw new Error("CYCLE_PUBLIC_POLICY_UNAVAILABLE");
-      if (policies.length !== 1) throw new Error("CYCLE_PUBLIC_AMBIGUOUS_POLICY");
-      const policy = policies[0]; assertPublicCycleScope(policy);
+      const activePolicies = configuredCyclePolicies(env)
+        .filter(p => p.indexId === indexId)
+        .filter(p => publicCyclePolicyActive(p));
+      if (!activePolicies.length) throw new Error("CYCLE_PUBLIC_POLICY_UNAVAILABLE");
+      if (activePolicies.length !== 1) throw new Error("CYCLE_PUBLIC_AMBIGUOUS_POLICY");
+      const policy = activePolicies[0];
+      if (policy.owner !== input.wallet) throw new Error("CYCLE_PUBLIC_POLICY_UNAVAILABLE");
+      assertPublicCycleScope(policy);
       // Do not publish private budgets/approval references by wallet enumeration. Owner signs
       // access-only canonical text, then reads the full policy and checks this hash.
       return Response.json({ binding: { operationId: policy.operationId, owner: policy.owner, policyHash: cyclePolicyHash(policy) }, challenge: createCycleAccessChallenge(policy, origin, env) }, { headers });
