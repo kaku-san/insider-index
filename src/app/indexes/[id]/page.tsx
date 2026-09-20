@@ -3,6 +3,7 @@ import { ThematicIndexPage } from "@/components/thematic-index";
 import { TrackerIndex } from "@/components/tracker-index";
 import { peopleService } from "@/lib/fmp/server";
 import { isThematicIndex } from "@/lib/fomo/index-readiness";
+import { publicCycleIndexEnabled } from "@/lib/index-vaults/public-cycle-release";
 import { vaultIndexService } from "@/lib/index-vaults/server";
 import { getThematicView } from "@/lib/thematic/views";
 import { trackerPersonView } from "@/lib/tracker/views";
@@ -17,7 +18,8 @@ export default async function IndexPage({
   if (isThematicIndex({ id }) || id.startsWith("theme-")) {
     const view = getThematicView(id);
     const vaultId = view?.id ?? (id.startsWith("idx-theme-") ? id : `idx-theme-${id}`);
-    const initialVault = await vaultIndexService.get(vaultId).catch(() => null);
+    const savedVault = await vaultIndexService.get(vaultId).catch(() => null);
+    const initialVault = savedVault ? { ...savedVault, publicFundsEnabled: publicCycleIndexEnabled(savedVault) } : null;
     return <ThematicIndexPage key={id} id={id} initialData={view ? { index: view, storage: "static-feed" } : undefined} initialVault={initialVault} />;
   }
   // Vault-ready tracker-positions index built from FMP mids + xStock mints + observed Raydium pools.

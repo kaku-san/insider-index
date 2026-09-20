@@ -91,7 +91,7 @@ test("public deposit eligibility requires a complete identity and the global rel
   assert.deepEqual(noIdentity.blockers, ["This index is for research. Investing is not available yet."]);
 });
 
-test("a created deposit-gated vault is Live in the public UI without waiting on the global release", () => {
+test("a public index is Live only when the active signing path also allows deposits", () => {
   const mag7 = {
     vaultAddress: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh",
     shareMint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4",
@@ -99,10 +99,15 @@ test("a created deposit-gated vault is Live in the public UI without waiting on 
     depositsEnabled: true,
     publicFundsEnabled: false,
   };
-  assert.equal(publicIndexIsLive(mag7), true);
-  assert.equal(publicIndexStatus(mag7), "Live");
-  assert.equal(publicIndexStatusCopy("Live"), "You can invest in this index.");
+  assert.equal(publicIndexIsLive(mag7), false);
+  assert.equal(publicIndexStatus(mag7), "Coming soon");
+  assert.equal(publicIndexStatusCopy("Coming soon"), "This index has a vault. Investing is not open yet.");
   assert.equal(publicVaultDepositIsEnabled(mag7), false);
+
+  const liveMag7 = { ...mag7, publicFundsEnabled: true };
+  assert.equal(publicIndexIsLive(liveMag7), true);
+  assert.equal(publicIndexStatus(liveMag7), "Live");
+  assert.equal(publicIndexStatusCopy("Live"), "You can invest in this index.");
   assert.equal(depositIsEnabled(vaultReadinessFromIndex("idx-theme-mag7-caucus", {
     index: mag7, depositsEnabled: true, publicFundsEnabled: false,
   })), false);

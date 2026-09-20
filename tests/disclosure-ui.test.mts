@@ -39,7 +39,7 @@ const nativeIndex: PublicVaultDefinition = {
 const mag7Index: PublicVaultDefinition = {
   indexId: "idx-theme-mag7-caucus", kind: "thematic", personSlug: "mag7-caucus", bioguideId: null,
   name: "Mag7 Caucus", symbol: "IITMAGCA", status: "CREATABLE", network: "mainnet-beta", weightBasis: "thematic-multi-member-value",
-  depositsEnabled: true, depositReason: "all-mapped-legs-carry-an-observed-tradable-pool (still gated by VAULT_RELEASE.publicFundsEnabled)",
+  depositsEnabled: true, publicFundsEnabled: true, depositReason: "all-mapped-legs-carry-an-observed-tradable-pool (still gated by VAULT_RELEASE.publicFundsEnabled)",
   coverage: { tickerCount: 7, mappedLegCount: 7, vaultReadyLegCount: 7, mappableByWeightBps: 10000, tradableByWeightBps: 10000, poolReadyOfMappedBps: 10000 },
   provenance: { kind: "thematic", note: "Congress owns the Mag7" },
   legs: [{ ticker: "MSFT", provider: "xstock", mint: "mint-msft", bookWeightBps: 3448, targetWeightBps: 3448, vaultReady: true }],
@@ -71,8 +71,8 @@ test("unpublished books do not appear in the 20-index catalog", () => {
   assert.match(html, /No indexes match this view|Loading index catalog/);
 });
 
-test("a live vault shows Live/Invest even when the global funds release is still off", () => {
-  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index, nativeIndex]);
+test("a live vault shows Live/Invest only when its signing path is open", () => {
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index, nativeIndex], true);
   assert.match(html, /Mag7 Caucus/);
   assert.match(html, />Live</);
   assert.match(html, /href="\/indexes\/idx-theme-mag7-caucus"[^>]*>Invest/);
@@ -84,6 +84,33 @@ test("a live vault shows Live/Invest even when the global funds release is still
   assert.ok(html.slice(mag7At, mag7At + 2500).includes("Invest"));
   assert.ok(html.slice(exampleAt, exampleAt + 2500).includes("View"));
   assert.ok(!html.slice(exampleAt, exampleAt + 2500).includes("Invest"));
+});
+
+test("home highlights the designated people and themes in the featured order", () => {
+  const featured = [
+    ["insiderindex-josh-gottheimer", "Josh Gottheimer", "person"],
+    ["insiderindex-nancy-pelosi", "Nancy Pelosi", "person"],
+    ["insiderindex-shri-thanedar", "Shri Thanedar", "person"],
+    ["insiderindex-lisa-mcclain", "Lisa McClain", "person"],
+    ["insiderindex-julia-letlow", "Julia Letlow", "person"],
+    ["idx-theme-mag7-caucus", "Mag7 Caucus", "thematic"],
+    ["idx-theme-silicon-hill", "Silicon Hill", "thematic"],
+    ["idx-theme-fresh-ink", "Fresh Ink", "thematic"],
+    ["idx-theme-bipartisan-handshake", "Bipartisan Handshake", "thematic"],
+    ["idx-theme-house-heat", "House Heat", "thematic"],
+  ] as const;
+  const indexes: PublicVaultDefinition[] = featured.map(([indexId, name, kind]) => ({
+    ...nativeIndex,
+    indexId,
+    name,
+    kind,
+    personSlug: indexId.replace(/^insiderindex-/, ""),
+    weightBasis: kind === "person" ? "annual-holding-value-midpoint" : "thematic-multi-member-value",
+  }));
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, indexes);
+  const offsets = featured.map(([indexId]) => html.indexOf(`/indexes/${indexId}`));
+  assert.ok(offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1])));
+  assert.equal((html.match(/>Featured<\/span>/g) ?? []).length, 10);
 });
 
 test("a failed disclosure tape renders a retryable error instead of an empty tape", () => {
