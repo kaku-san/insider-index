@@ -84,7 +84,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
     phase==="CONVERTING"||phase==="COMPLETE_USDC"?[...withdrawBase,"CONVERTING","COMPLETE_USDC"]:
     withdrawBase;
   const title=mode==="deposit"?`Invest in ${indexName}`:`Cash out ${indexName}`;
-  const canPrepare=hasVault;
+  const canPrepare=hasVault&&(mode!=="deposit"||depositIsEnabled(readiness));
   const txs=prepared?.transactions??[];
 
   function start(){
@@ -97,7 +97,6 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
   }
 
   async function doPrepare(){
-    if(mode==="deposit"&&!depositIsEnabled(readiness)){setScreen("prepare");return;}
     if(!canPrepare){setScreen("prepare");return;}
     if(!wallet.authenticated||!wallet.solanaAddress){setConnectOpen(true);return;}
     setBusy(true);setError(null);

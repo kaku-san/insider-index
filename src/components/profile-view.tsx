@@ -14,8 +14,9 @@ import { FilingLink } from "./person-portfolio";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { Icon } from "./social/icon";
 import { VaultFlow } from "./vault-flow";
+import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import { getVaultReadiness, publicIndexIsLive, publicIndexStatus, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
 import { formatUsd } from "@/lib/format";
@@ -97,15 +98,18 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const legacyNeeded=!research.loading&&!research.data;
  const legacy=useResource<LegacyProfileData>(legacyNeeded?`/api/profiles/${encodeURIComponent(id)}`:null);
  const ui=useUI();
+ const wallet=usePrivySolana();
  const vaultDir=useResource<{indexes:PublicVaultDefinition[];publicFundsEnabled:boolean}>("/api/vault-indexes");
  const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"stocks"|"breakdown"|"moves"|"about">("stocks");
  const[investOpen,setInvestOpen]=useState(false),[investMode,setInvestMode]=useState<"deposit"|"withdraw">("deposit");
  const[vault,setVault]=useState<VaultReadiness|null>(null);
+ const[position,setPosition]=useState<IndexSharePosition|null>(null);
  const researchBook=research.data,legacyProfile=legacy.data?.profile??null;
  const trackerPerson=tracker.data?.person??null;
  const vaultIndex=vaultDir.data?.indexes.find(item=>item.bioguideId===id);
  const vaultIndexId=vaultIndex?.indexId??null;
  useEffect(()=>{let alive=true;if(!vaultIndexId){setVault(null);return;}getVaultReadiness(vaultIndexId).then(value=>{if(alive)setVault(value)}).catch(()=>{if(alive)setVault(null)});return()=>{alive=false}},[vaultIndexId]);
+ useEffect(()=>{let alive=true;if(!vaultIndexId||!wallet.solanaAddress){setPosition(null);return;}getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(alive)setPosition(value)}).catch(()=>{if(alive)setPosition(null)});return()=>{alive=false}},[vaultIndexId,wallet.solanaAddress]);
  const loading=!trackerPerson&&!researchBook&&!legacyProfile&&(tracker.loading||research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));
  if(loading)return <Skeleton cards={3}/>;
  if(!trackerPerson&&!researchBook&&!legacyProfile&&tracker.error&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{tracker.reload();research.reload();legacy.reload()}}/>;
@@ -121,8 +125,11 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const activity=trackerMoves.length?trackerMoves:(researchBook?.activity?.length?researchActivity(researchBook):legacyActivity(legacy.data?.trades??[]));const snapshot=researchBook?[...researchBook.snapshots].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0]:null;const fullItems=snapshot?.items??[];const mappedCount=researchBook?.publishedIndex?.constituents.length??holdings.filter(x=>x.mint).length;const following=ui.deviceFollows.includes(id);const latestFiling=trackerPerson?.asOf??snapshot?.filingDate??snapshot?.referenceDate??activity[0]?.filedDate??null;
  const trackerPoints=trackerPerson?.performance.filter(point=>point.date&&typeof point.value==="number").map(point=>({label:point.date!,equity:point.value!}))??[];
  const curve=trackerPoints.length?trackerPoints:legacyProfile?.curve??[];const historicalReturn=curve.length>1&&curve[0].equity?((curve.at(-1)!.equity-curve[0].equity)/Math.abs(curve[0].equity))*100:null;
- const live=vaultIndex?publicIndexIsLive({vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network,depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultDir.data?.publicFundsEnabled}):false;
- const liveStatus=vaultIndex?publicIndexStatus({vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network,depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultDir.data?.publicFundsEnabled}):null;
+ const liveState={vaultAddress:vaultIndex?.vaultAddress,shareMint:vaultIndex?.shareMint,network:vaultIndex?.network,depositsEnabled:vaultIndex?.depositsEnabled,publicFundsEnabled:vaultDir.data?.publicFundsEnabled};
+ const live=Boolean(vaultIndex)&&publicIndexIsLive(liveState);
+ const liveStatus=vaultIndex?publicIndexStatus(liveState):null;
+ const resourceReadiness=vaultIndex&&vaultIndexId?vaultReadinessFromIndex(vaultIndexId,{index:{vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network},depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultDir.data?.publicFundsEnabled}):null;
+ const flowReadiness=vault??resourceReadiness;
 
  return <div className={styles.page}>
    <div className={styles.topline}><Link href="/"><Icon name="arrow" size={14} style={{transform:"rotate(180deg)"}}/>Explore</Link><span>Public disclosures · delayed, not live positions</span></div>
@@ -130,8 +137,8 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
    <section className={styles.compactHero}>
      <div className={styles.compactIdentity}>
        <div className={styles.heroPortrait}><Portrait name={name} image={image}/><span className={styles.personNumber}>INSIDERINDEX / {id.slice(-6).toUpperCase()}</span></div>
-       <div className={styles.identityCopy}><span className={styles.eyebrow}>{context}</span><h1>{name}</h1><p>{indexName}</p><div className={styles.compactReturn}>{historicalReturn!=null?<><strong>{historicalReturn>=0?"+":""}{historicalReturn.toFixed(1)}%</strong><span>{PREVIEW_MODE?"design preview · 1Y":"historical model · 1Y"}</span></>:<><strong>{holdings.length||"—"}</strong><span>visible holdings</span></>}</div><div className={styles.heroMeta}><span>{latestFiling?`Filed ${shortDate(latestFiling)}`:"Filing date unavailable"}</span><i/><span>{mappedCount||"No"} mapped</span></div>
-       <div className={styles.heroActions}><button className={`${styles.followButton} ${following?styles.following:""}`} onClick={()=>ui.toggleDeviceFollow(id)}><Icon name={following?"check":"people"} size={15}/>{following?"Following":"Follow"}</button><button className={styles.shareButton} onClick={()=>setShareOpen(true)}><Icon name="share" size={15}/>Share</button>{live?<button className={styles.indexButton} onClick={()=>{setInvestMode("deposit");setInvestOpen(true)}}>Invest<Icon name="arrow" size={14}/></button>:null}</div></div>
+       <div className={styles.identityCopy}><span className={styles.eyebrow}>{context}</span><h1>{name}</h1><p>{indexName}</p><span className={styles.profileStatus}>{live?"Live":liveStatus??"Research"}</span><div className={styles.compactReturn}>{historicalReturn!=null?<><strong>{historicalReturn>=0?"+":""}{historicalReturn.toFixed(1)}%</strong><span>{PREVIEW_MODE?"design preview · 1Y":"historical model · 1Y"}</span></>:<><strong>{holdings.length||"—"}</strong><span>visible holdings</span></>}</div><div className={styles.heroMeta}><span>{live?"Live":liveStatus??"Research"}</span><i/><span>{latestFiling?`Filed ${shortDate(latestFiling)}`:"Filing date unavailable"}</span><i/><span>{mappedCount||"No"} mapped</span></div>
+       <div className={styles.heroActions}><button className={`${styles.followButton} ${following?styles.following:""}`} onClick={()=>ui.toggleDeviceFollow(id)}><Icon name={following?"check":"people"} size={15}/>{following?"Following":"Follow"}</button><button className={styles.shareButton} onClick={()=>setShareOpen(true)}><Icon name="share" size={15}/>Share</button>{live?<><button className={styles.indexButton} onClick={()=>{setInvestMode("deposit");setInvestOpen(true)}}>Invest<Icon name="arrow" size={14}/></button><button className={styles.indexButton} onClick={()=>{setInvestMode("withdraw");setInvestOpen(true)}}>Cash out</button></>:null}</div></div>
      </div>
      <div className={styles.heroChart}><PerformanceGraphic profile={legacyProfile} activity={activity} series={trackerPoints} caption={trackerPerson?"PelosiTracker snapshot as of 2026-09-15 · not a live brokerage account":undefined}/></div>
    </section>
@@ -150,8 +157,8 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
 
    {tab==="about"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>About</h2><p>Source filings live here so the rest of the page stays short.</p></div><Link href="/methodology">Methodology</Link></div>{trackerPerson?<div className={styles.emptyBlock}><strong>Shown book dated {trackerPerson.asOf}.</strong><span>Older annual filings are listed below when saved.</span></div>:null}{researchBook?<FullBook items={fullItems}/>:<div className={styles.emptyBlock}><strong>Annual filing table isn&apos;t connected on this profile.</strong></div>}</section>:null}
 
-   <div className={styles.mobileBar}><button className={following?styles.following:""} onClick={()=>ui.toggleDeviceFollow(id)}>{following?"Following":"Follow"}</button>{live?<button onClick={()=>{setInvestMode("deposit");setInvestOpen(true)}}>Invest</button>:<button onClick={()=>setShareOpen(true)}>Share</button>}</div>
+   <div className={`${styles.mobileBar} ${live?styles.liveBar:""}`}><button className={following?styles.following:""} onClick={()=>ui.toggleDeviceFollow(id)}>{following?"Following":"Follow"}</button>{live?<><button onClick={()=>{setInvestMode("withdraw");setInvestOpen(true)}}>Cash out</button><button onClick={()=>{setInvestMode("deposit");setInvestOpen(true)}}>Invest</button></>:<button onClick={()=>setShareOpen(true)}>Share</button>}</div>
    <ShareSheet open={shareOpen} onClose={()=>setShareOpen(false)} name={name} indexName={indexName} image={image} profile={legacyProfile} holdings={holdings}/>
-   {live&&vaultIndexId?<VaultFlow open={investOpen} onClose={()=>setInvestOpen(false)} indexId={vaultIndexId} indexName={indexName} readiness={vault} mode={investMode}/>:null}
+   {live&&vaultIndexId?<VaultFlow open={investOpen} onClose={()=>setInvestOpen(false)} indexId={vaultIndexId} indexName={indexName} readiness={flowReadiness} mode={investMode} position={position}/>:null}
  </div>
 }
