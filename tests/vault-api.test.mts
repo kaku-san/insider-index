@@ -3,7 +3,7 @@ import { register } from "node:module";
 import test from "node:test";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { creditHasRemainingAmount, depositIsEnabled, publicVaultDepositIsEnabled, uiStateFrom, validatePreparedStep, vaultReadinessFromIndex } = await import("../src/lib/frontend/vault-api.ts");
+const { creditHasRemainingAmount, depositIsEnabled, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, publicVaultDepositIsEnabled, uiStateFrom, validatePreparedStep, vaultReadinessFromIndex } = await import("../src/lib/frontend/vault-api.ts");
 const { markedDollars, moneyBand, stockActBandFromMidpoint } = await import("../src/lib/frontend/research-format.ts");
 
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
@@ -81,11 +81,34 @@ test("public deposit eligibility requires a complete identity and the global rel
 
   const releaseClosed = vaultReadinessFromIndex("test", { ...created, publicFundsEnabled: false, depositReason: "blocked:internal-flag" });
   assert.equal(releaseClosed.depositEnabled, false);
-  assert.deepEqual(releaseClosed.blockers, ["Public deposits are not open yet."]);
+  assert.deepEqual(releaseClosed.blockers, ["Investing isn't open for signatures yet."]);
+  assert.doesNotMatch(releaseClosed.blockers.join(" "), /publicFundsEnabled|VAULT_RELEASE|internal-flag/);
   assert.equal(publicVaultDepositIsEnabled({ ...created.index, depositsEnabled: true, publicFundsEnabled: false }), false);
 
   const noIdentity = vaultReadinessFromIndex("test", { ...created, index: { vaultAddress: owner, shareMint: owner } });
   assert.equal(noIdentity.depositEnabled, false);
   assert.equal(noIdentity.identity, null);
-  assert.deepEqual(noIdentity.blockers, ["This index does not have a live vault yet."]);
+  assert.deepEqual(noIdentity.blockers, ["This index is for research. Investing is not available yet."]);
+});
+
+test("a created deposit-gated vault is Live in the public UI without waiting on the global release", () => {
+  const mag7 = {
+    vaultAddress: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh",
+    shareMint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4",
+    network: "mainnet-beta" as const,
+    depositsEnabled: true,
+    publicFundsEnabled: false,
+  };
+  assert.equal(publicIndexIsLive(mag7), true);
+  assert.equal(publicIndexStatus(mag7), "Live");
+  assert.equal(publicIndexStatusCopy("Live"), "You can invest in this index.");
+  assert.equal(publicVaultDepositIsEnabled(mag7), false);
+  assert.equal(depositIsEnabled(vaultReadinessFromIndex("idx-theme-mag7-caucus", {
+    index: mag7, depositsEnabled: true, publicFundsEnabled: false,
+  })), false);
+
+  const research = { vaultAddress: null, shareMint: null, network: "mainnet-beta" as const, depositsEnabled: false, publicFundsEnabled: false };
+  assert.equal(publicIndexIsLive(research), false);
+  assert.equal(publicIndexStatus(research), "Research");
+  assert.equal(publicIndexStatusCopy("Research"), "This index is for research. Investing is not available yet.");
 });
