@@ -66,7 +66,7 @@ const FEATURED_INDEX_IDS = [
   "idx-theme-bipartisan-handshake",
   "idx-theme-house-heat",
 ] as const;
-const featuredRank = new Map(FEATURED_INDEX_IDS.map((id, rank) => [id, rank]));
+const featuredRank = new Map<string, number>(FEATURED_INDEX_IDS.map((id, rank) => [id, rank]));
 
 function themeImage(id: string) {
   return `/index-assets/themes/${id}-hero.png`;
