@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePrivySolana } from "./providers/privy-provider";
 import { cycleActionPurpose, cycleActivationBlockers } from "../lib/index-vaults/cycle-policy-parse";
 import type { PublicCycleClient, PublicCycleDiscovery, PublicCycleReply } from "../lib/frontend/public-cycle";
+import { publicCycleErrorCopy } from "../lib/frontend/public-cycle-copy";
 import styles from "./vault-flow.module.css";
 
 function usdcText(raw: string) {
@@ -46,7 +47,7 @@ export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
     if (running.current) return;
     running.current = true; setBusy(true);
     try { await task(); }
-    catch (e) { setStatus(`${e instanceof Error ? e.message : "Operation refused"}. Keep this operation; reconcile instead of repeating funding or burn.`); }
+    catch (e) { setStatus(publicCycleErrorCopy(e, mode)); }
     finally {
       const owner = currentOwner.current, stepId = owner ? sessions.current.get(owner)?.retainedStepId : null;
       setRetained(owner && stepId ? { owner, stepId } : null);
