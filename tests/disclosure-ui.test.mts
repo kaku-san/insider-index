@@ -15,8 +15,8 @@ const { UIProvider } = await import("../src/components/providers/ui-provider.tsx
 function renderPerson(book: NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>) {
   return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(FmpPerson, { id: person.id, initialData: book }))));
 }
-function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }, indexes: PublicVaultDefinition[] = []) {
-  const initialIndexes = { count: indexes.length, indexes, publicFundsEnabled: false, storage: "supabase" };
+function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }, indexes: PublicVaultDefinition[] = [], publicFundsEnabled = false) {
+  const initialIndexes = { count: indexes.length, indexes, publicFundsEnabled, storage: "supabase" };
   return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData, initialIndexes }))));
 }
 
@@ -35,6 +35,15 @@ const nativeIndex: PublicVaultDefinition = {
   provenance: { kind: "person", fmpYear: 2025, note: "Annual holdings mapped from public disclosure." },
   legs: [{ ticker: "TEST", provider: "xstock", mint: "test-mint", bookWeightBps: 7500, targetWeightBps: 10000, vaultReady: true }],
   unmapped: [], vaultAddress: null, shareMint: null, updatedAt: "2026-09-16T00:00:00Z",
+};
+const mag7Index: PublicVaultDefinition = {
+  indexId: "idx-theme-mag7-caucus", kind: "thematic", personSlug: "mag7-caucus", bioguideId: null,
+  name: "Mag7 Caucus", symbol: "IITMAGCA", status: "CREATABLE", network: "mainnet-beta", weightBasis: "thematic-multi-member-value",
+  depositsEnabled: true, depositReason: "all-mapped-legs-carry-an-observed-tradable-pool (still gated by VAULT_RELEASE.publicFundsEnabled)",
+  coverage: { tickerCount: 7, mappedLegCount: 7, vaultReadyLegCount: 7, mappableByWeightBps: 10000, tradableByWeightBps: 10000, poolReadyOfMappedBps: 10000 },
+  provenance: { kind: "thematic", note: "Congress owns the Mag7" },
+  legs: [{ ticker: "MSFT", provider: "xstock", mint: "mint-msft", bookWeightBps: 3448, targetWeightBps: 3448, vaultReady: true }],
+  unmapped: [], vaultAddress: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh", shareMint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4", updatedAt: "2026-09-17T13:33:30Z",
 };
 
 // Assertions below inspect generated HTML, the public render output, not implementation source.
@@ -60,6 +69,21 @@ test("unpublished books do not appear in the 20-index catalog", () => {
   const html = renderHome({ people: [{ ...person, indexName: "Example F Index" }], total: 1, partial: true, savedAt: null, storage: "supabase" });
   assert.doesNotMatch(html, /Example Filer|Example F Index|Person index/);
   assert.match(html, /No indexes match this view|Loading index catalog/);
+});
+
+test("a live vault shows Live/Invest even when the global funds release is still off", () => {
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index, nativeIndex]);
+  assert.match(html, /Mag7 Caucus/);
+  assert.match(html, />Live</);
+  assert.match(html, /href="\/indexes\/idx-theme-mag7-caucus"[^>]*>Invest/);
+  assert.match(html, /Example F Index/);
+  assert.match(html, />Research</);
+  assert.doesNotMatch(html, /Research only|Deposits closed|publicFundsEnabled|VAULT_RELEASE/);
+  const mag7At = html.indexOf("Mag7 Caucus");
+  const exampleAt = html.indexOf("Example F Index");
+  assert.ok(html.slice(mag7At, mag7At + 2500).includes("Invest"));
+  assert.ok(html.slice(exampleAt, exampleAt + 2500).includes("View"));
+  assert.ok(!html.slice(exampleAt, exampleAt + 2500).includes("Invest"));
 });
 
 test("a failed disclosure tape renders a retryable error instead of an empty tape", () => {

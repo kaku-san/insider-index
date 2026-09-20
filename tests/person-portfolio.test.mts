@@ -88,11 +88,14 @@ test("consumer person portfolios keep annual rows separate from published alloca
     publishedIndex: { hash: "a".repeat(64), person_id: "insider-test", constituents: [{ ticker: "AAPL", mint: "mint-aapl", issuer: "xstock", weight_bps: 6000 }, { ticker: "MSFT", mint: "mint-msft", issuer: "xstock", weight_bps: 4000 }], definition: { evidence: [{ holding: { id: "h1" }, token: { mint: "mint-aapl" } }, { holding: { id: "h2" }, token: { mint: "mint-aapl" } }, { holding: { id: "h3" }, token: { mint: "mint-msft" } }] } },
   } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
   const html = renderToStaticMarkup(withProviders(createElement(ProfileView, { id: "insider-test", initialData })));
-  assert.match(html, /Holdings 4/);
+  assert.match(html, /Stocks 2/);
   assert.match(html, /60%/);
   assert.match(html, /40%/);
-  assert.match(html, new RegExp(`href="/indexes/fmp-${"a".repeat(64)}"[^>]*>View index`));
-  assert.doesNotMatch(html, /AAPL 75\.0%|MSFT 25\.0%|\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:/);
+  assert.match(html, />Breakdown</);
+  assert.match(html, />About</);
+  assert.doesNotMatch(html, /Unmapped mutual fund/);
+  assert.doesNotMatch(html, /AAPL 75\.0%|MSFT 25\.0%|\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:|publicFundsEnabled|VAULT_RELEASE/);
+  assert.doesNotMatch(html, />Invest</);
 });
 
 test("automated names use first name and last initial; only actual name collisions append IDs", () => {
