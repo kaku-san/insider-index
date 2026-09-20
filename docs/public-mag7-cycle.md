@@ -1,0 +1,36 @@
+# Public Mag7 cycle surface — wired, release-gated
+
+The public Mag7 `VaultFlow` uses `PublicCycleFlow` / the headless `PublicCycleClient`, not the disabled generic `PreparedStep` API. The original index, vault and native share mint are pinned in `public-cycle-parse.ts`. Other indexes cannot use this surface. No replacement vault, receipt token, client-generated operation ID, user-supplied policy, default spending budget, server signer or wallet-side broadcast is introduced.
+
+## API and authority
+
+`POST /api/indexes/idx-theme-mag7-caucus/cycle`:
+
+- `{ action: "discover", wallet }`: select the **unique** configured Mag7 operation for that wallet from `STOCKLANA_CYCLE_POLICIES_JSON`. Missing, malformed or ambiguous configuration refuses. Returns only an operation/owner/policy-hash binding and the existing canonical access challenge—not private policy limits or approval references.
+- `{ action: "read" | "reconcile", operationId, auth }`: after the owner's access-message signature, return the bound policy, persisted definition and journal state. Read/reconciliation remains available when new deposits close. Access is not a financial signature.
+- `{ action: "prepare", operationId, auth, request: "next" | "withdraw" | "recover" }`: use the **same** `CycleRunner`, native planner and shared Supabase journal as `/api/vaults/cycle`. The configured exact contribution is the only permitted deposit amount. Withdrawal is the approved operation's full unburned native-share amount; arbitrary amounts, partial exits and in-kind completion are not offered by this bridge.
+- `{ action: "submit", operationId, auth, signedTransaction }`: independently validated owner-signed bytes only. The shared runner commits the signature and exact bytes before audited relay. No signature-only receipt assertion can authorize a relay or create a balance.
+
+Same-origin POST JSON, the existing 8 KiB request bound, exact fields, owner Ed25519 access proof, policy binding, scrubbed errors and private/no-store responses apply. Keeper actions and client financial authority are refused. The public surface does not expose the private unauthenticated `challenge` response; discovery returns only its binding.
+
+The full policy must exist and contain the separately approved amounts, costs, economics and risk acceptance documented in [the private-cycle runbook](private-native-cycle.md). This bridge does not fill missing values from balances, quotes, fixtures or UI presets. It does not make a configured owner's authorization available to other wallets.
+
+## Signing, settlement and recovery
+
+`cycle-sign.ts` is the shared private/public owner-signing boundary. It invokes `validateCycleOwnerTransaction` against the same-origin `/api/rpc`: independent native state/backing, actual instruction reconstruction, finalized owner/intent/ATA history, recipients/debits/minima and simulation. The returned signed message and Ed25519 signature must match exactly. The wallet **signs only**; `signAndSendTransaction` is not used for Mag7.
+
+The public client retains exact bytes across ambiguous HTTP replies and wallet changes. Another signature for the same draft is refused. A server summary that changes `pending` does not itself retire retained bytes: the client checks the exact finalized receipt, or bounded continuous finalized block/signature evidence past the known wire's validity, before a later independently validated signature. This retained-wire check does not replace the journal's full-message canonical expiry proof or the next step's full history audit. Missing/pruned/gapped history fails closed.
+
+The dedicated keeper still runs **outside the app** under its separately approved policy and key-file authority. Discovery, wallet connection and an automation configuration bit do not start it. No keeper key is loaded by a route. Claim and conversion steps remain explicit owner approvals; unrelated inventory cannot replenish attributable credits. Receipt totals shown in the controls are **not balances/NAV**; native SPL share accounts determine ownership. Public transfer-holder onboarding/general redemption and arbitrary-size purchases are not added by this configured-operation bridge.
+
+`/indexes/idx-theme-mag7-caucus?nativeCycle=resume` opens the same public controls even when new deposits are closed. Renew access, read/reconcile, and continue the existing operation; never replace ambiguous funding or burn. Financial recovery still needs a valid approved policy—closing deposits is not permission to invent recovery budgets. The existing private operator surface and external keeper remain available unchanged.
+
+## Release and evidence
+
+All three `VAULT_RELEASE` gates remain **false**. The project full-cycle receipt requirement is unchanged. Public availability requires the release gates, original created Mag7 identity, its per-vault deposit gate and an active unambiguous configured policy. Directory and detail responses scope public eligibility per index, so a future global release cannot make uncreated or other indexes appear depositable. Server execution also checks release at preparation and again before relay; a shutdown retains a received signature but refuses new funding. Approved exit/claim/cancel/conversion are not disabled merely by closing new deposits.
+
+`tests/public-cycle.test.mts` drives the actual public client, authenticated handler, real SQL migration, native program fixtures, independent wallet validator and separate keeper through contribution → shares → attributable-credit USDC exit. It also checks missing configuration, wrong scope/owner/origin, injected budgets/keeper authority, unsafe sub-share amounts, global/per-index eligibility, a closed release, ambiguous replies and wallet changes. `tests/public-cycle-wire.test.mts` exercises retained-wire expiry through real web3 HTTP serialization with mocked RPC responses.
+
+These are **offline, mixed-slot fixture executions with synthetic finality**, not live financial receipts or a losslessness guarantee. No real wallet, funded public cycle, browser/DOM or Production write is validated by them. Actual public activation still needs approved configuration and the required live release evidence.
+
+Frontend tabs, general copy and layout are separate from this lifecycle implementation. The existing modal's Mag7 body is the integration point; UI work should consume `PublicCycleClient` rather than revive the disabled generic prepare/receipt helpers or bypass its wallet/journal checks.

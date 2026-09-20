@@ -1,4 +1,4 @@
-import { VAULT_RELEASE } from "@/lib/index-vaults/release";
+import { publicCycleIndexEnabled } from "@/lib/index-vaults/public-cycle-release";
 import { vaultIndexService } from "@/lib/index-vaults/server";
 
 export const runtime = "nodejs";
@@ -46,7 +46,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       activityProfileId: index.bioguideId,
       depositsEnabled: index.depositsEnabled,
       depositReason: index.depositReason,
-      publicFundsEnabled: VAULT_RELEASE.publicFundsEnabled,
+      publicFundsEnabled: publicCycleIndexEnabled(index),
       storage: "supabase",
     }, { headers });
   } catch {

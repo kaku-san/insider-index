@@ -28,6 +28,10 @@ export interface CyclePolicy {
     maxComputeUnits: number; maxMicroLamports: string; quoteMaxAgeMs: number;
   };
 }
+/** Closing new deposits must not turn an exit, claim or cancellation into new funding. */
+export function cycleActionPurpose(action: string): "deposit" | "recovery" {
+  return ["withdraw", "claim", "convert", "cancel", "cleanup"].includes(action) ? "recovery" : "deposit";
+}
 /** Renewing deadlines/references or shutting off execution must not erase recovery history. */
 export function cyclePolicyHash(policy: CyclePolicy): string {
   return hashObject({ ...policy, expiresAt: 0, approvalReference: null, financialExecutionAuthorized: false });

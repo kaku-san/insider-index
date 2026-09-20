@@ -32,14 +32,17 @@ export function parseCyclePolicy(value: unknown): CyclePolicy {
   if (Number(l.perTradeSlippageBps) > Number(l.rebalanceSlippageBps) || !Number.isInteger(l.maxComputeUnits) || Number(l.maxComputeUnits) < 1 || Number(l.maxComputeUnits) > 1400000 || !Number.isInteger(l.quoteMaxAgeMs) || Number(l.quoteMaxAgeMs) < 1 || Number(l.quoteMaxAgeMs) > 60000) throw new Error("CYCLE_CONFIG_EXECUTION_LIMIT");
   return structuredClone(value) as CyclePolicy;
 }
-export function configuredCyclePolicy(operationId: string, env: Record<string, string | undefined> = process.env): CyclePolicy {
+export function configuredCyclePolicies(env: Record<string, string | undefined> = process.env): CyclePolicy[] {
   const encoded = env.STOCKLANA_CYCLE_POLICIES_JSON;
-  if (!encoded) throw new Error("CYCLE_PRIVATE_OPERATION_UNAVAILABLE");
+  if (!encoded) return [];
   let rows: unknown; try { rows = JSON.parse(encoded); } catch { throw new Error("CYCLE_CONFIG_JSON"); }
   if (!Array.isArray(rows) || rows.length > 100) throw new Error("CYCLE_CONFIG_LIST");
   const policies = rows.map(parseCyclePolicy);
   if (new Set(policies.map(p => p.operationId)).size !== policies.length) throw new Error("CYCLE_CONFIG_DUPLICATE_OPERATION");
-  const policy = policies.find(p => p.operationId === operationId);
+  return policies;
+}
+export function configuredCyclePolicy(operationId: string, env: Record<string, string | undefined> = process.env): CyclePolicy {
+  const policy = configuredCyclePolicies(env).find(p => p.operationId === operationId);
   if (!policy) throw new Error("CYCLE_PRIVATE_OPERATION_UNAVAILABLE");
   return policy;
 }
