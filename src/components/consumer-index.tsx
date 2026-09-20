@@ -8,7 +8,7 @@ import type { PublishedIndex, PublishedIndexResponse } from "@/lib/frontend/rese
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
-import { getVaultReadiness, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getVaultReadiness, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { useUI } from "./providers/ui-provider";
@@ -191,6 +191,8 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
     publicFundsEnabled: resource.data?.publicFundsEnabled,
   });
   const availability = id ? (vaultError ?? publicIndexStatusCopy(status)) : publicIndexStatusCopy("Research");
+  const resourceReadiness = id && resource.data ? vaultReadinessFromIndex(routeId, resource.data) : null;
+  const flowReadiness = vault ?? resourceReadiness;
   const following = ui.deviceFollows.includes(index.person_id);
   const excluded = index.definition?.excluded ?? [];
   const holdings = sortedHoldings(index);
@@ -244,7 +246,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} stocks`} image={image} />
-    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={vault} mode={investMode} />
+    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} />
   </div>;
 }
 

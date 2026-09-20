@@ -97,6 +97,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
   }
 
   async function doPrepare(){
+    if(mode==="deposit"&&!depositIsEnabled(readiness)){setScreen("prepare");return;}
     if(!canPrepare){setScreen("prepare");return;}
     if(!wallet.authenticated||!wallet.solanaAddress){setConnectOpen(true);return;}
     setBusy(true);setError(null);
