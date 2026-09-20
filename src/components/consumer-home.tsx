@@ -10,6 +10,7 @@ import { slugifyPerson } from "@/lib/frontend/research-format";
 import type { PeopleDirectoryResponse, ResearchPerson } from "@/lib/frontend/research-contract";
 import type { CopySignal } from "@/lib/disclosures/types";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
+import { publicVaultDepositIsEnabled } from "@/lib/frontend/vault-api";
 import { Icon } from "./social/icon";
 import { PageError, StockIcon } from "./social/shared";
 import styles from "./consumer-home.module.css";
@@ -102,7 +103,7 @@ function IndexRow({ row }: { row: IndexRowData }) {
       <strong>{row.coverage == null ? row.coverageLabel : `${row.coverage.toFixed(row.coverage % 1 ? 1 : 0)}% ${row.coverageLabel}`}</strong>
       <span className={`${styles.status} ${row.status === "Research" ? styles.research : row.status === "Live" ? styles.live : styles.soon}`}>{row.status}</span>
     </div>
-    <Link href={row.href} className={styles.rowCta}>{row.status === "Live" ? "Invest" : row.kind === "person" ? "Preview" : "View"} <Icon name="arrow" size={14} /></Link>
+    <Link href={row.href} className={styles.rowCta}>{row.status === "Live" ? "Invest" : "View"} <Icon name="arrow" size={14} /></Link>
   </article>;
 }
 
@@ -114,7 +115,13 @@ function vaultRow(
 ): IndexRowData {
   const person = people.find((item) => item.id === index.bioguideId || slugifyPerson(item.name) === index.personSlug);
   const theme = themes.find((item) => item.id === index.indexId);
-  const live = index.kind === "person" && index.depositsEnabled && publicFundsEnabled;
+  const live = publicVaultDepositIsEnabled({
+    vaultAddress: index.vaultAddress,
+    shareMint: index.shareMint,
+    network: index.network,
+    depositsEnabled: index.depositsEnabled,
+    publicFundsEnabled,
+  });
   const coverage = (index.coverage.mappableByWeightBps ?? 0) / 100;
   return {
     id: index.indexId,
@@ -129,7 +136,7 @@ function vaultRow(
     coverage,
     coverageLabel: index.kind === "thematic" ? "catalog mapped" : "book mapped",
     tickers: index.legs.slice(0, 4).map((item) => item.ticker),
-    status: index.kind === "thematic" ? "Research" : live ? "Live" : "Coming soon",
+    status: live ? "Live" : index.vaultAddress && index.shareMint ? "Coming soon" : "Research",
   };
 }
 

@@ -41,11 +41,9 @@ export type IndexResourceResponse = PublishedIndexResponse & {
 };
 type ActivityResponse = { disclosures: Disclosure[]; total: number; hasMore?: boolean };
 
-function depositStatusCopy(reason: string | null | undefined, live: boolean) {
+function depositStatusCopy(vault: VaultReadiness | null, error: string | null, live: boolean) {
   if (live) return "Deposit preparation may return validated native transactions.";
-  if (!reason) return "Funding remains unavailable until the native vault and release checks complete.";
-  const detail = reason.replace(/^blocked:/i, "").replaceAll("_", " ").replaceAll("-", " ").replace(/\s+/g, " ").trim();
-  return detail ? `Investing is not available yet: ${detail}.` : "Funding remains unavailable until the native vault and release checks complete.";
+  return error ?? vault?.blockers?.[0] ?? "Vault readiness is unavailable.";
 }
 
 function sortedHoldings(index: PublishedIndex) {
@@ -168,12 +166,12 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
 
   useEffect(() => {
     let alive = true;
-    if (!index) return;
+    if (!index || !id) return;
     getVaultReadiness(routeId)
       .then((value) => { if (alive) setVault(value); })
       .catch((error) => { if (alive) setVaultError(errorText(error)); });
     return () => { alive = false; };
-  }, [index, routeId]);
+  }, [id, index, routeId]);
 
   const coverage = useMemo(() => {
     if (!index) return null;
@@ -187,8 +185,10 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   if (!index) return null;
 
   const image = portraitFor(resource.data?.personSlug ?? index.person_id);
-  const live = depositIsEnabled(vault) && (id ? Boolean(resource.data?.depositsEnabled && resource.data.publicFundsEnabled) : true);
-  const status = live ? "Live" : "Coming soon";
+  const live = depositIsEnabled(vault);
+  const hasVault = Boolean(vault?.identity);
+  const status = live ? "Live" : hasVault ? "Deposits closed" : "Research only";
+  const availability = id ? depositStatusCopy(vault, vaultError, live) : "This index does not have a live vault yet.";
   const following = ui.deviceFollows.includes(index.person_id);
   const unmapped = resource.data?.unmapped ?? (index.definition?.excluded ?? []).map((item) => ({
     ticker: item.ticker ?? "Unknown",
@@ -214,10 +214,11 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         <p>One inspectable target built from the mapped part of a public annual disclosure.</p>
         <div className={styles.proof}>{index.constituents.length} of {disclosedCount} tickers token mapped{coverage == null ? "" : ` · ${coverage.toFixed(1)}% of disclosed weight`} · definition updated {updated}</div>
         <div className={styles.actions}>
-          <button type="button" className={styles.primary} onClick={() => setInvestOpen(true)}>{live ? "Invest in index" : "Preview index"}<Icon name="arrow" size={14} /></button>
+          {live ? <button type="button" className={styles.primary} onClick={() => setInvestOpen(true)}>Invest in index <Icon name="arrow" size={14} /></button> : <Link className={styles.primary} href="#holdings">View holdings <Icon name="arrow" size={14} /></Link>}
           <button type="button" className={styles.secondary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
           <button type="button" className={styles.tertiary} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(index.person_id)}><Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}</button>
         </div>
+        {!live ? <p className={styles.availability}>{availability}</p> : null}
       </div>
       <div className={styles.returnHero}><span>1Y RETURN</span><strong>—</strong><small>Awaiting dated series</small></div>
     </section>
@@ -230,7 +231,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       <div><span>Status</span><strong>{status}</strong></div>
     </section>
     <nav className={styles.tabs} aria-label="Index sections">
-      {([["overview", "Overview"], ["holdings", "Holdings"], ["activity", "Activity"], ["about", "About"]] as const).map(([id, label]) => <button type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "holdings" ? <span>{index.constituents.length}</span> : null}</button>)}
+      {([["overview", "Overview"], ["holdings", "Holdings"], ["activity", "Activity"], ["about", "About"]] as const).map(([id, label]) => <button id={id === "holdings" ? "holdings" : undefined} type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "holdings" ? <span>{index.constituents.length}</span> : null}</button>)}
     </nav>
     <section className={styles.tabContent}>
       {tab === "overview" ? <div className={styles.overviewGrid}>
@@ -245,7 +246,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       {tab === "about" ? <div className={styles.aboutGrid}>
         <section><span>METHODOLOGY</span><h3>How the index is built</h3><p>{index.definition?.label ?? "Mapped annual holdings are normalized into a published target."}</p><p>{excluded.length} disclosed rows are excluded from the mapped target.</p></section>
         <section><span>SOURCE</span><h3>Public annual disclosure</h3><p>{index.period ? `Annual holdings year ${index.period}` : "Holdings year unavailable"} · definition updated {updated}. The model is not a live brokerage balance or NAV.</p></section>
-        <section className={styles.disclaimer}><span>VAULT STATUS</span><h3>{status}</h3><p>{vaultError ?? depositStatusCopy(resource.data?.depositReason, live)}</p></section>
+        <section className={styles.disclaimer}><span>VAULT STATUS</span><h3>{status}</h3><p>{availability}</p></section>
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} mapped names · public annual disclosure model`} image={image} />

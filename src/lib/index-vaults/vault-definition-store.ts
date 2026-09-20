@@ -163,6 +163,7 @@ export type PublicVaultDefinition = {
   name: string;
   symbol: string;
   status: "CREATABLE" | "WAIT_POOL_EVIDENCE" | "BLOCKED";
+  network: "mainnet-beta" | "devnet" | null;
   weightBasis: string;
   depositsEnabled: boolean;
   depositReason: string | null;
@@ -195,6 +196,7 @@ type PublicVaultRow = {
   name: string;
   symbol: string;
   status: PublicVaultDefinition["status"];
+  network: string | null;
   weight_basis: string;
   deposits_enabled: boolean;
   deposit_reason: string | null;
@@ -216,6 +218,7 @@ function publicDefinition(row: PublicVaultRow): PublicVaultDefinition {
     name: row.name,
     symbol: row.symbol,
     status: row.status,
+    network: row.network === "mainnet-beta" || row.network === "devnet" ? row.network : null,
     weightBasis: row.weight_basis,
     depositsEnabled: row.deposits_enabled,
     depositReason: row.deposit_reason,
@@ -233,7 +236,7 @@ function publicDefinition(row: PublicVaultRow): PublicVaultDefinition {
 export async function readPublicVaultDefinitions(db: SupabaseClient): Promise<PublicVaultDefinition[]> {
   const { data, error } = await db
     .from("insiderindex_vault_definitions")
-    .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
+    .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,network,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
     .order("index_id");
   if (error || !data) throw new Error(`Vault definition directory read failed (${error?.code ?? "storage"})`);
   return (data as PublicVaultRow[]).map(publicDefinition);
@@ -242,7 +245,7 @@ export async function readPublicVaultDefinitions(db: SupabaseClient): Promise<Pu
 export async function readPublicVaultDefinition(db: SupabaseClient, indexId: string): Promise<PublicVaultDefinition | null> {
   const { data, error } = await db
     .from("insiderindex_vault_definitions")
-    .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
+    .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,network,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
     .eq("index_id", indexId)
     .maybeSingle();
   if (error) throw new Error(`Vault definition read failed (${error.code ?? "storage"})`);

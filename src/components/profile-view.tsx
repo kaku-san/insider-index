@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useResource } from "@/lib/frontend/use-resource";
 import type { CopySignal, FomoProfile } from "@/lib/disclosures/types";
@@ -14,8 +14,6 @@ import { FilingLink } from "./person-portfolio";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { Icon } from "./social/icon";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import { depositIsEnabled, getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
-import { VaultFlow } from "./vault-flow";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
 import { formatUsd } from "@/lib/format";
 import styles from "./consumer-person.module.css";
@@ -96,12 +94,10 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const legacyNeeded=!research.loading&&!research.data;
  const legacy=useResource<LegacyProfileData>(legacyNeeded?`/api/profiles/${encodeURIComponent(id)}`:null);
  const ui=useUI();
- const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"overview"|"holdings"|"activity"|"sources">("overview"),[investOpen,setInvestOpen]=useState(false),[vault,setVault]=useState<VaultReadiness|null>(null);
+ const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"overview"|"holdings"|"activity"|"sources">("overview");
  const researchBook=research.data,legacyProfile=legacy.data?.profile??null;
  const trackerPerson=tracker.data?.person??null;
- const publishedIndexId=researchBook?.publishedIndex?`fmp-${researchBook.publishedIndex.hash}`:null;
- const indexId=publishedIndexId??legacyProfile?.index?.id??null;
- useEffect(()=>{let live=true;async function load(){if(!publishedIndexId){if(live)setVault(null);return;}try{const value=await getVaultReadiness(publishedIndexId);if(live)setVault(value)}catch{if(live)setVault(null)}}void load();return()=>{live=false}},[publishedIndexId]);
+ const indexId=researchBook?.publishedIndex?`fmp-${researchBook.publishedIndex.hash}`:legacyProfile?.index?.id??null;
  const loading=!trackerPerson&&!researchBook&&!legacyProfile&&(tracker.loading||research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));
  if(loading)return <Skeleton cards={3}/>;
  if(!trackerPerson&&!researchBook&&!legacyProfile&&tracker.error&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{tracker.reload();research.reload();legacy.reload()}}/>;
@@ -117,8 +113,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const trackerPoints=trackerPerson?.performance.filter(point=>point.date&&typeof point.value==="number").map(point=>({label:point.date!,equity:point.value!}))??[];
  const indexHref=indexId?`/indexes/${encodeURIComponent(indexId)}`:null;
  const curve=trackerPoints.length?trackerPoints:legacyProfile?.curve??[];const historicalReturn=curve.length>1&&curve[0].equity?((curve.at(-1)!.equity-curve[0].equity)/Math.abs(curve[0].equity))*100:null;
- const vaultFlowAvailable=Boolean(publishedIndexId&&(PREVIEW_MODE||depositIsEnabled(vault)||vault?.identity||vault?.vault));
- const investLabel=depositIsEnabled(vault)?"Invest":"Preview index";
+
  return <div className={styles.page}>
    <div className={styles.topline}><Link href="/"><Icon name="arrow" size={14} style={{transform:"rotate(180deg)"}}/>Explore</Link><span>Public disclosures · delayed, not live positions</span></div>
 
@@ -126,7 +121,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
      <div className={styles.compactIdentity}>
        <div className={styles.heroPortrait}><Portrait name={name} image={image}/><span className={styles.personNumber}>INSIDERINDEX / {id.slice(-6).toUpperCase()}</span></div>
        <div className={styles.identityCopy}><span className={styles.eyebrow}>{context}</span><h1>{name}</h1><p>{indexName}</p><div className={styles.compactReturn}>{historicalReturn!=null?<><strong>{historicalReturn>=0?"+":""}{historicalReturn.toFixed(1)}%</strong><span>{PREVIEW_MODE?"design preview · 1Y":"historical model · 1Y"}</span></>:<><strong>{holdings.length||"—"}</strong><span>visible holdings</span></>}</div><div className={styles.heroMeta}><span>{latestFiling?`Filed ${shortDate(latestFiling)}`:"Filing date unavailable"}</span><i/><span>{mappedCount||"No"} mapped</span></div>
-       <div className={styles.heroActions}><button className={`${styles.followButton} ${following?styles.following:""}`} onClick={()=>ui.toggleDeviceFollow(id)}><Icon name={following?"check":"people"} size={15}/>{following?"Following":"Follow"}</button><button className={styles.shareButton} onClick={()=>setShareOpen(true)}><Icon name="share" size={15}/>Share</button>{vaultFlowAvailable?<button className={styles.indexButton} onClick={()=>setInvestOpen(true)}>{investLabel}<Icon name="arrow" size={14}/></button>:indexHref?<Link className={styles.indexButton} href={indexHref}>View index<Icon name="arrow" size={14}/></Link>:null}</div></div>
+       <div className={styles.heroActions}><button className={`${styles.followButton} ${following?styles.following:""}`} onClick={()=>ui.toggleDeviceFollow(id)}><Icon name={following?"check":"people"} size={15}/>{following?"Following":"Follow"}</button><button className={styles.shareButton} onClick={()=>setShareOpen(true)}><Icon name="share" size={15}/>Share</button>{indexHref?<Link className={styles.indexButton} href={indexHref}>View index<Icon name="arrow" size={14}/></Link>:null}</div></div>
      </div>
      <div className={styles.heroChart}><PerformanceGraphic profile={legacyProfile} activity={activity} series={trackerPoints} caption={trackerPerson?"PelosiTracker snapshot as of 2026-09-15 · not a live brokerage account":undefined}/></div>
    </section>
@@ -145,8 +140,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
 
    {tab==="sources"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Source book</h2><p>The detail lives here instead of turning the whole portfolio page into a filing report.</p></div><Link href="/methodology">Methodology</Link></div>{trackerPerson?<div className={styles.emptyBlock}><strong>Current book: PelosiTracker snapshot dated {trackerPerson.asOf}.</strong><span>FMP annual filings below are older evidence. Tracker trades stay informational.</span></div>:null}{researchBook?<FullBook items={fullItems}/>:<div className={styles.emptyBlock}><strong>Annual filing table isn&apos;t connected on this profile.</strong></div>}<div className={styles.clockGrid}><article><span>1</span><strong>Period end</strong><p>What date the holdings describe.</p></article><article><span>2</span><strong>Filed</strong><p>When the public saw it.</p></article><article><span>3</span><strong>Fetched</strong><p>When InsiderIndex stored it.</p></article><article><span>4</span><strong>Chain time</strong><p>Only for real vault operations.</p></article></div></section>:null}
 
-   <div className={styles.mobileBar}><button className={following?styles.following:""} onClick={()=>ui.toggleDeviceFollow(id)}>{following?"Following":"Follow"}</button>{vaultFlowAvailable?<button onClick={()=>setInvestOpen(true)}>{investLabel}</button>:indexHref?<Link href={indexHref}>View index</Link>:<button onClick={()=>setShareOpen(true)}>Share</button>}</div>
+   <div className={styles.mobileBar}><button className={following?styles.following:""} onClick={()=>ui.toggleDeviceFollow(id)}>{following?"Following":"Follow"}</button>{indexHref?<Link href={indexHref}>View index</Link>:<button onClick={()=>setShareOpen(true)}>Share</button>}</div>
    <ShareSheet open={shareOpen} onClose={()=>setShareOpen(false)} name={name} indexName={indexName} image={image} profile={legacyProfile} holdings={holdings}/>
-   {vaultFlowAvailable&&publishedIndexId?<VaultFlow open={investOpen} onClose={()=>setInvestOpen(false)} indexId={publishedIndexId} indexName={indexName} readiness={vault}/>:null}
  </div>
 }
