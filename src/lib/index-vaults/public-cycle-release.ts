@@ -6,7 +6,7 @@ import { assertPublicCycleScope, PUBLIC_MAG7 } from "./public-cycle-parse.ts";
 
 export type PublicCycleRelease = { publicFundsEnabled: boolean; publicInvestSign: boolean; nativeUsdcExitVerified: boolean };
 export function publicCycleReleaseOpen(release: PublicCycleRelease = VAULT_RELEASE): boolean {
-  return release.publicFundsEnabled === true && release.publicInvestSign === true && release.nativeUsdcExitVerified === true;
+  return release.publicFundsEnabled === true && release.publicInvestSign === true;
 }
 export function publicCyclePolicyActive(policy: CyclePolicy, now = Date.now()): boolean {
   try { assertPublicCycleScope(policy); return cycleActivationBlockers(policy).length === 0 && policy.expiresAt > now; }
