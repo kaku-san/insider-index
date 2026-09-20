@@ -44,6 +44,27 @@ test("public discovery discloses binding only; no signature bypass, client budge
     assert.equal((await f.api({ action: "challenge", operationId: f.policy.operationId, wallet: f.policy.owner })).status, 409);
     assert.equal((await f.api({ action: "read", operationId: f.policy.operationId })).status, 403);
     assert.equal((await f.api({ action: "discover", wallet: f.policy.keeper })).status, 404);
+    const ownerDiscover = await (await f.api({ action: "discover", wallet: f.policy.owner })).json();
+    assert.equal(ownerDiscover.binding.operationId, f.policy.operationId);
+    assert.equal(ownerDiscover.recovery, undefined);
+    const other = Keypair.fromSeed(new Uint8Array(32).fill(32));
+    const otherDiscover = await f.api({ action: "discover", wallet: other.publicKey.toBase58() });
+    assert.equal(otherDiscover.status, 200);
+    const otherBody = await otherDiscover.json();
+    assert.equal(otherBody.binding.owner, other.publicKey.toBase58());
+    assert.notEqual(otherBody.binding.operationId, f.policy.operationId);
+    assert.equal(otherBody.recovery, undefined);
+    assert.doesNotMatch(otherBody.challenge.message, /CYCLE_|reconcile|Retain the operation|private native/i);
+    const { ed25519 } = await import("@noble/curves/ed25519");
+    const bs58 = (await import("bs58")).default;
+    const otherAuth = { token: otherBody.challenge.token, signature: bs58.encode(ed25519.sign(new TextEncoder().encode(otherBody.challenge.message), other.secretKey.subarray(0, 32))) };
+    const otherRead = await f.api({ operationId: otherBody.binding.operationId, action: "read", auth: otherAuth });
+    assert.equal(otherRead.status, 200);
+    const hijack = await f.api({ operationId: f.policy.operationId, action: "read", auth: otherAuth });
+    assert.notEqual(hijack.status, 200);
+    const hijackBody = await hijack.json();
+    assert.equal(hijackBody.recovery, undefined);
+    assert.doesNotMatch(hijackBody.message ?? "", /CYCLE_|reconcile|Retain the operation/i);
     await f.access(); assert.deepEqual(f.client.reply!.policy, f.policy);
     const before = await f.journal.read();
     for (const injected of [{ policy: f.policy }, { limits: f.policy.limits }, { amountRaw: "1" }, { actor: "keeper" }, { release: openTestRelease() }]) {
@@ -65,7 +86,8 @@ test("public readiness requires all releases, unique active policy and original 
   try {
     const row = { ...f.record, network: "mainnet-beta", kind: "thematic", legs: [], unmapped: [] } as unknown as PublicVaultDefinition;
     assert.equal(publicCycleIndexEnabled(row, f.env, f.release), true);
-    for (const gate of ["publicFundsEnabled", "publicInvestSign", "nativeUsdcExitVerified"] as const) assert.equal(publicCycleIndexEnabled(row, f.env, { ...f.release, [gate]: false }), false);
+    for (const gate of ["publicFundsEnabled", "publicInvestSign"] as const) assert.equal(publicCycleIndexEnabled(row, f.env, { ...f.release, [gate]: false }), false);
+    assert.equal(publicCycleIndexEnabled(row, f.env, { ...f.release, nativeUsdcExitVerified: false }), true, "unverified USDC exit stays honest and does not hide Mag7");
     for (const change of [{ vaultAddress: null }, { shareMint: null }, { vaultAddress: f.policy.owner }, { network: "devnet" }, { depositsEnabled: false }, { indexId: "insiderindex-pelosi" }]) assert.equal(publicCycleIndexEnabled({ ...row, ...change }, f.env, f.release), false);
     assert.equal(publicCycleIndexEnabled(row, {}, f.release), false);
     for (const policy of [{ ...f.policy, expiresAt: Date.now() }, { ...f.policy, financialExecutionAuthorized: false }, { ...f.policy, limits: { ...f.policy.limits, depositUsdcRaw: "0" } }]) {

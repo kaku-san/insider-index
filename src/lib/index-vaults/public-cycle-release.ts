@@ -12,6 +12,17 @@ export function publicCyclePolicyActive(policy: CyclePolicy, now = Date.now()): 
   try { assertPublicCycleScope(policy); return cycleActivationBlockers(policy).length === 0 && policy.expiresAt > now; }
   catch { return false; }
 }
+/** The single configured Mag7 template. Per-wallet depositors are derived from this; they are
+ * never a second row in STOCKLANA_CYCLE_POLICIES_JSON. */
+export function uniquePublicMag7Policy(env: Record<string, string | undefined> = process.env, now = Date.now()): CyclePolicy {
+  const activePolicies = configuredCyclePolicies(env)
+    .filter(p => p.indexId === PUBLIC_MAG7.indexId)
+    .filter(p => publicCyclePolicyActive(p, now));
+  if (!activePolicies.length) throw new Error("CYCLE_PUBLIC_POLICY_UNAVAILABLE");
+  if (activePolicies.length !== 1) throw new Error("CYCLE_PUBLIC_AMBIGUOUS_POLICY");
+  assertPublicCycleScope(activePolicies[0]);
+  return activePolicies[0];
+}
 /** Availability metadata, not execution authority. Every actual prepare/relay rechecks the
  * persisted definition, keeper, native state, exact policy, history and simulation. */
 export function publicCycleIndexEnabled(index: { indexId: string; network?: string | null; vaultAddress?: string | null; shareMint?: string | null; depositsEnabled?: boolean | null }, env: Record<string, string | undefined> = process.env, release: PublicCycleRelease = VAULT_RELEASE): boolean {

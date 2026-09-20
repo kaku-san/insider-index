@@ -79,4 +79,18 @@ test("invest sheet uses plain language and skips a separate review step", () => 
   assert.match(html, /Alpha software — experimental; you can lose funds\./);
   assert.match(html, /INVEST/);
   assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);
+  assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation|recovery required/i);
+});
+
+test("Mag7 invest sheet shows chain share balance as Your position", () => {
+  const html = renderToStaticMarkup(wrap(createElement(VaultFlow, {
+    open: true, onClose() {}, indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus",
+    position: {
+      indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner: "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+      shareMint: mag7Vault.shareMint!, shareDecimals: 6, sharesRaw: "1000000",
+    },
+  })));
+  assert.match(html, /Your position/);
+  assert.match(html, /1 shares/);
+  assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation/i);
 });

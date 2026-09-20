@@ -32,6 +32,8 @@ test("position endpoints accept only the connected wallet and return chain-backe
   });
   const one = await handleIndexPosition(request(`/api/indexes/${index().indexId}/position`), index().indexId, { getIndex: async () => index(), readPosition });
   assert.equal(one.status, 200);
+  const alias = await handleIndexPosition(new Request(`https://insiderindex.xyz/api/indexes/${index().indexId}/position?owner=${owner}`), index().indexId, { getIndex: async () => index(), readPosition });
+  assert.equal(alias.status, 200);
   assert.deepEqual(await one.json(), { indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner, shareMint: mint, shareDecimals: 6, sharesRaw: "1000000" });
   const all = await handleIndexPositions(request(), { listIndexes: async () => [index()], readPosition });
   assert.equal(all.status, 200);

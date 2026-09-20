@@ -5,6 +5,8 @@ import { usePrivySolana } from "./providers/privy-provider";
 import { cycleActionPurpose, cycleActivationBlockers } from "../lib/index-vaults/cycle-policy-parse";
 import type { PublicCycleClient, PublicCycleDiscovery, PublicCycleReply } from "../lib/frontend/public-cycle";
 import { publicCycleErrorCopy } from "../lib/frontend/public-cycle-copy";
+import { hasIndexShares, type IndexSharePosition } from "../lib/frontend/vault-api";
+import { formatVaultShares } from "../lib/index-vaults/positions-contract";
 import styles from "./vault-flow.module.css";
 
 function usdcText(raw: string) {
@@ -14,7 +16,14 @@ function usdcText(raw: string) {
 }
 
 /** Native lifecycle controls only. Page tabs, index copy and layout remain separate. */
-export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
+function ownedSharesLabel(position?: IndexSharePosition | null) {
+  try {
+    if (!hasIndexShares(position) || !position) return null;
+    return `${formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)} shares`;
+  } catch { return null; }
+}
+
+export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdraw"; position?: IndexSharePosition | null }) {
   const wallet = usePrivySolana();
   const [reply, setReply] = useState<PublicCycleReply | null>(null);
   const [discovery, setDiscovery] = useState<PublicCycleDiscovery | null>(null);
@@ -33,7 +42,7 @@ export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
   const newDeposits = active && reply?.depositEnabled === true;
   const canSign = active && !!pending && pending.payer === liveOwner && !pending.signature && pending.expiresAt > now && !(retained?.owner === liveOwner && retained.stepId === pending.stepId) && (cycleActionPurpose(pending.action) === "recovery" || newDeposits);
   async function client() {
-    if (!liveOwner) throw new Error("Connect the approved live owner wallet.");
+    if (!liveOwner) throw new Error("Connect your wallet.");
     let session = sessions.current.get(liveOwner);
     if (!session) {
       const { PublicCycleClient } = await import("../lib/frontend/public-cycle");
@@ -57,8 +66,10 @@ export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
   async function prepare(request: "next" | "withdraw" | "recover") {
     const result = await (await client()).prepare(request); setReply(result); setStatus(result.preparation?.action === "wait" ? "Your purchase is still being completed." : "Ready to sign.");
   }
+  const sharesLabel = ownedSharesLabel(position);
   return <div className="space-y-4">
     <div className={styles.intro}><h3>{mode === "withdraw" ? "Cash out" : "Invest in one step"}</h3><p>{mode === "withdraw" ? "Cash out the shares you own." : "See your amount and share estimate before you sign."}</p></div>
+    {sharesLabel ? <div className={styles.summary}><div className={styles.row}><span>Your position</span><strong>{sharesLabel}</strong></div></div> : null}
     <div className={styles.cta}>
       {!liveOwner ? <button className={styles.primary} disabled={busy} onClick={() => void work(() => wallet.connect("wallet"))}>Connect wallet</button> : <button className={styles.primary} disabled={busy} onClick={() => void work(async () => { const c = await client(); setDiscovery(await c.discover()); setStatus("Continue in your wallet."); })}>Continue</button>}
       <button className={styles.primary} disabled={busy || !accessReady} onClick={() => void work(async () => { const c = await client(); setReply(await c.authorize(wallet.signMessage)); setStatus("Your investment details are ready."); })}>Continue</button>

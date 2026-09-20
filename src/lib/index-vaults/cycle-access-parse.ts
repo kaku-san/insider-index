@@ -3,7 +3,7 @@ export interface CycleAccessClaims { origin: string; owner: string; operationId:
 export interface CycleAccessChallenge { token: string; message: string; expiresAt: number; }
 export interface CycleAccessProof { token: string; signature: string; }
 export function cycleAccessMessage(c: CycleAccessClaims): string {
-  return `InsiderIndex.xyz private native cycle access\nOrigin: ${c.origin}\nWallet: ${c.owner}\nOperation: ${c.operationId}\nPolicy: ${c.policyHash}\nNonce: ${c.nonce}\nExpires: ${new Date(c.expiresAt).toISOString()}\nRead, prepare unsigned steps and reconcile this operation. Relay ONLY my separately signed exact transaction. This message is not a transaction, token approval, or discretionary spending authority.`;
+  return `InsiderIndex wallet check\nOrigin: ${c.origin}\nWallet: ${c.owner}\nOperation: ${c.operationId}\nPolicy: ${c.policyHash}\nNonce: ${c.nonce}\nExpires: ${new Date(c.expiresAt).toISOString()}\nThis confirms you control this wallet. It is not a payment or an approval to move funds.`;
 }
 /** Before opening signMessage, independently constrain the text to access-only semantics.
  * HMAC verification belongs to the server; this check is not a bearer-session verifier. */

@@ -101,6 +101,15 @@ export function cycleRpcFromEnv(): CycleRpc {
     return data;
   };
 }
+export async function listIncompleteCycleOperations(vault: string, rpc: CycleRpc = cycleRpcFromEnv()): Promise<{ operationId: string; owner: string }[]> {
+  address(vault);
+  const value = await rpc("list_insiderindex_cycles_for_vault", { p_vault: vault });
+  if (!Array.isArray(value)) throw new Error("CYCLE_JOURNAL_UNREADABLE");
+  return value.map(row => {
+    if (!row || typeof row !== "object" || typeof (row as { operationId?: unknown }).operationId !== "string" || typeof (row as { owner?: unknown }).owner !== "string") throw new Error("CYCLE_JOURNAL_UNREADABLE");
+    return { operationId: (row as { operationId: string }).operationId, owner: (row as { owner: string }).owner };
+  });
+}
 /** Shared Postgres row + non-expiring lease. Never /tmp, a relative .data path, or process memory. */
 export class CycleJournal {
   private initial: CycleState;

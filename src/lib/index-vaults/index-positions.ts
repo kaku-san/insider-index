@@ -70,8 +70,9 @@ export async function readOwnedIndexPositions(owner: string, indexes: readonly P
 
 function requestOwner(request: Request): string {
   const params = new URL(request.url).searchParams;
-  if ([...params.keys()].some(key => key !== "wallet") || params.getAll("wallet").length !== 1) throw new Error("Unexpected query");
-  return walletOwner(params.get("wallet"));
+  const keys = [...params.keys()];
+  if (keys.length !== 1 || (keys[0] !== "wallet" && keys[0] !== "owner") || params.getAll(keys[0]).length !== 1) throw new Error("Unexpected query");
+  return walletOwner(params.get(keys[0]));
 }
 
 export async function handleIndexPosition(request: Request, indexId: string, dependencies: {
@@ -86,7 +87,7 @@ export async function handleIndexPosition(request: Request, indexId: string, dep
     if (!index || !createdIndex(index)) return Response.json({ error: "Index shares are unavailable." }, { status: 404, headers });
     return Response.json(await (dependencies.readPosition ?? readPublishedIndexPosition)(index, owner), { headers });
   } catch {
-    return Response.json({ error: "Index share balance unavailable. Retry the on-chain read; no balance has been inferred." }, { status: 503, headers });
+    return Response.json({ error: "Your position isn't available right now." }, { status: 503, headers });
   }
 }
 
@@ -101,6 +102,6 @@ export async function handleIndexPositions(request: Request, dependencies: {
     const positions = await readOwnedIndexPositions(owner, await dependencies.listIndexes(), dependencies.readPosition);
     return Response.json({ positions }, { headers });
   } catch {
-    return Response.json({ error: "Index share balances unavailable. Retry the on-chain read; no balances have been inferred." }, { status: 503, headers });
+    return Response.json({ error: "Your positions aren't available right now." }, { status: 503, headers });
   }
 }
