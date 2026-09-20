@@ -6,8 +6,8 @@ import { usePrivySolana } from "./providers/privy-provider";
 import { useResource } from "@/lib/frontend/use-resource";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
 import { formatReceiptAmount, type TrackedPosition } from "@/lib/position-contract";
-import { DEVNET_TEST_VAULT } from "@/lib/index-vaults/devnet-contract";
-import { formatVaultShares, type DevnetVaultPosition } from "@/lib/index-vaults/positions-contract";
+import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
+import type { IndexSharePosition } from "@/lib/frontend/vault-api";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { WalletButton } from "./wallet-button";
@@ -16,17 +16,18 @@ import { portraitFor } from "@/lib/fomo/portraits";
 import styles from "./consumer-positions.module.css";
 
 type CopyReceipts = { positions: TrackedPosition[] };
-type VaultResponse = { position: DevnetVaultPosition };
+type IndexPositionsResponse = { positions: IndexSharePosition[] };
 type Tab = "indexes" | "copies";
 
 export function PositionsTable() {
   const wallet = usePrivySolana();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Tab>("indexes");
-  const [showDevnet, setShowDevnet] = useState(false);
   const connected = wallet.mode === "live" && wallet.authenticated && wallet.solanaAddress;
   const copies = useResource<CopyReceipts>(connected ? `/api/positions/copies?wallet=${encodeURIComponent(connected)}` : null);
+  const indexes = useResource<IndexPositionsResponse>(connected ? `/api/positions/indexes?wallet=${encodeURIComponent(connected)}` : null);
   const fills = copies.data?.positions ?? [];
+  const ownedIndexes = indexes.data?.positions ?? [];
   const visible = fills.filter((p) => `${p.ticker} ${p.tokenSymbol}`.toLowerCase().includes(query.toLowerCase()));
 
   if (!connected) {
@@ -55,7 +56,7 @@ export function PositionsTable() {
             <p>
               {wallet.mode === "unavailable"
                 ? "Wallet connection is unavailable. Retry to reload Privy. We won’t substitute a demo wallet."
-                : "Following and research work without a wallet. Connecting only reveals wallet-scoped copy receipts and verified share balances; it never authorizes a transaction."}
+                : "Following and research work without a wallet. Connecting only reveals your index shares and copy receipts; it never authorizes a transaction."}
             </p>
             <WalletButton />
             <span className={styles.safe}><Icon name="shield" size={14} /> Every invest, copy and exit gets its own approval.</span>
@@ -74,7 +75,7 @@ export function PositionsTable() {
           <p>
             {PREVIEW_MODE
               ? "Interactive flow preview · values below are labelled design fixtures."
-              : "On-chain index shares and signed copy receipts for this wallet. Copy fills are not NAV."}
+              : "Your index shares and copied moves for this wallet."}
           </p>
         </div>
         <div className={styles.walletPill}>
@@ -88,10 +89,10 @@ export function PositionsTable() {
         <div>
           <span>INDEX SHARE VALUE</span>
           <strong>—</strong>
-          <small>No verified dollar mark. Share counts come from chain reads, never copy receipts.</small>
+          <small>Share counts come from chain reads. A dollar value is shown only when one is verified.</small>
         </div>
         <div className={styles.balanceStats}>
-          <span><b>—</b> index count unavailable</span>
+          <span><b>{indexes.loading ? "—" : ownedIndexes.length}</b> index {ownedIndexes.length === 1 ? "position" : "positions"}</span>
           <span><b>{fills.length}</b> copied moves</span>
           <span><b>—</b> pending unavailable</span>
         </div>
@@ -112,17 +113,17 @@ export function PositionsTable() {
           <div className={styles.sectionTitle}>
             <div>
               <h2>Your indexes</h2>
-              <p>Confirmed native share balances only. Basket buying stays unavailable until prepare returns real transactions.</p>
+              <p>Your shares in each index. These are read directly from your wallet.</p>
             </div>
           </div>
-          <div className={styles.empty}>
+          {indexes.loading ? <Skeleton cards={2} /> : indexes.error ? <PageError error={indexes.error} retry={indexes.reload} /> : !ownedIndexes.length ? <div className={styles.empty}>
             <Icon name="grid" size={26} />
-            <h2>Index positions are unavailable.</h2>
-            <p>This release cannot enumerate native share balances across published indexes. Use the separate devnet diagnostic only for the documented test vault.</p>
+            <h2>No index shares yet.</h2>
+            <p>When you own shares in an index, they will appear here.</p>
             <Link href="/">Explore indexes <Icon name="arrow" size={13} /></Link>
-          </div>
-          <button className={styles.diagnosticButton} aria-expanded={showDevnet} onClick={() => setShowDevnet(!showDevnet)}>Separate devnet share diagnostic</button>
-          {showDevnet ? <DevnetDiagnostic address={connected} /> : null}
+          </div> : <div className={styles.indexGrid}>{ownedIndexes.map(position => <Link className={styles.indexCard} key={position.indexId} href={`/indexes/${encodeURIComponent(position.indexId)}`}>
+            <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX SHARES</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}><span><b>{formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)}</b><small>shares owned</small></span><span><b>{position.markedValueUsdc ?? "—"}</b><small>{position.markedValueUsdc == null ? "value unavailable" : "verified value"}</small></span></div></div>
+          </Link>)}</div>}
         </section>
       ) : null}
 
@@ -180,14 +181,4 @@ export function PositionsTable() {
       </div>
     </div>
   );
-}
-
-function DevnetDiagnostic({ address }: { address: string }) {
-  const vault = useResource<VaultResponse>(`/api/positions?wallet=${encodeURIComponent(address)}`);
-  const position = !vault.loading && !vault.error ? vault.data?.position ?? null : null;
-  const identityMatches = Boolean(position && position.owner === address && position.identity.network === "devnet" && position.identity.vaultAccount === DEVNET_TEST_VAULT.vaultAccount && position.identity.shareMint === DEVNET_TEST_VAULT.shareMint);
-  return <section className={styles.diagnostic}>
-    <div className={styles.sectionTitle}><div><h2>Execution-test vault</h2><p>This read-only devnet diagnostic is not a person index or portfolio position.</p></div><button onClick={vault.reload} disabled={vault.loading}>Refresh</button></div>
-    {vault.loading ? <Skeleton cards={1} /> : vault.error ? <PageError error={vault.error} retry={vault.reload} /> : position && !identityMatches ? <PageError error="Vault observation identity mismatch. No balance is shown." retry={vault.reload} /> : position ? <div className={styles.indexNumbers}><span><b>{formatVaultShares(position.shareBalanceRaw, position.shareDecimals)}</b><small>test-vault shares</small></span><span><b>—</b><small>no verified mark</small></span><span><b>{position.observedSlot}</b><small>observed devnet slot</small></span></div> : null}
-  </section>;
 }

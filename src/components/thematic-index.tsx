@@ -11,7 +11,9 @@ import { Icon } from "./social/icon";
 import { IndexPerformancePlaceholder, type IndexResourceResponse } from "./consumer-index";
 import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
-import { getVaultReadiness, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { usePrivySolana } from "./providers/privy-provider";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { PUBLIC_MAG7 } from "@/lib/index-vaults/public-cycle-parse";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import styles from "./consumer-index.module.css";
 
@@ -39,11 +41,19 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const [investOpen, setInvestOpen] = useState(false);
   const [investMode, setInvestMode] = useState<"deposit" | "withdraw">("deposit");
   const [vault, setVault] = useState<VaultReadiness | null>(null);
+  const [position, setPosition] = useState<IndexSharePosition | null>(null);
+  const wallet = usePrivySolana();
   useEffect(() => {
     let alive = true;
     getVaultReadiness(vaultId).then(value => { if (alive) setVault(value); }).catch(() => { if (alive) setVault(null); });
     return () => { alive = false; };
   }, [vaultId]);
+  useEffect(() => {
+    let alive = true;
+    if (vaultId !== PUBLIC_MAG7.indexId || !wallet.solanaAddress) { setPosition(null); return; }
+    getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(() => { if (alive) setPosition(null); });
+    return () => { alive = false; };
+  }, [vaultId, wallet.solanaAddress]);
   if (resource.loading && !resource.data) return <Skeleton />;
   if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
   if (!index) return null;
@@ -57,6 +67,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const live = publicIndexIsLive(liveState);
   const status = publicIndexStatus(liveState);
   const availability = publicIndexStatusCopy(status);
+  const canCashOut = vaultId === PUBLIC_MAG7.indexId && hasIndexShares(position);
   const readiness = vault ?? (initialVault ? vaultReadinessFromIndex(vaultId, {
     index: { vaultAddress: initialVault.vaultAddress, shareMint: initialVault.shareMint, network: initialVault.network },
     depositsEnabled: initialVault.depositsEnabled,
@@ -73,7 +84,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
         <p>{index.headline}</p>
         <div className={styles.proof}>{holdings.length} stocks · {index.members.length} members · updated {updated}</div>
         <div className={styles.actions}>
-          {live ? <><button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button><button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button></> : null}
+          {live ? <><button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button>{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}</> : null}
           <button type="button" className={live ? styles.secondary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
@@ -120,6 +131,6 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName} kind="Theme index" detail={`${holdings.length} stocks`} image={`/index-assets/themes/${index.id}-hero.png`} />
-    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} />
+    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} position={position} />
   </div>;
 }

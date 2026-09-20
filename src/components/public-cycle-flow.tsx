@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { usePrivySolana } from "./providers/privy-provider";
 import { cycleActionPurpose, cycleActivationBlockers } from "../lib/index-vaults/cycle-policy-parse";
 import type { PublicCycleClient, PublicCycleDiscovery, PublicCycleReply } from "../lib/frontend/public-cycle";
 import styles from "./vault-flow.module.css";
+
+function usdcText(raw: string) {
+  if (!/^(0|[1-9]\d*)$/.test(raw)) return "Unavailable";
+  const padded = raw.padStart(7, "0"), whole = padded.slice(0, -6), fraction = padded.slice(-6).replace(/0+$/, "");
+  return `$${Number(whole).toLocaleString()}${fraction ? `.${fraction}` : ""}`;
+}
 
 /** Native lifecycle controls only. Page tabs, index copy and layout remain separate. */
 export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
@@ -14,7 +19,7 @@ export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
   const [discovery, setDiscovery] = useState<PublicCycleDiscovery | null>(null);
   const [busy, setBusy] = useState(false), [now, setNow] = useState(0);
   const [retained, setRetained] = useState<{ owner: string; stepId: string } | null>(null);
-  const [status, setStatus] = useState("A configured, wallet-bound Mag7 policy is required. Connecting never spends funds.");
+  const [status, setStatus] = useState("Connect your wallet to continue.");
   const sessions = useRef(new Map<string, PublicCycleClient>()), running = useRef(false);
   const liveOwner = wallet.mode === "live" && !wallet.previewConnection ? wallet.solanaAddress : null;
   const currentOwner = useRef(liveOwner);
@@ -49,41 +54,34 @@ export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
     }
   }
   async function prepare(request: "next" | "withdraw" | "recover") {
-    const result = await (await client()).prepare(request); setReply(result); setStatus(result.preparation?.reason ?? "Prepared, not signed.");
+    const result = await (await client()).prepare(request); setReply(result); setStatus(result.preparation?.action === "wait" ? "Your purchase is still being completed." : "Ready to sign.");
   }
   return <div className="space-y-4">
-    <div className={styles.intro}><h3>{mode === "withdraw" ? "USDC exit" : "Mag7 native vault"}</h3><p>Review the exact approved policy, then approve each owner transaction separately. The dedicated external keeper executes stock settlement. This is not a guaranteed return or loss-protected product.</p></div>
+    <div className={styles.intro}><h3>{mode === "withdraw" ? "Cash out" : "Invest in one step"}</h3><p>{mode === "withdraw" ? "Cash out the shares you own." : "See your amount and share estimate before you sign."}</p></div>
     <div className={styles.cta}>
-      {!liveOwner ? <button className={styles.primary} disabled={busy} onClick={() => void work(() => wallet.connect("wallet"))}>Connect wallet</button> : <button className={styles.secondary} disabled={busy} onClick={() => void work(async () => { const c = await client(); setDiscovery(await c.discover()); setStatus("Review the access-only message. It does not authorize a financial transaction."); })}>Find / renew approved operation</button>}
-      <button className={styles.primary} disabled={busy || !accessReady} onClick={() => void work(async () => { const c = await client(); setReply(await c.authorize(wallet.signMessage)); setStatus("Review all policy limits below before preparing an owner action."); })}>Authorize access</button>
+      {!liveOwner ? <button className={styles.primary} disabled={busy} onClick={() => void work(() => wallet.connect("wallet"))}>Connect wallet</button> : <button className={styles.primary} disabled={busy} onClick={() => void work(async () => { const c = await client(); setDiscovery(await c.discover()); setStatus("Continue in your wallet."); })}>Continue</button>}
+      <button className={styles.primary} disabled={busy || !accessReady} onClick={() => void work(async () => { const c = await client(); setReply(await c.authorize(wallet.signMessage)); setStatus("Your investment details are ready."); })}>Continue</button>
     </div>
-    {accessReady && discovery && <p className="break-all text-xs">Operation: {discovery.binding.operationId} · Policy: {discovery.binding.policyHash}</p>}
     {policy && <>
-      <details open><summary>Approved amounts, costs and risk limits</summary><pre className="max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs">{JSON.stringify(policy, null, 2)}</pre></details>
-      {!newDeposits && <div className={styles.blockers}>New public deposits are gated. A complete active policy, per-vault readiness and public release are all required. Existing obligations remain readable and resumable; no limits are supplied by this UI.</div>}
+      {!newDeposits && mode === "deposit" && <div className={styles.blockers}>Investing is not open right now.</div>}
       {state && <>
-        <div className={styles.summary}><div className={styles.row}><span>Operation phase</span><strong>{state.phase}</strong></div><div className={styles.row}><span>USDC contributed / recovered (raw)</span><strong>{state.contributedUsdcRaw} / {state.recoveredUsdcRaw}</strong></div><div className={styles.row}><span>Shares minted / burned (raw)</span><strong>{state.mintedSharesRaw} / {state.burnedSharesRaw}</strong></div></div>
-        <p className="text-xs">These are operation receipt totals, not balances or NAV. Native share-token accounts determine ownership. Exit completes only after claims and attributable-credit USDC conversion, not merely after the share burn.</p>
-        {state.recoveryRequired && <div role="alert" className={styles.blockers}>{state.recoveryRequired}</div>}
+        {mode === "deposit" ? <div className={styles.summary}><div className={styles.row}><span>You invest</span><strong>{usdcText(policy.limits.depositUsdcRaw)}</strong></div><div className={styles.row}><span>Expected shares</span><strong>Confirmed when your purchase finishes</strong></div></div> : <div className={styles.summary}><div className={styles.row}><span>Your cash out</span><strong>Shares you own</strong></div></div>}
+        {state.recoveryRequired && <div role="alert" className={styles.blockers}>This action needs attention before you continue.</div>}
         <div className={styles.cta}>
-          <button className={styles.secondary} disabled={busy} onClick={() => void work(async () => { setReply(await (await client()).reconcile()); setStatus("Finalized receipts reconciled. Missing history retains the existing obligation."); })}>Reconcile / refresh</button>
-          {mode === "deposit" && <button className={styles.primary} disabled={busy || !active || !!pending || (!newDeposits && !["exiting", "recovering"].includes(state.phase)) || state.phase === "complete"} onClick={() => void work(() => prepare("next"))}>Prepare next owner step</button>}
-        </div>
-        <div className={styles.cta}>
-          {mode === "withdraw" && <button className={styles.secondary} disabled={busy || !active || !!pending || state.phase !== "holding"} onClick={() => void work(() => prepare("withdraw"))}>Prepare approved USDC exit</button>}
-          <button className={styles.secondary} disabled={busy || !active || !!pending || state.phase === "complete"} onClick={() => void work(() => prepare("recover"))}>Prepare recovery</button>
+          <button className={styles.secondary} disabled={busy} onClick={() => void work(async () => { setReply(await (await client()).reconcile()); setStatus("Your latest update is here."); })}>Refresh</button>
+          {state.recoveryRequired ? <button className={styles.primary} disabled={busy || !active || !!pending} onClick={() => void work(() => prepare("recover"))}>Continue</button> : null}
+          {mode === "deposit" && !state.recoveryRequired ? <button className={styles.primary} disabled={busy || !active || !!pending || (!newDeposits && !["exiting", "recovering"].includes(state.phase)) || state.phase === "complete"} onClick={() => void work(() => prepare("next"))}>Continue</button> : null}
+          {mode === "withdraw" && !state.recoveryRequired ? <button className={styles.primary} disabled={busy || !active || !!pending || state.phase !== "holding"} onClick={() => void work(() => prepare("withdraw"))}>Cash out</button> : null}
         </div>
         {pending && <div className={styles.approval}>
-          <h4>{pending.action}</h4><p className="break-all">Payer: {pending.payer}<br/>Message: {pending.messageHash}<br/>Exact input (raw): {pending.exactInputRaw ?? "none"}<br/>Minimum USDC output (raw): {pending.minOutputRaw ?? "not a conversion"}<br/>Signature: {pending.signature ?? "not latched"}</p>
-          {pending.payer !== liveOwner && <p>This is a keeper step, not an owner wallet approval.</p>}
+          <h4>{mode === "deposit" ? "Ready to invest" : "Ready to cash out"}</h4><p>{pending.payer === liveOwner ? "Check the amount in your wallet, then sign." : "Your purchase is being completed."}</p>
           <div className={styles.cta}>
-            <button className={styles.primary} disabled={busy || !canSign} onClick={() => void work(async () => { const c = await client(); setReply(await c.signStep(wallet.signTransaction)); setStatus("Exact signed bytes submitted through the durable journal. Reconcile finality before continuing."); })}>Validate independently & sign</button>
-            <button className={styles.secondary} disabled={busy || pending.payer !== liveOwner || !(pending.signedTransaction || (retained?.owner === liveOwner))} onClick={() => void work(async () => { setReply(await (await client()).retry()); setStatus("Retried only the retained signed bytes."); })}>Retry exact signed bytes</button>
+            <button className={styles.primary} disabled={busy || !canSign} onClick={() => void work(async () => { const c = await client(); setReply(await c.signStep(wallet.signTransaction)); setStatus("Signed. We’ll update this when it finishes."); })}>Sign</button>
+            <button className={styles.secondary} disabled={busy || pending.payer !== liveOwner || !(pending.signedTransaction || (retained?.owner === liveOwner))} onClick={() => void work(async () => { setReply(await (await client()).retry()); setStatus("Still working on your signed action."); })}>Try again</button>
           </div>
         </div>}
       </>}
     </>}
     <p role="status" className={styles.notice}>{busy ? "Working. " : ""}{status}</p>
-    <Link className="text-xs underline" prefetch={false} href="/indexes/idx-theme-mag7-caucus?nativeCycle=resume">Bookmark the public resume / exit link</Link>
   </div>;
 }
