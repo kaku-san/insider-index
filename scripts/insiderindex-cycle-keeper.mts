@@ -7,6 +7,9 @@ import { parseCyclePolicy } from "../src/lib/index-vaults/cycle-config.ts";
 import { configuredCycleRunner } from "../src/lib/index-vaults/cycle-api.ts";
 import { cycleKeeperTick } from "../src/lib/index-vaults/cycle-keeper.ts";
 import { assertCycleExecutionAuthorized } from "../src/lib/index-vaults/cycle-policy.ts";
+import { listIncompleteCycleOperations } from "../src/lib/index-vaults/cycle-store.ts";
+import { resumePublicCyclePolicy } from "../src/lib/index-vaults/public-cycle-policy.ts";
+import { PUBLIC_MAG7 } from "../src/lib/index-vaults/public-cycle-parse.ts";
 
 export function parseCycleKeeperArgs(args: readonly string[]) {
   let policyPath: string | undefined, keypairPath: string | undefined, execute = false, watch = false, pollMs = 3000;
@@ -40,7 +43,8 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   if (process.env.VERCEL || process.env.NEXT_RUNTIME) throw new Error("CYCLE_KEEPER_OPERATOR_MACHINE_ONLY");
   const options = parseCycleKeeperArgs(args), policyFile = await stat(options.policyPath);
   if (!policyFile.isFile() || policyFile.size > 16384) throw new Error("CYCLE_KEEPER_POLICY_FILE");
-  const policy = parseCyclePolicy(JSON.parse(await readFile(options.policyPath, "utf8")));
+  const template = parseCyclePolicy(JSON.parse(await readFile(options.policyPath, "utf8")));
+  const policy = template.indexId === PUBLIC_MAG7.indexId ? await resumePublicCyclePolicy(template, template.owner) : template;
   const runner = configuredCycleRunner(policy, options.execute);
   let signer: Keypair | undefined;
   if (options.execute) {
@@ -54,6 +58,16 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     const result = await cycleKeeperTick(runner, { execute: options.execute, signer });
     // Public identifiers/results only: no private key bytes, policy secret, or signed wire.
     console.log(JSON.stringify({ indexId: policy.indexId, operationId: policy.operationId, keeper: policy.keeper, ...result }));
+    try {
+      for (const row of await listIncompleteCycleOperations(policy.vault)) {
+        if (row.operationId === policy.operationId) continue;
+        let depositor;
+        try { depositor = await resumePublicCyclePolicy(template, row.owner); } catch { continue; }
+        if (depositor.operationId !== row.operationId || depositor.keeper !== policy.keeper) continue;
+        const other = await cycleKeeperTick(configuredCycleRunner(depositor, options.execute), { execute: options.execute, signer });
+        console.log(JSON.stringify({ indexId: depositor.indexId, operationId: depositor.operationId, keeper: depositor.keeper, ...other }));
+      }
+    } catch { /* Listing other Mag7 depositors is additive; the configured operation already ticked. */ }
     if (!options.watch || ("phase" in result && result.phase === "complete")) break;
     await sleep(options.pollMs);
   } while (true);

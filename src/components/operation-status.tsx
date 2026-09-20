@@ -33,6 +33,8 @@ export function OperationStatus({ operationId }: { operationId: string }) {
     }
   }
 
+  // Loading is an external operation triggered by the route parameter.
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { void load(); }, [operationId]);
 
   async function next() {
@@ -74,10 +76,10 @@ export function OperationStatus({ operationId }: { operationId: string }) {
 
   return <div className={styles.page}>
     <Link href="/positions" className={styles.back}><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />Your portfolio</Link>
-    <header><span>RESUMABLE OPERATION</span><h1>{operation ? label(operation.phase) : "Loading operation…"}</h1><p>Closing InsiderIndex does not erase native vault state. This page reconciles confirmed receipts and tells you the next safe action.</p></header>
+    <header><span>SAVED ACTION</span><h1>{operation ? label(operation.phase) : "Loading…"}</h1><p>You can come back to this action. The latest status is saved.</p></header>
     {error ? <div className={styles.error}>{error}</div> : null}
     {operation ? <div className={styles.grid}>
-      <section><small>OPERATION</small><code>{operation.operationId}</code><div><span>Kind</span><b>{operation.kind}</b></div><div><span>Current phase</span><b>{label(operation.phase)}</b></div><div><span>Complete</span><b>{operation.complete ? "Yes" : "No"}</b></div><div><span>Next action</span><b>{operation.nextAction ?? "Reconcile state"}</b></div></section>
+      <section><small>ACTION</small><code>{operation.operationId}</code><div><span>Kind</span><b>{operation.kind}</b></div><div><span>Current phase</span><b>{label(operation.phase)}</b></div><div><span>Complete</span><b>{operation.complete ? "Yes" : "No"}</b></div><div><span>Next action</span><b>{operation.nextAction ?? "Refresh"}</b></div></section>
       <section><small>CHAIN OBLIGATIONS</small><div><span>Outstanding claims</span><b>{operation.outstandingClaims?.length ?? 0}</b></div><div><span>Confirmed credits</span><b>{operation.credits?.length ?? 0}</b></div><div><span>Blockers</span><b>{operation.blockers?.length ?? 0}</b></div>{operation.blockers?.map((blocker, index) => <p key={index}>{blocker}</p>)}</section>
     </div> : null}
     {prepared ? <section className={styles.approval}><small>WALLET APPROVAL REQUIRED</small><h2>{prepared.transactions.length} prepared {prepared.transactions.length === 1 ? "transaction" : "transactions"}</h2><p>Review the wallet prompt for each prepared step. Nothing is submitted until you approve it.</p>{prepared.transactions.map((transaction) => <div key={transaction.stepId}><span>{label(transaction.stepId)}</span><b>{transaction.maxDebits.length ? `${transaction.maxDebits.map((debit) => debit.amountRaw).join(", ")} raw maximum` : "No token debit declared"}</b></div>)}</section> : null}

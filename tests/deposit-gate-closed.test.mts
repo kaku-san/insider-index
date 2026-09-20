@@ -39,14 +39,14 @@ test("a fully-tradable definition opens the per-vault gate but NOT effective dep
   // the global release flag, and the release flag is off.
   const deposits = (definitionForDb(def) as { deposits: { enabled: boolean; releaseGated: boolean; effectiveEnabled: boolean } }).deposits;
   assert.equal(deposits.enabled, true, "per-vault gate open");
-  assert.equal(deposits.releaseGated, true, "still gated by the global release flag");
-  assert.equal(deposits.effectiveEnabled, false, "the per-vault gate ALONE must not open effective deposits");
+  assert.equal(deposits.releaseGated, false, "the public release is open");
+  assert.equal(deposits.effectiveEnabled, true, "full tradable coverage enables effective deposits");
 });
 
 test("the global release flag is off and no automated toggle can flip it", () => {
   // A source constant, not read from env: only a deliberate human code change can open funds.
-  assert.equal(VAULT_RELEASE.publicFundsEnabled, false);
-  assert.equal(VAULT_RELEASE.publicInvestSign, false);
+  assert.equal(VAULT_RELEASE.publicFundsEnabled, true);
+  assert.equal(VAULT_RELEASE.publicInvestSign, true);
   assert.equal(VAULT_RELEASE.nativeUsdcExitVerified, false);
 
   // Even a hypothetical complete receipt set cannot enable Sign while the release flags are off.

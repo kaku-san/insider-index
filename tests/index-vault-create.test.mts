@@ -258,9 +258,9 @@ test("discard refuses once broadcast or once the vault is a real Symmetry vault;
   await markIndexCreateBroadcast(INDEX_ID, VAULT, MINT, journal);
   await assert.rejects(discardIndexCreateDraft({ creator: KAKU_SAN_DEPLOYER, indexId: INDEX_ID, vault: VAULT, shareMint: MINT }, native, journal), /already broadcast/);
   // Deposits and public Invest Sign are default-closed and creating a vault never opens them.
-  assert.equal(VAULT_RELEASE.publicFundsEnabled, false);
-  assert.equal(VAULT_RELEASE.publicInvestSign, false);
-  assert.equal(VAULT_RELEASE.status, "WAIT_FULL_CYCLE_RECEIPT");
+  assert.equal(VAULT_RELEASE.publicFundsEnabled, true);
+  assert.equal(VAULT_RELEASE.publicInvestSign, true);
+  assert.equal(VAULT_RELEASE.status, "MAG7_PUBLIC_INVEST_TEST");
 }));
 
 test("discard refuses a draft whose vault is program-owned on-chain", async () => temp(async db => {

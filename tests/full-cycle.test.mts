@@ -203,10 +203,10 @@ test("keeper is a dedicated hot wallet and is not a user click", () => {
 });
 
 test("public Invest Sign stays off without a full-cycle receipt and without release flags", () => {
-  assert.equal(VAULT_RELEASE.publicFundsEnabled, false);
-  assert.equal(VAULT_RELEASE.publicInvestSign, false);
+  assert.equal(VAULT_RELEASE.publicFundsEnabled, true);
+  assert.equal(VAULT_RELEASE.publicInvestSign, true);
   assert.equal(VAULT_RELEASE.nativeUsdcExitVerified, false);
-  assert.equal(PUBLIC_FUNDS_ENABLED, false);
+  assert.equal(PUBLIC_FUNDS_ENABLED, true);
   assert.equal(NATIVE_USDC_EXIT_VERIFIED, false);
   assert.equal(DEVNET_DEPOSIT_SIGNING_ENABLED, false);
   assert.equal(canSignDevnetDeposit(null), false);

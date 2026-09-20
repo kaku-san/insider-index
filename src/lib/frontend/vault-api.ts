@@ -255,7 +255,7 @@ export async function getVaultReadiness(indexId: string): Promise<VaultReadiness
 
 export async function getIndexPosition(indexId: string, owner: string): Promise<IndexSharePosition | null> {
   try {
-    return await readApi<IndexSharePosition>(`/api/indexes/${encodeURIComponent(indexId)}/position?owner=${encodeURIComponent(owner)}`);
+    return await readApi<IndexSharePosition>(`/api/indexes/${encodeURIComponent(indexId)}/position?wallet=${encodeURIComponent(owner)}`);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;

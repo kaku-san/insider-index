@@ -29,6 +29,8 @@ export interface CycleState {
   schema: "insiderindex-native-cycle-v1";
   indexId: string; vault: string; shareMint: string; owner: string; keeper: string; operationId: string;
   policyHash: string; definitionHash: string;
+  /** Immutable selected amount; absent only on pre-variable-amount journals. */
+  approvedDepositUsdcRaw?: string;
   phase: "new" | "investing" | "holding" | "exiting" | "recovering" | "complete";
   depositGenerationSignature: string | null; exitGenerationSignature: string | null;
   contributedUsdcRaw: string; mintedSharesRaw: string; burnedSharesRaw: string; recoveredUsdcRaw: string;
@@ -39,12 +41,13 @@ export interface CycleState {
 }
 export function initialCycleState(policy: CyclePolicy): CycleState {
   return { schema: "insiderindex-native-cycle-v1", indexId: policy.indexId, vault: policy.vault, shareMint: policy.shareMint, owner: policy.owner, keeper: policy.keeper, operationId: policy.operationId,
-    policyHash: cyclePolicyHash(policy), definitionHash: policy.definitionHash, phase: "new", depositGenerationSignature: null, exitGenerationSignature: null,
+    policyHash: cyclePolicyHash(policy), definitionHash: policy.definitionHash, approvedDepositUsdcRaw: policy.limits.depositUsdcRaw, phase: "new", depositGenerationSignature: null, exitGenerationSignature: null,
     contributedUsdcRaw: "0", mintedSharesRaw: "0", burnedSharesRaw: "0", recoveredUsdcRaw: "0", ownerSolDebitLamports: "0", keeperSolDebitLamports: "0", keeperSurplusUsdcRaw: "0", bountyFundingRaw: "0",
     nativeClaimsClear: true, credits: [], receipts: [], expiredDrafts: [], pending: null, recoveryRequired: null };
 }
 export function assertCycleState(state: CycleState, initial: CycleState): void {
   if (!state || state.schema !== initial.schema || ["indexId", "vault", "shareMint", "owner", "keeper", "operationId", "definitionHash", "policyHash"].some(k => state[k as keyof CycleState] !== initial[k as keyof CycleState])) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
+  if (state.approvedDepositUsdcRaw !== undefined && state.approvedDepositUsdcRaw !== initial.approvedDepositUsdcRaw) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
   for (const key of ["vault", "shareMint", "owner", "keeper"] as const) address(state[key]);
   for (const key of ["contributedUsdcRaw", "mintedSharesRaw", "burnedSharesRaw", "recoveredUsdcRaw", "ownerSolDebitLamports", "keeperSolDebitLamports", "keeperSurplusUsdcRaw", "bountyFundingRaw"] as const) rawAmount(state[key]);
   if (!["new", "investing", "holding", "exiting", "recovering", "complete"].includes(state.phase) || !Array.isArray(state.credits) || !Array.isArray(state.receipts) || typeof state.nativeClaimsClear !== "boolean") throw new Error("CYCLE_JOURNAL_SHAPE");
@@ -100,6 +103,15 @@ export function cycleRpcFromEnv(): CycleRpc {
     if (error) throw new Error(`CYCLE_JOURNAL_UNAVAILABLE:${error.code ?? "storage"}`);
     return data;
   };
+}
+export async function listIncompleteCycleOperations(vault: string, rpc: CycleRpc = cycleRpcFromEnv()): Promise<{ operationId: string; owner: string }[]> {
+  address(vault);
+  const value = await rpc("list_insiderindex_cycles_for_vault", { p_vault: vault });
+  if (!Array.isArray(value)) throw new Error("CYCLE_JOURNAL_UNREADABLE");
+  return value.map(row => {
+    if (!row || typeof row !== "object" || typeof (row as { operationId?: unknown }).operationId !== "string" || typeof (row as { owner?: unknown }).owner !== "string") throw new Error("CYCLE_JOURNAL_UNREADABLE");
+    return { operationId: (row as { operationId: string }).operationId, owner: (row as { owner: string }).owner };
+  });
 }
 /** Shared Postgres row + non-expiring lease. Never /tmp, a relative .data path, or process memory. */
 export class CycleJournal {

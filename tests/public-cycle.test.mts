@@ -44,6 +44,27 @@ test("public discovery discloses binding only; no signature bypass, client budge
     assert.equal((await f.api({ action: "challenge", operationId: f.policy.operationId, wallet: f.policy.owner })).status, 409);
     assert.equal((await f.api({ action: "read", operationId: f.policy.operationId })).status, 403);
     assert.equal((await f.api({ action: "discover", wallet: f.policy.keeper })).status, 404);
+    const ownerDiscover = await (await f.api({ action: "discover", wallet: f.policy.owner })).json();
+    assert.equal(ownerDiscover.binding.operationId, f.policy.operationId);
+    assert.equal(ownerDiscover.recovery, undefined);
+    const other = Keypair.fromSeed(new Uint8Array(32).fill(32));
+    const otherDiscover = await f.api({ action: "discover", wallet: other.publicKey.toBase58() });
+    assert.equal(otherDiscover.status, 200);
+    const otherBody = await otherDiscover.json();
+    assert.equal(otherBody.binding.owner, other.publicKey.toBase58());
+    assert.notEqual(otherBody.binding.operationId, f.policy.operationId);
+    assert.equal(otherBody.recovery, undefined);
+    assert.doesNotMatch(otherBody.challenge.message, /CYCLE_|reconcile|Retain the operation|private native/i);
+    const { ed25519 } = await import("@noble/curves/ed25519");
+    const bs58 = (await import("bs58")).default;
+    const otherAuth = { token: otherBody.challenge.token, signature: bs58.encode(ed25519.sign(new TextEncoder().encode(otherBody.challenge.message), other.secretKey.subarray(0, 32))) };
+    const otherRead = await f.api({ operationId: otherBody.binding.operationId, action: "read", auth: otherAuth });
+    assert.equal(otherRead.status, 200);
+    const hijack = await f.api({ operationId: f.policy.operationId, action: "read", auth: otherAuth });
+    assert.notEqual(hijack.status, 200);
+    const hijackBody = await hijack.json();
+    assert.equal(hijackBody.recovery, undefined);
+    assert.doesNotMatch(hijackBody.message ?? "", /CYCLE_|reconcile|Retain the operation/i);
     await f.access(); assert.deepEqual(f.client.reply!.policy, f.policy);
     const before = await f.journal.read();
     for (const injected of [{ policy: f.policy }, { limits: f.policy.limits }, { amountRaw: "1" }, { actor: "keeper" }, { release: openTestRelease() }]) {
@@ -65,7 +86,8 @@ test("public readiness requires all releases, unique active policy and original 
   try {
     const row = { ...f.record, network: "mainnet-beta", kind: "thematic", legs: [], unmapped: [] } as unknown as PublicVaultDefinition;
     assert.equal(publicCycleIndexEnabled(row, f.env, f.release), true);
-    for (const gate of ["publicFundsEnabled", "publicInvestSign", "nativeUsdcExitVerified"] as const) assert.equal(publicCycleIndexEnabled(row, f.env, { ...f.release, [gate]: false }), false);
+    for (const gate of ["publicFundsEnabled", "publicInvestSign"] as const) assert.equal(publicCycleIndexEnabled(row, f.env, { ...f.release, [gate]: false }), false);
+    assert.equal(publicCycleIndexEnabled(row, f.env, { ...f.release, nativeUsdcExitVerified: false }), true, "unverified USDC exit stays honest and does not hide Mag7");
     for (const change of [{ vaultAddress: null }, { shareMint: null }, { vaultAddress: f.policy.owner }, { network: "devnet" }, { depositsEnabled: false }, { indexId: "insiderindex-pelosi" }]) assert.equal(publicCycleIndexEnabled({ ...row, ...change }, f.env, f.release), false);
     assert.equal(publicCycleIndexEnabled(row, {}, f.release), false);
     for (const policy of [{ ...f.policy, expiresAt: Date.now() }, { ...f.policy, financialExecutionAuthorized: false }, { ...f.policy, limits: { ...f.policy.limits, depositUsdcRaw: "0" } }]) {
@@ -128,8 +150,8 @@ test("public shutdown/ambiguous HTTP/wallet switch retain exact signed bytes and
   } finally { await f.close(); }
 });
 
-test("public client → authenticated API → actual SQL/native bank → external keeper → shares → USDC exit", async () => {
-  const f = await publicCycleFixture();
+test("non-template depositor chooses amount → authenticated API → SQL/native bank → shares → USDC-only exit", async () => {
+  const f = await publicCycleFixture("100000000", { templateAmountRaw: "200000000", templateOwner: Keypair.fromSeed(new Uint8Array(32).fill(32)).publicKey.toBase58() });
   try {
     f.vm.seed(f.policy.owner, MAINNET_USDC, 100_000_123n);
     for (const l of f.record.vaultLegs) f.vm.seed(f.policy.owner, l.mint, 123n, TOKEN_2022_PROGRAM_ID);
@@ -178,7 +200,13 @@ test("public client → authenticated API → actual SQL/native bank → externa
     await keeper("setup-keeper"); await keeper("setup-keeper");
     f.vm.seed(f.policy.keeper, MAINNET_USDC, 5_000_000n);
     for (const l of f.record.vaultLegs) f.vm.seed(f.policy.keeper, l.mint, 321n, TOKEN_2022_PROGRAM_ID);
-    await owner("create"); await owner("contribute"); await owner("lock");
+    await owner("create");
+    const resumed = await (await f.api({ action: "discover", wallet: f.policy.owner })).json();
+    assert.equal(resumed.binding.policyHash, f.client.discovery!.binding.policyHash, "reload resumes selected amount, not the configured $200");
+    assert.equal((await f.api({ action: "discover", wallet: f.policy.owner, amountRaw: "200000000" })).status, 409, "an existing draft cannot silently change amount");
+    await owner("contribute");
+    assert.equal((await f.journal.read()).contributedUsdcRaw, "100000000", "only the user-selected $100 was deposited");
+    await owner("lock");
     let intent = (await f.vm.native.sdk.fetchRebalanceIntent(f.vm.intent)).chain_data;
     f.vm.time(Number(intent.executionStartTime.toString()));
     for (let n = 0; n < 10; n++) { if ((await f.runner.preview("keeper")).action !== "prices") break; await keeper("prices"); }

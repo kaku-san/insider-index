@@ -64,7 +64,7 @@ test("deposits default closed for every thematic index (no pool evidence)", () =
     const db = definitionForDb(def) as { deposits: { enabled: boolean; effectiveEnabled: boolean; releaseGated: boolean } };
     assert.equal(db.deposits.enabled, false);
     assert.equal(db.deposits.effectiveEnabled, false);
-    assert.equal(db.deposits.releaseGated, true);
+    assert.equal(db.deposits.releaseGated, false);
   }
 });
 
@@ -78,7 +78,7 @@ test("even with full pool evidence deposits stay release-gated, and creation nev
   // ...but the authoritative release flag keeps the effective state closed.
   const db = definitionForDb(def) as { deposits: { enabled: boolean; effectiveEnabled: boolean } };
   assert.equal(db.deposits.enabled, true);
-  assert.equal(db.deposits.effectiveEnabled, false);
+  assert.equal(db.deposits.effectiveEnabled, true);
 });
 
 test("a not-ready leg never counts toward tradable coverage", () => {

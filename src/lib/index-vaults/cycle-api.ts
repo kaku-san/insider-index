@@ -35,6 +35,8 @@ export interface CycleApiDependencies {
   runner?: (policy: CyclePolicy, allowSend: boolean) => CycleRunner;
   /** A narrower HTTP surface may restrict scope; it cannot supply client spending authority. */
   assertPolicy?: (policy: CyclePolicy) => void;
+  /** Server-resolved policy only. Never taken from the request body. */
+  policy?: CyclePolicy;
 }
 export async function handleCycleRequest(request: Request, dependencies: CycleApiDependencies = {}): Promise<Response> {
   const headers = { "Cache-Control": "no-store, private", "Vary": "Origin", "X-Content-Type-Options": "nosniff" };
@@ -45,7 +47,8 @@ export async function handleCycleRequest(request: Request, dependencies: CycleAp
     if (typeof input.operationId !== "string" || input.operationId.length > 64 || typeof input.action !== "string" || !["challenge", "read", "prepare", "submit", "reconcile"].includes(input.action)) throw new Error("CYCLE_REQUEST_ACTION");
     const allowed = ["operationId", "action", ...(input.action === "challenge" ? ["wallet"] : ["auth"]), ...(input.action === "prepare" ? ["request"] : []), ...(input.action === "submit" ? ["signedTransaction"] : [])];
     if (Object.keys(input).some(k => !allowed.includes(k))) throw new Error("CYCLE_REQUEST_UNEXPECTED_FIELD");
-    const env = dependencies.env ?? process.env, policy = configuredCyclePolicy(input.operationId, env);
+    const env = dependencies.env ?? process.env, policy = dependencies.policy ?? configuredCyclePolicy(input.operationId, env);
+    if (policy.operationId !== input.operationId) throw new Error("CYCLE_REQUEST_ACTION");
     dependencies.assertPolicy?.(policy);
     if (input.action === "challenge") {
       if (input.wallet !== policy.owner) throw new Error("CYCLE_ACCESS_WALLET");

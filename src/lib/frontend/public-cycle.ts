@@ -45,9 +45,9 @@ export class PublicCycleClient {
     if (!response.ok || result.error) throw new Error(result.error ?? "CYCLE_PUBLIC_REQUEST_FAILED");
     return result;
   }
-  async discover(): Promise<PublicCycleDiscovery> {
+  async discover(amountRaw?: string): Promise<PublicCycleDiscovery> {
     return this.work(async () => {
-      const result = await this.post({ action: "discover", wallet: this.owner }) as PublicCycleDiscovery;
+      const result = await this.post({ action: "discover", wallet: this.owner, ...(amountRaw === undefined ? {} : { amountRaw }) }) as PublicCycleDiscovery;
       validateCycleAccessBinding(result.challenge, result.binding, this.origin, this.owner);
       if (this.discovery && (result.binding.operationId !== this.discovery.binding.operationId || result.binding.policyHash !== this.discovery.binding.policyHash)) throw new Error("CYCLE_CLIENT_POLICY_CHANGED_REVIEW_REQUIRED");
       this.discovery = result; this.auth = null; return result;
