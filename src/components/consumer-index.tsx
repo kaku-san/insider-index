@@ -8,11 +8,12 @@ import type { PublishedIndex, PublishedIndexResponse } from "@/lib/frontend/rese
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
-import { getVaultReadiness, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { useUI } from "./providers/ui-provider";
 import { VaultFlow } from "./vault-flow";
+import { usePrivySolana } from "./providers/privy-provider";
 import { ShareCard } from "./share-card";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
@@ -156,10 +157,12 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const [tab, setTab] = useState<Tab>("stocks");
   const [vault, setVault] = useState<VaultReadiness | null>(null);
   const [vaultError, setVaultError] = useState<string | null>(null);
+  const [position, setPosition] = useState<IndexSharePosition | null>(null);
   const [investOpen, setInvestOpen] = useState(false);
   const [investMode, setInvestMode] = useState<"deposit" | "withdraw">("deposit");
   const [shareOpen, setShareOpen] = useState(false);
   const ui = useUI();
+  const wallet = usePrivySolana();
   const index = resource.data?.index;
 
   useEffect(() => {
@@ -170,6 +173,13 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       .catch((error) => { if (alive) setVaultError(errorText(error)); });
     return () => { alive = false; };
   }, [id, index, routeId]);
+
+  useEffect(() => {
+    let alive = true;
+    if (!id || !wallet.solanaAddress) { setPosition(null); return; }
+    getIndexPosition(routeId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(() => { if (alive) setPosition(null); });
+    return () => { alive = false; };
+  }, [id, routeId, wallet.solanaAddress]);
 
   if (resource.loading && !index) return <Skeleton />;
   if (resource.error && !index) return <PageError error={resource.error} retry={resource.reload} />;
@@ -194,6 +204,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const resourceReadiness = id && resource.data ? vaultReadinessFromIndex(routeId, resource.data) : null;
   const flowReadiness = vault ?? resourceReadiness;
   const following = ui.deviceFollows.includes(index.person_id);
+  const canCashOut = live && hasIndexShares(position);
   const excluded = index.definition?.excluded ?? [];
   const holdings = sortedHoldings(index);
   const summary = `A public annual-disclosure model led by ${holdings.slice(0, 4).map((item) => companyNameFor(item.ticker, item.issuer)).join(", ")}.`;
@@ -211,7 +222,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         <p>The stocks in this index, the mix, and how it was built — in one place.</p>
         <div className={styles.proof}>{index.constituents.length} stocks · updated {updated}</div>
         <div className={styles.actions}>
-          {live ? <><button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button><button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button></> : null}
+          {live ? <><button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button>{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}</> : null}
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
           <button type="button" className={styles.tertiary} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(index.person_id)}><Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}</button>
         </div>
@@ -246,7 +257,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} stocks`} image={image} />
-    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} />
+    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} position={position} />
   </div>;
 }
 

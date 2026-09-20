@@ -1,0 +1,43 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { handleIndexPosition, handleIndexPositions, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
+import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
+
+const owner = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
+const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
+const mint = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
+const index = (id = "idx-theme-mag7-caucus"): PublicVaultDefinition => ({
+  indexId: id, kind: "thematic", personSlug: "mag7-caucus", bioguideId: null, name: "Mag7 Caucus", symbol: "MAG7",
+  status: "CREATABLE", network: "mainnet-beta", weightBasis: "thematic", depositsEnabled: true, depositReason: null,
+  coverage: {}, provenance: {}, legs: [], unmapped: [], vaultAddress: vault, shareMint: mint, updatedAt: "2026-09-20T00:00:00Z",
+});
+const request = (path = "/api/positions/indexes", wallet = owner) => new Request(`https://insiderindex.xyz${path}?wallet=${wallet}`);
+
+test("portfolio keeps only positive native share balances and never turns a failed read into zero", async () => {
+  const positions = await readOwnedIndexPositions(owner, [index(), index("idx-theme-other")], async (definition, wallet) => {
+    assert.equal(wallet, owner);
+    if (definition.indexId === "idx-theme-other") throw new Error("RPC unavailable");
+    return { indexId: definition.indexId, indexName: definition.name, owner: wallet, shareMint: mint, shareDecimals: 6, sharesRaw: "0" };
+  }).then(() => assert.fail("a failed vault read must not be silently omitted"), error => error);
+  assert.match(String(positions), /RPC unavailable/);
+  const owned = await readOwnedIndexPositions(owner, [index()], async (definition, wallet) => ({
+    indexId: definition.indexId, indexName: definition.name, owner: wallet, shareMint: mint, shareDecimals: 6, sharesRaw: "42",
+  }));
+  assert.deepEqual(owned.map(position => [position.indexId, position.sharesRaw]), [["idx-theme-mag7-caucus", "42"]]);
+});
+
+test("position endpoints accept only the connected wallet and return chain-backed positions", async () => {
+  const readPosition = async (definition: PublicVaultDefinition & { network: "mainnet-beta" | "devnet"; vaultAddress: string; shareMint: string }, wallet: string) => ({
+    indexId: definition.indexId, indexName: definition.name, owner: wallet, shareMint: definition.shareMint, shareDecimals: 6, sharesRaw: "1000000",
+  });
+  const one = await handleIndexPosition(request(`/api/indexes/${index().indexId}/position`), index().indexId, { getIndex: async () => index(), readPosition });
+  assert.equal(one.status, 200);
+  assert.deepEqual(await one.json(), { indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner, shareMint: mint, shareDecimals: 6, sharesRaw: "1000000" });
+  const all = await handleIndexPositions(request(), { listIndexes: async () => [index()], readPosition });
+  assert.equal(all.status, 200);
+  assert.deepEqual((await all.json()).positions.map((position: { indexId: string }) => position.indexId), ["idx-theme-mag7-caucus"]);
+  for (const wallet of ["", "not-a-wallet", "privy-stub:test"]) {
+    const response = await handleIndexPositions(request("/api/positions/indexes", wallet), { listIndexes: async () => [index()], readPosition });
+    assert.equal(response.status, 400);
+  }
+});

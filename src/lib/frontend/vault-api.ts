@@ -140,6 +140,11 @@ export type IndexSharePosition = {
 
 export type VaultUiState = "NO_VAULT" | "PREVIEW_ONLY" | "PREPARE_BLOCKED" | "LIVE_DEPOSIT" | "PENDING" | "HAS_SHARES";
 
+export function hasIndexShares(position?: IndexSharePosition | null): boolean {
+  try { return Boolean(position && rawAmountPattern.test(position.sharesRaw) && BigInt(position.sharesRaw) > 0n); }
+  catch { return false; }
+}
+
 export const DEPOSIT_PHASES = [
   "DRAFT","AWAITING_SIGNATURE","SUBMITTED","INTENT_CONFIRMED","AWAITING_LOCK","PRICING","AUCTION","SETTLING","SHARES_RECEIVED","RETURN_PENDING","CLEANUP","COMPLETE"
 ] as const;
@@ -153,7 +158,7 @@ export function depositIsEnabled(readiness?: VaultReadiness | null): boolean {
 
 export function uiStateFrom(readiness: VaultReadiness | null, position?: IndexSharePosition | null, operation?: ObservedOperation | null): VaultUiState {
   if (operation && !operation.complete) return "PENDING";
-  if (position) { try { if (BigInt(position.sharesRaw || "0") > 0n) return "HAS_SHARES"; } catch {} }
+  if (hasIndexShares(position)) return "HAS_SHARES";
   if (!readiness?.identity && !readiness?.vault) return "NO_VAULT";
   if (depositIsEnabled(readiness)) return "LIVE_DEPOSIT";
   if ((readiness.phase || readiness.status || "").toUpperCase().includes("BLOCK")) return "PREPARE_BLOCKED";

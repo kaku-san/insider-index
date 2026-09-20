@@ -38,7 +38,7 @@ test("clicking Mag7 shows stocks, breakdown, and Invest on one page", () => {
   })));
   assert.match(html, /Mag7 Caucus/);
   assert.match(html, /Invest/);
-  assert.match(html, /Cash out/);
+  assert.doesNotMatch(html, /Cash out/, "cash out stays hidden until this connected wallet has Mag7 shares");
   assert.match(html, />Live</);
   assert.match(html, />Stocks</);
   assert.match(html, />Breakdown</);
@@ -77,5 +77,5 @@ test("invest sheet uses plain language and skips a separate review step", () => 
   })));
   assert.match(html, /Invest in one step/);
   assert.match(html, /INVEST/);
-  assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE/);
+  assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);
 });
