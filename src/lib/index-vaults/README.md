@@ -14,7 +14,7 @@ Public funds, Invest Sign and public exit remain disabled. No live amount, fees/
 
 ## Public Mag7 bridge — wired, still release-gated
 
-The public Mag7 modal now uses `POST /api/indexes/idx-theme-mag7-caucus/cycle` and `PublicCycleClient` to reach the SAME owner-authenticated `CycleRunner`, shared journal and independent native wallet validator. It selects only the original Mag7 vault/mint and a unique configured owner operation; no client budgets/defaults or public keeper signer. Directory/detail public eligibility is scoped per index. `/indexes/idx-theme-mag7-caucus?nativeCycle=resume` keeps recovery reachable when new deposits close. The generic adapter/PreparedStep investor helpers remain disabled and are not this path. All public release flags remain false; this is working lifecycle plumbing, not live cycle receipts or public launch. See [public Mag7 contract, limits and tests](../../../docs/public-mag7-cycle.md).
+The public Mag7 modal now uses `POST /api/indexes/idx-theme-mag7-caucus/cycle` and `PublicCycleClient` to reach the same owner-authenticated `CycleRunner`, shared journal and independent native wallet validator. Per-wallet amount selection, derived operations, USDC cash-out continuation, release gates and recovery are defined in the [public Mag7 contract, limits and tests](../../../docs/public-mag7-cycle.md). The generic adapter/PreparedStep investor helpers remain disabled and are not this path.
 
 ## Full cycle contract
 

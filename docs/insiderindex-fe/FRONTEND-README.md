@@ -63,7 +63,7 @@ The quote request uses `mint`, `usdcAmount`, `side`, and optional `taker`. Copy 
 
 ### Track B — native person index
 
-**Mag7-specific implemented bridge:** the original Mag7 modal uses `POST /api/indexes/idx-theme-mag7-caucus/cycle`, the existing cycle engine/journal and independent wallet validation. It requires a unique configured owner policy; it never adopts the generic amount presets as spending authority. Its USDC exit covers that approved operation's full unburned shares, not arbitrary/partial holdings. All public release flags remain off. `/indexes/idx-theme-mag7-caucus?nativeCycle=resume` keeps owner recovery reachable. See [the public Mag7 contract](../public-mag7-cycle.md); the generic person-index contracts below remain separate and fail closed where unimplemented.
+**Mag7-specific implemented bridge:** the original Mag7 modal uses `POST /api/indexes/idx-theme-mag7-caucus/cycle` and the existing cycle engine/journal with independent wallet validation. Its per-wallet amount selection, derived operation policy, USDC cash-out continuation, release gates and recovery contract are defined in [the public Mag7 contract](../public-mag7-cycle.md). The generic person-index contracts below remain separate and fail closed where unimplemented.
 
 Entry:
 

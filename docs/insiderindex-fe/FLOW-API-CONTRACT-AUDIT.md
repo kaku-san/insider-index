@@ -8,7 +8,7 @@ Canonical product name: **InsiderIndex**. Canonical public URL: **InsiderIndex.x
 
 ## Current Mag7-specific update — 2026-09-20
 
-The original Mag7 vault now has a separate, real configured-operation path: `POST /api/indexes/idx-theme-mag7-caucus/cycle` with discovery, owner access, prepare, exact-signed-byte submit and reconciliation. Its public `VaultFlow` body uses the existing private cycle engine/journal, same-origin RPC and independent wallet validation; it does **not** make the generic endpoints below available. Contribution and USDC exit stay policy/release-gated; no default spend caps or Live launch claim. Other indexes stay non-deposit. See [public Mag7 contract](../public-mag7-cycle.md) for exact requests, recovery and offline-vs-live limits. The shared access message remains canonical access-only text, not financial authorization.
+The original Mag7 vault now has a separate public cycle path: `POST /api/indexes/idx-theme-mag7-caucus/cycle` with per-wallet discovery, access, prepare, exact-signed-byte submit and reconciliation. Its `VaultFlow` body uses the existing cycle engine/journal, same-origin RPC and independent wallet validation; it does **not** make the generic endpoints below available. Amount selection, USDC cash-out continuation, release gates and offline-vs-live limits are owned by the [public Mag7 contract](../public-mag7-cycle.md). Other indexes stay non-deposit. The shared access message remains canonical access-only text, not financial authorization.
 
 ## Executive status (generic recovered contract)
 
