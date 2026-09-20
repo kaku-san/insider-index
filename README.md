@@ -69,7 +69,7 @@ API routes:
 - `GET /api/tracker-profiles` · `GET /api/tracker-profiles/[id]` — bundled PelosiTracker top-20 snapshot (`TRACKER_AS_OF`, currently 2026-09-15); the featured 20 person pages show this as the current book, with FMP annual filings staying older evidence and tracker trades info-only. Static snapshot, no live crawl
 - `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
 - `GET /api/disclosures` — feed body served from the committed PelosiTracker/FMP disclosure bundle via `src/lib/tracker/feed.ts` (research-only rows: `source: "pelositracker"`, `venue: "none"`, no mint, `tradeEligible: false`, value bands never exact prices). Per-lane provenance in `lanes.{insiders,congress,tracker}` (`source`, `live`, `count`, `note`): the live EDGAR/AInvest lanes are reported `off` with provenance rather than probed/retried. Paginated (`?page`/`?limit`; default/max in `feed.ts`) with `total`/`page`/`pageSize`/`pageCount`/`hasMore`/`partial`; `catalog` feed status included
-- `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
+- `POST /api/rpc` — same-origin, server-configured JSON-RPC proxy to Helius (or public RPC); preserves existing methods and adds only bounded vault discovery/finalized history reads, rejecting broad scans and malformed requests
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles`
 - `GET /api/indexes` lists model indexes (crowd first) and explicit unavailable native-position status. Legacy `POST /api/indexes/quote` and `/execute` now return `503` with native release blockers; no fabricated transaction or receipt
@@ -103,7 +103,7 @@ A profile does not guarantee an annual book. `npm run holdings:ingest -- --save`
 
 ## Private native USDC cycle (not activated)
 
-The existing-wallet private operator path is definition-driven: owner-signed USDC contribution, separate keeper stock acquisition/native mint, and attributable-credit USDC exit with durable recovery. It is isolated under `/kaku-admin`, authenticated `POST /api/vaults/cycle`, and the dry-run-default `npm run keeper:cycle` CLI. Blank `STOCKLANA_CYCLE_POLICIES_JSON` / `STOCKLANA_CYCLE_AUTH_SECRET` disables access; `NEXT_PUBLIC_SOLANA_RPC_URL` is browser-visible read-only RPC, never a server secret. No keeper key belongs in the app. Public Invest/funds/exit remain off.
+The existing-wallet private operator path is definition-driven: owner-signed USDC contribution, separate keeper stock acquisition/native mint, and attributable-credit USDC exit with durable recovery. It is isolated under `/kaku-admin`, authenticated `POST /api/vaults/cycle`, and the dry-run-default `npm run keeper:cycle` CLI. Blank `STOCKLANA_CYCLE_POLICIES_JSON` / `STOCKLANA_CYCLE_AUTH_SECRET` disables access. Independent wallet checks reuse same-origin `/api/rpc` with bounded native discovery/finalized history reads; no public RPC URL/key is required, and `HELIUS_API_KEY` remains server-only. No keeper key belongs in the app. Public Invest/funds/exit remain off.
 
 Real-program offline tests are **not a live roundtrip or losslessness proof**. Exact amounts, budgets, native economics/fees, keeper custody/signing and activation still require approval. [Private cycle runbook and evidence limitations](docs/private-native-cycle.md).
 
