@@ -33,7 +33,7 @@ The rework does not add a generic API proxy. Existing same-origin routes continu
 | Route | Purpose | Money behavior |
 | --- | --- | --- |
 | `/` | Discover people and published person-index research | none |
-| `/p/[id]` | Compact person portfolio: identity + chart + holdings/moves tabs | opens native index flow only when a published index exists |
+| `/p/[id]` | Compact person portfolio: identity + chart + holdings/moves tabs | links to the native index page when a published index exists |
 | `/indexes/fmp-[hash]` | Published target, exclusions, readiness | opens native vault deposit flow |
 | `/feed` | disclosure tape | Copy only when disclosure is eligible |
 | `/trade/[disclosureId]?copy=1` | one-leg copy ticket | Jupiter quote → user sign → execute |
@@ -76,7 +76,7 @@ All token/share amounts are raw decimal strings at the API boundary.
 
 | Endpoint | Request / meaning | UI consumer |
 | --- | --- | --- |
-| `GET /api/vault-indexes/:id` | published index readiness, per-vault deposit gate, public release flag, vault/share identity | index page investment CTA and preparation flow |
+| `GET /api/vault-indexes/:id` | published index readiness, per-vault deposit gate, public release flag, supported network, vault/share identity | index page investment CTA and preparation flow |
 | `GET /api/indexes/:id/vault` | native lifecycle observation, target/actual weights, fees, slot when that backend contract is available | position/detail integrations |
 | `GET /api/indexes/:id/position?owner=…` | authoritative share balance, pending intents, claims | position detail |
 | `POST /api/indexes/:id/deposit/prepare` | `owner`, `amountRaw`, `idempotencyKey`, wallet proof | entry flow |

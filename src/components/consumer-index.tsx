@@ -171,7 +171,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       .then((value) => { if (alive) setVault(value); })
       .catch((error) => { if (alive) setVaultError(errorText(error)); });
     return () => { alive = false; };
-  }, [index, routeId]);
+  }, [id, index, routeId]);
 
   const coverage = useMemo(() => {
     if (!index) return null;
