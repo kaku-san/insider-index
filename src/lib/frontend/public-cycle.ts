@@ -42,7 +42,12 @@ export class PublicCycleClient {
     this.current();
     const response = await (this.options.fetch ?? fetch)(`/api/indexes/${this.indexId}/cycle`, { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify(body) });
     const result = await response.json(); this.current();
-    if (!response.ok || result.error) throw new Error(result.error ?? "CYCLE_PUBLIC_REQUEST_FAILED");
+    if (!response.ok || result.error) {
+      const error = Object.assign(new Error(result.message ?? result.error ?? "CYCLE_PUBLIC_REQUEST_FAILED"), {
+        code: typeof result.code === "string" ? result.code : undefined,
+      });
+      throw error;
+    }
     return result;
   }
   async discover(amountRaw?: string): Promise<PublicCycleDiscovery> {
