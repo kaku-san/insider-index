@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { PublicKey, TransactionMessage, VersionedTransaction, type ConnectionConfig } from "@solana/web3.js";
+import bs58 from "bs58";
 import { VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import { RebalanceIntentLayout } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { handleRpcProxy } from "../src/lib/rpc-proxy.ts";
@@ -10,7 +11,7 @@ const origin = "https://insiderindex.example", endpoint = origin + "/api/rpc";
 const key = "SERVER-ONLY-TEST-CREDENTIAL-NOT-A-REAL-KEY";
 const upstream = "https://rpc.example.invalid/?api-key=" + key;
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
-const sig = "1".repeat(64), blockhash = PublicKey.default.toBase58();
+const sig = bs58.encode(new Uint8Array(64).fill(1)), blockhash = PublicKey.default.toBase58();
 const discovery = { jsonrpc: "2.0", id: 7, method: "getProgramAccounts", params: [VAULTS_V3_PROGRAM_ID.toBase58(), {
   commitment: "confirmed", encoding: "base64", filters: [{ dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 8, bytes: vault, encoding: "base58" } }],
 }] };
@@ -77,27 +78,31 @@ test("same-origin cycle connection forwards the real SDK discovery/history/simul
 
 test("proxy refuses broad scans, nonfinalized/unbounded history and malformed/bad batches before touching the upstream", async () => {
   // Unknown-typed JSON mutations intentionally exercise the HTTP boundary, not TypeScript casts as evidence.
-  const gpa = (config: Record<string, unknown>, program = VAULTS_V3_PROGRAM_ID.toBase58()) => ({ method: "getProgramAccounts", params: [program, config] });
+  const rpc = (call: Record<string, unknown>) => ({ jsonrpc: "2.0", id: 1, ...call });
+  const gpa = (config: Record<string, unknown>, program = VAULTS_V3_PROGRAM_ID.toBase58()) => rpc({ method: "getProgramAccounts", params: [program, config] });
   const config = discovery.params[1] as Record<string, unknown>;
   const history = { commitment: "finalized", limit: 100, minContextSlot: 42 };
   const refused: unknown[] = [
     null, 1, "getGenesisHash", {}, [], [null], Array.from({ length: 21 }, () => ({ method: "getGenesisHash" })),
-    { method: "getGenesisHash", params: ["extra"] }, { method: "getBlockTime", params: [-1] }, { method: "getBlockTime", params: [1.5] },
-    { method: "getBlocks", params: [0, 1000] },
+    { jsonrpc: "1.0", id: 1, method: "getGenesisHash", params: [] },
+    { jsonrpc: "2.0", id: {}, method: "getGenesisHash", params: [] },
+    { jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: "invalid" },
+    rpc({ method: "getGenesisHash", params: ["extra"] }), rpc({ method: "getBlockTime", params: [-1] }), rpc({ method: "getBlockTime", params: [1.5] }),
+    rpc({ method: "getBlocks", params: [0, 1000] }),
     gpa({ ...config, filters: [] }), gpa(config, PublicKey.default.toBase58()), gpa({ ...config, encoding: "jsonParsed" }),
     gpa({ ...config, commitment: "processed" }), gpa({ ...config, dataSlice: { offset: 0, length: 1 } }),
     gpa({ ...config, filters: [{ dataSize: RebalanceIntentLayout.span + 9 }, { memcmp: { offset: 8, bytes: vault } }] }),
     gpa({ ...config, filters: [{ dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 0, bytes: vault } }] }),
     gpa({ ...config, filters: [{ dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 8, bytes: "not-a-key" } }] }),
-    { method: "getSignaturesForAddress", params: [vault, { ...history, limit: 101 }] },
-    { method: "getSignaturesForAddress", params: [vault, { ...history, commitment: "confirmed" }] },
-    { method: "getSignaturesForAddress", params: [vault, { limit: 100, commitment: "finalized" }] },
-    { method: "getSignaturesForAddress", params: [vault, { ...history, before: "invalid" }] },
-    { method: "getSignaturesForAddress", params: [vault, { ...history, until: sig }] },
-    { method: "getBlock", params: [42, { commitment: "confirmed", transactionDetails: "signatures", rewards: false }] },
-    { method: "getBlock", params: [42, { commitment: "finalized", transactionDetails: "full", rewards: false }] },
-    { method: "getBlock", params: [42, { commitment: "finalized", transactionDetails: "signatures", rewards: true }] },
-    [discovery, { method: "requestAirdrop", params: [vault, 1] }],
+    rpc({ method: "getSignaturesForAddress", params: [vault, { ...history, limit: 101 }] }),
+    rpc({ method: "getSignaturesForAddress", params: [vault, { ...history, commitment: "confirmed" }] }),
+    rpc({ method: "getSignaturesForAddress", params: [vault, { limit: 100, commitment: "finalized" }] }),
+    rpc({ method: "getSignaturesForAddress", params: [vault, { ...history, before: "invalid" }] }),
+    rpc({ method: "getSignaturesForAddress", params: [vault, { ...history, until: sig }] }),
+    rpc({ method: "getBlock", params: [42, { commitment: "confirmed", transactionDetails: "signatures", rewards: false }] }),
+    rpc({ method: "getBlock", params: [42, { commitment: "finalized", transactionDetails: "full", rewards: false }] }),
+    rpc({ method: "getBlock", params: [42, { commitment: "finalized", transactionDetails: "signatures", rewards: true }] }),
+    [discovery, rpc({ method: "requestAirdrop", params: [vault, 1] })],
   ];
   let touched = 0;
   const options = { upstream: () => { touched++; return upstream; }, provider: "helius" as const, fetcher: async () => { touched++; throw new Error("No upstream call permitted"); } };

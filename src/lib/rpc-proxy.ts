@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import bs58 from "bs58";
 import { VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
 import { RebalanceIntentLayout } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 
@@ -18,10 +19,20 @@ function address(v: unknown): boolean {
   if (typeof v !== "string" || v.length > 44) return false;
   try { return new PublicKey(v).toBase58() === v; } catch { return false; }
 }
-const signature = (v: unknown) => typeof v === "string" && /^[1-9A-HJ-NP-Za-km-z]{64,88}$/.test(v);
+const signature = (v: unknown) => {
+  if (typeof v !== "string") return false;
+  try { return bs58.decode(v).length === 64; } catch { return false; }
+};
+
+function validEnvelope(call: Record<string, unknown>): boolean {
+  if (call.jsonrpc !== undefined && call.jsonrpc !== "2.0") return false;
+  if (Object.hasOwn(call, "id") && call.id !== null
+    && (typeof call.id !== "string" && (typeof call.id !== "number" || !Number.isFinite(call.id)))) return false;
+  return call.params === undefined || Array.isArray(call.params);
+}
 
 function allowed(call: unknown): boolean {
-  if (!object(call) || typeof call.method !== "string") return false;
+  if (!object(call) || !validEnvelope(call) || typeof call.method !== "string") return false;
   if (EXISTING_METHODS.has(call.method)) return true;
   const p = call.params;
   if (call.method === "getGenesisHash") return p === undefined || (Array.isArray(p) && p.length === 0);
