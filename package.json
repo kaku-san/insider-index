@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npx --no-install tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.mts",
     "holdings:ingest": "node --env-file=.env.local --experimental-strip-types scripts/ingest-holdings.mts",
     "indexes:publish": "node --env-file=.env.local --experimental-strip-types scripts/publish-holdings-indexes.mts",
