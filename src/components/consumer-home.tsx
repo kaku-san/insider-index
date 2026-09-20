@@ -120,7 +120,7 @@ function vaultRow(
     shareMint: index.shareMint,
     network: index.network,
     depositsEnabled: index.depositsEnabled,
-    publicFundsEnabled,
+    publicFundsEnabled: publicFundsEnabled && index.publicFundsEnabled === true,
   });
   const coverage = (index.coverage.mappableByWeightBps ?? 0) / 100;
   return {

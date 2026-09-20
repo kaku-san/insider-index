@@ -60,12 +60,9 @@ export function PrivateCycleAdmin() {
   }
   async function signStep() {
     if (!canSpend || !auth || !policy || !state || !reply?.record || !pending || pending.payer !== wallet.solanaAddress || pending.signature) throw new Error("No authorized unsigned owner step");
-    const [{ VersionedTransaction, PublicKey }, { validateCycleOwnerTransaction }, { createCycleReadConnection }, { sha256 }, { ed25519 }] = await Promise.all([import("@solana/web3.js"), import("../lib/frontend/cycle-wallet"), import("../lib/frontend/cycle-rpc"), import("../lib/index-vaults/amounts"), import("@noble/curves/ed25519")]);
+    const [{ signValidatedCycleStep }, { createCycleReadConnection }] = await Promise.all([import("../lib/frontend/cycle-sign"), import("../lib/frontend/cycle-rpc")]);
     const connection = createCycleReadConnection(window.location.origin);
-    const validated = await validateCycleOwnerTransaction({ connection, policy, record: reply.record, state, pending, wallet: wallet.solanaAddress! });
-    setStatus(`Validated ${pending.action}. Approve only the displayed exact owner transaction in your wallet.`);
-    const wire = await wallet.signTransaction(pending.txBase64, "mainnet-beta"), transaction = VersionedTransaction.deserialize(Buffer.from(wire, "base64"));
-    if (transaction.message.header.numRequiredSignatures !== 1 || sha256(transaction.message.serialize()) !== validated.messageHash || transaction.message.staticAccountKeys[0].toBase58() !== policy.owner || !ed25519.verify(transaction.signatures[0], transaction.message.serialize(), new PublicKey(policy.owner).toBytes(), { zip215: false })) throw new Error("CYCLE_WALLET_CHANGED_SIGNED_MESSAGE");
+    const wire = await signValidatedCycleStep({ connection, policy, record: reply.record, state, pending, wallet: wallet.solanaAddress! }, wallet.signTransaction, () => setStatus(`Validated ${pending.action}. Approve only the displayed exact owner transaction in your wallet.`));
     // Retain exact bytes across an ambiguous HTTP response. Never ask for a replacement wire.
     signed.current.set(operationId, { stepId: pending.stepId, wire });
     setRetainedSignedStepId(pending.stepId);

@@ -166,6 +166,8 @@ export type PublicVaultDefinition = {
   network: "mainnet-beta" | "devnet" | null;
   weightBasis: string;
   depositsEnabled: boolean;
+  /** Per-index public-surface eligibility, added by the public response projector. */
+  publicFundsEnabled?: boolean;
   depositReason: string | null;
   coverage: {
     tickerCount?: number;

@@ -3,6 +3,7 @@ import { VersionedTransaction, type VersionedTransactionResponse } from "@solana
 import { sha256, rawAmount } from "./amounts.ts";
 import { assertSignedBy } from "./kaku-san-create.ts";
 import { assertCycleExecutionAuthorized, type CyclePolicy } from "./cycle-policy.ts";
+import { cycleActionPurpose } from "./cycle-policy-parse.ts";
 import { CycleJournal, bindCycleSubmission, type CycleState } from "./cycle-store.ts";
 import { prepareCycleStep, type CyclePreparation } from "./cycle-prepare.ts";
 import { finalizeCycleAttempt } from "./cycle-finalize.ts";
@@ -16,7 +17,9 @@ import type { PoolMetadata } from "./cycle-routes.ts";
 /** No signing/key-file loading here. The app receives owner signatures; an external operator
  * process signs keeper messages. Supabase is the shared authority for all attempts/resumes. */
 type CycleRunnerInput = { native: NativeVaultBuilders; policy: CyclePolicy; journal: CycleJournal;
-  loadDefinition: (indexId: string) => Promise<PersistedVaultDefinition | null>; metadata?: PoolMetadata };
+  loadDefinition: (indexId: string) => Promise<PersistedVaultDefinition | null>; metadata?: PoolMetadata;
+  /** Additional surface gate; never replaces policy/native checks. Private operator use has none. */
+  executionGate?: (purpose: "deposit" | "recovery") => void };
 export class CycleRunner {
   readonly input: CycleRunnerInput;
   constructor(input: CycleRunnerInput) { this.input = input; }
@@ -33,8 +36,10 @@ export class CycleRunner {
   }
   async prepare(actor: "owner" | "keeper", request: "next" | "withdraw" | "recover" = "next"): Promise<CyclePreparation> {
     const current = await this.read(), recovery = request !== "next" || ["recovering", "exiting"].includes(current.phase);
+    this.input.executionGate?.(current.pending ? cycleActionPurpose(current.pending.action) : recovery ? "recovery" : "deposit");
     assertCycleExecutionAuthorized(this.input.policy, await this.definition(), recovery ? "recovery" : "deposit");
     return this.input.journal.update(async state => {
+      this.input.executionGate?.(state.pending ? cycleActionPurpose(state.pending.action) : request !== "next" || ["recovering", "exiting"].includes(state.phase) ? "recovery" : "deposit");
       const record = await this.definition();
       if (state.pending) {
         if (state.pending.payer !== (actor === "owner" ? this.input.policy.owner : this.input.policy.keeper)) return { action: "wait", reason: "The other actor must resolve its existing draft/signature." };
@@ -43,6 +48,7 @@ export class CycleRunner {
       await this.observeClosure(state, record);
       const prepared = await prepareCycleStep({ ...this.input, record, state, actor, request });
       if (prepared.pending) {
+        this.input.executionGate?.(cycleActionPurpose(prepared.pending.action));
         state.pending = prepared.pending;
         if (request === "recover" && prepared.action === "cancel") state.phase = "recovering";
       } else if (prepared.action === "complete") {
@@ -82,8 +88,9 @@ export class CycleRunner {
       const status = (await native.connection.getSignatureStatuses([signature], { searchTransactionHistory: true })).value[0];
       if (status) return { signature, status: "pending-finalized-reconciliation" };
       const record = await this.definition();
-      const recovery = ["withdraw", "claim", "convert", "cancel", "cleanup"].includes(p.action);
-      assertCycleExecutionAuthorized(policy, record, recovery ? "recovery" : "deposit");
+      const purpose = cycleActionPurpose(p.action);
+      this.input.executionGate?.(purpose);
+      assertCycleExecutionAuthorized(policy, record, purpose);
       if (p.expiresAt <= Date.now() || await native.connection.getBlockHeight("confirmed") > p.lastValidBlockHeight) throw new Error("CYCLE_SIGNED_OFFER_EXPIRED_RECONCILE");
       const request = p.action === "withdraw" ? "withdraw" : p.action === "cancel" ? "recover" : "next";
       const audited = await prepareCycleStep({ ...this.input, record, state, actor, request, revalidate: p });

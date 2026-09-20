@@ -12,7 +12,7 @@ export function configuredCycleRunner(policy: CyclePolicy, allowSend = false): C
     return readVaultDefinition(db, policy.indexId);
   } });
 }
-async function body(request: Request): Promise<Record<string, unknown>> {
+export async function readCycleRequestBody(request: Request): Promise<Record<string, unknown>> {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new Error("CYCLE_REQUEST_JSON_REQUIRED");
   const reader = request.body?.getReader(); if (!reader) throw new Error("CYCLE_REQUEST_BODY");
   const chunks: Uint8Array[] = []; let size = 0;
@@ -30,16 +30,23 @@ async function body(request: Request): Promise<Record<string, unknown>> {
 /** Private owner endpoint. No client policies, balances, credits, keeper actions or arbitrary
  * relay. A short owner-signed session only grants access; each financial message is separately
  * owner-signed, journal-latched, independently checked and simulated again before relay. */
-export async function handleCycleRequest(request: Request, dependencies: { env?: Record<string, string | undefined>; runner?: (policy: CyclePolicy, allowSend: boolean) => CycleRunner } = {}): Promise<Response> {
+export interface CycleApiDependencies {
+  env?: Record<string, string | undefined>;
+  runner?: (policy: CyclePolicy, allowSend: boolean) => CycleRunner;
+  /** A narrower HTTP surface may restrict scope; it cannot supply client spending authority. */
+  assertPolicy?: (policy: CyclePolicy) => void;
+}
+export async function handleCycleRequest(request: Request, dependencies: CycleApiDependencies = {}): Promise<Response> {
   const headers = { "Cache-Control": "no-store, private", "Vary": "Origin", "X-Content-Type-Options": "nosniff" };
   try {
     const origin = new URL(request.url).origin;
     if (request.method !== "POST" || request.headers.get("origin") !== origin) throw new Error("CYCLE_REQUEST_ORIGIN");
-    const input = await body(request);
+    const input = await readCycleRequestBody(request);
     if (typeof input.operationId !== "string" || input.operationId.length > 64 || typeof input.action !== "string" || !["challenge", "read", "prepare", "submit", "reconcile"].includes(input.action)) throw new Error("CYCLE_REQUEST_ACTION");
     const allowed = ["operationId", "action", ...(input.action === "challenge" ? ["wallet"] : ["auth"]), ...(input.action === "prepare" ? ["request"] : []), ...(input.action === "submit" ? ["signedTransaction"] : [])];
     if (Object.keys(input).some(k => !allowed.includes(k))) throw new Error("CYCLE_REQUEST_UNEXPECTED_FIELD");
     const env = dependencies.env ?? process.env, policy = configuredCyclePolicy(input.operationId, env);
+    dependencies.assertPolicy?.(policy);
     if (input.action === "challenge") {
       if (input.wallet !== policy.owner) throw new Error("CYCLE_ACCESS_WALLET");
       return Response.json({ policy, challenge: createCycleAccessChallenge(policy, origin, env) }, { headers });
