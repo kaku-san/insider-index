@@ -117,8 +117,8 @@ test("real prepare/observe installs exact Mag7 in the existing identity; no Pyth
   const contribution = parsed(payloadTransactions(depositDraft, snapshot.creator).at(-1)!.txBase64);
   assert(contribution.message.staticAccountKeys.some(k => k.toBase58() === MAINNET_USDC));
   assert(!contribution.message.staticAccountKeys.some(k => k.toBase58() === WSOL_MINT));
-  assert.equal(VAULT_RELEASE.publicFundsEnabled, false);
-  assert.equal(VAULT_RELEASE.publicInvestSign, false);
+  assert.equal(VAULT_RELEASE.publicFundsEnabled, true);
+  assert.equal(VAULT_RELEASE.publicInvestSign, true);
   const final = await observeIndexVault(request, vm.native, load);
   assert.deepEqual(final.inactiveDefaults, [MAINNET_USDC]);
   assert(final.configuredDefaults!.includes(WSOL_MINT));

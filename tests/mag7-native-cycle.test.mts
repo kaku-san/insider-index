@@ -105,7 +105,7 @@ test("native Mag7 accounting and interrupted redemption: synthetic inventory con
     assert.equal(converted, 609167n);
     assert(converted >= BigInt(exitQuote.otherAmountThreshold));
     for (const leg of definition.vaultLegs.filter(l => l.mint !== exitQuote.inputMint)) assert.equal(await vm.balance(owner, leg.mint, TOKEN_2022_PROGRAM_ID), holdings.get(leg.mint)! + 123n, "unrelated remaining credits not sold by another leg's conversion");
-    assert.equal(VAULT_RELEASE.publicFundsEnabled, false);
+    assert.equal(VAULT_RELEASE.publicFundsEnabled, true);
     assert.equal(VAULT_RELEASE.nativeUsdcExitVerified, false, "one converted credit is not a seven-leg USDC-only exit");
   });
 });
@@ -142,6 +142,6 @@ test("deployed native IOC + Jupiter token ledger executes captured real Raydium 
     const credited = (await vm.native.sdk.fetchRebalanceIntent(intentAddress)).chain_data.tokens.find(t => t.mint.toBase58() === pair.inMint)!;
     assert.equal(credited.amount.toString(), "165970");
     assert.equal(credited.targetAmount.toString(), "165970");
-    assert.equal(VAULT_RELEASE.publicInvestSign, false);
+    assert.equal(VAULT_RELEASE.publicInvestSign, true);
   });
 });

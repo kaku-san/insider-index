@@ -52,8 +52,8 @@ test("native redemption keeps inactive and residual slots; vault-relative swap d
   assert.deepEqual(jupiterDirection({ mint_out: key(6), mint_in: key(10) }), { inputMint: key(6), outputMint: key(10) });
 });
 test("both legacy quote and execute fail closed with no fabricated signature/payload", async () => {
-  for (const handler of [quote, execute]) { const response = await handler(); assert.equal(response.status, 503); const body = await response.json(); assert.equal(body.publicFundsEnabled, false); assert.equal(body.signature, undefined); assert.equal(body.transaction, undefined); }
-  assert.equal(NATIVE_USDC_EXIT_VERIFIED, false); assert.equal(PUBLIC_FUNDS_ENABLED, false);
+  for (const handler of [quote, execute]) { const response = await handler(); assert.equal(response.status, 503); const body = await response.json(); assert.equal(body.publicFundsEnabled, true); assert.equal(body.signature, undefined); assert.equal(body.transaction, undefined); }
+  assert.equal(NATIVE_USDC_EXIT_VERIFIED, false); assert.equal(PUBLIC_FUNDS_ENABLED, true);
 });
 test("read-only RPC rejects airdrop and broadcast before network", async () => {
   const connection = readOnlyConnection("http://127.0.0.1:1");

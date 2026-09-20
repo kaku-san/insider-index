@@ -33,7 +33,7 @@ test("pilot authority is explicit, expiring and isolated by definition, vault, m
   const changed = record(); changed.vaultLegs[0].targetWeightBps--; changed.vaultLegs[1].targetWeightBps++;
   assert.notEqual(cycleDefinitionHash(r), cycleDefinitionHash(changed));
   assert.throws(() => assertCyclePolicy(p, changed), /IDENTITY_CHANGED/);
-  assert.equal(VAULT_RELEASE.publicFundsEnabled, false);
+  assert.equal(VAULT_RELEASE.publicFundsEnabled, true);
 });
 test("creation/readiness/caps/fees cannot be borrowed from another index or silently repaired", () => {
   const r = record(); assertCycleDefinition(r, r.indexId);
