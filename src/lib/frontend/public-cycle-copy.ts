@@ -22,9 +22,9 @@ export function publicCycleErrorCopy(error: unknown, mode: "deposit" | "withdraw
   return raw.length <= 160 ? raw : fallback(mode);
 }
 
-export function publicCycleErrorBody(error: unknown): { error: string; message: string; code: string } {
+export function publicCycleErrorBody(error: unknown, mode: "deposit" | "withdraw" = "deposit"): { error: string; message: string; code: string } {
   const raw = error instanceof Error ? error.message : typeof error === "string" ? error : "";
   const code = raw.match(/^CYCLE_[A-Z_]+/)?.[0] ?? "CYCLE_PUBLIC_OPERATION_REFUSED";
-  const copy = publicCycleErrorCopy(new Error(code), "deposit");
+  const copy = publicCycleErrorCopy(new Error(code), mode);
   return { error: copy, message: copy, code };
 }
