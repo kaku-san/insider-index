@@ -75,7 +75,7 @@ test("even with full pool evidence deposits stay release-gated, and creation nev
   assert.equal(def.status, "CREATABLE");
   // Per-vault gate opens on full tradable coverage...
   assert.equal(def.depositsEnabled, true);
-  // ...but the authoritative release flag keeps the effective state closed.
+  // The open release flag allows the fully covered per-vault gate to take effect.
   const db = definitionForDb(def) as { deposits: { enabled: boolean; effectiveEnabled: boolean } };
   assert.equal(db.deposits.enabled, true);
   assert.equal(db.deposits.effectiveEnabled, true);
