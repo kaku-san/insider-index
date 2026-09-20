@@ -10,7 +10,7 @@ import { slugifyPerson } from "@/lib/frontend/research-format";
 import type { PeopleDirectoryResponse, ResearchPerson } from "@/lib/frontend/research-contract";
 import type { CopySignal } from "@/lib/disclosures/types";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
-import { publicVaultDepositIsEnabled } from "@/lib/frontend/vault-api";
+import { publicIndexStatus } from "@/lib/frontend/vault-api";
 import { Icon } from "./social/icon";
 import { PageError, StockIcon } from "./social/shared";
 import styles from "./consumer-home.module.css";
@@ -115,7 +115,7 @@ function vaultRow(
 ): IndexRowData {
   const person = people.find((item) => item.id === index.bioguideId || slugifyPerson(item.name) === index.personSlug);
   const theme = themes.find((item) => item.id === index.indexId);
-  const live = publicVaultDepositIsEnabled({
+  const status = publicIndexStatus({
     vaultAddress: index.vaultAddress,
     shareMint: index.shareMint,
     network: index.network,
@@ -129,14 +129,14 @@ function vaultRow(
     kind: index.kind === "person" ? "person" : "theme",
     name: index.name,
     description: theme?.headline || (index.kind === "person"
-      ? `Annual public holdings for ${person?.name ?? index.personSlug.replaceAll("-", " ")}, mapped to the Solana catalog.`
+      ? `Public holdings for ${person?.name ?? index.personSlug.replaceAll("-", " ")}.`
       : index.provenance.note ?? "A multi-member research basket built from public filings."),
     image: index.kind === "thematic" ? themeImage(index.indexId) : person ? portraitForPerson(person) : portraitFor(index.personSlug),
     holdings: index.legs.length,
     coverage,
-    coverageLabel: index.kind === "thematic" ? "catalog mapped" : "book mapped",
+    coverageLabel: index.kind === "thematic" ? "mapped" : "mapped",
     tickers: index.legs.slice(0, 4).map((item) => item.ticker),
-    status: live ? "Live" : index.vaultAddress && index.shareMint ? "Coming soon" : "Research",
+    status,
   };
 }
 
@@ -221,7 +221,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
       </div>
       <div className={styles.tableBody}>
         {rows.map((row) => <IndexRow key={row.id} row={row} />)}
-        {!loading && !rows.length ? <div className={styles.empty}><strong>No indexes match this view.</strong><span>{investableOnly ? "Public funding is not enabled for any index yet." : indexResource.error ?? "Clear the filters or search to see the index catalog."}</span></div> : null}
+        {!loading && !rows.length ? <div className={styles.empty}><strong>No indexes match this view.</strong><span>{investableOnly ? "No indexes are open to invest yet." : indexResource.error ?? "Clear the filters or search to see the index catalog."}</span></div> : null}
         {loading ? <div className={styles.empty}><strong>Loading index catalog…</strong></div> : null}
       </div>
       <p className={styles.performanceNote}>Return and performance stay blank until InsiderIndex has a verified dated price series. We do not invent alpha.</p>

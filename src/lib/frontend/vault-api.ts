@@ -172,16 +172,14 @@ export type VaultIndexResponse = {
 };
 
 function publicBlocker(payload: VaultIndexResponse, hasIdentity: boolean): string {
-  if (!hasIdentity) return "This index does not have a live vault yet.";
-  // The release gate is intentionally named for people, not an internal feature flag.
-  if (payload.publicFundsEnabled !== true) return "Public deposits are not open yet.";
+  if (!hasIdentity) return "This index is for research. Investing is not available yet.";
   if (payload.depositsEnabled !== true) return "This vault is not accepting deposits yet.";
+  if (payload.publicFundsEnabled !== true) return "Investing isn't open for signatures yet.";
   return "Deposit readiness could not be verified.";
 }
 
-/** Build the only public-invest eligibility state used by index pages.
- * A definition's deposit gate is never enough on its own: a created vault, share mint, known
- * network, and the global public-funds release must all be present before a deposit CTA appears. */
+/** Signing eligibility for native prepare. A created vault and per-index deposit gate are not
+ * enough: the global public-funds release must also be on before the wallet is asked to sign. */
 export function vaultReadinessFromIndex(indexId: string, payload: VaultIndexResponse): VaultReadiness {
   const vaultAddress = payload.index?.vaultAddress;
   const shareMint = payload.index?.shareMint;
@@ -194,6 +192,7 @@ export function vaultReadinessFromIndex(indexId: string, payload: VaultIndexResp
     indexId,
     depositEnabled,
     ready: depositEnabled,
+    redeemEnabled: hasIdentity,
     blockers: depositEnabled ? [] : [publicBlocker(payload, hasIdentity)],
     identity: hasIdentity ? { network, vaultAccount: vaultAddress, shareMint, indexId } : null,
   };
@@ -213,6 +212,31 @@ export function publicVaultDepositIsEnabled(state: PublicVaultDepositState): boo
     depositsEnabled: state.depositsEnabled,
     publicFundsEnabled: state.publicFundsEnabled,
   }).depositEnabled === true;
+}
+
+export function hasPublicVaultIdentity(state: PublicVaultDepositState): boolean {
+  return vaultReadinessFromIndex("public-index", {
+    index: { vaultAddress: state.vaultAddress, shareMint: state.shareMint, network: state.network },
+  }).identity != null;
+}
+
+/** Public Live/Invest: created vault + per-index deposit gate. Signing still uses `depositIsEnabled`. */
+export function publicIndexIsLive(state: PublicVaultDepositState): boolean {
+  return hasPublicVaultIdentity(state) && state.depositsEnabled === true;
+}
+
+export type PublicIndexStatus = "Live" | "Coming soon" | "Research";
+
+export function publicIndexStatus(state: PublicVaultDepositState): PublicIndexStatus {
+  if (publicIndexIsLive(state)) return "Live";
+  if (hasPublicVaultIdentity(state)) return "Coming soon";
+  return "Research";
+}
+
+export function publicIndexStatusCopy(status: PublicIndexStatus): string {
+  if (status === "Live") return "You can invest in this index.";
+  if (status === "Coming soon") return "This index has a vault. Investing is not open yet.";
+  return "This index is for research. Investing is not available yet.";
 }
 
 export async function getVaultReadiness(indexId: string): Promise<VaultReadiness | null> {

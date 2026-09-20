@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Disclosure } from "@/lib/disclosures/types";
 import type { PublishedIndex, PublishedIndexResponse } from "@/lib/frontend/research-contract";
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
-import { depositIsEnabled, getVaultReadiness, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getVaultReadiness, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { useUI } from "./providers/ui-provider";
@@ -19,7 +19,7 @@ import { PageError, Skeleton, StockIcon } from "./social/shared";
 import styles from "./consumer-index.module.css";
 
 const palette = ["#ff5a36", "#171717", "#7e74ff", "#e5a239", "#2e8b73", "#d95d83", "#4387d7", "#8c6f57"];
-type Tab = "overview" | "holdings" | "activity" | "about";
+type Tab = "stocks" | "breakdown" | "moves" | "about";
 export type IndexCoverage = {
   tickerCount?: number;
   mappedLegCount?: number;
@@ -29,7 +29,12 @@ export type IndexCoverage = {
   poolReadyOfMappedBps?: number;
 };
 export type UnmappedIndexLeg = { ticker: string; name?: string | null; bookWeightBps?: number; reason?: string };
-export type IndexResourceResponse = PublishedIndexResponse & {
+export type IndexResourceResponse = Omit<PublishedIndexResponse, "index"> & {
+  index: PublishedIndex & {
+    vaultAddress?: string | null;
+    shareMint?: string | null;
+    network?: "devnet" | "mainnet-beta" | null;
+  };
   coverageBps?: number | null;
   coverage?: IndexCoverage;
   unmapped?: UnmappedIndexLeg[];
@@ -40,11 +45,6 @@ export type IndexResourceResponse = PublishedIndexResponse & {
   publicFundsEnabled?: boolean;
 };
 type ActivityResponse = { disclosures: Disclosure[]; total: number; hasMore?: boolean };
-
-function depositStatusCopy(vault: VaultReadiness | null, error: string | null, live: boolean) {
-  if (live) return "Deposit preparation may return validated native transactions.";
-  return error ?? vault?.blockers?.[0] ?? "Vault readiness is unavailable.";
-}
 
 function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
@@ -97,15 +97,12 @@ function AllocationStrip({ index }: { index: PublishedIndex }) {
 }
 
 function HoldingsTab({ index }: { index: PublishedIndex }) {
-  return <div className={styles.holdingsTable}>
-    <div className={styles.holdingsNote}>Target weights normalize the token-mapped portion to 100%. Disclosure weights retain each name&apos;s share of the full annual book.</div>
-    <div className={styles.holdingsHead}><span>Asset</span><span>Target</span><span>Disclosure</span><span>Token</span><span>Vault route</span></div>
+  return <div className={`${styles.holdingsTable} ${styles.simple}`}>
+    <div className={styles.holdingsNote}>Every stock in this index, with its published weight.</div>
+    <div className={styles.holdingsHead}><span>Stock</span><span>Weight</span></div>
     {sortedHoldings(index).map((item) => <div className={styles.fullHolding} key={item.mint}>
       <div><StockIcon ticker={item.ticker} size="md" /><span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.issuer)}</small></span></div>
       <b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b>
-      <b>{item.book_weight_bps == null ? "—" : `${(item.book_weight_bps / 100).toFixed(item.book_weight_bps >= 1000 ? 1 : 2)}%`}</b>
-      <span>{item.issuer === "xstock" ? "xStock" : "Backpack"}</span>
-      <em className={item.vault_ready ? undefined : styles.routeMissing}>{item.vault_ready ? "Pool ready" : "No observed pool"}</em>
     </div>)}
   </div>;
 }
@@ -156,10 +153,11 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const resource = useResource<IndexResourceResponse>(
     id ? `/api/vault-indexes/${encodeURIComponent(id)}` : `/api/published-indexes/${encodeURIComponent(hash!)}`,
   );
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>("stocks");
   const [vault, setVault] = useState<VaultReadiness | null>(null);
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [investOpen, setInvestOpen] = useState(false);
+  const [investMode, setInvestMode] = useState<"deposit" | "withdraw">("deposit");
   const [shareOpen, setShareOpen] = useState(false);
   const ui = useUI();
   const index = resource.data?.index;
@@ -173,35 +171,34 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
     return () => { alive = false; };
   }, [id, index, routeId]);
 
-  const coverage = useMemo(() => {
-    if (!index) return null;
-    if (resource.data?.coverageBps != null) return resource.data.coverageBps / 100;
-    const evidenceCount = index.definition?.evidence?.length ?? 0;
-    return evidenceCount ? index.constituents.length / evidenceCount * 100 : null;
-  }, [index, resource.data?.coverageBps]);
-
   if (resource.loading && !index) return <Skeleton />;
   if (resource.error && !index) return <PageError error={resource.error} retry={resource.reload} />;
   if (!index) return null;
 
   const image = portraitFor(resource.data?.personSlug ?? index.person_id);
-  const live = depositIsEnabled(vault);
-  const hasVault = Boolean(vault?.identity);
-  const status = live ? "Live" : hasVault ? "Deposits closed" : "Research only";
-  const availability = id ? depositStatusCopy(vault, vaultError, live) : "This index does not have a live vault yet.";
+  const live = publicIndexIsLive({
+    vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
+    shareMint: vault?.identity?.shareMint ?? resource.data?.index.shareMint,
+    network: vault?.identity?.network ?? resource.data?.index.network,
+    depositsEnabled: resource.data?.depositsEnabled,
+    publicFundsEnabled: resource.data?.publicFundsEnabled,
+  });
+  const status = publicIndexStatus({
+    vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
+    shareMint: vault?.identity?.shareMint ?? resource.data?.index.shareMint,
+    network: vault?.identity?.network ?? resource.data?.index.network,
+    depositsEnabled: resource.data?.depositsEnabled,
+    publicFundsEnabled: resource.data?.publicFundsEnabled,
+  });
+  const availability = id ? (vaultError ?? publicIndexStatusCopy(status)) : publicIndexStatusCopy("Research");
+  const resourceReadiness = id && resource.data ? vaultReadinessFromIndex(routeId, resource.data) : null;
+  const flowReadiness = vault ?? resourceReadiness;
   const following = ui.deviceFollows.includes(index.person_id);
-  const unmapped = resource.data?.unmapped ?? (index.definition?.excluded ?? []).map((item) => ({
-    ticker: item.ticker ?? "Unknown",
-    name: item.name,
-    reason: item.reason,
-  }));
   const excluded = index.definition?.excluded ?? [];
   const holdings = sortedHoldings(index);
   const summary = `A public annual-disclosure model led by ${holdings.slice(0, 4).map((item) => companyNameFor(item.ticker, item.issuer)).join(", ")}.`;
   const updated = index.published_at ? new Date(index.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "Unavailable";
-  const disclosedCount = resource.data?.coverage?.tickerCount ?? index.constituents.length + unmapped.length;
-  const poolReadyCount = resource.data?.coverage?.vaultReadyLegCount ?? index.constituents.filter((item) => item.vault_ready).length;
-  const tradableCoverage = resource.data?.coverage?.tradableByWeightBps;
+  const disclosedCount = resource.data?.coverage?.tickerCount ?? index.constituents.length + excluded.length;
   const activityProfileId = id ? resource.data?.activityProfileId : index.person_id;
 
   return <div className={styles.page}>
@@ -211,11 +208,11 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       <div className={styles.heroCopy}>
         <div className={styles.titleLine}><span>Person index</span><em>{index.period ? `${index.period} annual holdings` : "Annual disclosure"}</em></div>
         <h1>{index.indexName ?? "Person index"}</h1>
-        <p>One inspectable target built from the mapped part of a public annual disclosure.</p>
-        <div className={styles.proof}>{index.constituents.length} of {disclosedCount} tickers token mapped{coverage == null ? "" : ` · ${coverage.toFixed(1)}% of disclosed weight`} · definition updated {updated}</div>
+        <p>The stocks in this index, the mix, and how it was built — in one place.</p>
+        <div className={styles.proof}>{index.constituents.length} stocks · updated {updated}</div>
         <div className={styles.actions}>
-          {live ? <button type="button" className={styles.primary} onClick={() => setInvestOpen(true)}>Invest in index <Icon name="arrow" size={14} /></button> : <Link className={styles.primary} href="#holdings">View holdings <Icon name="arrow" size={14} /></Link>}
-          <button type="button" className={styles.secondary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
+          {live ? <><button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button><button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button></> : null}
+          <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
           <button type="button" className={styles.tertiary} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(index.person_id)}><Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
@@ -225,32 +222,31 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
 
     <IndexPerformancePlaceholder />
     <section className={styles.statStrip}>
-      <div><span>Disclosed names</span><strong>{disclosedCount}</strong><small>{index.period ? `${index.period} annual holdings` : "annual source book"}</small></div>
-      <div><span>Token mapped</span><strong>{index.constituents.length}</strong><small>{coverage == null ? "catalog coverage unavailable" : `${coverage.toFixed(1)}% of disclosed weight`}</small></div>
-      <div><span>Pool ready</span><strong>{poolReadyCount}</strong><small>{tradableCoverage == null ? "route coverage unavailable" : `${(tradableCoverage / 100).toFixed(1)}% of disclosed weight`}</small></div>
+      <div><span>Stocks</span><strong>{index.constituents.length}</strong><small>{index.period ? `${index.period} holdings` : "published mix"}</small></div>
+      <div><span>Names in the source</span><strong>{disclosedCount}</strong></div>
+      <div><span>Updated</span><strong>{updated}</strong></div>
       <div><span>Status</span><strong>{status}</strong></div>
     </section>
     <nav className={styles.tabs} aria-label="Index sections">
-      {([["overview", "Overview"], ["holdings", "Holdings"], ["activity", "Activity"], ["about", "About"]] as const).map(([id, label]) => <button id={id === "holdings" ? "holdings" : undefined} type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "holdings" ? <span>{index.constituents.length}</span> : null}</button>)}
+      {([["stocks", "Stocks"], ["breakdown", "Breakdown"], ["moves", "Moves"], ["about", "About"]] as const).map(([id, label]) => <button type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "stocks" ? <span>{index.constituents.length}</span> : null}</button>)}
     </nav>
     <section className={styles.tabContent}>
-      {tab === "overview" ? <div className={styles.overviewGrid}>
+      {tab === "stocks" ? <HoldingsTab index={index} /> : null}
+      {tab === "breakdown" ? <div className={styles.overviewGrid}>
         <TopHoldings index={index} /><AllocationStrip index={index} />
-        <CoverageBreakdown coverage={resource.data?.coverage} unmapped={unmapped} />
-        <div className={styles.summaryCard}><span>PORTFOLIO SUMMARY</span><p>{summary}</p><small>Weights are annual disclosed holding-value range midpoints, not live positions. Reported trades remain separate activity.</small></div>
+        <div className={styles.summaryCard}><span>WHAT THIS MIX IS</span><p>{summary}</p><small>Weights come from public filings. They are not a live brokerage account.</small></div>
       </div> : null}
-      {tab === "holdings" ? <HoldingsTab index={index} /> : null}
-      {tab === "activity" ? (/^[A-Z][0-9]{6}$/.test(activityProfileId ?? "")
+      {tab === "moves" ? (/^[A-Z][0-9]{6}$/.test(activityProfileId ?? "")
         ? <ActivityTab personId={activityProfileId!} />
         : <div className={styles.activityEmpty}><div className={styles.activityIcon}><Icon name="file" size={22} /></div><h3>Person-specific activity is unavailable.</h3><p>This index does not have a verified bioguide identifier, so InsiderIndex will not guess which disclosure rows belong here.</p><Link href="/feed">Open full disclosure feed <Icon name="arrow" size={13} /></Link></div>) : null}
       {tab === "about" ? <div className={styles.aboutGrid}>
-        <section><span>METHODOLOGY</span><h3>How the index is built</h3><p>{index.definition?.label ?? "Mapped annual holdings are normalized into a published target."}</p><p>{excluded.length} disclosed rows are excluded from the mapped target.</p></section>
-        <section><span>SOURCE</span><h3>Public annual disclosure</h3><p>{index.period ? `Annual holdings year ${index.period}` : "Holdings year unavailable"} · definition updated {updated}. The model is not a live brokerage balance or NAV.</p></section>
-        <section className={styles.disclaimer}><span>VAULT STATUS</span><h3>{status}</h3><p>{availability}</p></section>
+        <section><span>HOW IT IS BUILT</span><h3>Public filings, published mix</h3><p>{index.definition?.label ?? "This index is built from a public annual disclosure."}</p>{excluded.length ? <p>{excluded.length} disclosed names are not in the published mix.</p> : null}</section>
+        <section><span>SOURCE</span><h3>Public annual disclosure</h3><p>{index.period ? `Holdings year ${index.period}` : "Holdings year unavailable"} · updated {updated}.</p></section>
+        <section className={styles.disclaimer}><span>STATUS</span><h3>{status}</h3><p>{availability}</p></section>
       </div> : null}
     </section>
-    <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} mapped names · public annual disclosure model`} image={image} />
-    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={vault} />
+    <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} stocks`} image={image} />
+    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} />
   </div>;
 }
 
