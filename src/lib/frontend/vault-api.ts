@@ -225,9 +225,9 @@ export function hasPublicVaultIdentity(state: PublicVaultDepositState): boolean 
   }).identity != null;
 }
 
-/** Public Live/Invest: created vault + per-index deposit gate. Signing still uses `depositIsEnabled`. */
+/** Public Live/Invest requires the created vault, its deposit gate, and the active public signing path. */
 export function publicIndexIsLive(state: PublicVaultDepositState): boolean {
-  return hasPublicVaultIdentity(state) && state.depositsEnabled === true;
+  return publicVaultDepositIsEnabled(state);
 }
 
 export type PublicIndexStatus = "Live" | "Coming soon" | "Research";

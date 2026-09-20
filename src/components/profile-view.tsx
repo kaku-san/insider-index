@@ -125,11 +125,11 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const activity=trackerMoves.length?trackerMoves:(researchBook?.activity?.length?researchActivity(researchBook):legacyActivity(legacy.data?.trades??[]));const snapshot=researchBook?[...researchBook.snapshots].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0]:null;const fullItems=snapshot?.items??[];const mappedCount=researchBook?.publishedIndex?.constituents.length??holdings.filter(x=>x.mint).length;const following=ui.deviceFollows.includes(id);const latestFiling=trackerPerson?.asOf??snapshot?.filingDate??snapshot?.referenceDate??activity[0]?.filedDate??null;
  const trackerPoints=trackerPerson?.performance.filter(point=>point.date&&typeof point.value==="number").map(point=>({label:point.date!,equity:point.value!}))??[];
  const curve=trackerPoints.length?trackerPoints:legacyProfile?.curve??[];const historicalReturn=curve.length>1&&curve[0].equity?((curve.at(-1)!.equity-curve[0].equity)/Math.abs(curve[0].equity))*100:null;
- const liveState={vaultAddress:vaultIndex?.vaultAddress,shareMint:vaultIndex?.shareMint,network:vaultIndex?.network,depositsEnabled:vaultIndex?.depositsEnabled,publicFundsEnabled:vaultDir.data?.publicFundsEnabled};
+ const liveState={vaultAddress:vaultIndex?.vaultAddress,shareMint:vaultIndex?.shareMint,network:vaultIndex?.network,depositsEnabled:vaultIndex?.depositsEnabled,publicFundsEnabled:vaultIndex?.publicFundsEnabled===true};
  const live=Boolean(vaultIndex)&&publicIndexIsLive(liveState);
  const liveStatus=vaultIndex?publicIndexStatus(liveState):null;
  const canCashOut=live&&hasIndexShares(position);
- const resourceReadiness=vaultIndex&&vaultIndexId?vaultReadinessFromIndex(vaultIndexId,{index:{vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network},depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultDir.data?.publicFundsEnabled}):null;
+ const resourceReadiness=vaultIndex&&vaultIndexId?vaultReadinessFromIndex(vaultIndexId,{index:{vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network},depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultIndex.publicFundsEnabled===true}):null;
  const flowReadiness=vault??resourceReadiness;
 
  return <div className={styles.page}>

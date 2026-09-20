@@ -15,7 +15,7 @@ const { UIProvider } = await import("../src/components/providers/ui-provider.tsx
 const mag7Vault: PublicVaultDefinition = {
   indexId: "idx-theme-mag7-caucus", kind: "thematic", personSlug: "mag7-caucus", bioguideId: null,
   name: "Mag7 Caucus", symbol: "IITMAGCA", status: "CREATABLE", network: "mainnet-beta",
-  weightBasis: "thematic-multi-member-value", depositsEnabled: true,
+  weightBasis: "thematic-multi-member-value", depositsEnabled: true, publicFundsEnabled: true,
   depositReason: "all-mapped-legs-carry-an-observed-tradable-pool (still gated by VAULT_RELEASE.publicFundsEnabled)",
   coverage: { tickerCount: 7, mappedLegCount: 7, vaultReadyLegCount: 7, mappableByWeightBps: 10000 },
   provenance: { kind: "thematic", note: "Congress owns the Mag7" },
@@ -76,6 +76,7 @@ test("invest sheet uses plain language and skips a separate review step", () => 
     },
   })));
   assert.match(html, /Invest in one step/);
+  assert.match(html, /Alpha software — experimental; you can lose funds\./);
   assert.match(html, /INVEST/);
   assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);
 });

@@ -51,7 +51,22 @@ type IndexRowData = {
   coverageLabel: string;
   tickers: string[];
   status: "Live" | "Coming soon" | "Research";
+  featured: boolean;
 };
+
+const FEATURED_INDEX_IDS = [
+  "insiderindex-josh-gottheimer",
+  "insiderindex-nancy-pelosi",
+  "insiderindex-shri-thanedar",
+  "insiderindex-lisa-mcclain",
+  "insiderindex-julia-letlow",
+  "idx-theme-mag7-caucus",
+  "idx-theme-silicon-hill",
+  "idx-theme-fresh-ink",
+  "idx-theme-bipartisan-handshake",
+  "idx-theme-house-heat",
+] as const;
+const featuredRank = new Map(FEATURED_INDEX_IDS.map((id, rank) => [id, rank]));
 
 function themeImage(id: string) {
   return `/index-assets/themes/${id}-hero.png`;
@@ -87,7 +102,8 @@ function IndexThumb({ row }: { row: IndexRowData }) {
 }
 
 function IndexRow({ row }: { row: IndexRowData }) {
-  return <article className={styles.indexRow}>
+  const statusLabel = row.status === "Research" && row.featured ? "Featured" : row.status === "Coming soon" ? "Soon" : row.status;
+  return <article className={`${styles.indexRow} ${row.featured ? styles.featuredRow : ""}`}>
     <Link href={row.href} className={styles.indexIdentity}>
       <IndexThumb row={row} />
       <div><strong>{row.name}</strong><span>{row.kind === "person" ? "Person index" : "Theme index"}</span></div>
@@ -101,7 +117,7 @@ function IndexRow({ row }: { row: IndexRowData }) {
     </div>
     <div className={styles.metricsCell}>
       <strong>{row.coverage == null ? row.coverageLabel : `${row.coverage.toFixed(row.coverage % 1 ? 1 : 0)}% ${row.coverageLabel}`}</strong>
-      <span className={`${styles.status} ${row.status === "Research" ? styles.research : row.status === "Live" ? styles.live : styles.soon}`}>{row.status}</span>
+      <span className={`${styles.status} ${row.status === "Research" ? styles.research : row.status === "Live" ? styles.live : styles.soon}`}>{statusLabel}</span>
     </div>
     <Link href={row.href} className={styles.rowCta}>{row.status === "Live" ? "Invest" : "View"} <Icon name="arrow" size={14} /></Link>
   </article>;
@@ -137,6 +153,7 @@ function vaultRow(
     coverageLabel: index.kind === "thematic" ? "mapped" : "mapped",
     tickers: index.legs.slice(0, 4).map((item) => item.ticker),
     status,
+    featured: featuredRank.has(index.indexId),
   };
 }
 
@@ -179,7 +196,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
     if (sort === "name") next.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "coverage") next.sort((a, b) => (b.coverage ?? 0) - (a.coverage ?? 0) || a.name.localeCompare(b.name));
     if (sort === "holdings") next.sort((a, b) => (b.holdings ?? 0) - (a.holdings ?? 0) || a.name.localeCompare(b.name));
-    if (sort === "featured") next.sort((a, b) => Number(a.id !== "insiderindex-nancy-pelosi") - Number(b.id !== "insiderindex-nancy-pelosi") || Number(a.kind === "theme") - Number(b.kind === "theme") || a.name.localeCompare(b.name));
+    if (sort === "featured") next.sort((a, b) => (featuredRank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (featuredRank.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name));
     return next;
   }, [definitions, filter, indexResource.data?.publicFundsEnabled, investableOnly, people, query, sort, themes]);
   const loading = !initialIndexes && indexResource.loading;
@@ -203,7 +220,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
 
     <section className={styles.tableSection} aria-labelledby="all-indexes-title">
       <div className={styles.tableHead}>
-        <div><span className={styles.eyebrow}>ALL INDEXES</span><h2 id="all-indexes-title">Pick the index. See the book.</h2></div>
+        <div><span className={styles.eyebrow}>FEATURED INDEXES</span><h2 id="all-indexes-title">Pick the index. See the book.</h2></div>
         <div className={styles.utilityBar}>
           <div className={styles.segmented} aria-label="Index type filter">
             {([["all", "All"], ["people", "People"], ["themes", "Themes"]] as const).map(([value, label]) => <button type="button" key={value} className={filter === value ? styles.active : ""} onClick={() => setFilter(value)}>{label}</button>)}

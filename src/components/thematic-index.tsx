@@ -27,7 +27,7 @@ function vaultState(definition?: PublicVaultDefinition | null, payload?: IndexRe
     shareMint: readiness?.identity?.shareMint ?? payload?.index.shareMint ?? definition?.shareMint,
     network: readiness?.identity?.network ?? payload?.index.network ?? definition?.network,
     depositsEnabled: payload?.depositsEnabled ?? definition?.depositsEnabled,
-    publicFundsEnabled: payload?.publicFundsEnabled,
+    publicFundsEnabled: payload?.publicFundsEnabled ?? definition?.publicFundsEnabled,
   };
 }
 
