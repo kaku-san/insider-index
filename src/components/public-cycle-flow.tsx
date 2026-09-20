@@ -67,10 +67,10 @@ export function PublicCycleFlow({ mode }: { mode: "deposit" | "withdraw" }) {
         {state.recoveryRequired && <div role="alert" className={styles.blockers}>{state.recoveryRequired}</div>}
         <div className={styles.cta}>
           <button className={styles.secondary} disabled={busy} onClick={() => void work(async () => { setReply(await (await client()).reconcile()); setStatus("Finalized receipts reconciled. Missing history retains the existing obligation."); })}>Reconcile / refresh</button>
-          <button className={styles.primary} disabled={busy || !active || !!pending || (!newDeposits && !["exiting", "recovering"].includes(state.phase)) || state.phase === "complete"} onClick={() => void work(() => prepare("next"))}>Prepare next owner step</button>
+          {mode === "deposit" && <button className={styles.primary} disabled={busy || !active || !!pending || (!newDeposits && !["exiting", "recovering"].includes(state.phase)) || state.phase === "complete"} onClick={() => void work(() => prepare("next"))}>Prepare next owner step</button>}
         </div>
         <div className={styles.cta}>
-          <button className={styles.secondary} disabled={busy || !active || !!pending || state.phase !== "holding"} onClick={() => void work(() => prepare("withdraw"))}>Prepare approved USDC exit</button>
+          {mode === "withdraw" && <button className={styles.secondary} disabled={busy || !active || !!pending || state.phase !== "holding"} onClick={() => void work(() => prepare("withdraw"))}>Prepare approved USDC exit</button>}
           <button className={styles.secondary} disabled={busy || !active || !!pending || state.phase === "complete"} onClick={() => void work(() => prepare("recover"))}>Prepare recovery</button>
         </div>
         {pending && <div className={styles.approval}>
