@@ -109,7 +109,7 @@ test("public API refuses real sub-share bootstrap amount before returning a wire
   const f = await publicCycleFixture("500000");
   try {
     await f.access();
-    await assert.rejects(f.client.prepare(), /Invest isn't available right now\./);
+    await assert.rejects(f.client.prepare(), /This amount is too small to buy shares\. Try a larger amount\./);
     assert.equal((await f.journal.read()).pending, null); assert.equal(f.sends(), 0);
   } finally { await f.close(); }
 });

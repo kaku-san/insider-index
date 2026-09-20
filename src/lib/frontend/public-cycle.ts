@@ -96,9 +96,9 @@ export class PublicCycleClient {
   }
   async retry(): Promise<PublicCycleReply> {
     return this.work(async () => {
-      const pending = this.reply?.state.pending;
+      const pending = this.retained?.pending ?? this.reply?.state.pending;
       const wire = this.retained?.wire ?? pending?.signedTransaction;
-      if (!wire) throw new Error("CYCLE_CLIENT_NO_RETAINED_SIGNED_BYTES");
+      if (!wire || !pending) throw new Error("CYCLE_CLIENT_NO_RETAINED_SIGNED_BYTES");
       return this.call("submit", { signedTransaction: wire, request: cycleActionPurpose(pending.action) === "recovery" ? "withdraw" : "next" });
     });
   }
