@@ -69,7 +69,7 @@ API routes:
 - `GET /api/tracker-profiles` · `GET /api/tracker-profiles/[id]` — bundled PelosiTracker top-20 snapshot (`TRACKER_AS_OF`, currently 2026-09-15); the featured 20 person pages show this as the current book, with FMP annual filings staying older evidence and tracker trades info-only. Static snapshot, no live crawl
 - `GET /api/published-indexes/[hash]` — immutable published model with persisted constituent target weights; no write or execution endpoint
 - `GET /api/disclosures` — feed body served from the committed PelosiTracker/FMP disclosure bundle via `src/lib/tracker/feed.ts` (research-only rows: `source: "pelositracker"`, `venue: "none"`, no mint, `tradeEligible: false`, value bands never exact prices). Per-lane provenance in `lanes.{insiders,congress,tracker}` (`source`, `live`, `count`, `note`): the live EDGAR/AInvest lanes are reported `off` with provenance rather than probed/retried. Paginated (`?page`/`?limit`; default/max in `feed.ts`) with `total`/`page`/`pageSize`/`pageCount`/`hasMore`/`partial`; `catalog` feed status included
-- `POST /api/rpc` — allowlisted JSON-RPC pass-through to Helius (or public RPC)
+- `POST /api/rpc` — same-origin, server-configured JSON-RPC proxy to Helius (or public RPC); preserves existing methods and adds only bounded vault discovery/finalized history reads, rejecting broad scans and malformed requests
 - `GET /api/disclosures/[id]` — inspect payload
 - `GET /api/signals` · `GET /api/profiles`
 - `GET /api/indexes` lists model indexes (crowd first) and explicit unavailable native-position status. Legacy `POST /api/indexes/quote` and `/execute` now return `503` with native release blockers; no fabricated transaction or receipt
