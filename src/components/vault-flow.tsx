@@ -84,7 +84,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
     phase==="CONVERTING"||phase==="COMPLETE_USDC"?[...withdrawBase,"CONVERTING","COMPLETE_USDC"]:
     withdrawBase;
   const title=mode==="deposit"?`Invest in ${indexName}`:`Cash out ${indexName}`;
-  const canPrepare=hasVault&&(mode!=="deposit"||depositIsEnabled(readiness));
+  const canPrepare=hasVault&&(mode==="deposit"?depositIsEnabled(readiness):readiness?.redeemEnabled===true);
   const txs=prepared?.transactions??[];
 
   function start(){
