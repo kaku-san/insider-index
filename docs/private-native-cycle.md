@@ -46,7 +46,7 @@ npm run keeper:cycle -- --policy /absolute/operator/approved-cycle.json \
   --execute --keypair /absolute/operator/keeper.json --watch
 ```
 
-Without `--watch`, one tick runs. The watcher signs keeper setup/prices/fills/mint/cleanup only, waits for owner actions and never withdraws for the owner. This is operation settlement, not a discretionary index rebalance/force-rebalance daemon. Exceptions stop the process; investigate/restart the same operation, not a new UUID. No hosting/service provisioning is implied.
+Without `--watch`, one tick runs. The watcher signs keeper setup/prices/fills/mint/cleanup only, waits for owner actions and never withdraws for the owner. This is operation settlement, not a discretionary index rebalance/force-rebalance daemon. Exceptions in the configured operation stop the process; failures while ticking additional public Mag7 depositor operations are isolated so later operations continue. Investigate/restart the same operation, not a new UUID. No hosting/service provisioning is implied.
 
 ## Owner sequence
 
