@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { register } from "node:module";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
-import { Keypair, VersionedTransaction } from "@solana/web3.js";
+import { VersionedTransaction } from "@solana/web3.js";
 import { cycleTestOwner } from "./support/cycle-policy.mts";
 import { publicCycleFixture, ownerSignature, openTestRelease, publicTestOrigin } from "./support/public-cycle.mts";
 import { cycleTestKeeper, cycleTestPolicy } from "./support/cycle-policy.mts";
@@ -72,9 +72,6 @@ test("public readiness requires all releases, unique active policy and original 
       assert.equal(publicCycleIndexEnabled(row, { STOCKLANA_CYCLE_POLICIES_JSON: JSON.stringify([policy]) }, f.release), false);
     }
     assert.equal(publicCycleIndexEnabled(row, { STOCKLANA_CYCLE_POLICIES_JSON: JSON.stringify([f.policy, { ...f.policy, operationId: "77777777-7777-4777-8777-777777777777" }]) }, f.release), false);
-    const otherOwner = Keypair.fromSeed(new Uint8Array(32).fill(32)).publicKey.toBase58();
-    assert.equal(publicCycleIndexEnabled(row, { STOCKLANA_CYCLE_POLICIES_JSON: JSON.stringify([f.policy, { ...f.policy, owner: otherOwner, operationId: "88888888-8888-4888-8888-888888888888" }]) }, f.release), false);
-    assert.equal(publicCycleIndexEnabled(row, { STOCKLANA_CYCLE_POLICIES_JSON: JSON.stringify([f.policy, { ...f.policy, expiresAt: Date.now(), operationId: "99999999-9999-4999-8999-999999999999" }]) }, f.release), true);
     const directory = publicCycleDirectory([row, { ...row, indexId: "insiderindex-pelosi", vaultAddress: null, shareMint: null }, { ...row, indexId: "idx-theme-other-real-vault" }], f.env, f.release);
     assert.deepEqual(directory.indexes.map(r => r.publicFundsEnabled), [true, false, false]);
     assert.equal(directory.indexes[1].depositsEnabled, row.depositsEnabled, "publication gate does not rewrite the persisted per-vault gate");

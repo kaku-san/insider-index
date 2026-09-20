@@ -17,10 +17,8 @@ export function publicCyclePolicyActive(policy: CyclePolicy, now = Date.now()): 
 export function publicCycleIndexEnabled(index: { indexId: string; network?: string | null; vaultAddress?: string | null; shareMint?: string | null; depositsEnabled?: boolean | null }, env: Record<string, string | undefined> = process.env, release: PublicCycleRelease = VAULT_RELEASE): boolean {
   if (!publicCycleReleaseOpen(release) || index.indexId !== PUBLIC_MAG7.indexId || index.network !== "mainnet-beta" || index.vaultAddress !== PUBLIC_MAG7.vault || index.shareMint !== PUBLIC_MAG7.shareMint || index.depositsEnabled !== true) return false;
   try {
-    const activePolicies = configuredCyclePolicies(env)
-      .filter(p => p.indexId === index.indexId)
-      .filter(p => publicCyclePolicyActive(p));
-    return activePolicies.length === 1;
+    const policies = configuredCyclePolicies(env).filter(p => p.indexId === index.indexId);
+    return policies.some(p => publicCyclePolicyActive(p) && policies.filter(candidate => candidate.owner === p.owner).length === 1);
   } catch { return false; }
 }
 export function publicCycleDirectory(indexes: readonly PublicVaultDefinition[], env: Record<string, string | undefined> = process.env, release: PublicCycleRelease = VAULT_RELEASE) {
