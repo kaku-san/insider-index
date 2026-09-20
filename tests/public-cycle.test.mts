@@ -109,7 +109,7 @@ test("public API refuses real sub-share bootstrap amount before returning a wire
   const f = await publicCycleFixture("500000");
   try {
     await f.access();
-    await assert.rejects(f.client.prepare(), /CYCLE_AMOUNT_CANNOT_REPRESENT_MINIMUM_SHARES/);
+    await assert.rejects(f.client.prepare(), /Invest isn't available right now\./);
     assert.equal((await f.journal.read()).pending, null); assert.equal(f.sends(), 0);
   } finally { await f.close(); }
 });
@@ -122,7 +122,7 @@ test("public shutdown/ambiguous HTTP/wallet switch retain exact signed bytes and
     await f.access(); await f.client.prepare();
     const before = f.sends();
     f.release.publicFundsEnabled = false;
-    await assert.rejects(f.client.signStep(ownerSignature), /PUBLIC_DEPOSITS_CLOSED/);
+    await assert.rejects(f.client.signStep(ownerSignature), /Invest isn't available right now\./);
     assert.equal(f.sends(), before);
     const retained = (await f.journal.read()).pending!.signedTransaction;
     assert(retained, "release shutdown does not forget a received owner signature");
@@ -160,7 +160,7 @@ test("non-template depositor chooses amount → authenticated API → SQL/native
     await f.access();
     f.release.publicFundsEnabled = false;
     const before = await f.journal.read();
-    await assert.rejects(f.client.prepare(), /PUBLIC_DEPOSITS_CLOSED/);
+    await assert.rejects(f.client.prepare(), /Invest isn't available right now\./);
     assert.deepEqual(await f.journal.read(), before, "closed release never acquires a prepare lease/draft");
     assert.equal(f.sends(), 0); f.release.publicFundsEnabled = true;
     async function keeper(expected: string) {
