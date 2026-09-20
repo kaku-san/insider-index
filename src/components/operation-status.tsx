@@ -33,6 +33,8 @@ export function OperationStatus({ operationId }: { operationId: string }) {
     }
   }
 
+  // Loading is an external operation triggered by the route parameter.
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { void load(); }, [operationId]);
 
   async function next() {

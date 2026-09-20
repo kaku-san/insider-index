@@ -20,6 +20,8 @@ export function PositionDetail({indexId}:{indexId:string}){
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState<string|null>(null);
   const [exitOpen,setExitOpen]=useState(false);
+  // Synchronize the wallet-scoped view with the external position endpoints.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(()=>{let alive=true;if(!wallet.solanaAddress){setPosition(null);return;}setLoading(true);setError(null);Promise.all([getIndexPosition(indexId,wallet.solanaAddress),getVaultReadiness(indexId)]).then(([p,r])=>{if(alive){setPosition(p);setReadiness(r)}}).catch(e=>{if(alive)setError(errorText(e))}).finally(()=>{if(alive)setLoading(false)});return()=>{alive=false}},[indexId,wallet.solanaAddress]);
   const weights=useMemo(()=>[...(readiness?.actualWeights?.length?readiness.actualWeights:readiness?.targetWeights??[])].sort((a,b)=>b.weightBps-a.weightBps),[readiness]);
   const pending=position?.pendingOperations?.filter(x=>!x.complete)??[];

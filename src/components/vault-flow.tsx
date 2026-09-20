@@ -64,7 +64,7 @@ function withdrawalDecimals(readiness?:VaultReadiness|null,position?:IndexShareP
   return decimals;
 }
 
-export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposit",position,indexKind:_indexKind="person"}:{open:boolean;onClose:()=>void;indexId:string;indexName:string;readiness?:VaultReadiness|null;mode?:Mode;position?:IndexSharePosition|null;indexKind?:IndexKind}){
+export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposit",position}:{open:boolean;onClose:()=>void;indexId:string;indexName:string;readiness?:VaultReadiness|null;mode?:Mode;position?:IndexSharePosition|null;indexKind?:IndexKind}){
   const wallet=usePrivySolana();
   const [screen,setScreen]=useState<Screen>("amount");
   const [amount,setAmount]=useState(mode==="deposit"?"1000":"100");
