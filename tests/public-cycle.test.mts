@@ -76,7 +76,9 @@ test("public discovery discloses binding only; no signature bypass, client budge
     f.env.STOCKLANA_CYCLE_POLICIES_JSON = JSON.stringify([{ ...f.policy, vault: f.policy.owner }]);
     assert.notEqual((await f.api({ action: "discover", wallet: f.policy.owner })).status, 200);
     f.env.STOCKLANA_CYCLE_POLICIES_JSON = JSON.stringify([f.policy, { ...f.policy, operationId: "77777777-7777-4777-8777-777777777777" }]);
-    assert.match((await (await f.api({ action: "discover", wallet: f.policy.owner })).json()).error, /AMBIGUOUS_POLICY/);
+    const ambiguous = await (await f.api({ action: "discover", wallet: f.policy.owner })).json();
+    assert.doesNotMatch(ambiguous.error, /CYCLE_|AMBIGUOUS_POLICY/);
+    assert.match(ambiguous.code, /AMBIGUOUS_POLICY/);
     f.env.STOCKLANA_CYCLE_POLICIES_JSON = original;
   } finally { await f.close(); }
 });

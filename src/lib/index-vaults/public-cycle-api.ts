@@ -15,7 +15,7 @@ export type PublicCycleDependencies = Pick<CycleApiDependencies, "env" | "runner
 
 function publicCycleErrorResponse(error: unknown, status?: number): Response {
   const body = publicCycleErrorBody(error);
-  const code = body.error;
+  const code = body.code;
   return Response.json(body, {
     status: status ?? (code.includes("ORIGIN") ? 403 : code === "CYCLE_PUBLIC_POLICY_UNAVAILABLE" || code === "CYCLE_PUBLIC_SCOPE" ? 404 : 409),
     headers,
@@ -24,9 +24,11 @@ function publicCycleErrorResponse(error: unknown, status?: number): Response {
 
 async function sanitizeCycleFailure(response: Response): Promise<Response> {
   const payload = await response.json().catch(() => null);
-  const code = payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
-    ? payload.error
-    : "CYCLE_PUBLIC_OPERATION_REFUSED";
+  const code = payload && typeof payload === "object" && "code" in payload && typeof payload.code === "string"
+    ? payload.code
+    : payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
+      ? payload.error
+      : "CYCLE_PUBLIC_OPERATION_REFUSED";
   return publicCycleErrorResponse(code, response.status);
 }
 
