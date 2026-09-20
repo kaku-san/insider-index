@@ -70,9 +70,8 @@ export async function readOwnedIndexPositions(owner: string, indexes: readonly P
 
 function requestOwner(request: Request): string {
   const params = new URL(request.url).searchParams;
-  const keys = [...params.keys()];
-  if (keys.length !== 1 || (keys[0] !== "wallet" && keys[0] !== "owner") || params.getAll(keys[0]).length !== 1) throw new Error("Unexpected query");
-  return walletOwner(params.get(keys[0]));
+  if ([...params.keys()].some(key => key !== "wallet") || params.getAll("wallet").length !== 1) throw new Error("Unexpected query");
+  return walletOwner(params.get("wallet"));
 }
 
 export async function handleIndexPosition(request: Request, indexId: string, dependencies: {
