@@ -7,10 +7,11 @@ import { assertPublicCycleScope, PUBLIC_MAG7 } from "./public-cycle-parse.ts";
 import { publicCyclePolicyForWallet, resolvePublicCyclePolicy } from "./public-cycle-policy.ts";
 import { publicCycleIndexEnabled, publicCyclePolicyActive, publicCycleReleaseOpen, type PublicCycleRelease } from "./public-cycle-release.ts";
 import { VAULT_RELEASE } from "./release.ts";
+import type { CycleRpc } from "./cycle-store.ts";
 import { publicCycleErrorBody } from "../frontend/public-cycle-copy.ts";
 
 const headers = { "Cache-Control": "no-store, private", Vary: "Origin", "X-Content-Type-Options": "nosniff" };
-export type PublicCycleDependencies = Pick<CycleApiDependencies, "env" | "runner" | "policy"> & { release?: PublicCycleRelease };
+export type PublicCycleDependencies = Pick<CycleApiDependencies, "env" | "runner" | "policy"> & { release?: PublicCycleRelease; rpc?: CycleRpc };
 
 function publicCycleErrorResponse(error: unknown, status?: number): Response {
   const body = publicCycleErrorBody(error);
@@ -30,8 +31,8 @@ async function sanitizeCycleFailure(response: Response): Promise<Response> {
 }
 
 /** Public URL. The configured Mag7 owner keeps the original operation. Any other connected
- * wallet gets a derived operation on the same vault (same limits/keeper, new journal). No
- * client budgets, operation IDs, keeper signing, or user-supplied policy. */
+ * wallet gets a derived operation on the same vault. Discovery binds the selected amount;
+ * client slippage/cost budgets, operation IDs, keeper signing and policies are never accepted. */
 export async function handlePublicCycleRequest(request: Request, indexId: string, dependencies: PublicCycleDependencies = {}): Promise<Response> {
   try {
     const origin = new URL(request.url).origin;
@@ -40,10 +41,10 @@ export async function handlePublicCycleRequest(request: Request, indexId: string
     const input = await readCycleRequestBody(request), env = dependencies.env ?? process.env;
     const release = dependencies.release ?? VAULT_RELEASE;
     if (input.action === "discover") {
-      if (Object.keys(input).length !== 2 || typeof input.wallet !== "string" || input.wallet.length > 44) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
+      if (Object.keys(input).some(k => !["action", "wallet", "amountRaw"].includes(k)) || typeof input.wallet !== "string" || input.wallet.length > 44 || (input.amountRaw !== undefined && typeof input.amountRaw !== "string")) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
       const wallet = new PublicKey(input.wallet);
       if (wallet.toBase58() !== input.wallet || !PublicKey.isOnCurve(wallet.toBytes())) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
-      const policy = publicCyclePolicyForWallet(input.wallet, env);
+      const policy = await publicCyclePolicyForWallet(input.wallet, env, Date.now(), input.amountRaw as string | undefined, dependencies.rpc);
       assertPublicCycleScope(policy);
       return Response.json({ binding: { operationId: policy.operationId, owner: policy.owner, policyHash: cyclePolicyHash(policy) }, challenge: createCycleAccessChallenge(policy, origin, env) }, { headers });
     }

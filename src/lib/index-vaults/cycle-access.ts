@@ -14,7 +14,7 @@ function secret(env: Record<string, string | undefined>): string {
 }
 function mac(encoded: string, env: Record<string, string | undefined>): Buffer { return createHmac("sha256", secret(env)).update(`insiderindex-cycle-access-v1:${encoded}`).digest(); }
 export function createCycleAccessChallenge(policy: CyclePolicy, origin: string, env: Record<string, string | undefined> = process.env, now = Date.now()): CycleAccessChallenge {
-  const c: Claims = { origin, owner: policy.owner, operationId: policy.operationId, policyHash: cyclePolicyHash(policy), nonce: randomBytes(24).toString("hex"), issuedAt: now, expiresAt: now + LIFETIME_MS };
+  const c: Claims = { origin, owner: policy.owner, operationId: policy.operationId, policyHash: cyclePolicyHash(policy), nonce: randomBytes(24).toString("hex"), issuedAt: now, expiresAt: now + LIFETIME_MS, depositUsdcRaw: policy.limits.depositUsdcRaw };
   const encoded = Buffer.from(canonicalJson(c)).toString("base64url");
   return { token: `${encoded}.${mac(encoded, env).toString("base64url")}`, message: message(c), expiresAt: c.expiresAt };
 }

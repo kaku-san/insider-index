@@ -1,5 +1,5 @@
 import { cyclePolicyHash, type CyclePolicy } from "./cycle-policy-parse.ts";
-export interface CycleAccessClaims { origin: string; owner: string; operationId: string; policyHash: string; nonce: string; issuedAt: number; expiresAt: number; }
+export interface CycleAccessClaims { origin: string; owner: string; operationId: string; policyHash: string; nonce: string; issuedAt: number; expiresAt: number; depositUsdcRaw?: string; }
 export interface CycleAccessChallenge { token: string; message: string; expiresAt: number; }
 export interface CycleAccessProof { token: string; signature: string; }
 export function cycleAccessMessage(c: CycleAccessClaims): string {

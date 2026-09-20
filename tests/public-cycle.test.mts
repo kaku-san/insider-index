@@ -150,8 +150,8 @@ test("public shutdown/ambiguous HTTP/wallet switch retain exact signed bytes and
   } finally { await f.close(); }
 });
 
-test("public client → authenticated API → actual SQL/native bank → external keeper → shares → USDC exit", async () => {
-  const f = await publicCycleFixture();
+test("non-template depositor chooses amount → authenticated API → SQL/native bank → shares → USDC-only exit", async () => {
+  const f = await publicCycleFixture("100000000", { templateAmountRaw: "200000000", templateOwner: Keypair.fromSeed(new Uint8Array(32).fill(32)).publicKey.toBase58() });
   try {
     f.vm.seed(f.policy.owner, MAINNET_USDC, 100_000_123n);
     for (const l of f.record.vaultLegs) f.vm.seed(f.policy.owner, l.mint, 123n, TOKEN_2022_PROGRAM_ID);
@@ -200,7 +200,13 @@ test("public client → authenticated API → actual SQL/native bank → externa
     await keeper("setup-keeper"); await keeper("setup-keeper");
     f.vm.seed(f.policy.keeper, MAINNET_USDC, 5_000_000n);
     for (const l of f.record.vaultLegs) f.vm.seed(f.policy.keeper, l.mint, 321n, TOKEN_2022_PROGRAM_ID);
-    await owner("create"); await owner("contribute"); await owner("lock");
+    await owner("create");
+    const resumed = await (await f.api({ action: "discover", wallet: f.policy.owner })).json();
+    assert.equal(resumed.binding.policyHash, f.client.discovery!.binding.policyHash, "reload resumes selected amount, not the configured $200");
+    assert.equal((await f.api({ action: "discover", wallet: f.policy.owner, amountRaw: "200000000" })).status, 409, "an existing draft cannot silently change amount");
+    await owner("contribute");
+    assert.equal((await f.journal.read()).contributedUsdcRaw, "100000000", "only the user-selected $100 was deposited");
+    await owner("lock");
     let intent = (await f.vm.native.sdk.fetchRebalanceIntent(f.vm.intent)).chain_data;
     f.vm.time(Number(intent.executionStartTime.toString()));
     for (let n = 0; n < 10; n++) { if ((await f.runner.preview("keeper")).action !== "prices") break; await keeper("prices"); }
