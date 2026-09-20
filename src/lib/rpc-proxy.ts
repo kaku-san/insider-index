@@ -25,7 +25,7 @@ const signature = (v: unknown) => {
 };
 
 function validEnvelope(call: Record<string, unknown>): boolean {
-  if (call.jsonrpc !== undefined && call.jsonrpc !== "2.0") return false;
+  if (call.jsonrpc !== "2.0") return false;
   if (Object.hasOwn(call, "id") && call.id !== null
     && (typeof call.id !== "string" && (typeof call.id !== "number" || !Number.isFinite(call.id)))) return false;
   return call.params === undefined || Array.isArray(call.params);

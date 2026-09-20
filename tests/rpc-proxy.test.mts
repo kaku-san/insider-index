@@ -84,6 +84,7 @@ test("proxy refuses broad scans, nonfinalized/unbounded history and malformed/ba
   const history = { commitment: "finalized", limit: 100, minContextSlot: 42 };
   const refused: unknown[] = [
     null, 1, "getGenesisHash", {}, [], [null], Array.from({ length: 21 }, () => ({ method: "getGenesisHash" })),
+    { method: "getBalance", params: [] },
     { jsonrpc: "1.0", id: 1, method: "getGenesisHash", params: [] },
     { jsonrpc: "2.0", id: {}, method: "getGenesisHash", params: [] },
     { jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: "invalid" },
@@ -126,7 +127,7 @@ test("proxy preserves existing relay and batch payloads but never signs or retur
     async () => { throw new Error("Failed at " + upstream); },
     async () => new Response("Upstream diagnostic containing " + key, { status: 401 }),
   ]) {
-    const refused = await handleRpcProxy(request({ method: "getGenesisHash" }), { ...options, fetcher });
+    const refused = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), { ...options, fetcher });
     assert.equal(refused.status, 502);
     assert.deepEqual(await refused.json(), { error: "RPC upstream unavailable." });
   }
