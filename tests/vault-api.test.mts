@@ -3,7 +3,7 @@ import { register } from "node:module";
 import test from "node:test";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { creditHasRemainingAmount, depositIsEnabled, uiStateFrom, validatePreparedStep } = await import("../src/lib/frontend/vault-api.ts");
+const { creditHasRemainingAmount, depositIsEnabled, publicVaultDepositIsEnabled, uiStateFrom, validatePreparedStep, vaultReadinessFromIndex } = await import("../src/lib/frontend/vault-api.ts");
 const { markedDollars, moneyBand, stockActBandFromMidpoint } = await import("../src/lib/frontend/research-format.ts");
 
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
@@ -72,4 +72,20 @@ test("explicitly disabled deposits override generic vault readiness", () => {
   assert.equal(uiStateFrom(disabled), "PREVIEW_ONLY");
   assert.equal(depositIsEnabled({ ...disabled, depositEnabled: true }), true);
   assert.equal(uiStateFrom({ ...disabled, depositEnabled: true }), "LIVE_DEPOSIT");
+});
+
+test("public deposit eligibility requires a complete identity and the global release", () => {
+  const created = { index: { vaultAddress: owner, shareMint: owner, network: "mainnet-beta" as const }, depositsEnabled: true, publicFundsEnabled: true };
+  assert.equal(vaultReadinessFromIndex("test", created).depositEnabled, true);
+  assert.equal(publicVaultDepositIsEnabled({ ...created.index, depositsEnabled: true, publicFundsEnabled: true }), true);
+
+  const releaseClosed = vaultReadinessFromIndex("test", { ...created, publicFundsEnabled: false, depositReason: "blocked:internal-flag" });
+  assert.equal(releaseClosed.depositEnabled, false);
+  assert.deepEqual(releaseClosed.blockers, ["Public deposits are not open yet."]);
+  assert.equal(publicVaultDepositIsEnabled({ ...created.index, depositsEnabled: true, publicFundsEnabled: false }), false);
+
+  const noIdentity = vaultReadinessFromIndex("test", { ...created, index: { vaultAddress: owner, shareMint: owner } });
+  assert.equal(noIdentity.depositEnabled, false);
+  assert.equal(noIdentity.identity, null);
+  assert.deepEqual(noIdentity.blockers, ["This index does not have a live vault yet."]);
 });

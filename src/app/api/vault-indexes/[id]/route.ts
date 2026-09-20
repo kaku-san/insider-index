@@ -20,6 +20,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         period: index.provenance.fmpYear ? String(index.provenance.fmpYear) : undefined,
         version: 1,
         status: index.status,
+        network: index.network,
         published_at: index.updatedAt,
         vaultAddress: index.vaultAddress,
         shareMint: index.shareMint,

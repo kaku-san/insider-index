@@ -47,7 +47,9 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
   const poolReadyCount = coverage?.vaultReadyLegCount ?? 0;
   const tradableCoverage = coverage?.tradableByWeightBps == null ? null : coverage.tradableByWeightBps / 100;
   const readinessByTicker = new Map(vaultResource.data?.index.constituents.map((item) => [item.ticker, item.vault_ready]) ?? []);
-  const live = Boolean(vaultResource.data?.depositsEnabled && vaultResource.data?.publicFundsEnabled && depositIsEnabled(vault));
+  const live = depositIsEnabled(vault);
+  const hasVault = Boolean(vault?.identity);
+  const availability = vault?.blockers?.[0] ?? "This index does not have a live vault yet.";
 
   return <div className={styles.page}>
     <div className={styles.breadcrumb}><Link href="/"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />All indexes</Link><span>{index.indexName}</span></div>
@@ -62,6 +64,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
           {live ? <button type="button" className={styles.primary} onClick={() => setInvestOpen(true)}>Invest in index <Icon name="arrow" size={14} /></button> : <Link className={styles.primary} href="#holdings">View holdings <Icon name="arrow" size={14} /></Link>}
           <button type="button" className={styles.secondary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
+        {!live ? <p className={styles.availability}>{availability}</p> : null}
       </div>
       <div className={styles.returnHero}><span>1Y RETURN</span><strong>—</strong><small>Awaiting dated series</small></div>
     </section>
@@ -71,7 +74,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
       <div><span>Research names</span><strong>{disclosedCount}</strong></div>
       <div><span>Token mapped</span><strong>{mappedCount}</strong><small>{catalogCoverage == null ? "catalog coverage loading" : `${catalogCoverage.toFixed(1)}% of research weight`}</small></div>
       <div><span>Pool ready</span><strong>{poolReadyCount}</strong><small>{tradableCoverage == null ? "route coverage loading" : `${tradableCoverage.toFixed(1)}% of research weight`}</small></div>
-      <div><span>Status</span><strong>{live ? "Live" : "Research"}</strong></div>
+      <div><span>Status</span><strong>{live ? "Live" : hasVault ? "Deposits closed" : "Research only"}</strong></div>
     </section>
     <nav className={styles.tabs} aria-label="Index sections">
       {([["overview", "Overview"], ["holdings", "Holdings"], ["activity", "Activity"], ["about", "About"]] as const).map(([tabId, label]) => <button id={tabId === "holdings" ? "holdings" : undefined} type="button" key={tabId} className={tab === tabId ? styles.activeTab : ""} onClick={() => setTab(tabId)}>{label}{tabId === "holdings" ? <span>{holdings.length}</span> : null}</button>)}
@@ -92,7 +95,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
           <div className={styles.allocationLegend}>{top.map((item, position) => <div key={item.mint}><i style={{ background: palette[position % palette.length] }} /><StockIcon ticker={item.ticker} size="sm" /><span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.name)}</small></span><b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b></div>)}</div>
         </div>
         <CoverageBreakdown coverage={coverage} unmapped={vaultResource.data?.unmapped ?? []} />
-        <div className={styles.summaryCard}><span>PORTFOLIO SUMMARY</span><p>{index.narrative}</p><small>{live ? "This multi-member thematic basket is a research model. Deposit preparation is available when the native vault gate is open." : "This multi-member thematic basket is a research model. It has no deposit, basket Buy or NAV."}</small></div>
+        <div className={styles.summaryCard}><span>PORTFOLIO SUMMARY</span><p>{index.narrative}</p><small>{live ? "This multi-member thematic basket is a research model. Deposit preparation is available when the native vault gate is open." : `${availability} This multi-member thematic basket remains a research model without a deposit, basket Buy or NAV.`}</small></div>
       </div> : null}
       {tab === "holdings" ? <div className={styles.holdingsTable}>
         <div className={styles.holdingsNote}>Research weights are the published thematic target. Pool readiness separately shows whether each mapped token has an observed native vault route.</div>
@@ -106,7 +109,7 @@ export function ThematicIndexPage({ id, initialData }: { id: string; initialData
       {tab === "about" ? <div className={styles.aboutGrid}>
         <section><span>METHODOLOGY</span><h3>How the index is built</h3><p>{index.rule}</p><p>{index.whyItExists}</p></section>
         <section><span>SOURCE</span><h3>Where the data comes from</h3><p>{index.sourceLine}</p><p>{index.members.length} members · {index.rebalance}.</p></section>
-        <section className={styles.disclaimer}><span>IMPORTANT</span><h3>{live ? "Deposit preparation available" : "Research only"}</h3><p>{live ? "Investing opens a verified native preparation flow. Shares, costs and wallet approvals are shown only after preparation." : index.disclaimers.join(" ")}</p></section>
+        <section className={styles.disclaimer}><span>IMPORTANT</span><h3>{live ? "Deposit preparation available" : hasVault ? "Deposits closed" : "Research only"}</h3><p>{live ? "Investing opens a verified native preparation flow. Shares, costs and wallet approvals are shown only after preparation." : availability}</p></section>
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName} kind="Theme index" detail={`${holdings.length} mapped names · thematic research model`} image={`/index-assets/themes/${index.id}-hero.png`} />

@@ -160,30 +160,64 @@ export function uiStateFrom(readiness: VaultReadiness | null, position?: IndexSh
   return "PREVIEW_ONLY";
 }
 
-type VaultIndexResponse = {
+export type VaultIndexResponse = {
   index?: {
     vaultAddress?: string | null;
     shareMint?: string | null;
+    network?: Network | null;
   };
   depositsEnabled?: boolean;
   depositReason?: string | null;
   publicFundsEnabled?: boolean;
 };
 
+function publicBlocker(payload: VaultIndexResponse, hasIdentity: boolean): string {
+  if (!hasIdentity) return "This index does not have a live vault yet.";
+  // The release gate is intentionally named for people, not an internal feature flag.
+  if (payload.publicFundsEnabled !== true) return "Public deposits are not open yet.";
+  if (payload.depositsEnabled !== true) return "This vault is not accepting deposits yet.";
+  return "Deposit readiness could not be verified.";
+}
+
+/** Build the only public-invest eligibility state used by index pages.
+ * A definition's deposit gate is never enough on its own: a created vault, share mint, known
+ * network, and the global public-funds release must all be present before a deposit CTA appears. */
+export function vaultReadinessFromIndex(indexId: string, payload: VaultIndexResponse): VaultReadiness {
+  const vaultAddress = payload.index?.vaultAddress;
+  const shareMint = payload.index?.shareMint;
+  const network = payload.index?.network;
+  const hasIdentity = typeof vaultAddress === "string" && addressPattern.test(vaultAddress)
+    && typeof shareMint === "string" && addressPattern.test(shareMint)
+    && (network === "mainnet-beta" || network === "devnet");
+  const depositEnabled = hasIdentity && payload.depositsEnabled === true && payload.publicFundsEnabled === true;
+  return {
+    indexId,
+    depositEnabled,
+    ready: depositEnabled,
+    blockers: depositEnabled ? [] : [publicBlocker(payload, hasIdentity)],
+    identity: hasIdentity ? { network, vaultAccount: vaultAddress, shareMint, indexId } : null,
+  };
+}
+
+export type PublicVaultDepositState = {
+  vaultAddress?: string | null;
+  shareMint?: string | null;
+  network?: Network | null;
+  depositsEnabled?: boolean;
+  publicFundsEnabled?: boolean;
+};
+
+export function publicVaultDepositIsEnabled(state: PublicVaultDepositState): boolean {
+  return vaultReadinessFromIndex("public-index", {
+    index: { vaultAddress: state.vaultAddress, shareMint: state.shareMint, network: state.network },
+    depositsEnabled: state.depositsEnabled,
+    publicFundsEnabled: state.publicFundsEnabled,
+  }).depositEnabled === true;
+}
+
 export async function getVaultReadiness(indexId: string): Promise<VaultReadiness | null> {
   try {
-    const payload = await readApi<VaultIndexResponse>(`/api/vault-indexes/${encodeURIComponent(indexId)}`);
-    const publicFundsEnabled = payload.publicFundsEnabled === true;
-    const vaultAddress = payload.index?.vaultAddress;
-    const shareMint = payload.index?.shareMint;
-    const depositEnabled = payload.depositsEnabled === true && publicFundsEnabled && Boolean(vaultAddress && shareMint);
-    return {
-      indexId,
-      depositEnabled,
-      ready: depositEnabled,
-      blockers: depositEnabled ? [] : [payload.depositReason ?? (publicFundsEnabled ? "deposit-gate-closed" : "public-funds-disabled")],
-      identity: vaultAddress && shareMint ? { network: "mainnet-beta", vaultAccount: vaultAddress, shareMint, indexId } : null,
-    };
+    return vaultReadinessFromIndex(indexId, await readApi<VaultIndexResponse>(`/api/vault-indexes/${encodeURIComponent(indexId)}`));
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;

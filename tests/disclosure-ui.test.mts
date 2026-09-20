@@ -29,7 +29,7 @@ const person: StoredPerson = {
 const directory = Array.from({ length: 540 }, (_, i) => ({ ...person, id: `A${String(i).padStart(6, "0")}`, name: `Example Filer ${i}`, chamber: i % 2 ? "house" as const : "senate" as const }));
 const nativeIndex: PublicVaultDefinition = {
   indexId: "insiderindex-example-filer", kind: "person", personSlug: "example-filer", bioguideId: person.id,
-  name: "Example F Index", symbol: "IIFILER", status: "CREATABLE", weightBasis: "annual-holding-value-midpoint",
+  name: "Example F Index", symbol: "IIFILER", status: "CREATABLE", network: "mainnet-beta", weightBasis: "annual-holding-value-midpoint",
   depositsEnabled: false, depositReason: "public release disabled",
   coverage: { tickerCount: 1, mappedLegCount: 1, mappableByWeightBps: 7500 },
   provenance: { kind: "person", fmpYear: 2025, note: "Annual holdings mapped from public disclosure." },
