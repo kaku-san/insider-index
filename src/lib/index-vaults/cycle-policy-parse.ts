@@ -36,10 +36,11 @@ export function cycleActionPurpose(action: string): "deposit" | "recovery" {
 export function cyclePolicyHash(policy: CyclePolicy): string {
   return hashObject({ ...policy, expiresAt: 0, approvalReference: null, financialExecutionAuthorized: false });
 }
+/** Policy identity binds installed composition, not the live liquidity observation that gates it. */
 export function cycleDefinitionHash(record: PersistedVaultDefinition): string {
   return hashObject({ indexId: record.indexId, network: record.network, vault: record.vaultAddress, shareMint: record.shareMint,
     kind: record.kind ?? null, version: record.definitionVersion ?? null,
-    legs: record.vaultLegs.map(l => ({ ticker: l.ticker, mint: l.mint, provider: l.provider ?? null, decimals: l.decimals, pool: l.pool, kind: l.kind, targetWeightBps: l.targetWeightBps, tvlUsd: l.tvlUsd?.toString() ?? null })),
+    legs: record.vaultLegs.map(l => ({ ticker: l.ticker, mint: l.mint, provider: l.provider ?? null, decimals: l.decimals, pool: l.pool, kind: l.kind, targetWeightBps: l.targetWeightBps })),
     fees: [record.hostEntryFeeBps ?? null, record.hostExitFeeBps ?? null], cap: record.nativeTokenCap ?? null,
     keeper: record.keeper.pubkey });
 }

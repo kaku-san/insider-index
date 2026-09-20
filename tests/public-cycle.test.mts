@@ -122,7 +122,7 @@ test("public shutdown/ambiguous HTTP/wallet switch retain exact signed bytes and
     await f.access(); await f.client.prepare();
     const before = f.sends();
     f.release.publicFundsEnabled = false;
-    await assert.rejects(f.client.signStep(ownerSignature), /Invest isn't available right now\./);
+    await assert.rejects(f.client.signStep(ownerSignature), /Invest isn't set up for this index yet\./);
     assert.equal(f.sends(), before);
     const retained = (await f.journal.read()).pending!.signedTransaction;
     assert(retained, "release shutdown does not forget a received owner signature");
@@ -160,7 +160,7 @@ test("non-template depositor chooses amount → authenticated API → SQL/native
     await f.access();
     f.release.publicFundsEnabled = false;
     const before = await f.journal.read();
-    await assert.rejects(f.client.prepare(), /Invest isn't available right now\./);
+    await assert.rejects(f.client.prepare(), /Invest isn't set up for this index yet\./);
     assert.deepEqual(await f.journal.read(), before, "closed release never acquires a prepare lease/draft");
     assert.equal(f.sends(), 0); f.release.publicFundsEnabled = true;
     async function keeper(expected: string) {

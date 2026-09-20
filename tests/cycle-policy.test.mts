@@ -30,6 +30,8 @@ test("pilot authority is explicit, expiring and isolated by definition, vault, m
   assert.notEqual(cycleScope(p), cycleScope({ ...p, operationId: "00000000-0000-4000-8000-000000000002" }));
   assert.notEqual(cycleScope(p), cycleScope({ ...p, owner: keeper }));
   assert.notEqual(cycleScope(p), cycleScope({ ...p, indexId: "idx-theme-silicon-hill" }));
+  const observedLiquidity = record(); observedLiquidity.vaultLegs[0].tvlUsd = (observedLiquidity.vaultLegs[0].tvlUsd ?? 0) + 1;
+  assert.equal(cycleDefinitionHash(r), cycleDefinitionHash(observedLiquidity), "volatile TVL is an execution-readiness check, not policy identity");
   const changed = record(); changed.vaultLegs[0].targetWeightBps--; changed.vaultLegs[1].targetWeightBps++;
   assert.notEqual(cycleDefinitionHash(r), cycleDefinitionHash(changed));
   assert.throws(() => assertCyclePolicy(p, changed), /IDENTITY_CHANGED/);

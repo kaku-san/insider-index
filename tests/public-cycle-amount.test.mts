@@ -5,7 +5,8 @@ import { derivePublicCyclePolicy, resumePublicCyclePolicy, resolvePublicCyclePol
 import { initialCycleState } from "../src/lib/index-vaults/cycle-store.ts";
 import { createCycleAccessChallenge } from "../src/lib/index-vaults/cycle-access.ts";
 import { cyclePolicyHash } from "../src/lib/index-vaults/cycle-policy-parse.ts";
-import { publicDepositAmountRaw, publicCycleNextRequest } from "../src/lib/frontend/public-cycle-controls.ts";
+import { publicDepositAmountRaw, publicCycleNextRequest, publicCyclePrimaryCta } from "../src/lib/frontend/public-cycle-controls.ts";
+import { publicCycleErrorCopy, publicCycleStatusCopy } from "../src/lib/frontend/public-cycle-copy.ts";
 import { cycleTestPolicy } from "./support/cycle-policy.mts";
 
 test("chosen USDC amount scales minima without a product cap or relaxed slippage", async () => {
@@ -48,4 +49,26 @@ test("USDC decimal input is exact; cash out continues through every conversion, 
   assert.equal(publicCycleNextRequest("withdraw", { ...state, phase: "recovering" }), "next");
   assert.equal(publicCycleNextRequest("withdraw", { ...state, phase: "complete" }), null);
   assert.equal(publicCycleNextRequest("withdraw", { ...state, recoveryRequired: "attention" }), "recover");
+  assert.equal(publicCycleNextRequest("deposit", state, true), "next", "a first deposit must prepare from the holding phase");
+  assert.equal(publicCycleNextRequest("deposit", state, false), null, "a closed deposit gate cannot prepare a new contribution");
+});
+
+test("public modal presents one clear next action from review through wallet signature", () => {
+  const input = { mode: "deposit" as const, walletConnected: true, accessReady: true, authorized: true, pending: false, canRetry: false, nextRequest: "next" as const };
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, walletConnected: false }), { action: "connect", label: "Connect wallet" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, accessReady: false }), { action: "discover", label: "Review amount" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, authorized: false }), { action: "authorize", label: "Confirm in wallet" });
+  assert.deepEqual(publicCyclePrimaryCta(input), { action: "prepare", label: "Prepare investment" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, pending: true }), { action: "sign", label: "Sign in wallet" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, pending: true, canRetry: true }), { action: "retry", label: "Retry signed action" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, mode: "withdraw", accessReady: false }), { action: "discover", label: "Cash out to USDC" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, mode: "withdraw", nextRequest: "withdraw" }), { action: "prepare", label: "Cash out to USDC" });
+});
+
+test("prepare failures give investors usable copy instead of a generic unavailable state", () => {
+  for (const code of ["CYCLE_PERSISTED_KEEPER_AUTHORITY_REQUIRED", "CYCLE_PARTIAL_COVERAGE_OR_DEPOSITS_CLOSED", "CYCLE_PUBLIC_DEPOSITS_CLOSED", "CYCLE_LEG_UNREADY:mint"]) {
+    assert.equal(publicCycleErrorCopy(new Error(code), "deposit"), "Invest isn't set up for this index yet.");
+  }
+  assert.equal(publicCycleErrorCopy(new Error("CYCLE_AUTHORIZATION_EXPIRED"), "deposit"), "Your approval expired. Review the amount and confirm again.");
+  assert.equal(publicCycleStatusCopy(Object.assign(new Error("Invest isn't available right now."), { code: "CYCLE_POLICY_IDENTITY_CHANGED" }), "deposit"), "Invest blocked (POLICY_IDENTITY).");
 });

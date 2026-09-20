@@ -4,8 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePrivySolana } from "./providers/privy-provider";
 import { cycleActionPurpose, cycleActivationBlockers } from "../lib/index-vaults/cycle-policy-parse";
 import type { PublicCycleClient, PublicCycleDiscovery, PublicCycleReply } from "../lib/frontend/public-cycle";
-import { publicCycleErrorCopy } from "../lib/frontend/public-cycle-copy";
-import { publicDepositAmountRaw, publicCycleNextRequest } from "../lib/frontend/public-cycle-controls";
+import { publicCycleStatusCopy } from "../lib/frontend/public-cycle-copy";
+import { publicCycleNextRequest, publicCyclePrimaryCta, publicDepositAmountRaw } from "../lib/frontend/public-cycle-controls";
 import { hasIndexShares, type IndexSharePosition } from "../lib/frontend/vault-api";
 import { formatVaultShares } from "../lib/index-vaults/positions-contract";
 import styles from "./vault-flow.module.css";
@@ -43,6 +43,9 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
   const active = !!policy && cycleActivationBlockers(policy).length === 0 && policy.expiresAt > now;
   const newDeposits = active && reply?.depositEnabled === true;
   const canSign = active && !!pending && pending.payer === liveOwner && !pending.signature && pending.expiresAt > now && !(retained?.owner === liveOwner && retained.stepId === pending.stepId) && (cycleActionPurpose(pending.action) === "recovery" || newDeposits);
+  const canRetry = !!pending && pending.payer === liveOwner && !!(pending.signedTransaction || (retained?.owner === liveOwner && retained.stepId === pending.stepId));
+  let amountRaw: string | null = null;
+  try { amountRaw = publicDepositAmountRaw(amount); } catch { /* The primary action stays disabled until this is valid. */ }
   async function client() {
     if (!liveOwner) throw new Error("Connect your wallet.");
     let session = sessions.current.get(liveOwner);
@@ -58,7 +61,13 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
     if (running.current) return;
     running.current = true; setBusy(true);
     try { await task(); }
-    catch (e) { setStatus(publicCycleErrorCopy(e, mode)); }
+    catch (error) {
+      const code = error && typeof error === "object" && "code" in error && typeof error.code === "string" ? error.code : null;
+      if (process.env.NODE_ENV !== "production" && code) console.warn("Public cycle request failed", { code });
+      if (code === "CYCLE_AUTHORIZATION_EXPIRED") { setDiscovery(null); setReply(null); }
+      const copy = publicCycleStatusCopy(error, mode);
+      setStatus(process.env.NODE_ENV === "development" && code ? `${copy} [${code}]` : copy);
+    }
     finally {
       const owner = currentOwner.current, stepId = owner ? sessions.current.get(owner)?.retainedStepId : null;
       setRetained(owner && stepId ? { owner, stepId } : null);
@@ -66,38 +75,97 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
     }
   }
   async function prepare(request: "next" | "withdraw" | "recover") {
-    const result = await (await client()).prepare(request); setReply(result); setStatus(result.state.phase === "complete" ? "Cash out complete. Your USDC is in your wallet." : result.preparation?.action === "wait" ? "Still processing. Refresh to check progress." : "Ready to sign.");
+    setStatus(request === "withdraw" || request === "recover" || mode === "withdraw" ? "Preparing your cash out." : "Preparing your investment.");
+    const result = await (await client()).prepare(request);
+    setReply(result);
+    setStatus(result.state.phase === "complete"
+      ? "Cash out complete. Your USDC is in your wallet."
+      : result.preparation?.action === "wait"
+        ? "Still processing. Refresh to check progress."
+        : request === "withdraw" || request === "recover" || mode === "withdraw"
+          ? "Your cash out is ready. Sign in your wallet."
+          : "Your investment is ready. Sign in your wallet.");
   }
   const sharesLabel = ownedSharesLabel(position);
-  const nextRequest = state ? publicCycleNextRequest(mode, state) : null;
+  const nextRequest = state ? publicCycleNextRequest(mode, state, newDeposits) : null;
   const exitInProgress = state?.phase === "exiting" || state?.phase === "recovering";
+  const primary = publicCyclePrimaryCta({
+    mode,
+    walletConnected: !!liveOwner,
+    accessReady,
+    authorized: !!policy,
+    pending: !!pending,
+    canRetry,
+    nextRequest,
+  });
+  const primaryDisabled = !primary || busy
+    || (primary.action === "discover" && mode === "deposit" && !amountRaw)
+    || (primary.action === "prepare" && (!active || (nextRequest === "next" && !exitInProgress && !newDeposits)))
+    || (primary.action === "sign" && !canSign)
+    || (primary.action === "retry" && !canRetry);
+  async function runPrimary() {
+    if (!primary) return;
+    if (primary.action === "connect") {
+      setStatus("Opening your wallet connection.");
+      await wallet.connect("wallet");
+      setStatus("Choose an amount to review.");
+      return;
+    }
+    if (primary.action === "discover") {
+      setStatus(mode === "deposit" ? "Reviewing your amount." : "Loading your cash out details.");
+      setDiscovery(await (await client()).discover(mode === "deposit" ? amountRaw ?? undefined : undefined));
+      setStatus("Confirm in your wallet to continue.");
+      return;
+    }
+    if (primary.action === "authorize") {
+      setStatus("Confirm in your wallet to continue.");
+      const result = await (await client()).authorize(wallet.signMessage);
+      setReply(result);
+      if (mode === "deposit" && result.depositEnabled && !result.state.pending && result.state.phase !== "complete") {
+        await prepare("next");
+        return;
+      }
+      setStatus(mode === "deposit"
+        ? result.depositEnabled ? "Investment details are ready. Prepare investment to continue." : "Investment details are ready. Investing isn't open right now."
+        : "Cash out details are ready. Cash out to USDC to continue.");
+      return;
+    }
+    if (primary.action === "prepare") {
+      if (!nextRequest) throw new Error("CYCLE_PUBLIC_OPERATION_REFUSED");
+      await prepare(nextRequest);
+      return;
+    }
+    if (primary.action === "retry") {
+      setStatus("Retrying your signed action.");
+      setReply(await (await client()).retry());
+      setStatus("Still processing. Refresh to check progress.");
+      return;
+    }
+    setStatus("Sign in your wallet to continue.");
+    setReply(await (await client()).signStep(wallet.signTransaction));
+    setStatus("Signed. We’ll update this when it finishes.");
+  }
   return <div className="space-y-4">
     <div className={styles.intro}><h3>{mode === "withdraw" ? "Cash out to USDC" : "Invest"}</h3><p>{mode === "withdraw" ? "Convert your shares to USDC. Keep going until every step is complete." : "Choose your USDC amount, then review before you sign."}</p></div>
-    {mode === "deposit" && <><p className={styles.notice}>Alpha: funds are at risk. Shares and cash out can take multiple approvals; returns are not guaranteed.</p>{!accessReady && <div className={styles.amountWrap}><label htmlFor="public-deposit-amount">Amount in USDC</label><div className={styles.amount}><input id="public-deposit-amount" inputMode="decimal" autoComplete="off" placeholder="0.00" value={amount} disabled={busy} onChange={event => setAmount(event.target.value)} /></div></div>}</>}
+    {mode === "deposit" && <>
+      <p className={styles.notice}>Alpha: funds are at risk. Shares and cash out can take multiple approvals; returns are not guaranteed.</p>
+      {liveOwner && <div className={styles.amountWrap}><label htmlFor="public-deposit-amount">Amount in USDC</label><div className={styles.amount}><input id="public-deposit-amount" inputMode="decimal" autoComplete="off" placeholder="0.00" value={amount} disabled={busy || accessReady} onChange={event => setAmount(event.target.value)} /></div></div>}
+    </>}
     {sharesLabel ? <div className={styles.summary}><div className={styles.row}><span>Your position</span><strong>{sharesLabel}</strong></div></div> : null}
-    <div className={styles.cta}>
-      {!liveOwner ? <button className={styles.primary} disabled={busy} onClick={() => void work(() => wallet.connect("wallet"))}>Connect wallet</button> : <button className={styles.primary} disabled={busy} onClick={() => void work(async () => { const c = await client(); setDiscovery(await c.discover(mode === "deposit" && !accessReady ? publicDepositAmountRaw(amount) : undefined)); setStatus("Continue in your wallet."); })}>{mode === "deposit" && !accessReady ? "Review amount" : "Continue"}</button>}
-      {liveOwner && !accessReady && mode === "deposit" && <button className={styles.secondary} disabled={busy} onClick={() => void work(async () => { setDiscovery(await (await client()).discover()); setStatus("Continue in your wallet to resume."); })}>Resume</button>}
-      <button className={styles.primary} disabled={busy || !accessReady} onClick={() => void work(async () => { const c = await client(); setReply(await c.authorize(wallet.signMessage)); setStatus("Your investment details are ready."); })}>Continue</button>
-    </div>
     {policy && <>
       {!newDeposits && mode === "deposit" && <div className={styles.blockers}>Investing is not open right now.</div>}
       {state && <>
         {mode === "deposit" ? <div className={styles.summary}><div className={styles.row}><span>You invest</span><strong>{usdcText(policy.limits.depositUsdcRaw)}</strong></div><div className={styles.row}><span>Expected shares</span><strong>Confirmed when your purchase finishes</strong></div></div> : <div className={styles.summary}><div className={styles.row}><span>Minimum cash out</span><strong>{usdcText(policy.limits.minExitUsdcRaw)} USDC</strong></div></div>}
         {state.recoveryRequired && <div role="alert" className={styles.blockers}>This action needs attention before you continue.</div>}
-        <div className={styles.cta}>
-          <button className={styles.secondary} disabled={busy} onClick={() => void work(async () => { setReply(await (await client()).reconcile()); setStatus("Your latest update is here."); })}>Refresh</button>
-          {nextRequest && <button className={styles.primary} disabled={busy || !active || (nextRequest === "next" && !exitInProgress && !newDeposits)} onClick={() => void work(() => prepare(nextRequest))}>{nextRequest === "withdraw" ? "Cash out to USDC" : exitInProgress ? "Continue to USDC" : "Continue"}</button>}
-        </div>
         {pending && <div className={styles.approval}>
-          <h4>{cycleActionPurpose(pending.action) === "recovery" ? "Continue cash out to USDC" : "Ready to invest"}</h4><p>{pending.payer === liveOwner ? "Check the amount in your wallet, then sign." : "Your purchase is being completed."}</p>
-          <div className={styles.cta}>
-            <button className={styles.primary} disabled={busy || !canSign} onClick={() => void work(async () => { const c = await client(); setReply(await c.signStep(wallet.signTransaction)); setStatus("Signed. We’ll update this when it finishes."); })}>Sign</button>
-            <button className={styles.secondary} disabled={busy || pending.payer !== liveOwner || !(pending.signedTransaction || (retained?.owner === liveOwner))} onClick={() => void work(async () => { setReply(await (await client()).retry()); setStatus("Still working on your signed action."); })}>Try again</button>
-          </div>
+          <h4>{cycleActionPurpose(pending.action) === "recovery" ? "Cash out ready to sign" : "Investment ready to sign"}</h4><p>{pending.payer === liveOwner ? "Check the amount in your wallet, then sign." : "Your purchase is being completed."}</p>
         </div>}
       </>}
     </>}
+    <div className={styles.cta}>
+      {primary && <button className={styles.primary} disabled={primaryDisabled} onClick={() => void work(runPrimary)}>{primary.label}</button>}
+      {policy && <button className={styles.secondary} disabled={busy} onClick={() => void work(async () => { setStatus("Refreshing your investment status."); setReply(await (await client()).reconcile()); setStatus("Your latest update is here."); })}>Refresh</button>}
+    </div>
     <p role="status" className={styles.notice}>{busy ? "Working. " : ""}{status}</p>
   </div>;
 }
