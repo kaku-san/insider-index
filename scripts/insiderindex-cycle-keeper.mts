@@ -61,11 +61,12 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     try {
       for (const row of await listIncompleteCycleOperations(policy.vault)) {
         if (row.operationId === policy.operationId) continue;
-        let depositor;
-        try { depositor = await resumePublicCyclePolicy(template, row.owner); } catch { continue; }
-        if (depositor.operationId !== row.operationId || depositor.keeper !== policy.keeper) continue;
-        const other = await cycleKeeperTick(configuredCycleRunner(depositor, options.execute), { execute: options.execute, signer });
-        console.log(JSON.stringify({ indexId: depositor.indexId, operationId: depositor.operationId, keeper: depositor.keeper, ...other }));
+        try {
+          const depositor = await resumePublicCyclePolicy(template, row.owner);
+          if (depositor.operationId !== row.operationId || depositor.keeper !== policy.keeper) continue;
+          const other = await cycleKeeperTick(configuredCycleRunner(depositor, options.execute), { execute: options.execute, signer });
+          console.log(JSON.stringify({ indexId: depositor.indexId, operationId: depositor.operationId, keeper: depositor.keeper, ...other }));
+        } catch { continue; }
       }
     } catch { /* Listing other Mag7 depositors is additive; the configured operation already ticked. */ }
     if (!options.watch || ("phase" in result && result.phase === "complete")) break;

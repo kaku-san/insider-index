@@ -13,32 +13,36 @@ import { publicCycleErrorBody } from "../frontend/public-cycle-copy.ts";
 const headers = { "Cache-Control": "no-store, private", Vary: "Origin", "X-Content-Type-Options": "nosniff" };
 export type PublicCycleDependencies = Pick<CycleApiDependencies, "env" | "runner" | "policy"> & { release?: PublicCycleRelease; rpc?: CycleRpc };
 
-function publicCycleErrorResponse(error: unknown, status?: number): Response {
-  const body = publicCycleErrorBody(error);
-  const code = body.error;
+function publicCycleErrorResponse(error: unknown, status?: number, mode: "deposit" | "withdraw" = "deposit"): Response {
+  const body = publicCycleErrorBody(error, mode);
+  const code = body.code;
   return Response.json(body, {
     status: status ?? (code.includes("ORIGIN") ? 403 : code === "CYCLE_PUBLIC_POLICY_UNAVAILABLE" || code === "CYCLE_PUBLIC_SCOPE" ? 404 : 409),
     headers,
   });
 }
 
-async function sanitizeCycleFailure(response: Response): Promise<Response> {
+async function sanitizeCycleFailure(response: Response, mode: "deposit" | "withdraw"): Promise<Response> {
   const payload = await response.json().catch(() => null);
-  const code = payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
-    ? payload.error
-    : "CYCLE_PUBLIC_OPERATION_REFUSED";
-  return publicCycleErrorResponse(code, response.status);
+  const code = payload && typeof payload === "object" && "code" in payload && typeof payload.code === "string"
+    ? payload.code
+    : payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
+      ? payload.error
+      : "CYCLE_PUBLIC_OPERATION_REFUSED";
+  return publicCycleErrorResponse(code, response.status, mode);
 }
 
 /** Public URL. The configured Mag7 owner keeps the original operation. Any other connected
  * wallet gets a derived operation on the same vault. Discovery binds the selected amount;
  * client slippage/cost budgets, operation IDs, keeper signing and policies are never accepted. */
 export async function handlePublicCycleRequest(request: Request, indexId: string, dependencies: PublicCycleDependencies = {}): Promise<Response> {
+  let mode: "deposit" | "withdraw" = "deposit";
   try {
     const origin = new URL(request.url).origin;
     if (request.method !== "POST" || request.headers.get("origin") !== origin) throw new Error("CYCLE_REQUEST_ORIGIN");
     if (indexId !== PUBLIC_MAG7.indexId) throw new Error("CYCLE_PUBLIC_SCOPE");
     const input = await readCycleRequestBody(request), env = dependencies.env ?? process.env;
+    mode = input.request === "withdraw" ? "withdraw" : "deposit";
     const release = dependencies.release ?? VAULT_RELEASE;
     if (input.action === "discover") {
       if (Object.keys(input).some(k => !["action", "wallet", "amountRaw"].includes(k)) || typeof input.wallet !== "string" || input.wallet.length > 44 || (input.amountRaw !== undefined && typeof input.amountRaw !== "string")) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
@@ -61,10 +65,10 @@ export async function handlePublicCycleRequest(request: Request, indexId: string
         } });
       },
     });
-    if (!response.ok) return sanitizeCycleFailure(response);
+    if (!response.ok) return sanitizeCycleFailure(response, mode);
     const reply = await response.json();
     return Response.json({ ...reply, depositEnabled: publicCyclePolicyActive(reply.policy) && publicCycleIndexEnabled(reply.record, env, release) }, { headers });
   } catch (error) {
-    return publicCycleErrorResponse(error);
+    return publicCycleErrorResponse(error, undefined, mode);
   }
 }

@@ -45,7 +45,7 @@ export async function handleCycleRequest(request: Request, dependencies: CycleAp
     if (request.method !== "POST" || request.headers.get("origin") !== origin) throw new Error("CYCLE_REQUEST_ORIGIN");
     const input = await readCycleRequestBody(request);
     if (typeof input.operationId !== "string" || input.operationId.length > 64 || typeof input.action !== "string" || !["challenge", "read", "prepare", "submit", "reconcile"].includes(input.action)) throw new Error("CYCLE_REQUEST_ACTION");
-    const allowed = ["operationId", "action", ...(input.action === "challenge" ? ["wallet"] : ["auth"]), ...(input.action === "prepare" ? ["request"] : []), ...(input.action === "submit" ? ["signedTransaction"] : [])];
+    const allowed = ["operationId", "action", ...(input.action === "challenge" ? ["wallet"] : ["auth"]), ...(input.action === "prepare" || input.action === "submit" ? ["request"] : []), ...(input.action === "submit" ? ["signedTransaction"] : [])];
     if (Object.keys(input).some(k => !allowed.includes(k))) throw new Error("CYCLE_REQUEST_UNEXPECTED_FIELD");
     const env = dependencies.env ?? process.env, policy = dependencies.policy ?? configuredCyclePolicy(input.operationId, env);
     if (policy.operationId !== input.operationId) throw new Error("CYCLE_REQUEST_ACTION");
@@ -62,6 +62,7 @@ export async function handleCycleRequest(request: Request, dependencies: CycleAp
       if (input.request !== undefined && !["next", "withdraw", "recover"].includes(String(input.request))) throw new Error("CYCLE_REQUEST_PREPARATION");
       preparation = await runner.prepare("owner", (input.request ?? "next") as "next" | "withdraw" | "recover");
     } else if (input.action === "submit") {
+      if (input.request !== undefined && !["next", "withdraw", "recover"].includes(String(input.request))) throw new Error("CYCLE_REQUEST_PREPARATION");
       if (typeof input.signedTransaction !== "string" || input.signedTransaction.length > 3000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(input.signedTransaction)) throw new Error("CYCLE_REQUEST_SIGNED_WIRE");
       submission = await runner.submit("owner", input.signedTransaction);
     } else if (input.action === "reconcile") await runner.reconcile();

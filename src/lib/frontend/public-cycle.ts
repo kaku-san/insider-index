@@ -91,15 +91,15 @@ export class PublicCycleClient {
       // discard it because a server summary omits a pending step.
       this.retained = { pending: structuredClone(pending), wire, signature };
       this.current();
-      return this.call("submit", { signedTransaction: wire });
+      return this.call("submit", { signedTransaction: wire, request: cycleActionPurpose(pending.action) === "recovery" ? "withdraw" : "next" });
     });
   }
   async retry(): Promise<PublicCycleReply> {
     return this.work(async () => {
-      const pending = this.reply?.state.pending;
+      const pending = this.retained?.pending ?? this.reply?.state.pending;
       const wire = this.retained?.wire ?? pending?.signedTransaction;
-      if (!wire) throw new Error("CYCLE_CLIENT_NO_RETAINED_SIGNED_BYTES");
-      return this.call("submit", { signedTransaction: wire });
+      if (!wire || !pending) throw new Error("CYCLE_CLIENT_NO_RETAINED_SIGNED_BYTES");
+      return this.call("submit", { signedTransaction: wire, request: cycleActionPurpose(pending.action) === "recovery" ? "withdraw" : "next" });
     });
   }
 }

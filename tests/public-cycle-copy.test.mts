@@ -19,7 +19,8 @@ test("Mag7 public errors never expose lifecycle codes or recovery instructions",
   assert.equal(publicCycleErrorCopy(new Error("CYCLE_UNSAFE_INTERNAL_DETAIL"), "deposit"), "Invest isn't available right now.");
   assert.equal(publicCycleErrorCopy(new Error("CYCLE_UNSAFE_INTERNAL_DETAIL"), "withdraw"), "Cash out isn't available right now.");
   const body = publicCycleErrorBody(new Error("CYCLE_PUBLIC_POLICY_UNAVAILABLE"));
-  assert.equal(body.error, "CYCLE_PUBLIC_POLICY_UNAVAILABLE");
+  assert.equal(body.error, "Invest isn't available for this wallet.");
   assert.equal(body.message, "Invest isn't available for this wallet.");
+  assert.equal(body.code, "CYCLE_PUBLIC_POLICY_UNAVAILABLE");
   assert.equal("recovery" in body, false);
 });
