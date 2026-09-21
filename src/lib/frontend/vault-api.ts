@@ -1,3 +1,6 @@
+import { bytesToHex } from "@noble/hashes/utils.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { VersionedTransaction } from "@solana/web3.js";
 import { ApiError, readApi, writeApi } from "./api";
 
 export type Network = "devnet" | "mainnet-beta";
@@ -34,7 +37,7 @@ export type UnsignedMessage = {
   expectedRecipients: { owner: string; mint: string }[];
   recentBlockhash: string;
   lastValidBlockHeight: number;
-  simulation: { ok: true; slot: number; logsHash: string; error?: string };
+  simulation?: { ok: true; slot: number; logsHash: string; error?: string };
 };
 
 export type PreparedStep = {
@@ -284,8 +287,48 @@ function array(value: unknown, label: string): unknown[] {
   return value;
 }
 
+function decodedTransaction(value: string): Uint8Array {
+  if (typeof atob !== "function") throw new Error("The wallet cannot validate the prepared transaction.");
+  try { return Uint8Array.from(atob(value), character => character.charCodeAt(0)); }
+  catch { throw new Error("The prepared transaction is not valid base64."); }
+}
+
+function validatedTransaction(value: unknown, owner: string): UnsignedMessage {
+  const transaction = record(value);
+  const stepId = string(transaction.stepId, "transaction step");
+  const messageBase64 = string(transaction.messageBase64, "transaction");
+  const messageHash = string(transaction.messageHash, "transaction hash");
+  const recentBlockhash = string(transaction.recentBlockhash, "transaction blockhash");
+  const lastValidBlockHeight = transaction.lastValidBlockHeight;
+  if (typeof lastValidBlockHeight !== "number" || !Number.isSafeInteger(lastValidBlockHeight) || lastValidBlockHeight <= 0) throw new Error("The prepared transaction expiry is invalid.");
+  const requiredSigners = array(transaction.requiredSigners, "transaction signers").map((signer, index) => addressValue(signer, `transaction signer ${index + 1}`));
+  const allowedProgramIds = array(transaction.allowedProgramIds, "transaction programs").map((program, index) => addressValue(program, `transaction program ${index + 1}`));
+  const maxDebits = array(transaction.maxDebits, "transaction debits").map((debit, index) => {
+    const item = record(debit); const debitOwner = addressValue(item.owner, `debit owner ${index + 1}`); const mint = addressValue(item.mint, `debit mint ${index + 1}`); const amountRaw = string(item.amountRaw, `debit amount ${index + 1}`);
+    if (!rawAmountPattern.test(amountRaw) || debitOwner !== owner) throw new Error("The prepared transaction debit is invalid.");
+    return { owner: debitOwner, mint, amountRaw };
+  });
+  const expectedRecipients = array(transaction.expectedRecipients, "transaction recipients").map((recipient, index) => {
+    const item = record(recipient); return { owner: addressValue(item.owner, `recipient owner ${index + 1}`), mint: addressValue(item.mint, `recipient mint ${index + 1}`) };
+  });
+  let parsed: VersionedTransaction;
+  try { parsed = VersionedTransaction.deserialize(decodedTransaction(messageBase64)); }
+  catch { throw new Error("The prepared transaction cannot be decoded."); }
+  const signers = parsed.message.staticAccountKeys.slice(0, parsed.message.header.numRequiredSignatures).map(key => key.toBase58());
+  const compiledPrograms = parsed.message.compiledInstructions.map(instruction => parsed.message.staticAccountKeys[instruction.programIdIndex]?.toBase58());
+  if (parsed.signatures.some(signature => signature.some(byte => byte !== 0)) || parsed.message.staticAccountKeys[0]?.toBase58() !== owner || signers.length !== 1 || signers[0] !== owner || requiredSigners.length !== 1 || requiredSigners[0] !== owner || parsed.message.recentBlockhash !== recentBlockhash || bytesToHex(sha256(parsed.message.serialize())) !== messageHash || compiledPrograms.some(program => !program) || new Set(compiledPrograms).size !== new Set(allowedProgramIds).size || compiledPrograms.some(program => !allowedProgramIds.includes(program!))) throw new Error("The prepared transaction does not match this wallet.");
+  const simulation = transaction.simulation;
+  let validatedSimulation: UnsignedMessage["simulation"];
+  if (simulation != null) {
+    const checked = record(simulation);
+    if (checked.ok !== true || typeof checked.slot !== "number" || !Number.isSafeInteger(checked.slot) || checked.slot < 0 || !/^[a-f0-9]{64}$/.test(string(checked.logsHash, "simulation logs hash"))) throw new Error("The prepared transaction simulation is invalid.");
+    validatedSimulation = { ok: true, slot: checked.slot, logsHash: string(checked.logsHash, "simulation logs hash"), ...(typeof checked.error === "string" ? { error: checked.error } : {}) };
+  }
+  return { stepId, messageBase64, messageHash, requiredSigners, allowedProgramIds, maxDebits, expectedRecipients, recentBlockhash, lastValidBlockHeight, ...(validatedSimulation ? { simulation: validatedSimulation } : {}) };
+}
+
 export async function validatePreparedStep(payload: unknown, context: { owner: string; network: Network }): Promise<PreparedStep> {
-  addressValue(context.owner, "wallet owner");
+  const owner = addressValue(context.owner, "wallet owner");
   if (context.network !== "devnet" && context.network !== "mainnet-beta") throw new Error("The prepared network is invalid.");
   const step = record(payload);
   const requires = string(step.requires, "authority");
@@ -301,7 +344,8 @@ export async function validatePreparedStep(payload: unknown, context: { owner: s
     if (transactions.length) throw new Error("A non-user step returned wallet transactions.");
     return { ...(payload as Omit<PreparedStep, "network">), network: context.network };
   }
-  throw new Error("Native vault signing is unavailable until transaction instructions can be verified against declared debits and recipients.");
+  if (!transactions.length) throw new Error("The prepared action has no wallet transactions.");
+  return { ...(payload as Omit<PreparedStep, "network" | "transactions">), network: context.network, transactions: transactions.map(transaction => validatedTransaction(transaction, owner)) };
 }
 
 export async function prepareDeposit(indexId: string, input: { owner: string; amountRaw: RawAmount; idempotencyKey: string; walletProof?: string }, network: Network): Promise<PreparedStep> {
