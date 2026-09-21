@@ -20,6 +20,9 @@ export type PrivySolanaWallet = {
   authenticated: boolean;
   previewConnection: boolean;
   solanaAddress: string | null;
+  /** Available live addresses; the selected address is used consistently for header and signing. */
+  solanaWallets: string[];
+  selectSolanaWallet: (address: string) => void;
   appId: string | null;
   connectionMethod: WalletConnectMethod | null;
   connect: (method?: WalletConnectMethod) => Promise<void>;
@@ -100,6 +103,8 @@ export function PrivySolanaProvider({
       authenticated: allowStub && authenticated,
       previewConnection: allowStub && authenticated,
       solanaAddress: allowStub && authenticated ? STUB_WALLET : null,
+      solanaWallets: allowStub && authenticated ? [STUB_WALLET] : [],
+      selectSolanaWallet: () => {},
       appId: null,
       connectionMethod: allowStub && authenticated ? connectionMethod : null,
       connect,

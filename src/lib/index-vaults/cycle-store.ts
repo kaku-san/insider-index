@@ -45,6 +45,17 @@ export function initialCycleState(policy: CyclePolicy): CycleState {
     contributedUsdcRaw: "0", mintedSharesRaw: "0", burnedSharesRaw: "0", recoveredUsdcRaw: "0", ownerSolDebitLamports: "0", keeperSolDebitLamports: "0", keeperSurplusUsdcRaw: "0", bountyFundingRaw: "0",
     nativeClaimsClear: true, credits: [], receipts: [], expiredDrafts: [], pending: null, recoveryRequired: null };
 }
+/** A selected public amount can change only before any real contribution/share progress and
+ * after every issued draft is durably resolved. An unsigned wire is not disposable: it might
+ * have been signed or broadcast outside the app, so reconciliation must produce expiry history
+ * before a later discovery can restart this journal. */
+export function cycleAmountRestartable(state: CycleState): boolean {
+  return (state.phase === "new" || state.phase === "investing")
+    && rawAmount(state.contributedUsdcRaw) === 0n
+    && rawAmount(state.mintedSharesRaw) === 0n
+    && state.pending === null
+    && !state.receipts.some(receipt => receipt.status === "finalized" && (receipt.action === "contribute" || receipt.action === "mint"));
+}
 export function assertCycleState(state: CycleState, initial: CycleState): void {
   if (!state || state.schema !== initial.schema || ["indexId", "vault", "shareMint", "owner", "keeper", "operationId", "definitionHash", "policyHash"].some(k => state[k as keyof CycleState] !== initial[k as keyof CycleState])) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
   if (state.approvedDepositUsdcRaw !== undefined && state.approvedDepositUsdcRaw !== initial.approvedDepositUsdcRaw) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
@@ -134,6 +145,32 @@ export class CycleJournal {
       const result = await fn(state); assertCycleState(state, this.initial);
       await this.rpc("write_insiderindex_cycle", { ...identity, p_revision: raw.revision, p_state: state });
       return result;
+    } catch (error) { failed = true; throw error; }
+    finally {
+      try { await this.rpc("release_insiderindex_cycle", identity); }
+      catch { if (!failed) throw new Error("CYCLE_JOURNAL_RELEASE_FAILED_RECOVERY_REQUIRED"); }
+    }
+  }
+  /** Replace only the variable public amount under the existing durable lease. The SQL writer
+   * independently permits this two-field state change only while the old state is restartable. */
+  async restartEmptyAmount(replacement: CyclePolicy): Promise<boolean> {
+    const next = initialCycleState(replacement), current = this.initial;
+    for (const key of ["indexId", "vault", "shareMint", "owner", "keeper", "operationId", "definitionHash"] as const) {
+      if (next[key] !== current[key]) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
+    }
+    const token = randomUUID(), identity = { p_operation_id: current.operationId, p_token: token };
+    const raw = await this.rpc("lock_insiderindex_cycle", { ...identity, p_initial: current });
+    let failed = false;
+    try {
+      if (!raw || typeof raw !== "object" || !("state" in raw) || !("revision" in raw) || !Number.isSafeInteger(raw.revision)) throw new Error("CYCLE_JOURNAL_UNREADABLE");
+      const state = raw.state as CycleState; assertCycleState(state, current);
+      if (!cycleAmountRestartable(state)) return false;
+      state.policyHash = next.policyHash;
+      state.approvedDepositUsdcRaw = next.approvedDepositUsdcRaw;
+      assertCycleState(state, next);
+      await this.rpc("write_insiderindex_cycle", { ...identity, p_revision: raw.revision, p_state: state });
+      this.initial = next;
+      return true;
     } catch (error) { failed = true; throw error; }
     finally {
       try { await this.rpc("release_insiderindex_cycle", identity); }

@@ -9,7 +9,7 @@ import { getThematicView } from "../src/lib/thematic/views.ts";
 register("./support/ui-loader.mjs", import.meta.url);
 const { ThematicIndexPage } = await import("../src/components/thematic-index.tsx");
 const { VaultFlow } = await import("../src/components/vault-flow.tsx");
-const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
+const { PrivySolanaContext, PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 
 const mag7Vault: PublicVaultDefinition = {
@@ -80,6 +80,20 @@ test("invest sheet uses plain language and skips a separate review step", () => 
   assert.match(html, /INVEST/);
   assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);
   assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation|recovery required/i);
+});
+
+test("Mag7 invest sheet names the same selected wallet used by the header", () => {
+  const address = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
+  const wallet = {
+    ready: true, configured: true, mode: "live" as const, authenticated: true, previewConnection: false, solanaAddress: address,
+    solanaWallets: [address], selectSolanaWallet() {}, appId: "test", connectionMethod: "wallet" as const,
+    connect: async () => {}, disconnect: async () => {}, signMessage: async () => "", signTransaction: async () => "", signAndSendTransaction: async () => "",
+  };
+  const html = renderToStaticMarkup(createElement(UIProvider, null, createElement(PrivySolanaContext.Provider, { value: wallet }, createElement(VaultFlow, {
+    open: true, onClose() {}, indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus",
+  }))));
+  assert.match(html, /Investing as/);
+  assert.match(html, /C7ye6UvJ…zgCWYQyB/);
 });
 
 test("Mag7 invest sheet shows chain share balance as Your position", () => {

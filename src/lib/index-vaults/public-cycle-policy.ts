@@ -6,7 +6,7 @@ import { assertPublicCycleScope } from "./public-cycle-parse.ts";
 import { uniquePublicMag7Policy } from "./public-cycle-release.ts";
 import { cycleAccessClaims } from "./cycle-access.ts";
 import { rawAmount, sdkRawAmount } from "./amounts.ts";
-import { cycleRpcFromEnv, type CycleRpc } from "./cycle-store.ts";
+import { CycleJournal, cycleRpcFromEnv, type CycleRpc } from "./cycle-store.ts";
 import { cyclePolicyHash } from "./cycle-policy-parse.ts";
 
 /** RFC 4122 UUID v5 so each Mag7 depositor resumes the same journal without a second configured policy. */
@@ -48,7 +48,12 @@ export async function resumePublicCyclePolicy(template: CyclePolicy, wallet: str
   const state = value.state as { approvedDepositUsdcRaw?: string; policyHash?: string };
   const saved = derivePublicCyclePolicy(template, wallet, state.approvedDepositUsdcRaw);
   if (cyclePolicyHash(saved) !== state.policyHash) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
-  if (depositUsdcRaw !== undefined && requested.limits.depositUsdcRaw !== saved.limits.depositUsdcRaw) throw new Error("CYCLE_PUBLIC_AMOUNT_ALREADY_SELECTED");
+  if (depositUsdcRaw !== undefined && requested.limits.depositUsdcRaw !== saved.limits.depositUsdcRaw) {
+    // Discovery is allowed to replace a never-funded amount. The journal reacquires its durable
+    // lease and rechecks the complete state, so this read cannot race a contribution or signature.
+    if (await new CycleJournal(saved, rpc).restartEmptyAmount(requested)) return requested;
+    throw new Error("CYCLE_PUBLIC_AMOUNT_ALREADY_SELECTED");
+  }
   return saved;
 }
 

@@ -8,6 +8,7 @@ import { publicCycleStatusCopy } from "../lib/frontend/public-cycle-copy";
 import { publicCycleNextRequest, publicCyclePrimaryCta, publicDepositAmountRaw } from "../lib/frontend/public-cycle-controls";
 import { hasIndexShares, type IndexSharePosition } from "../lib/frontend/vault-api";
 import { formatVaultShares } from "../lib/index-vaults/positions-contract";
+import { shortenAddress } from "../lib/format";
 import styles from "./vault-flow.module.css";
 
 function usdcText(raw: string) {
@@ -30,12 +31,20 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
   const [discovery, setDiscovery] = useState<PublicCycleDiscovery | null>(null);
   const [busy, setBusy] = useState(false), [now, setNow] = useState(0);
   const [amount, setAmount] = useState("");
+  const [resumeSavedAmount, setResumeSavedAmount] = useState(false);
   const [retained, setRetained] = useState<{ owner: string; stepId: string } | null>(null);
   const [status, setStatus] = useState("Connect your wallet to continue.");
   const sessions = useRef(new Map<string, PublicCycleClient>()), running = useRef(false);
   const liveOwner = wallet.mode === "live" && !wallet.previewConnection ? wallet.solanaAddress : null;
-  const currentOwner = useRef(liveOwner);
+  const currentOwner = useRef(liveOwner), previousOwner = useRef<string | null | undefined>(undefined);
   useLayoutEffect(() => { currentOwner.current = liveOwner; return () => { currentOwner.current = null; }; }, [liveOwner]);
+  useEffect(() => {
+    if (previousOwner.current !== undefined && previousOwner.current !== liveOwner) {
+      sessions.current.clear(); setDiscovery(null); setReply(null); setRetained(null); setResumeSavedAmount(false);
+      setStatus(liveOwner ? "Choose an amount to review." : "Connect your wallet to continue.");
+    }
+    previousOwner.current = liveOwner;
+  }, [liveOwner]);
   useEffect(() => { const update = () => setNow(Date.now()); update(); const timer = setInterval(update, 1000); return () => clearInterval(timer); }, []);
   const policy = reply?.policy.owner === liveOwner ? reply.policy : null;
   const state = policy ? reply!.state : null, pending = state?.pending;
@@ -65,6 +74,9 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
       const code = error && typeof error === "object" && "code" in error && typeof error.code === "string" ? error.code : null;
       if (process.env.NODE_ENV !== "production" && code) console.warn("Public cycle request failed", { code });
       if (code === "CYCLE_AUTHORIZATION_EXPIRED") { setDiscovery(null); setReply(null); }
+      // Old deployments can still return this while the new server rollout reaches them. Resume
+      // that exact amount instead of leaving the amount-review CTA in a dead-error loop.
+      if (code === "CYCLE_PUBLIC_AMOUNT_ALREADY_SELECTED" && mode === "deposit") { setDiscovery(null); setReply(null); setResumeSavedAmount(true); }
       const copy = publicCycleStatusCopy(error, mode);
       setStatus(process.env.NODE_ENV === "development" && code ? `${copy} [${code}]` : copy);
     }
@@ -87,6 +99,7 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
           : "Your investment is ready. Sign in your wallet.");
   }
   const sharesLabel = ownedSharesLabel(position);
+  const amountLocked = !!state && (state.pending !== null || BigInt(state.contributedUsdcRaw) > 0n || BigInt(state.mintedSharesRaw) > 0n || state.receipts.some(receipt => receipt.status === "finalized" && (receipt.action === "contribute" || receipt.action === "mint")));
   const nextRequest = state ? publicCycleNextRequest(mode, state, newDeposits) : null;
   const exitInProgress = state?.phase === "exiting" || state?.phase === "recovering";
   const primary = publicCyclePrimaryCta({
@@ -96,6 +109,7 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
     authorized: !!policy,
     pending: !!pending,
     canRetry,
+    resumeSavedAmount,
     nextRequest,
   });
   const primaryDisabled = !primary || busy
@@ -112,8 +126,9 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
       return;
     }
     if (primary.action === "discover") {
-      setStatus(mode === "deposit" ? "Reviewing your amount." : "Loading your cash out details.");
-      setDiscovery(await (await client()).discover(mode === "deposit" ? amountRaw ?? undefined : undefined));
+      setStatus(mode === "deposit" ? resumeSavedAmount ? "Continuing your investment." : "Reviewing your amount." : "Loading your cash out details.");
+      setDiscovery(await (await client()).discover(mode === "deposit" ? resumeSavedAmount ? undefined : amountRaw ?? undefined : undefined));
+      setResumeSavedAmount(false);
       setStatus("Confirm in your wallet to continue.");
       return;
     }
@@ -146,10 +161,10 @@ export function PublicCycleFlow({ mode, position }: { mode: "deposit" | "withdra
     setStatus("Signed. We’ll update this when it finishes.");
   }
   return <div className="space-y-4">
-    <div className={styles.intro}><h3>{mode === "withdraw" ? "Cash out to USDC" : "Invest"}</h3><p>{mode === "withdraw" ? "Convert your shares to USDC. Keep going until every step is complete." : "Choose your USDC amount, then review before you sign."}</p></div>
+    <div className={styles.intro}><h3>{mode === "withdraw" ? "Cash out to USDC" : "Invest"}</h3><p>{mode === "withdraw" ? "Convert your shares to USDC. Keep going until every step is complete." : "Choose your USDC amount, then review before you sign."}</p>{mode === "deposit" && liveOwner ? <p>Investing as <code title={liveOwner}>{shortenAddress(liveOwner, 8)}</code></p> : null}</div>
     {mode === "deposit" && <>
       <p className={styles.notice}>Alpha: funds are at risk. Shares and cash out can take multiple approvals; returns are not guaranteed.</p>
-      {liveOwner && <div className={styles.amountWrap}><label htmlFor="public-deposit-amount">Amount in USDC</label><div className={styles.amount}><input id="public-deposit-amount" inputMode="decimal" autoComplete="off" placeholder="0.00" value={amount} disabled={busy || accessReady} onChange={event => setAmount(event.target.value)} /></div></div>}
+      {liveOwner && <div className={styles.amountWrap}><label htmlFor="public-deposit-amount">Amount in USDC</label><div className={styles.amount}><input id="public-deposit-amount" inputMode="decimal" autoComplete="off" placeholder="0.00" value={amount} disabled={busy || amountLocked} onChange={event => { setAmount(event.target.value); setDiscovery(null); setReply(null); setResumeSavedAmount(false); }} /></div></div>}
     </>}
     {sharesLabel ? <div className={styles.summary}><div className={styles.row}><span>Your position</span><strong>{sharesLabel}</strong></div></div> : null}
     {policy && <>

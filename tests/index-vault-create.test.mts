@@ -326,7 +326,7 @@ test("receipt step machine walks create → defaults → legs → weights → ob
 
 type TestWallet = {
   ready: boolean; configured: boolean; mode: "live" | "stub" | "unavailable"; authenticated: boolean;
-  previewConnection: boolean; solanaAddress: string | null; appId: string | null;
+  previewConnection: boolean; solanaAddress: string | null; solanaWallets: string[]; selectSolanaWallet: (address: string) => void; appId: string | null;
   connectionMethod: "wallet" | "email" | null; connect: () => Promise<void>; disconnect: () => Promise<void>;
   signMessage: (message: string) => Promise<string>;
   signTransaction: (transaction: string, network?: "mainnet-beta" | "devnet") => Promise<string>;
@@ -335,7 +335,7 @@ type TestWallet = {
 function wallet(partial: Partial<TestWallet>): TestWallet {
   return {
     ready: true, configured: true, mode: "live", authenticated: true, previewConnection: false,
-    solanaAddress: OTHER, appId: "test", connectionMethod: null,
+    solanaAddress: OTHER, solanaWallets: [OTHER], selectSolanaWallet: () => {}, appId: "test", connectionMethod: null,
     connect: async () => {}, disconnect: async () => {},
     signMessage: async () => { throw new Error("test wallet does not authorize access"); },
     signTransaction: async () => { throw new Error("test wallet does not sign"); },
