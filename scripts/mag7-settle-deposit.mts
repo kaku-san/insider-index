@@ -31,6 +31,30 @@ type ScanIntent = {
   chain_data: { vault: { toBase58(): string }; owner: { toBase58(): string }; rebalanceType: RebalanceType; currentAction: RebalanceAction };
 };
 type TickResult = { action: string; intent?: string; signatures: string[]; spent: bigint; [key: string]: unknown };
+type Mag7MintToken = { mint: string; amount: string };
+
+const MAG7_SKIPPABLE_ROUTE_ERRORS = new Set([
+  "CYCLE_ROUTE_MINIMUM_UNSATISFIABLE",
+  // The direct CLMM quote cannot fill the native amount. In this fixed deposit
+  // settler it is a dust/unroutable leg, not a reason to abandon prior fills.
+  "CYCLE_NO_FULL_SIZE_ROUTE",
+]);
+
+/** A Mag7-only auction may mint its filled subset; Symmetry keeps unspent USDC in the intent. */
+export function mag7MintPlan(input: { investmentLegMints: readonly string[]; tokens: readonly Mag7MintToken[]; wsolMint: string }) {
+  const amounts = new Map(input.tokens.map(token => [token.mint, BigInt(token.amount)]));
+  const filledLegMints = input.investmentLegMints.filter(mint => (amounts.get(mint) ?? 0n) > 0n);
+  const skippedLegMints = input.investmentLegMints.filter(mint => (amounts.get(mint) ?? 0n) === 0n);
+  if ((amounts.get(input.wsolMint) ?? 0n) > 0n) return { mayMint: false, reason: "MAG7_ACCOUNTED_SUPPORT_REQUIRES_RECONCILIATION", filledLegMints, skippedLegMints };
+  if (!filledLegMints.length) return { mayMint: false, reason: "MAG7_NO_FILLED_LEGS_DO_NOT_MINT", filledLegMints, skippedLegMints };
+  return { mayMint: true, filledLegMints, skippedLegMints, unspentUsdcRaw: (amounts.get(MAINNET_USDC) ?? 0n).toString() };
+}
+
+/** Only quote-size failures are dust skips; every other route failure stays fail-closed. */
+export function mag7SkippableRouteReason(error: unknown): string | null {
+  const message = error instanceof Error ? error.message : "";
+  return MAG7_SKIPPABLE_ROUTE_ERRORS.has(message) ? message : null;
+}
 
 function usage() {
   return `Usage:
@@ -192,27 +216,36 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
   if (action === RebalanceAction.Auction) {
     const end = Number(chain.auctions[2]?.endTime.toString() ?? "0");
     if (now > end) {
-      const incomplete = record.vaultLegs.filter(leg => !chain.tokens.some(token => token.mint.toBase58() === leg.mint && !token.amount.isZero()));
-      if (incomplete.length || chain.tokens.some(token => token.mint.toBase58() === WSOL_MINT && !token.amount.isZero())) throw new Error("MAG7_INCOMPLETE_BOOK_DO_NOT_MINT");
+      // Symmetry's mint instruction accepts a partial initial composition and retains
+      // unused USDC in the deposit intent. Mint only after at least one real stock
+      // fill; unfillable dust legs are reported rather than blocking those shares.
+      const plan = mag7MintPlan({ investmentLegMints: record.vaultLegs.map(leg => leg.mint), tokens: chain.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString() })), wsolMint: WSOL_MINT });
+      if (!plan.mayMint) throw new Error(plan.reason);
       const payload = await native.sdk.mintTx({ keeper: keeperAddress, rebalance_intent: intentAddress });
       const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
-      return { action: "mint", intent: intentAddress, ...result };
+      return { action: "mint", intent: intentAddress, filledLegMints: plan.filledLegMints, skippedLegMints: plan.skippedLegMints, unspentUsdcRaw: plan.unspentUsdcRaw, ...result };
     }
     const missingLegs = new Set(record.vaultLegs.filter(leg => !chain.tokens.some(token => token.mint.toBase58() === leg.mint && !token.amount.isZero())).map(leg => leg.mint));
     const pairs = getSwapPairs(chain, vault).filter(pair => pair.outMint === MAINNET_USDC && missingLegs.has(pair.inMint));
-    const fills = [];
+    const fills = [], skipped: Array<{ mint: string; ticker: string; reason: string }> = [];
     for (const pair of pairs) {
       const leg = record.vaultLegs.find(candidate => candidate.mint === pair.inMint);
       if (!leg || !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount)) continue;
-      const route = await buildCycleRoute({ connection: native.connection, leg, owner: keeperAddress, inputMint: MAINNET_USDC, outputMint: leg.mint,
-        amountInRaw: String(pair.outAmount), minimumOutRaw: String(pair.inAmount), slippageBps: 50, maxAgeMs: 60_000 });
-      fills.push({ route, maxRepaymentRaw: String(pair.inAmount) });
-      if (fills.length === 2) break;
+      try {
+        const route = await buildCycleRoute({ connection: native.connection, leg, owner: keeperAddress, inputMint: MAINNET_USDC, outputMint: leg.mint,
+          amountInRaw: String(pair.outAmount), minimumOutRaw: String(pair.inAmount), slippageBps: 50, maxAgeMs: 60_000 });
+        fills.push({ route, maxRepaymentRaw: String(pair.inAmount) });
+        if (fills.length === 2) break;
+      } catch (error) {
+        const reason = mag7SkippableRouteReason(error);
+        if (!reason) throw error;
+        skipped.push({ mint: leg.mint, ticker: leg.ticker, reason });
+      }
     }
-    if (!fills.length) return { action: "wait", reason: "No complete Raydium CLMM fill is available inside the native auction", intent: intentAddress, signatures: [], spent };
+    if (!fills.length) return { action: "wait", reason: "No complete Raydium CLMM fill is available inside the native auction", skipped, intent: intentAddress, signatures: [], spent };
     const wire = await buildCycleFillWire({ native, keeper: keeperAddress, vault: VAULT, intent: intentAddress, fills, computeUnits: 1_400_000, microLamports: "25000", maxPriorityFeeLamports: (MAX_SOL_DEBIT_LAMPORTS - spent).toString() });
     const result = await sendTransactions({ transactions: [{ txBase64: wire.txBase64 }], keeper, native, spent });
-    return { action: "fill", intent: intentAddress, filled: fills.map(fill => fill.route.outputMint), ...result };
+    return { action: "fill", intent: intentAddress, filled: fills.map(fill => fill.route.outputMint), skipped, ...result };
   }
 
   if (intent.claim_bounty_data) {

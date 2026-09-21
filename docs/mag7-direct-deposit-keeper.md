@@ -35,9 +35,14 @@ npm run keeper:mag7-deposit -- --watch-vault --execute --watch \
 Every poll begins with a fresh **0.05 SOL** observed-debit cap for the keeper.
 The process stops starting more deposits in that poll when the cap is reached;
 inspect the emitted JSON and let the next scheduled poll resume. It never creates a
-user deposit, opens public funds, or turns a submitted deposit into a share receipt.
-Missing keeper ATAs, an incomplete book, wrong keeper identity, non-Raydium
-configuration, and Pyth/Hermes environment all refuse before settlement.
+user deposit or opens public funds. After at least one stock leg is filled, Symmetry
+may mint a partial book; unspent USDC remains in the deposit intent and the emitted
+`filledLegMints`/`skippedLegMints` identify the result. Only
+`CYCLE_ROUTE_MINIMUM_UNSATISFIABLE` and `CYCLE_NO_FULL_SIZE_ROUTE` are treated as
+skippable dust/unroutable legs; other route errors refuse settlement. A nonzero
+accounted WSOL balance, no filled stock legs, missing keeper ATAs, wrong keeper
+identity, non-Raydium configuration, and Pyth/Hermes environment all refuse before
+settlement. A positive owner share balance is the completion signal.
 
 ## Hetzner / VPS always-on
 
