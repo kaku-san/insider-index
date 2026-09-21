@@ -1,11 +1,13 @@
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import type { TxPayload, TxPayloadBatchSequence } from "@symmetry-hq/sdk/dist/txUtils.js";
-import { PublicKey, VersionedTransaction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, SystemProgram, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { createServiceSupabase } from "@/lib/supabase";
-import { address, hashObject, rawAmount, sdkRawAmount, sha256 } from "./amounts.ts";
+import { address, hashObject, rawAmount, sdkRawAmount } from "./amounts.ts";
+import { validateAndSimulate } from "./transaction-policy.ts";
 import { kakuSanBuilders } from "./kaku-san-create.ts";
 import { VAULT_RELEASE } from "./release.ts";
-import { networkUsdc, type NativeVaultBuilders } from "./symmetry-adapter.ts";
+import { networkUsdc, SYMMETRY_PROGRAM_ID, type NativeVaultBuilders } from "./symmetry-adapter.ts";
 import { readVaultDefinition, type PersistedVaultDefinition } from "./vault-definition-store.ts";
 
 const HEADERS = { "Cache-Control": "no-store" };
@@ -77,7 +79,41 @@ function requireDepositGate(definition: PersistedVaultDefinition, release: Pick<
   if (release.publicFundsEnabled !== true) throw new Error("Investing is not open for signatures.");
 }
 
-function transactionFromPayload(tx: TxPayload, stepId: string, owner: string, maxDebits: PreparedTransaction["maxDebits"]): PreparedTransaction {
+function payloadInstructions(tx: TxPayload): TransactionInstruction[] {
+  return tx.instructions.map(instruction => new TransactionInstruction({
+    programId: new PublicKey(address(instruction.program_id)),
+    keys: instruction.accounts.map(account => ({ pubkey: new PublicKey(address(account.pubkey)), isSigner: account.is_signer, isWritable: account.is_writable })),
+    data: Buffer.from(instruction.data, "base64"),
+  }));
+}
+
+function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"]) {
+  const tokenPrograms = new Set([TOKEN_PROGRAM_ID.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58()]);
+  const allowedPrograms = new Set([ComputeBudgetProgram.programId.toBase58(), SystemProgram.programId.toBase58(), ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(), ...tokenPrograms, SYMMETRY_PROGRAM_ID]);
+  const programs = [...new Set(instructions.map(instruction => instruction.programId.toBase58()))];
+  if (!programs.length || programs.some(program => !allowedPrograms.has(program))) throw new Error("Prepared transaction uses an unapproved program.");
+  return {
+    payer: owner,
+    signers: [owner],
+    programs,
+    writableAccounts: [...new Set(instructions.flatMap(instruction => instruction.keys.filter(key => key.isWritable).map(key => key.pubkey.toBase58()))), owner],
+    expectedInstructions: instructions,
+    maxDebits,
+    recipients: [],
+    minima: [],
+    maxComputeUnits: 1_400_000,
+    maxMicroLamports: 100_000n,
+    decode: (instruction: TransactionInstruction) => {
+      if (!tokenPrograms.has(instruction.programId.toBase58())) return { debits: [], recipients: [], minima: [] };
+      const discriminator = instruction.data[0];
+      if (discriminator !== 3 && discriminator !== 12) throw new Error("Unsupported token instruction");
+      if (instruction.data.length < 9) throw new Error("Malformed token instruction");
+      return { debits: [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw: instruction.data.readBigUInt64LE(1).toString() }], recipients: [], minima: [] };
+    },
+  };
+}
+
+async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload, stepId: string, owner: string, maxDebits: PreparedTransaction["maxDebits"]): Promise<PreparedTransaction> {
   if (tx.payer !== owner) throw new Error("Prepared transaction payer does not match the investing wallet.");
   const lastValidBlockHeight = tx.last_valid_block_height;
   if (!tx.tx_b64 || typeof lastValidBlockHeight !== "number" || !Number.isSafeInteger(lastValidBlockHeight) || lastValidBlockHeight <= 0) throw new Error("Prepared transaction is missing its expiry.");
@@ -85,27 +121,15 @@ function transactionFromPayload(tx: TxPayload, stepId: string, owner: string, ma
   const signers = parsed.message.staticAccountKeys.slice(0, parsed.message.header.numRequiredSignatures).map(key => key.toBase58());
   if (signers.length !== 1 || signers[0] !== owner || parsed.signatures.some(signature => signature.some(byte => byte !== 0))) throw new Error("Prepared transaction requires an unexpected signer.");
   if (parsed.message.staticAccountKeys[0]?.toBase58() !== owner || parsed.message.recentBlockhash !== tx.recent_blockhash) throw new Error("Prepared transaction identity mismatch.");
-  const allowedProgramIds = [...new Set(tx.instructions.map(instruction => address(instruction.program_id)))];
-  const compiledPrograms = parsed.message.compiledInstructions.map(instruction => parsed.message.staticAccountKeys[instruction.programIdIndex]?.toBase58());
-  if (!allowedProgramIds.length || compiledPrograms.some(program => !program) || new Set(compiledPrograms).size !== allowedProgramIds.length || compiledPrograms.some(program => !allowedProgramIds.includes(program!))) throw new Error("Prepared transaction instructions do not match the SDK draft.");
-  return {
-    stepId,
-    messageBase64: tx.tx_b64,
-    messageHash: sha256(parsed.message.serialize()),
-    requiredSigners: signers,
-    allowedProgramIds,
-    maxDebits,
-    expectedRecipients: [],
-    recentBlockhash: tx.recent_blockhash,
-    lastValidBlockHeight,
-  };
+  const instructions = payloadInstructions(tx);
+  return validateAndSimulate(native.connection, { stepId, transactionBase64: tx.tx_b64, lastValidBlockHeight }, transactionPolicy(instructions, owner, maxDebits));
 }
 
-function transactionsFromPayload(payload: TxPayloadBatchSequence, prefix: string, owner: string, amountRaw?: string): PreparedTransaction[] {
+async function transactionsFromPayload(native: NativeVaultBuilders, payload: TxPayloadBatchSequence, prefix: string, owner: string, amountRaw?: string): Promise<PreparedTransaction[]> {
   const all = payload.batches.flatMap(batch => batch.transactions);
   if (!all.length) throw new Error("The vault did not prepare a transaction.");
-  return all.map((tx, index) => transactionFromPayload(tx, `${prefix}-${index + 1}`, owner,
-    amountRaw && index === all.length - 1 ? [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw }] : []));
+  return Promise.all(all.map((tx, index) => transactionFromPayload(native, tx, `${prefix}-${index + 1}`, owner,
+    amountRaw && index === all.length - 1 ? [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw }] : [])));
 }
 
 async function assertLiveVault(native: NativeVaultBuilders, definition: PersistedVaultDefinition, owner: string) {
@@ -137,7 +161,7 @@ export async function prepareIndexDeposit(indexId: string, input: DepositInput, 
     operationId,
     phase: "AWAITING_SIGNATURE",
     requires: "user-signature" as const,
-    transactions: [...transactionsFromPayload(buy, "deposit", input.owner, input.amountRaw), ...transactionsFromPayload(lock, "lock", input.owner)],
+    transactions: [...await transactionsFromPayload(native, buy, "deposit", input.owner, input.amountRaw), ...await transactionsFromPayload(native, lock, "lock", input.owner)],
     configHash: hashObject({ indexId, vault: definition.vaultAddress, shareMint: definition.shareMint, depositsEnabled: definition.depositsEnabled }),
     constraints: [{ label: "Settlement", value: "Your deposit locks after wallet approval. A keeper mints shares later." }],
     costs: { hostEntryFeeBps: definition.hostEntryFeeBps ?? 25, hostExitFeeBps: definition.hostExitFeeBps ?? 0, estimatedOnly: true },

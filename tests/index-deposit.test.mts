@@ -34,7 +34,12 @@ function dependencies(overrides: Record<string, unknown> = {}) {
     nativeBuilder: () => ({
       network: "mainnet-beta",
       assertNetwork: async () => {},
-      connection: { getAccountInfo: async () => null },
+      connection: {
+        getAccountInfo: async () => null,
+        getAddressLookupTable: async () => ({ value: null }),
+        getBlockHeight: async () => 1,
+        simulateTransaction: async () => ({ context: { slot: 1 }, value: { err: null, logs: [] } }),
+      },
       sdk: {
         fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint) }),
         buyVaultTx: async () => payload(), lockDepositsTx: async () => payload(),
