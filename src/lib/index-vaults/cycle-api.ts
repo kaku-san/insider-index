@@ -4,13 +4,14 @@ import { CycleRunner } from "./cycle-runner.ts";
 import { CycleJournal } from "./cycle-store.ts";
 import { kakuSanBuilders } from "./kaku-san-create.ts";
 import { createServiceSupabase } from "../supabase.ts";
-import { readVaultDefinition } from "./vault-definition-store.ts";
+import { readVaultDefinition, type PersistedVaultDefinition } from "./vault-definition-store.ts";
 import type { CyclePolicy } from "./cycle-policy-parse.ts";
+export async function configuredCycleDefinition(indexId: string): Promise<PersistedVaultDefinition | null> {
+  const db = createServiceSupabase(); if (!db) throw new Error("CYCLE_DURABLE_SERVICE_ROLE_REQUIRED");
+  return readVaultDefinition(db, indexId);
+}
 export function configuredCycleRunner(policy: CyclePolicy, allowSend = false): CycleRunner {
-  return new CycleRunner({ native: kakuSanBuilders(allowSend), policy, journal: new CycleJournal(policy), loadDefinition: async () => {
-    const db = createServiceSupabase(); if (!db) throw new Error("CYCLE_DURABLE_SERVICE_ROLE_REQUIRED");
-    return readVaultDefinition(db, policy.indexId);
-  } });
+  return new CycleRunner({ native: kakuSanBuilders(allowSend), policy, journal: new CycleJournal(policy), loadDefinition: configuredCycleDefinition });
 }
 export async function readCycleRequestBody(request: Request): Promise<Record<string, unknown>> {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new Error("CYCLE_REQUEST_JSON_REQUIRED");

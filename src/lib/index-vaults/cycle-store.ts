@@ -151,11 +151,11 @@ export class CycleJournal {
       catch { if (!failed) throw new Error("CYCLE_JOURNAL_RELEASE_FAILED_RECOVERY_REQUIRED"); }
     }
   }
-  /** Replace only the variable public amount under the existing durable lease. The SQL writer
-   * independently permits this two-field state change only while the old state is restartable. */
+  /** Replace the selected public amount and an obsolete definition/policy binding under the
+   * existing durable lease. SQL independently permits this only for an empty restartable row. */
   async restartEmptyAmount(replacement: CyclePolicy): Promise<boolean> {
     const next = initialCycleState(replacement), current = this.initial;
-    for (const key of ["indexId", "vault", "shareMint", "owner", "keeper", "operationId", "definitionHash"] as const) {
+    for (const key of ["indexId", "vault", "shareMint", "owner", "keeper", "operationId"] as const) {
       if (next[key] !== current[key]) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
     }
     const token = randomUUID(), identity = { p_operation_id: current.operationId, p_token: token };
@@ -163,8 +163,13 @@ export class CycleJournal {
     let failed = false;
     try {
       if (!raw || typeof raw !== "object" || !("state" in raw) || !("revision" in raw) || !Number.isSafeInteger(raw.revision)) throw new Error("CYCLE_JOURNAL_UNREADABLE");
-      const state = raw.state as CycleState; assertCycleState(state, current);
+      const state = raw.state as CycleState;
+      // The old definition/policy is exactly what this narrow recovery replaces. Validate the
+      // stored state against itself before checking only the immutable operation identity.
+      assertCycleState(state, state);
+      if (["indexId", "vault", "shareMint", "owner", "keeper", "operationId"].some(key => state[key as keyof CycleState] !== next[key as keyof CycleState])) throw new Error("CYCLE_JOURNAL_IDENTITY_OR_POLICY_CHANGED");
       if (!cycleAmountRestartable(state)) return false;
+      state.definitionHash = next.definitionHash;
       state.policyHash = next.policyHash;
       state.approvedDepositUsdcRaw = next.approvedDepositUsdcRaw;
       assertCycleState(state, next);

@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { createCycleAccessChallenge } from "./cycle-access.ts";
-import { configuredCycleRunner, handleCycleRequest, readCycleRequestBody, type CycleApiDependencies } from "./cycle-api.ts";
+import { configuredCycleDefinition, configuredCycleRunner, handleCycleRequest, readCycleRequestBody, type CycleApiDependencies } from "./cycle-api.ts";
 import { CycleRunner } from "./cycle-runner.ts";
 import { cyclePolicyHash } from "./cycle-policy-parse.ts";
 import { assertPublicCycleScope, PUBLIC_MAG7 } from "./public-cycle-parse.ts";
@@ -8,10 +8,16 @@ import { publicCyclePolicyForWallet, resolvePublicCyclePolicy } from "./public-c
 import { publicCycleIndexEnabled, publicCyclePolicyActive, publicCycleReleaseOpen, type PublicCycleRelease } from "./public-cycle-release.ts";
 import { VAULT_RELEASE } from "./release.ts";
 import type { CycleRpc } from "./cycle-store.ts";
+import type { PersistedVaultDefinition } from "./vault-definition-store.ts";
 import { publicCycleErrorBody } from "../frontend/public-cycle-copy.ts";
 
 const headers = { "Cache-Control": "no-store, private", Vary: "Origin", "X-Content-Type-Options": "nosniff" };
-export type PublicCycleDependencies = Pick<CycleApiDependencies, "env" | "runner" | "policy"> & { release?: PublicCycleRelease; rpc?: CycleRpc };
+export type PublicCycleDependencies = Pick<CycleApiDependencies, "env" | "runner"> & {
+  release?: PublicCycleRelease;
+  rpc?: CycleRpc;
+  /** Live persisted Mag7 definition used to bind public policy identity at every request. */
+  loadDefinition?: (indexId: string) => Promise<PersistedVaultDefinition | null>;
+};
 
 function publicCycleErrorResponse(error: unknown, status?: number, mode: "deposit" | "withdraw" = "deposit"): Response {
   const body = publicCycleErrorBody(error, mode);
@@ -44,16 +50,21 @@ export async function handlePublicCycleRequest(request: Request, indexId: string
     const input = await readCycleRequestBody(request), env = dependencies.env ?? process.env;
     mode = input.request === "withdraw" ? "withdraw" : "deposit";
     const release = dependencies.release ?? VAULT_RELEASE;
+    const loadDefinition = dependencies.loadDefinition ?? configuredCycleDefinition;
     if (input.action === "discover") {
       if (Object.keys(input).some(k => !["action", "wallet", "amountRaw"].includes(k)) || typeof input.wallet !== "string" || input.wallet.length > 44 || (input.amountRaw !== undefined && typeof input.amountRaw !== "string")) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
       const wallet = new PublicKey(input.wallet);
       if (wallet.toBase58() !== input.wallet || !PublicKey.isOnCurve(wallet.toBytes())) throw new Error("CYCLE_PUBLIC_DISCOVERY_REQUEST");
-      const policy = await publicCyclePolicyForWallet(input.wallet, env, Date.now(), input.amountRaw as string | undefined, dependencies.rpc);
+      const policy = await publicCyclePolicyForWallet(input.wallet, loadDefinition, env, Date.now(), input.amountRaw as string | undefined, dependencies.rpc);
       assertPublicCycleScope(policy);
       return Response.json({ binding: { operationId: policy.operationId, owner: policy.owner, policyHash: cyclePolicyHash(policy) }, challenge: createCycleAccessChallenge(policy, origin, env) }, { headers });
     }
     if (input.action === "challenge") throw new Error("CYCLE_PUBLIC_USE_DISCOVERY");
-    const policy = dependencies.policy ?? resolvePublicCyclePolicy(input, env);
+    const record = await loadDefinition(indexId);
+    if (!record) throw new Error("CYCLE_DEFINITION_MISSING_OR_SUBSTITUTED");
+    // Never accept an injected/stale template on the public path: every derived owner policy
+    // binds its definition hash to the same record the runner will validate before preparation.
+    const policy = resolvePublicCyclePolicy(input, env, Date.now(), record);
     const forwarded = new Request(request.url, { method: "POST", headers: request.headers, body: JSON.stringify(input) });
     const response = await handleCycleRequest(forwarded, {
       env, policy, assertPolicy: assertPublicCycleScope,

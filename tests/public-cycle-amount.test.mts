@@ -82,5 +82,5 @@ test("prepare failures give investors usable copy instead of a generic unavailab
     assert.equal(publicCycleErrorCopy(new Error(code), "deposit"), "Invest isn't set up for this index yet.");
   }
   assert.equal(publicCycleErrorCopy(new Error("CYCLE_AUTHORIZATION_EXPIRED"), "deposit"), "Your approval expired. Review the amount and confirm again.");
-  assert.equal(publicCycleStatusCopy(Object.assign(new Error("Invest isn't available right now."), { code: "CYCLE_POLICY_IDENTITY_CHANGED" }), "deposit"), "Invest blocked (POLICY_IDENTITY).");
+  assert.equal(publicCycleStatusCopy(Object.assign(new Error("Invest isn't available right now."), { code: "CYCLE_POLICY_IDENTITY_CHANGED" }), "deposit"), "Investment setup changed. Tap Prepare again.");
 });
