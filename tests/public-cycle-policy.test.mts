@@ -4,10 +4,12 @@ import { Keypair } from "@solana/web3.js";
 import { cycleTestPolicy } from "./support/cycle-policy.mts";
 import { derivePublicCycleOperationId, derivePublicCyclePolicy } from "../src/lib/index-vaults/public-cycle-policy.ts";
 
-test("Mag7 depositor derivation keeps the original owner operation and copies vault limits", () => {
+test("Mag7 depositor derivation isolates every public wallet from the operator journal", () => {
   const template = { ...cycleTestPolicy(), notBeforeSlot: 1 };
   const other = Keypair.fromSeed(new Uint8Array(32).fill(32)).publicKey.toBase58();
-  assert.equal(derivePublicCyclePolicy(template, template.owner).operationId, template.operationId);
+  const owner = derivePublicCyclePolicy(template, template.owner);
+  assert.notEqual(owner.operationId, template.operationId);
+  assert.equal(owner.operationId, derivePublicCycleOperationId(template.operationId, template.owner));
   const derived = derivePublicCyclePolicy(template, other);
   assert.equal(derived.owner, other);
   assert.notEqual(derived.operationId, template.operationId);

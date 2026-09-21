@@ -41,6 +41,7 @@ test("HMAC access binds selected amount, not a prepare-body spending override", 
   template.economics = { keeperSurplus: "native-filler-retains", shareQuantization: "bounded-native-units", residualCash: "native-backing", issuerAuthorityRiskApproved: true, nativeSettlementRiskApproved: true };
   const selected = derivePublicCyclePolicy(template, template.owner, "123456789");
   const env = { STOCKLANA_CYCLE_AUTH_SECRET: "LOCAL-TEST-SECRET-ONLY-12345678901234567890", STOCKLANA_CYCLE_POLICIES_JSON: JSON.stringify([template]) };
+  assert.equal(resolvePublicCyclePolicy({ operationId: template.operationId }, env).operationId, template.operationId, "the private operator path retains its configured operation");
   const challenge = createCycleAccessChallenge(selected, "https://insiderindex.xyz", env);
   const auth = { token: challenge.token, signature: "unused-before-owner-verification" };
   assert.equal(cyclePolicyHash(resolvePublicCyclePolicy({ operationId: selected.operationId, auth }, env)), cyclePolicyHash(selected));
@@ -67,7 +68,7 @@ test("public modal presents one clear next action from review through wallet sig
   const input = { mode: "deposit" as const, walletConnected: true, accessReady: true, authorized: true, pending: false, canRetry: false, nextRequest: "next" as const };
   assert.deepEqual(publicCyclePrimaryCta({ ...input, walletConnected: false }), { action: "connect", label: "Connect wallet" });
   assert.deepEqual(publicCyclePrimaryCta({ ...input, accessReady: false }), { action: "discover", label: "Review amount" });
-  assert.deepEqual(publicCyclePrimaryCta({ ...input, accessReady: false, resumeSavedAmount: true }), { action: "discover", label: "Continue investment" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, accessReady: false, resumeSavedAmount: true }), { action: "discover", label: "Continue existing with saved amount" });
   assert.deepEqual(publicCyclePrimaryCta({ ...input, authorized: false }), { action: "authorize", label: "Confirm in wallet" });
   assert.deepEqual(publicCyclePrimaryCta(input), { action: "prepare", label: "Prepare investment" });
   assert.deepEqual(publicCyclePrimaryCta({ ...input, pending: true }), { action: "sign", label: "Sign in wallet" });

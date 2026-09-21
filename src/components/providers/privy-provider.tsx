@@ -22,6 +22,8 @@ export type PrivySolanaWallet = {
   solanaAddress: string | null;
   /** Available live addresses; the selected address is used consistently for header and signing. */
   solanaWallets: string[];
+  /** Provenance labels make embedded wallets distinguishable from connected external wallets. */
+  solanaWalletLabels?: Record<string, string>;
   selectSolanaWallet: (address: string) => void;
   appId: string | null;
   connectionMethod: WalletConnectMethod | null;
@@ -104,6 +106,7 @@ export function PrivySolanaProvider({
       previewConnection: allowStub && authenticated,
       solanaAddress: allowStub && authenticated ? STUB_WALLET : null,
       solanaWallets: allowStub && authenticated ? [STUB_WALLET] : [],
+      solanaWalletLabels: {},
       selectSolanaWallet: () => {},
       appId: null,
       connectionMethod: allowStub && authenticated ? connectionMethod : null,

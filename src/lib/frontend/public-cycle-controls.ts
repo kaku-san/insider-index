@@ -34,7 +34,7 @@ export function publicCyclePrimaryCta(input: {
   nextRequest: "next" | "withdraw" | "recover" | null;
 }): PublicCyclePrimaryCta {
   if (!input.walletConnected) return { action: "connect", label: "Connect wallet" };
-  if (!input.accessReady) return { action: "discover", label: input.mode === "deposit" ? input.resumeSavedAmount ? "Continue investment" : "Review amount" : "Cash out to USDC" };
+  if (!input.accessReady) return { action: "discover", label: input.mode === "deposit" ? input.resumeSavedAmount ? "Continue existing with saved amount" : "Review amount" : "Cash out to USDC" };
   if (!input.authorized) return { action: "authorize", label: "Confirm in wallet" };
   if (input.pending) return input.canRetry ? { action: "retry", label: "Retry signed action" } : { action: "sign", label: "Sign in wallet" };
   if (!input.nextRequest) return null;
