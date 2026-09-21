@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { register } from "node:module";
 import test from "node:test";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
+import { PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { creditHasRemainingAmount, depositIsEnabled, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, publicVaultDepositIsEnabled, uiStateFrom, validatePreparedStep, vaultReadinessFromIndex } = await import("../src/lib/frontend/vault-api.ts");
@@ -8,6 +11,8 @@ const { markedDollars, moneyBand, stockActBandFromMidpoint } = await import("../
 
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 function preparedPayload(requires: "user-signature" | "wait" = "user-signature") {
+  const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions: [] }).compileToV0Message();
+  const transaction = new VersionedTransaction(message);
   return {
     operationId: "operation-1",
     phase: "AWAITING_SIGNATURE",
@@ -15,12 +20,19 @@ function preparedPayload(requires: "user-signature" | "wait" = "user-signature")
     configHash: "config-hash",
     constraints: [],
     blockers: [],
-    transactions: requires === "user-signature" ? [{ stepId: "deposit-contribution" }] : [],
+    transactions: requires === "user-signature" ? [{
+      stepId: "deposit-contribution", messageBase64: Buffer.from(transaction.serialize()).toString("base64"), messageHash: bytesToHex(sha256(message.serialize())),
+      requiredSigners: [owner], allowedProgramIds: [], maxDebits: [], expectedRecipients: [], recentBlockhash: owner, lastValidBlockHeight: 1,
+    }] : [],
   };
 }
 
-test("native wallet signing fails closed without semantic instruction validation", async () => {
-  await assert.rejects(validatePreparedStep(preparedPayload(), { owner, network: "devnet" }), /signing is unavailable/);
+test("native wallet signing accepts only an unsigned transaction bound to the selected wallet", async () => {
+  const prepared = await validatePreparedStep(preparedPayload(), { owner, network: "devnet" });
+  assert.equal(prepared.transactions.length, 1);
+  const altered = preparedPayload();
+  altered.transactions[0].messageHash = "0".repeat(64);
+  await assert.rejects(validatePreparedStep(altered, { owner, network: "devnet" }), /does not match this wallet/);
   const wait = await validatePreparedStep(preparedPayload("wait"), { owner, network: "devnet" });
   assert.equal(wait.network, "devnet");
 });

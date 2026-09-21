@@ -1,6 +1,6 @@
-# Public Mag7 cycle surface — wired, release-gated
+# Retained public Mag7 cycle surface — not mounted on Invest
 
-The public Mag7 `VaultFlow` uses `PublicCycleFlow` / the headless `PublicCycleClient`, not the disabled generic `PreparedStep` API. The original index, vault and native share mint are pinned in `public-cycle-parse.ts`. Other indexes cannot use this surface. No replacement vault, receipt token, client-generated operation ID, user-supplied policy, default spending budget, server signer or wallet-side broadcast is introduced.
+The public Mag7 cycle endpoint and `PublicCycleClient` remain retained compatibility infrastructure, but `VaultFlow` no longer mounts them for Invest. The Invest path is the release-gated `POST /api/indexes/:id/deposit/prepare` rail documented in [`src/lib/index-vaults/README.md`](../src/lib/index-vaults/README.md): the wallet signs SDK `buyVaultTx` contribution transactions and `lockDepositsTx`, then a keeper mints shares later. Other indexes are accepted only by the persisted-definition deposit route when their gates are open. No replacement vault, receipt token, server signer or wallet-side broadcast is introduced.
 
 ## API and authority
 
@@ -56,4 +56,4 @@ returning operation_id, owner, updated_at;
 commit;
 ```
 
-Frontend tabs, general copy and layout are separate from this lifecycle implementation. The existing modal's Mag7 body is the integration point; UI work should consume `PublicCycleClient` rather than revive the disabled generic prepare/receipt helpers or bypass its wallet/journal checks.
+Frontend tabs, general copy and layout are separate from this retained lifecycle implementation. The Invest modal does not consume `PublicCycleClient`; UI work for deposits should follow the persisted-definition prepare route and its sequential wallet confirmations. Keep this document for callers of the retained cycle endpoint, and do not re-mount it on Invest without an explicit contract change.

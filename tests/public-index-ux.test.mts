@@ -76,7 +76,7 @@ test("invest sheet uses plain language and skips a separate review step", () => 
       },
     },
   })));
-  assert.match(html, /Choose your USDC amount, then review before you sign\./);
+  assert.match(html, /Enter an amount in USDC\. You approve in your wallet before anything moves\./);
   assert.match(html, /Alpha software — experimental; you can lose funds\./);
   assert.match(html, /INVEST/);
   assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);

@@ -63,7 +63,7 @@ The quote request uses `mint`, `usdcAmount`, `side`, and optional `taker`. Copy 
 
 ### Track B — native person index
 
-**Mag7-specific implemented bridge:** the original Mag7 modal uses `POST /api/indexes/idx-theme-mag7-caucus/cycle` and the existing cycle engine/journal with independent wallet validation. Its per-wallet amount selection, derived operation policy, USDC cash-out continuation, release gates and recovery contract are defined in [the public Mag7 contract](../public-mag7-cycle.md). The generic person-index contracts below remain separate and fail closed where unimplemented.
+**Public deposit rail:** Invest follows the release-gated flow owned by [`src/lib/index-vaults/README.md`](../../src/lib/index-vaults/README.md). The retained Mag7 cycle endpoint is not mounted on Invest; its compatibility contract remains in [the public Mag7 cycle document](../public-mag7-cycle.md).
 
 Entry:
 
@@ -71,12 +71,11 @@ Entry:
 USDC amount
 → POST /api/indexes/:id/deposit/prepare
 → user approves contribution
-→ intent observed on chain
-→ separate lock approval when required
-→ keeper pricing / auction / settlement
+→ confirmation
+→ user approves lock
+→ confirmation
+→ keeper mints shares later
 → shares received
-→ cleanup
-→ complete
 ```
 
 Exit:
