@@ -16,6 +16,7 @@ import {
   type PrivySolanaWallet,
   type WalletConnectMethod,
 } from "@/components/providers/privy-provider";
+import { selectableSolanaWallets, selectedSolanaWallet } from "@/lib/frontend/privy-wallet-selection";
 
 function base64ToBytes(value: string): Uint8Array {
   const binary = atob(value);
@@ -104,21 +105,22 @@ function PrivyLiveBridge({
   const { signMessage: signMessageWithPrivy } = useSignMessage();
   const { signAndSendTransaction: signAndSendWithPrivy } = useSignAndSendTransaction();
   const [connectionMethod, setConnectionMethod] = useState<WalletConnectMethod | null>(null);
-  const wallet = wallets[0] ?? null;
-
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  // Privy's wallet ordering can put an embedded/email wallet before a connected Phantom. Never
+  // bind signing or a public journal to that incidental array position.
+  const selectableWallets = useMemo(() => selectableSolanaWallets(wallets), [wallets]);
+  const wallet = useMemo(() => selectedSolanaWallet(wallets, selectedAddress), [wallets, selectedAddress]);
   useEffect(() => {
-    if (!ready || !authenticated || wallet) {
-      return;
-    }
-    void createWallet().catch(() => {
-      // User can still connect an external Solana wallet from the Privy modal.
-    });
-  }, [authenticated, createWallet, ready, wallet]);
+    if (selectedAddress && wallets.some(candidate => candidate.address === selectedAddress)) return;
+    setSelectedAddress(selectableWallets[0]?.address ?? null);
+  }, [selectedAddress, selectableWallets, wallets]);
 
   const connect = useCallback(async (method: WalletConnectMethod = "wallet") => {
     setConnectionMethod(method);
     if (authenticated) {
-      if (!wallet) await createWallet();
+      // Creating an embedded wallet is an explicit email choice, never a side effect of merely
+      // being authenticated or opening a trading surface.
+      if (!wallet && method === "email") await createWallet();
       return;
     }
     await login({ loginMethods: [method === "email" ? "email" : "wallet"], walletChainType: "solana-only" });
@@ -181,6 +183,8 @@ function PrivyLiveBridge({
       authenticated,
       previewConnection: false,
       solanaAddress: wallet?.address ?? null,
+      solanaWallets: selectableWallets.map(candidate => candidate.address),
+      selectSolanaWallet: address => { if (selectableWallets.some(candidate => candidate.address === address)) setSelectedAddress(address); },
       appId,
       connectionMethod: connectionMethod ?? (authenticated ? "wallet" : null),
       connect,
@@ -200,6 +204,8 @@ function PrivyLiveBridge({
       signAndSendTransaction,
       signTransaction,
       wallet?.address,
+      selectableWallets,
+      wallets,
     ],
   );
 

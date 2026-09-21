@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Keypair } from "@solana/web3.js";
 import { derivePublicCyclePolicy, resumePublicCyclePolicy, resolvePublicCyclePolicy } from "../src/lib/index-vaults/public-cycle-policy.ts";
-import { initialCycleState } from "../src/lib/index-vaults/cycle-store.ts";
+import { CycleJournal, initialCycleState } from "../src/lib/index-vaults/cycle-store.ts";
 import { createCycleAccessChallenge } from "../src/lib/index-vaults/cycle-access.ts";
 import { cyclePolicyHash } from "../src/lib/index-vaults/cycle-policy-parse.ts";
 import { publicDepositAmountRaw, publicCycleNextRequest, publicCyclePrimaryCta } from "../src/lib/frontend/public-cycle-controls.ts";
 import { publicCycleErrorCopy, publicCycleStatusCopy } from "../src/lib/frontend/public-cycle-copy.ts";
 import { cycleTestPolicy } from "./support/cycle-policy.mts";
+import { cycleDb } from "./support/cycle-db.mts";
 
 test("chosen USDC amount scales minima without a product cap or relaxed slippage", async () => {
   const template = { ...cycleTestPolicy(), notBeforeSlot: 1 }, owner = Keypair.fromSeed(new Uint8Array(32).fill(32)).publicKey.toBase58();
@@ -21,7 +22,16 @@ test("chosen USDC amount scales minima without a product cap or relaxed slippage
   assert.throws(() => derivePublicCyclePolicy(template, template.keeper, amount), /POLICY_UNAVAILABLE/);
   const state = initialCycleState(chosen);
   assert.deepEqual(await resumePublicCyclePolicy(template, owner, undefined, async () => ({ state })), chosen);
-  await assert.rejects(resumePublicCyclePolicy(template, owner, template.limits.depositUsdcRaw, async () => ({ state })), /AMOUNT_ALREADY_SELECTED/);
+  const db = await cycleDb();
+  try {
+    const journal = new CycleJournal(chosen, db.rpc);
+    await journal.update(() => {});
+    const restarted = await resumePublicCyclePolicy(template, owner, template.limits.depositUsdcRaw, db.rpc);
+    assert.equal(restarted.limits.depositUsdcRaw, template.limits.depositUsdcRaw, "an empty journal restarts with the requested amount");
+    assert.equal((await new CycleJournal(restarted, db.rpc).read()).approvedDepositUsdcRaw, template.limits.depositUsdcRaw);
+    await new CycleJournal(restarted, db.rpc).update(s => { s.contributedUsdcRaw = "1"; });
+    await assert.rejects(resumePublicCyclePolicy(template, owner, amount, db.rpc), /AMOUNT_ALREADY_SELECTED/, "real funding progress permanently locks the amount");
+  } finally { await db.close(); }
   await assert.rejects(resumePublicCyclePolicy(template, owner, undefined, async () => { throw new Error("offline"); }), /offline/);
   await assert.rejects(resumePublicCyclePolicy(template, owner, undefined, async () => ({ state: { ...state, approvedDepositUsdcRaw: "1" } })), /IDENTITY_OR_POLICY_CHANGED/);
 });
@@ -57,6 +67,7 @@ test("public modal presents one clear next action from review through wallet sig
   const input = { mode: "deposit" as const, walletConnected: true, accessReady: true, authorized: true, pending: false, canRetry: false, nextRequest: "next" as const };
   assert.deepEqual(publicCyclePrimaryCta({ ...input, walletConnected: false }), { action: "connect", label: "Connect wallet" });
   assert.deepEqual(publicCyclePrimaryCta({ ...input, accessReady: false }), { action: "discover", label: "Review amount" });
+  assert.deepEqual(publicCyclePrimaryCta({ ...input, accessReady: false, resumeSavedAmount: true }), { action: "discover", label: "Continue investment" });
   assert.deepEqual(publicCyclePrimaryCta({ ...input, authorized: false }), { action: "authorize", label: "Confirm in wallet" });
   assert.deepEqual(publicCyclePrimaryCta(input), { action: "prepare", label: "Prepare investment" });
   assert.deepEqual(publicCyclePrimaryCta({ ...input, pending: true }), { action: "sign", label: "Sign in wallet" });

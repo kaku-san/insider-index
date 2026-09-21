@@ -105,6 +105,21 @@ test("public readiness requires all releases, unique active policy and original 
   } finally { await f.close(); }
 });
 
+test("public discovery restarts an empty Mag7 journal with a new amount", async () => {
+  const f = await publicCycleFixture();
+  try {
+    await f.access();
+    await f.journal.update(() => {});
+    const prior = f.client.discovery!.binding.policyHash;
+    const response = await f.api({ action: "discover", wallet: f.policy.owner, amountRaw: "200000000" });
+    assert.equal(response.status, 200);
+    const restarted = await response.json();
+    assert.notEqual(restarted.binding.policyHash, prior);
+    assert.equal(restarted.binding.owner, f.policy.owner);
+    assert.equal((await f.db.rpc("read_insiderindex_cycle", { p_operation_id: f.policy.operationId }) as { state: { approvedDepositUsdcRaw: string } }).state.approvedDepositUsdcRaw, "200000000");
+  } finally { await f.close(); }
+});
+
 test("public API refuses real sub-share bootstrap amount before returning a wire", async () => {
   const f = await publicCycleFixture("500000");
   try {
@@ -205,7 +220,6 @@ test("non-template depositor chooses amount → authenticated API → SQL/native
     await owner("create");
     const resumed = await (await f.api({ action: "discover", wallet: f.policy.owner })).json();
     assert.equal(resumed.binding.policyHash, f.client.discovery!.binding.policyHash, "reload resumes selected amount, not the configured $200");
-    assert.equal((await f.api({ action: "discover", wallet: f.policy.owner, amountRaw: "200000000" })).status, 409, "an existing draft cannot silently change amount");
     await owner("contribute");
     assert.equal((await f.journal.read()).contributedUsdcRaw, "100000000", "only the user-selected $100 was deposited");
     await owner("lock");

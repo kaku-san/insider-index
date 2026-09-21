@@ -54,7 +54,12 @@ export class PublicCycleClient {
     return this.work(async () => {
       const result = await this.post({ action: "discover", wallet: this.owner, ...(amountRaw === undefined ? {} : { amountRaw }) }) as PublicCycleDiscovery;
       validateCycleAccessBinding(result.challenge, result.binding, this.origin, this.owner);
-      if (this.discovery && (result.binding.operationId !== this.discovery.binding.operationId || result.binding.policyHash !== this.discovery.binding.policyHash)) throw new Error("CYCLE_CLIENT_POLICY_CHANGED_REVIEW_REQUIRED");
+      if (this.discovery && (result.binding.operationId !== this.discovery.binding.operationId || result.binding.policyHash !== this.discovery.binding.policyHash)) {
+        // Changing an editable, never-funded amount needs a new wallet access proof. A retained
+        // financial signature is still an obligation and can never be replaced by discovery.
+        if (this.retained) throw new Error("CYCLE_CLIENT_POLICY_CHANGED_REVIEW_REQUIRED");
+        this.reply = null;
+      }
       this.discovery = result; this.auth = null; return result;
     });
   }
