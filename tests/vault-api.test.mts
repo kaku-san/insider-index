@@ -10,7 +10,7 @@ const { creditHasRemainingAmount, depositIsEnabled, publicIndexIsLive, publicInd
 const { markedDollars, moneyBand, stockActBandFromMidpoint } = await import("../src/lib/frontend/research-format.ts");
 
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
-function preparedPayload(requires: "user-signature" | "wait" = "user-signature") {
+function preparedPayload(requires: "user-signature" | "wait" = "user-signature", encoding: "transaction" | "message" = "transaction") {
   const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions: [] }).compileToV0Message();
   const transaction = new VersionedTransaction(message);
   return {
@@ -21,7 +21,7 @@ function preparedPayload(requires: "user-signature" | "wait" = "user-signature")
     constraints: [],
     blockers: [],
     transactions: requires === "user-signature" ? [{
-      stepId: "deposit-contribution", messageBase64: Buffer.from(transaction.serialize()).toString("base64"), messageHash: bytesToHex(sha256(message.serialize())),
+      stepId: "deposit-contribution", messageBase64: Buffer.from(encoding === "transaction" ? transaction.serialize() : message.serialize()).toString("base64"), messageHash: bytesToHex(sha256(message.serialize())),
       requiredSigners: [owner], allowedProgramIds: [], maxDebits: [], expectedRecipients: [], recentBlockhash: owner, lastValidBlockHeight: 1,
     }] : [],
   };
@@ -35,6 +35,13 @@ test("native wallet signing accepts only an unsigned transaction bound to the se
   await assert.rejects(validatePreparedStep(altered, { owner, network: "devnet" }), /does not match this wallet/);
   const wait = await validatePreparedStep(preparedPayload("wait"), { owner, network: "devnet" });
   assert.equal(wait.network, "devnet");
+});
+
+test("legacy message-only prepares normalize to wallet-signable transaction wire bytes", async () => {
+  const prepared = await validatePreparedStep(preparedPayload("user-signature", "message"), { owner, network: "devnet" });
+  const transaction = VersionedTransaction.deserialize(Buffer.from(prepared.transactions[0]!.messageBase64, "base64"));
+  assert.ok(transaction.signatures.every(signature => signature.every(byte => byte === 0)));
+  assert.equal(bytesToHex(sha256(transaction.message.serialize())), prepared.transactions[0]!.messageHash);
 });
 
 test("remaining redeemed credits retain integer precision", () => {
