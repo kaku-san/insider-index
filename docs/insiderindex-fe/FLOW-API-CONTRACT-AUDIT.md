@@ -8,7 +8,7 @@ Canonical product name: **InsiderIndex**. Canonical public URL: **InsiderIndex.x
 
 ## Current Mag7-specific update — 2026-09-20
 
-The original Mag7 vault now has a separate public cycle path: `POST /api/indexes/idx-theme-mag7-caucus/cycle` with per-wallet discovery, access, prepare, exact-signed-byte submit and reconciliation. Its `VaultFlow` body uses the existing cycle engine/journal, same-origin RPC and independent wallet validation; it does **not** make the generic endpoints below available. Amount selection, USDC cash-out continuation, release gates and offline-vs-live limits are owned by the [public Mag7 contract](../public-mag7-cycle.md). Other indexes stay non-deposit. The shared access message remains canonical access-only text, not financial authorization.
+The public Invest modal follows the release-gated deposit rail owned by [`src/lib/index-vaults/README.md`](../../src/lib/index-vaults/README.md). The retained Mag7 cycle endpoint is not mounted on Invest and remains documented separately in the [public Mag7 cycle contract](../public-mag7-cycle.md).
 
 ## Executive status (generic recovered contract)
 
@@ -19,7 +19,7 @@ The original Mag7 vault now has a separate public cycle path: `POST /api/indexes
 | Copy one eligible disclosure | Done | `/api/quote` + `/api/execute` | Existing same-origin quote/execute routes | Fail closed without production API + wallet |
 | Connect / wallet-scoped portfolio | Done | Privy React/Solana adapter + preview adapter | Production app ID/config required | Real external/email connect when configured; preview stays local |
 | Native index readiness | Done | Done | Native person-index route not present | Read-only until native backend exists |
-| Native index deposit | Done, including separate deposit + lock approvals | Done | Native prepare/reconcile routes not present | Fail closed |
+| Native index deposit | Done, including sequential contribution + lock confirmations | Done | Persisted-definition prepare route with release/gate checks | Release-gated; keeper mint remains later |
 | Native index position | Done | Done | Authoritative person-index position route not present | Read-only until backend exists |
 | Native withdrawal | Done | Done | Native redemption/claim routes not present | Fail closed |
 | Claim / partial claim / resume | Done | Done | Chain reconciliation route/store/worker not present | Fail closed |
@@ -27,7 +27,7 @@ The original Mag7 vault now has a separate public cycle path: `POST /api/indexes
 | Operation resume / recovery UI | Done | Done | Durable operation/recovery routes not present | Fail closed |
 | Retired multi-leg basket stub | Safe tombstone only | No calls | N/A | **Never sign** |
 
-The rework does not add a generic API proxy. Existing same-origin routes continue to own research and copy behavior. Native lifecycle clients target same-origin contracts that remain unavailable until explicit server routes, authentication, reconciliation and keeper infrastructure are implemented.
+The rework does not add a generic API proxy. Existing same-origin routes continue to own research and copy behavior. The deposit prepare route is available behind persisted-definition and release gates; withdrawal, reconciliation, recovery and keeper settlement remain separately gated or operator-owned.
 
 ---
 
@@ -99,18 +99,13 @@ All token/share amounts are raw decimal strings at the API boundary.
 DRAFT
 → AWAITING_SIGNATURE          investor reviews deposit payload
 → SUBMITTED
-→ INTENT_CONFIRMED            native owner/vault intent exists
-→ AWAITING_LOCK               separate user lock approval when required
-→ PRICING                     keeper
-→ AUCTION                     keeper/Jupiter native auction path
-→ SETTLING
-→ SHARES_RECEIVED             shares can arrive before cleanup finishes
-→ RETURN_PENDING              unused contribution assets may remain
-→ CLEANUP
-→ COMPLETE
+→ CONTRIBUTION_CONFIRMED      wallet contribution confirmed on chain
+→ LOCK_CONFIRMED              wallet lock confirmed on chain
+→ KEEPER_MINT_PENDING         keeper mints shares later
+→ SHARES_RECEIVED
 ```
 
-**Important:** production `/next` must decide when a separate lock approval is valid.
+**Important:** the prepare response does not certify minting or a completed share receipt.
 
 ### Withdrawal lifecycle shown in UI
 
@@ -136,7 +131,7 @@ The UI now converts entered share text → raw share amount using `shareDecimals
 
 ## Native SDK mapping from the supplied Final Contract Handoff
 
-These method names are a build contract, **not evidence that the adapter exists in this ZIP**.
+These method names describe the native SDK mapping; the public deposit rail currently uses `buyVaultTx` and `lockDepositsTx`, while keeper minting remains a later operator action.
 
 | Job | Native SDK builder/helper |
 | --- | --- |
