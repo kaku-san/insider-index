@@ -1,6 +1,6 @@
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { VersionedTransaction } from "@solana/web3.js";
+import { VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 import { ApiError, readApi, writeApi } from "./api";
 
 export type Network = "devnet" | "mainnet-beta";
@@ -293,6 +293,21 @@ function decodedTransaction(value: string): Uint8Array {
   catch { throw new Error("The prepared transaction is not valid base64."); }
 }
 
+function encodedTransaction(value: Uint8Array): string {
+  if (typeof btoa !== "function") throw new Error("The wallet cannot validate the prepared transaction.");
+  return btoa(Array.from(value, byte => String.fromCharCode(byte)).join(""));
+}
+
+/** Accept legacy message-only prepares, but always give the wallet a complete unsigned wire transaction. */
+function deserializePreparedTransaction(value: string): VersionedTransaction {
+  const bytes = decodedTransaction(value);
+  try { return VersionedTransaction.deserialize(bytes); }
+  catch {
+    try { return new VersionedTransaction(VersionedMessage.deserialize(bytes)); }
+    catch { throw new Error("The prepared transaction cannot be decoded."); }
+  }
+}
+
 function validatedTransaction(value: unknown, owner: string): UnsignedMessage {
   const transaction = record(value);
   const stepId = string(transaction.stepId, "transaction step");
@@ -311,9 +326,7 @@ function validatedTransaction(value: unknown, owner: string): UnsignedMessage {
   const expectedRecipients = array(transaction.expectedRecipients, "transaction recipients").map((recipient, index) => {
     const item = record(recipient); return { owner: addressValue(item.owner, `recipient owner ${index + 1}`), mint: addressValue(item.mint, `recipient mint ${index + 1}`) };
   });
-  let parsed: VersionedTransaction;
-  try { parsed = VersionedTransaction.deserialize(decodedTransaction(messageBase64)); }
-  catch { throw new Error("The prepared transaction cannot be decoded."); }
+  const parsed = deserializePreparedTransaction(messageBase64);
   const signers = parsed.message.staticAccountKeys.slice(0, parsed.message.header.numRequiredSignatures).map(key => key.toBase58());
   const compiledPrograms = parsed.message.compiledInstructions.map(instruction => parsed.message.staticAccountKeys[instruction.programIdIndex]?.toBase58());
   if (parsed.signatures.some(signature => signature.some(byte => byte !== 0)) || parsed.message.staticAccountKeys[0]?.toBase58() !== owner || signers.length !== 1 || signers[0] !== owner || requiredSigners.length !== 1 || requiredSigners[0] !== owner || parsed.message.recentBlockhash !== recentBlockhash || bytesToHex(sha256(parsed.message.serialize())) !== messageHash || compiledPrograms.some(program => !program) || new Set(compiledPrograms).size !== new Set(allowedProgramIds).size || compiledPrograms.some(program => !allowedProgramIds.includes(program!))) throw new Error("The prepared transaction does not match this wallet.");
@@ -324,7 +337,7 @@ function validatedTransaction(value: unknown, owner: string): UnsignedMessage {
     if (checked.ok !== true || typeof checked.slot !== "number" || !Number.isSafeInteger(checked.slot) || checked.slot < 0 || !/^[a-f0-9]{64}$/.test(string(checked.logsHash, "simulation logs hash"))) throw new Error("The prepared transaction simulation is invalid.");
     validatedSimulation = { ok: true, slot: checked.slot, logsHash: string(checked.logsHash, "simulation logs hash"), ...(typeof checked.error === "string" ? { error: checked.error } : {}) };
   }
-  return { stepId, messageBase64, messageHash, requiredSigners, allowedProgramIds, maxDebits, expectedRecipients, recentBlockhash, lastValidBlockHeight, ...(validatedSimulation ? { simulation: validatedSimulation } : {}) };
+  return { stepId, messageBase64: encodedTransaction(parsed.serialize()), messageHash, requiredSigners, allowedProgramIds, maxDebits, expectedRecipients, recentBlockhash, lastValidBlockHeight, ...(validatedSimulation ? { simulation: validatedSimulation } : {}) };
 }
 
 export async function validatePreparedStep(payload: unknown, context: { owner: string; network: Network }): Promise<PreparedStep> {

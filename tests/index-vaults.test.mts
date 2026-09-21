@@ -164,12 +164,15 @@ function transactionFixture() {
   }, maxDebits: [{ owner: payer.toBase58(), mint: "SOL", amountRaw: "123" }], recipients: [{ owner: recipient.toBase58(), mint: "SOL" }], minima: [], maxComputeUnits: 1000000, maxMicroLamports: 25000n };
   let calls = 0;
   const connection = { getBlockHeight: async () => 50, getAddressLookupTable: async () => { throw new Error("unexpected table"); }, simulateTransaction: async () => { calls++; return { context: { slot: 10 }, value: { err: null, logs: [] } }; } } as unknown as Connection;
-  return { input, policy, connection, calls: () => calls };
+  return { input, policy, connection, transaction: tx, calls: () => calls };
 }
 test("wire-policy validates exact bytes/accounts and explicit RPC simulation, not SDK summaries", async () => {
   const f = transactionFixture();
   const message = await validateAndSimulate(f.connection, f.input, f.policy);
   assert.equal(message.simulation.ok, true); assert.equal(f.calls(), 1);
+  assert.equal(message.messageBase64, f.input.transactionBase64);
+  assert.equal(message.messageHash, sha256(f.transaction.message.serialize()));
+  assert.notEqual(message.messageBase64, Buffer.from(f.transaction.message.serialize()).toString("base64"));
   await assert.rejects(validateAndSimulate(f.connection, f.input, { ...f.policy, writableAccounts: [key(11)] }), /writable/);
   await assert.rejects(validateAndSimulate(f.connection, f.input, { ...f.policy, maxDebits: [{ owner: key(11), mint: "SOL", amountRaw: "122" }] }), /Debit exceeds/);
   await assert.rejects(validateAndSimulate(f.connection, f.input, { ...f.policy, recipients: [] }), /recipient/);

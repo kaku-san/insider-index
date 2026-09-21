@@ -71,8 +71,8 @@ export async function validateAndSimulate(connection: Pick<Connection, "getAddre
     const logs = JSON.stringify((result.value.logs ?? []).slice(-20).map(log => log.length > 200 ? `...${log.slice(-197)}` : log));
     throw new Error(`RPC simulation failed: ${JSON.stringify(result.value.err)}; logs tail: ${logs}`);
   }
-  const bytes = tx.message.serialize();
-  return { stepId: input.stepId, messageBase64: Buffer.from(bytes).toString("base64"), messageHash: sha256(bytes), requiredSigners: signers, allowedProgramIds: [...programs], maxDebits: policy.maxDebits, expectedRecipients: policy.recipients, recentBlockhash: message.recentBlockhash, lastValidBlockHeight: input.lastValidBlockHeight, simulation: { ok: true, slot: result.context.slot, logsHash: sha256(JSON.stringify(result.value.logs ?? [])) } };
+  const messageBytes = tx.message.serialize();
+  return { stepId: input.stepId, messageBase64: Buffer.from(tx.serialize()).toString("base64"), messageHash: sha256(messageBytes), requiredSigners: signers, allowedProgramIds: [...programs], maxDebits: policy.maxDebits, expectedRecipients: policy.recipients, recentBlockhash: message.recentBlockhash, lastValidBlockHeight: input.lastValidBlockHeight, simulation: { ok: true, slot: result.context.slot, logsHash: sha256(JSON.stringify(result.value.logs ?? [])) } };
 }
 
 export function unverifiedInstruction(): never { throw new Error("Instruction semantics not verified: route disabled"); }

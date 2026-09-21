@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { register } from "node:module";
-import { PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
+import { PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createSyncNativeInstruction, NATIVE_MINT, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { createRebalanceIntentIx, initRebalanceIntentIx, resizeRebalanceIntentIx } from "@symmetry-hq/sdk/dist/instructions/automation/rebalanceIntent.js";
 import { getAta, getGlobalConfigPda, getRebalanceIntentPda, getRentPayerPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
@@ -106,7 +106,9 @@ test("deposit prepare atomically simulates and signs first-depositor setup, cont
   assert.equal(body.transactions[0].maxDebits[0].owner, owner);
   assert.equal(body.transactions[0].maxDebits[0].amountRaw, "1000000");
   assert.equal(body.transactions[0].expectedRecipients[0].owner, vault);
-  const merged = TransactionMessage.decompile(VersionedMessage.deserialize(Buffer.from(body.transactions[0].messageBase64, "base64"))).instructions;
+  const preparedTransaction = VersionedTransaction.deserialize(Buffer.from(body.transactions[0].messageBase64, "base64"));
+  assert.ok(preparedTransaction.signatures.every(signature => signature.every(byte => byte === 0)));
+  const merged = TransactionMessage.decompile(preparedTransaction.message).instructions;
   assert.equal(merged.filter(instruction => instruction.programId.toBase58() === SYMMETRY_PROGRAM_ID).length, 5);
   assert.doesNotMatch(JSON.stringify(body), /cycle|policy|recovery/i);
 });
