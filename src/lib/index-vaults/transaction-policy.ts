@@ -67,7 +67,10 @@ export async function validateAndSimulate(connection: Pick<Connection, "getAddre
   }
   for (const minimum of policy.minima) if ((minimums.get(minimum.mint) ?? 0n) < rawAmount(minimum.amountRaw)) throw new Error("Native per-transaction minimum not enforced");
   const result = await connection.simulateTransaction(tx, { commitment: "confirmed", sigVerify: false, replaceRecentBlockhash: false, innerInstructions: true });
-  if (result.value.err) throw new Error(`RPC simulation failed: ${JSON.stringify(result.value.err)}`);
+  if (result.value.err) {
+    const logs = JSON.stringify((result.value.logs ?? []).slice(-20).map(log => log.length > 200 ? `...${log.slice(-197)}` : log));
+    throw new Error(`RPC simulation failed: ${JSON.stringify(result.value.err)}; logs tail: ${logs}`);
+  }
   const bytes = tx.message.serialize();
   return { stepId: input.stepId, messageBase64: Buffer.from(bytes).toString("base64"), messageHash: sha256(bytes), requiredSigners: signers, allowedProgramIds: [...programs], maxDebits: policy.maxDebits, expectedRecipients: policy.recipients, recentBlockhash: message.recentBlockhash, lastValidBlockHeight: input.lastValidBlockHeight, simulation: { ok: true, slot: result.context.slot, logsHash: sha256(JSON.stringify(result.value.logs ?? [])) } };
 }
