@@ -32,7 +32,9 @@ export async function publicCycleFixture(amountRaw = "100000000", selected?: { t
   assert.equal(record.indexId, PUBLIC_MAG7.indexId);
   policy.feeScheduleHash = (await observeCycle(vm.native, record, policy)).feeScheduleHash;
   const template = selected ? { ...policy, owner: selected.templateOwner, limits: { ...policy.limits, depositUsdcRaw: selected.templateAmountRaw, minExitUsdcRaw: (BigInt(selected.templateAmountRaw) * 97n / 100n).toString() } } : policy;
-  if (selected) policy = derivePublicCyclePolicy(template, policy.owner, amountRaw);
+  // Public discovery always has a per-wallet journal, including when this fixture's wallet is
+  // also the configured template owner. The template operation remains private-only.
+  policy = derivePublicCyclePolicy(template, policy.owner, selected ? amountRaw : undefined);
   const db = await cycleDb(), journal = new CycleJournal(policy, db.rpc);
   const runner = new CycleRunner({ native: vm.native, policy, journal, loadDefinition: async () => record, metadata: vm.metadata });
   const transactions = new Map<string, VersionedTransactionResponse>();

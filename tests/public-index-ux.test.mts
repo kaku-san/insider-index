@@ -9,6 +9,7 @@ import { getThematicView } from "../src/lib/thematic/views.ts";
 register("./support/ui-loader.mjs", import.meta.url);
 const { ThematicIndexPage } = await import("../src/components/thematic-index.tsx");
 const { VaultFlow } = await import("../src/components/vault-flow.tsx");
+const { WalletConnectSheet } = await import("../src/components/wallet-connect-sheet.tsx");
 const { PrivySolanaContext, PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 
@@ -94,6 +95,20 @@ test("Mag7 invest sheet names the same selected wallet used by the header", () =
   }))));
   assert.match(html, /Investing as/);
   assert.match(html, /C7ye6UvJ…zgCWYQyB/);
+});
+
+test("wallet picker identifies external and embedded choices", () => {
+  const external = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
+  const embedded = "8m9vvWgNey5UR4oeioMtnDgmEKdB8iQmyYVGXCBCnFqH";
+  const wallet = {
+    ready: true, configured: true, mode: "live" as const, authenticated: true, previewConnection: false, solanaAddress: external,
+    solanaWallets: [external, embedded], solanaWalletLabels: { [external]: "Phantom/external", [embedded]: "Privy embedded" }, selectSolanaWallet() {}, appId: "test", connectionMethod: "wallet" as const,
+    connect: async () => {}, disconnect: async () => {}, signMessage: async () => "", signTransaction: async () => "", signAndSendTransaction: async () => "",
+  };
+  const html = renderToStaticMarkup(createElement(PrivySolanaContext.Provider, { value: wallet }, createElement(WalletConnectSheet, { open: true, onClose() {} })));
+  assert.match(html, /Phantom\/external/);
+  assert.match(html, /Privy embedded/);
+  assert.match(html, /Use this wallet/);
 });
 
 test("Mag7 invest sheet shows chain share balance as Your position", () => {

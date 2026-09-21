@@ -35,7 +35,7 @@ export function derivePublicCyclePolicy(template: CyclePolicy, wallet: string, d
     const scaledMinimum = (value: string) => ((rawAmount(value, true) * amount + base - 1n) / base).toString();
     limits = { ...limits, depositUsdcRaw, minNetSharesRaw: scaledMinimum(limits.minNetSharesRaw), minExitUsdcRaw: scaledMinimum(limits.minExitUsdcRaw) };
   }
-  return parseCyclePolicy({ ...template, limits, owner: wallet, operationId: wallet === template.owner ? template.operationId : derivePublicCycleOperationId(template.operationId, wallet) });
+  return parseCyclePolicy({ ...template, limits, owner: wallet, operationId: derivePublicCycleOperationId(template.operationId, wallet) });
 }
 
 /** Resume the amount already committed in the shared journal, including after a reload or

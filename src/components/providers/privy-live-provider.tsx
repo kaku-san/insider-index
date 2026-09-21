@@ -16,7 +16,7 @@ import {
   type PrivySolanaWallet,
   type WalletConnectMethod,
 } from "@/components/providers/privy-provider";
-import { selectableSolanaWallets, selectedSolanaWallet } from "@/lib/frontend/privy-wallet-selection";
+import { selectableSolanaWallets, selectedSolanaWallet, solanaWalletSourceLabel } from "@/lib/frontend/privy-wallet-selection";
 
 function base64ToBytes(value: string): Uint8Array {
   const binary = atob(value);
@@ -109,6 +109,7 @@ function PrivyLiveBridge({
   // Privy's wallet ordering can put an embedded/email wallet before a connected Phantom. Never
   // bind signing or a public journal to that incidental array position.
   const selectableWallets = useMemo(() => selectableSolanaWallets(wallets), [wallets]);
+  const solanaWalletLabels = useMemo(() => Object.fromEntries(selectableWallets.map(candidate => [candidate.address, solanaWalletSourceLabel(candidate)])), [selectableWallets]);
   const wallet = useMemo(() => selectedSolanaWallet(wallets, selectedAddress), [wallets, selectedAddress]);
   useEffect(() => {
     if (selectedAddress && wallets.some(candidate => candidate.address === selectedAddress)) return;
@@ -184,6 +185,7 @@ function PrivyLiveBridge({
       previewConnection: false,
       solanaAddress: wallet?.address ?? null,
       solanaWallets: selectableWallets.map(candidate => candidate.address),
+      solanaWalletLabels,
       selectSolanaWallet: address => { if (selectableWallets.some(candidate => candidate.address === address)) setSelectedAddress(address); },
       appId,
       connectionMethod: connectionMethod ?? (authenticated ? "wallet" : null),
@@ -205,6 +207,7 @@ function PrivyLiveBridge({
       signTransaction,
       wallet?.address,
       selectableWallets,
+      solanaWalletLabels,
       wallets,
     ],
   );

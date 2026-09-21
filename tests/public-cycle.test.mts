@@ -42,7 +42,7 @@ test("public discovery discloses binding only; no signature bypass, client budge
       assert.throws(() => validateCycleAccessBinding(challenge, { ...discovered.binding, [field]: forged[field] }, publicTestOrigin, f.policy.owner), /CHALLENGE_SCOPE/, "discovery cannot smuggle arbitrary text into an access prompt");
     }
     assert.equal((await f.api({ action: "challenge", operationId: f.policy.operationId, wallet: f.policy.owner })).status, 409);
-    assert.equal((await f.api({ action: "read", operationId: f.policy.operationId })).status, 403);
+    assert.equal((await f.api({ action: "read", operationId: f.policy.operationId })).status, 409, "a public-derived owner operation requires its access binding");
     assert.equal((await f.api({ action: "discover", wallet: f.policy.keeper })).status, 404);
     const ownerDiscover = await (await f.api({ action: "discover", wallet: f.policy.owner })).json();
     assert.equal(ownerDiscover.binding.operationId, f.policy.operationId);

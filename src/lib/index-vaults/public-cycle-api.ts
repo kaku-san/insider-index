@@ -32,8 +32,8 @@ async function sanitizeCycleFailure(response: Response, mode: "deposit" | "withd
   return publicCycleErrorResponse(code, response.status, mode);
 }
 
-/** Public URL. The configured Mag7 owner keeps the original operation. Any other connected
- * wallet gets a derived operation on the same vault. Discovery binds the selected amount;
+/** Public URL. Every connected Mag7 wallet gets a derived operation on the same vault. The
+ * configured template operation remains available only to the private operator path. Discovery binds the selected amount;
  * client slippage/cost budgets, operation IDs, keeper signing and policies are never accepted. */
 export async function handlePublicCycleRequest(request: Request, indexId: string, dependencies: PublicCycleDependencies = {}): Promise<Response> {
   let mode: "deposit" | "withdraw" = "deposit";
