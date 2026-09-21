@@ -127,36 +127,42 @@ solana transfer "$KEEPER" "$TOP_UP_LAMPORTS" --lamports --allow-unfunded-recipie
 
 ## 3. Run the direct Mag7 settler after user buy + lock
 
-After the user's app-signed `buyVaultTx` **and** `lockDepositsTx` are finalized, set
-`USER` to that same wallet. First inspect without loading a key; it must report the
-expected locked deposit intent rather than `deposit_tokens`/no intent.
+After any user's app-signed `buyVaultTx` **and** `lockDepositsTx` are finalized, the
+normal command scans Mag7 for every locked deposit. It needs no `USER` variable or
+manual wallet copy/paste. First inspect without loading a key; it reports all locked
+intents, excluding `deposit_tokens` intents that have not been locked yet.
 
 ```sh
-export USER=<base58-wallet-that-finalized-buyVaultTx-and-lockDepositsTx>
-npm run keeper:mag7-deposit -- --owner "$USER" --dry-run
+npm run keeper:mag7-deposit -- --watch-vault --dry-run
 ```
 
-Then run the external keeper. `--watch` advances the same locked intent through
+Then leave the external keeper running. It advances each locked intent through
 Raydium price updates, bounded two-leg fills, post-auction mint, and bounty cleanup.
 It does not use `keeper:index` (rebalance-only), does not use `keeper:cycle`, and
 does not create a replacement user intent.
 
 ```sh
-npm run keeper:mag7-deposit -- --owner "$USER" --execute --keypair "$KEEPER_KEYPAIR" --watch
+npm run keeper:mag7-watch -- --keypair "$KEEPER_KEYPAIR"
 ```
 
-If the command reaches its 0.05 SOL bound, prints an auction wait, or a single
-execution times out, inspect its JSON/signatures and re-run that **same** command
-for the same owner/intent. Do not make a second user deposit. `MAG7_INCOMPLETE_BOOK_DO_NOT_MINT`
-means do not mint a partial stock book.
+The watcher polls every five minutes; each poll has a fresh 0.05 SOL debit cap. If
+it reaches that cap, prints an auction wait, or reports an error, inspect its
+JSON/signatures and allow the next poll to resume. Do not make a second user deposit.
+`MAG7_INCOMPLETE_BOOK_DO_NOT_MINT` means do not mint a partial stock book. The key
+must remain outside the repository and never in the app/Vercel environment. See the
+VPS unit and deployment instructions in
+[`docs/mag7-direct-deposit-keeper.md`](../../docs/mag7-direct-deposit-keeper.md) and
+[`data/stocklana-b-auto-keeper-f1/hetzner-deploy.md`](../stocklana-b-auto-keeper-f1/hetzner-deploy.md).
 
 ## 4. Verify share supply and user position
 
-After the keeper prints a finalized `mint` signature, run this read-only check. It
-prints raw and UI amounts and exits nonzero unless the native share supply and the
-locking user's canonical share ATA are both positive.
+After the keeper prints a finalized `mint` signature, set `USER` to the wallet that
+made the deposit, then run this read-only check. It prints raw and UI amounts and
+exits nonzero unless the native share supply and that user's canonical share ATA are
+both positive.
 
 ```sh
+export USER=<base58-wallet-that-finalized-buyVaultTx-and-lockDepositsTx>
 node --input-type=module - "$USER" "$SHARE_MINT" <<'NODE'
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';

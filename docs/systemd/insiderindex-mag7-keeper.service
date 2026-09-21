@@ -1,0 +1,25 @@
+# Install as /etc/systemd/system/insiderindex-mag7-keeper.service
+# The keypair must be an external 64-byte JSON file; do not add it to this repository,
+# a Next/Vercel environment, or the EnvironmentFile below.
+[Unit]
+Description=InsiderIndex Mag7 locked-deposit keeper
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=insiderindex
+Group=insiderindex
+WorkingDirectory=/srv/insiderindex/stocklana
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/insiderindex/mag7-keeper.env
+ExecStart=/usr/bin/npm run keeper:mag7-watch -- --keypair /etc/insiderindex/mag7-keeper.json
+Restart=always
+RestartSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

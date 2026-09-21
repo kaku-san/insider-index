@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { handleIndexPosition, handleIndexPositions, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
+import { PublicKey } from "@solana/web3.js";
+import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
+import { handleIndexPosition, handleIndexPositions, pendingNativeDeposit, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
 import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 
 const owner = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
@@ -24,6 +26,18 @@ test("portfolio keeps only positive native share balances and never turns a fail
     indexId: definition.indexId, indexName: definition.name, owner: wallet, shareMint: mint, shareDecimals: 6, sharesRaw: "42",
   }));
   assert.deepEqual(owned.map(position => [position.indexId, position.sharesRaw]), [["idx-theme-mag7-caucus", "42"]]);
+});
+
+test("position endpoint exposes only a chain-backed locked native deposit as pending", () => {
+  const intent = {
+    formatted_data: { pubkey: "native-intent" }, mint_data: null,
+    chain_data: { vault: new PublicKey(vault), owner: new PublicKey(owner), rebalanceType: RebalanceType.Deposit, currentAction: RebalanceAction.UpdatePrices },
+  };
+  assert.deepEqual(pendingNativeDeposit(intent as never, vault, mint, owner), {
+    operationId: "native-deposit-native-intent", identity: { vaultAccount: vault, shareMint: mint }, owner, kind: "deposit", phase: "PRICING", nativeIntent: "native-intent", complete: false, blockers: ["Deposit pending settlement"],
+  });
+  assert.equal(pendingNativeDeposit({ ...intent, chain_data: { ...intent.chain_data, currentAction: RebalanceAction.NotActive } } as never, vault, mint, owner), null);
+  assert.throws(() => pendingNativeDeposit({ ...intent, chain_data: { ...intent.chain_data, owner: new PublicKey(mint) } } as never, vault, mint, owner), /identity mismatch/);
 });
 
 test("position endpoints accept only the connected wallet and return chain-backed positions", async () => {
