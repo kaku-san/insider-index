@@ -6,7 +6,7 @@ import { WalletConnectSheet } from "./wallet-connect-sheet";
 import { Icon } from "./social/icon";
 import { errorText } from "@/lib/frontend/api";
 import {
-  DEPOSIT_PHASES, creditHasRemainingAmount, depositIsEnabled, getOperation, prepareConversion, prepareDeposit,
+  DEPOSIT_PHASES, creditHasRemainingAmount, depositIsEnabled, getIndexPosition, getOperation, hasIndexShares, prepareConversion, prepareDeposit,
   prepareNext, prepareWithdrawal, submitReceipts,
   type IndexSharePosition, type ObservedOperation, type PreparedStep, type VaultReadiness,
 } from "@/lib/frontend/vault-api";
@@ -87,13 +87,17 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
   const [amount,setAmount]=useState(mode==="deposit"?"1000":"100");
   const [prepared,setPrepared]=useState<PreparedStep|null>(null);
   const [operation,setOperation]=useState<ObservedOperation|null>(null);
+  const [settlementPosition,setSettlementPosition]=useState<IndexSharePosition|null>(null);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState<string|null>(null);
   const [connectOpen,setConnectOpen]=useState(false);
   function close(){onClose();}
   // Reset the reusable modal when a new operation opens; derived state cannot preserve this boundary.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(()=>{if(open){setScreen("amount");setPrepared(null);setOperation(null);setError(null);setAmount(mode==="deposit"?"1000":(position?.sharesText??"0"));}},[open,mode,indexId,position?.sharesText]);
+  useEffect(()=>{if(open){setScreen("amount");setPrepared(null);setOperation(null);setSettlementPosition(null);setError(null);setAmount(mode==="deposit"?"1000":(position?.sharesText??"0"));}},[open,mode,indexId,position?.sharesText]);
+  // A wallet-confirmed lock is not a share receipt. Poll only the public position reader and
+  // never turn this state into completion until a positive native share balance is observed.
+  useEffect(()=>{if(!open||screen!=="submitted"||mode!=="deposit"||!wallet.solanaAddress)return;let alive=true;let timer:ReturnType<typeof setTimeout>|null=null;const observe=()=>{void getIndexPosition(indexId,wallet.solanaAddress!).then(value=>{if(alive){setSettlementPosition(value);if(!hasIndexShares(value))timer=setTimeout(observe,15_000);}}).catch(()=>{if(alive)timer=setTimeout(observe,15_000);});};observe();return()=>{alive=false;if(timer)clearTimeout(timer)};},[open,screen,mode,indexId,wallet.solanaAddress]);
   const hasVault=Boolean(readiness?.identity||readiness?.vault);
   const blocked=(readiness?.blockers??[]).length>0 && !depositIsEnabled(readiness) && mode==="deposit";
   const phase=operation?.phase??prepared?.phase??"DRAFT";
@@ -149,6 +153,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
       }
       if(mode==="deposit"){
         setPrepared(null);
+        setSettlementPosition(null);
         setScreen("submitted");
       }else if(observed){setPrepared(null);setScreen("progress");}
     }catch(e){setError(errorText(e));}finally{setBusy(false)}
@@ -174,7 +179,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
         <div className={styles.summary}><div className={styles.row}><span>{mode==="deposit"?"You invest":"You cash out"}</span><strong>{mode==="deposit"?`${amount} USDC`:`${amount} shares`}</strong></div>{mode==="deposit"&&wallet.solanaAddress?<div className={styles.row}><span>Investing as</span><strong>{wallet.solanaAddress.slice(0,8)}…{wallet.solanaAddress.slice(-8)}</strong></div>:null}{mode==="deposit"&&currentShares?<div className={styles.row}><span>Your position</span><strong>{currentShares} shares</strong></div>:null}<div className={styles.row}><span>Fees</span><strong>Shown before you approve</strong></div></div>{error?<div className={styles.blockers}>{error}</div>:null}{blocked?<div className={styles.blockers}><strong>Not ready to sign</strong><ul>{(readiness?.blockers??[]).map((x,i)=><li key={i}>{x}</li>)}</ul></div>:null}<div className={styles.notice}><Icon name="shield" size={18}/><p><strong>Nothing moves until you approve.</strong>Connecting a wallet does not invest or cash out.</p></div><div className={styles.cta}><button className={styles.primary} disabled={busy} onClick={start}>{!wallet.authenticated?"Connect to continue":busy?"Preparing…":mode==="deposit"?"Invest":"Cash out"}</button></div></>
       :screen==="prepare"?<><div className={styles.intro}><h3>{prepared?.blockers?.length?"This stopped here.":"Not ready to sign yet."}</h3><p>Nothing was sent. You can go back and try again when investing is open.</p></div><PreparedDetails prepared={prepared}/><div className={styles.blockers}><ul>{(prepared?.blockers?.length?prepared.blockers:readiness?.blockers?.length?readiness.blockers:[error||"This action is not available yet."]).map((x,i)=><li key={i}>{x}</li>)}</ul></div><div className={styles.cta}><button className={styles.secondary} onClick={()=>setScreen("amount")}>Back</button></div></>
       :screen==="approval"?<><div className={styles.intro}><h3>Approve in your wallet.</h3><p>{txs.length} {txs.length===1?"approval":"approvals"} ready. Check the amount before you sign.</p></div><PreparedDetails prepared={prepared}/>{txs.map((tx,i)=><div className={styles.approval} key={tx.stepId}><div className={styles.approvalTop}><span>APPROVAL {i+1} OF {txs.length}</span></div><h4>{phaseLabel(tx.stepId)}</h4></div>)}{error?<div className={styles.blockers}>{error}</div>:null}<div className={styles.cta}><button className={styles.secondary} onClick={()=>setScreen("amount")}>Back</button><button className={styles.primary} disabled={busy||!txs.length||Boolean(prepared?.blockers.length)} onClick={()=>void approve()}>{busy?"Waiting for wallet…":"Approve in wallet"}</button></div></>
-      :screen==="submitted"?<><div className={styles.phaseCard}><small>INVEST</small><h3>Deposit submitted.</h3><p>Your USDC deposit is locked after its wallet confirmations. A keeper settles the deposit; your index shares may take a short time to appear.</p></div>{error?<div className={styles.blockers}>{error}</div>:null}<div className={styles.cta}><button className={styles.primary} onClick={onClose}>Done</button></div></>
+      :screen==="submitted"?<><div className={styles.phaseCard}><small>INVEST</small><h3>{hasIndexShares(settlementPosition)?"Shares received.":"Deposit pending settlement"}</h3><p>{hasIndexShares(settlementPosition)?"A positive share balance is confirmed for this wallet.":"Your USDC deposit is locked after wallet confirmation. Our Mag7 keeper settles it next; this screen checks your on-chain share balance until it appears."}</p></div>{error?<div className={styles.blockers}>{error}</div>:null}<div className={styles.cta}><button className={styles.primary} onClick={onClose}>{hasIndexShares(settlementPosition)?"Done":"Close and check later"}</button></div></>
       :<><div className={styles.phaseCard}><small>{mode==="deposit"?"INVEST":"CASH OUT"}</small><h3>{phaseLabel(phase)}</h3><p>{phase==="SHARES_RECEIVED"?"Your shares are in. Unused cash may still be coming back.":phase==="TOKENS_RECEIVED"?"The stocks landed in your wallet. Keep them, or convert only these to USDC.":phase.startsWith("COMPLETE")?"Done.":"You can close this and come back. The status is saved."}</p></div><Progress phases={progressFlow} current={phase}/>{error?<div className={styles.blockers}>{error}</div>:null}{mode==="withdraw"&&phase==="TOKENS_RECEIVED"?<div className={styles.choices}><div className={`${styles.exitChoice} ${styles.active}`}><strong>Keep the stocks</strong><span>Finish without selling.</span></div><button className={styles.exitChoice} onClick={()=>void convert()}><strong>Convert to USDC</strong><span>Only the cashed-out amount, after a separate approval.</span></button></div>:null}{mode==="withdraw"&&phase==="TOKENS_RECEIVED"?null:<div className={styles.cta}>{phase.startsWith("COMPLETE")?<button className={styles.primary} onClick={onClose}>Done</button>:<><button className={styles.secondary} disabled={busy} onClick={()=>void refresh()}>Refresh</button><button className={styles.primary} disabled={busy} onClick={()=>void next()}>{busy?"Checking…":"Continue"}</button></>}</div>}</>}
     </div><footer className={styles.footer}>Fees and share amounts are shown only when the prepared action supplies them. Index shares and copy trades are different things.</footer>
   </aside></div><WalletConnectSheet open={connectOpen} onClose={()=>setConnectOpen(false)}/></>;

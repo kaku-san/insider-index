@@ -22,6 +22,7 @@
     "keeper:index": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/insiderindex-keeper-tick.mts",
     "keeper:cycle": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/insiderindex-cycle-keeper.mts",
     "keeper:mag7-deposit": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/mag7-settle-deposit.mts",
+    "keeper:mag7-watch": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/mag7-settle-deposit.mts --watch-vault --execute --watch",
     "vault:settle:devnet": "node --experimental-strip-types scripts/settle-devnet-vault.mts",
     "vault:cycle": "node --experimental-strip-types scripts/vault-full-cycle.mts"
   },

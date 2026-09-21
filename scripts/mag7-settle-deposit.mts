@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { setTimeout as sleep } from "node:timers/promises";
 import { Keypair, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { getHeliusRpcUrl } from "../src/lib/helius.ts";
@@ -19,25 +21,34 @@ import { readVaultDefinition, type PersistedVaultDefinition } from "../src/lib/i
 const INDEX_ID = "idx-theme-mag7-caucus";
 const VAULT = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const SHARE_MINT = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
-const POLL_MS = 5_000;
-const MAX_SOL_DEBIT_LAMPORTS = 50_000_000n; // 0.05 SOL, a per-run demo bound.
+const MAG7_KEEPER = "GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq";
+const DEFAULT_POLL_MS = 300_000;
+const MAX_SOL_DEBIT_LAMPORTS = 50_000_000n; // 0.05 SOL per watcher tick.
 
-type Options = { owner: string; execute: boolean; watch: boolean; keypair?: string };
+type Options = { owner?: string; watchVault: boolean; execute: boolean; watch: boolean; pollMs: number; keypair?: string };
+type ScanIntent = {
+  formatted_data: { pubkey: string };
+  chain_data: { vault: { toBase58(): string }; owner: { toBase58(): string }; rebalanceType: RebalanceType; currentAction: RebalanceAction };
+};
+type TickResult = { action: string; intent?: string; signatures: string[]; spent: bigint; [key: string]: unknown };
 
 function usage() {
   return `Usage:
+  npm run keeper:mag7-deposit -- --watch-vault --dry-run
+  npm run keeper:mag7-deposit -- --watch-vault --execute --keypair /absolute/external/keeper.json --watch
+  npm run keeper:mag7-deposit -- --watch-vault --execute --keypair /absolute/external/keeper.json --watch --interval-seconds 300
   npm run keeper:mag7-deposit -- --owner <locked-deposit-wallet> --dry-run
-  npm run keeper:mag7-deposit -- --owner <locked-deposit-wallet> --execute --keypair /absolute/external/keeper.json --watch
 
-External laptop-only Mag7 deposit settler. It reads the persisted Mag7 definition, observes the
-user's already-finalized native deposit intent, then runs only Raydium price/fill/mint/cleanup steps.
-It never creates a user deposit, opens public funds, uses Pyth/Hermes, uses the cycle journal, or
-loads a key in the app. Dry-run is the default and broadcasts nothing. Execute is bounded to 0.05 SOL
-of observed keeper debit per invocation; restart the same command to continue after the bound.`;
+External VPS-only Mag7 deposit settler. With no --owner (the default) it scans every locked
+native deposit intent for the fixed Mag7 vault, regardless of depositor, and settles each through
+Raydium price/fill/mint/cleanup. --watch polls until Ctrl-C (five minutes by default); each poll has
+its own 0.05 SOL keeper SOL-debit cap. It never creates a user deposit, opens public funds, uses
+Pyth/Hermes, uses the cycle journal, or loads a key in the app. Dry-run is the default and
+broadcasts nothing.`;
 }
 
-function parseArgs(argv: readonly string[]): Options {
-  let owner: string | undefined, keypair: string | undefined, execute = false, watch = false;
+export function parseArgs(argv: readonly string[]): Options {
+  let owner: string | undefined, keypair: string | undefined, execute = false, watch = false, watchVault = false, pollMs = DEFAULT_POLL_MS;
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
     const value = () => {
@@ -50,12 +61,30 @@ function parseArgs(argv: readonly string[]): Options {
     else if (flag === "--execute") execute = true;
     else if (flag === "--dry-run") { /* Explicit spelling of the default. */ }
     else if (flag === "--watch") watch = true;
-    else throw new Error(`Unsupported argument ${flag}`);
+    else if (flag === "--watch-vault") watchVault = true;
+    else if (flag === "--interval-seconds") {
+      const seconds = Number(value());
+      if (!Number.isSafeInteger(seconds) || seconds < 5 || seconds > 86_400) throw new Error("--interval-seconds must be an integer from 5 to 86400");
+      pollMs = seconds * 1_000;
+    } else throw new Error(`Unsupported argument ${flag}`);
   }
-  if (!owner || (execute && !keypair) || (!execute && (keypair || watch)) || (execute && !isAbsolute(keypair!))) {
-    throw new Error("Use --owner <wallet>; --execute requires an absolute external --keypair path; --watch requires --execute");
+  // No owner is the safe normal-operation path: scan the one fixed vault, never all vaults.
+  if (!owner) watchVault = true;
+  if ((owner && watchVault) || (execute && !keypair) || (!execute && (keypair || watch)) || (execute && !isAbsolute(keypair!))) {
+    throw new Error("Use --watch-vault (or omit --owner) to scan Mag7; --owner is single-intent only; --execute requires an absolute external --keypair path; --watch requires --execute");
   }
-  return { owner, execute, watch, ...(keypair ? { keypair } : {}) };
+  return { ...(owner ? { owner } : {}), watchVault, execute, watch, pollMs, ...(keypair ? { keypair } : {}) };
+}
+
+/** Select only finalized/locked deposit intents from the fixed Mag7 vault. */
+export function lockedMag7DepositIntentAddresses(intents: readonly ScanIntent[]): string[] {
+  return intents
+    .filter(intent => intent.chain_data.vault.toBase58() === VAULT
+      && intent.chain_data.rebalanceType === RebalanceType.Deposit
+      && intent.chain_data.currentAction !== RebalanceAction.DepositTokens
+      && intent.chain_data.currentAction !== RebalanceAction.NotActive)
+    .map(intent => intent.formatted_data.pubkey)
+    .filter((intent, index, all) => all.indexOf(intent) === index);
 }
 
 function loadExternalKeypair(path: string): Keypair {
@@ -73,7 +102,7 @@ function requireMag7Definition(record: PersistedVaultDefinition | null): Persist
   if (!record || record.indexId !== INDEX_ID || record.vaultAddress !== VAULT || record.shareMint !== SHARE_MINT || record.network !== "mainnet-beta" || record.status !== "CREATABLE") {
     throw new Error("Persisted Mag7 definition/identity is not ready");
   }
-  if (!record.keeper?.pubkey || record.keeper.automationEnabled !== true) throw new Error("Persisted Mag7 keeper automation is not enabled");
+  if (record.keeper?.pubkey !== MAG7_KEEPER || record.keeper.automationEnabled !== true) throw new Error("Persisted Mag7 keeper must be the configured automation wallet");
   if (record.vaultLegs.length !== 7) throw new Error("Persisted Mag7 definition must contain exactly seven investment legs");
   return record;
 }
@@ -121,7 +150,7 @@ async function missingKeeperAtas(native: ReturnType<typeof kakuSanBuilders>, rec
   return missing;
 }
 
-async function tick(options: Options, spent: bigint) {
+async function tickIntent(options: Options, spent: bigint, intentAddress: string): Promise<TickResult> {
   assertNoPythEnvironment();
   const db = createServiceSupabase();
   if (!db) throw new Error("Supabase service-role credentials are required");
@@ -132,21 +161,22 @@ async function tick(options: Options, spent: bigint) {
   if (vault.ownAddress.toBase58() !== VAULT || vault.mint.toBase58() !== SHARE_MINT) throw new Error("On-chain Mag7 vault identity mismatch");
   assertRaydiumOnlyVault(vault, [...legBindings(record.vaultLegs), ...NATIVE_DEFAULT_BINDINGS]);
   assertNativeSupportTargets(vault);
-  const intentAddress = (await import("@symmetry-hq/sdk/dist/instructions/pda.js")).getRebalanceIntentPda(new PublicKey(VAULT), new PublicKey(options.owner)).toBase58();
   const account = await native.connection.getAccountInfo(new PublicKey(intentAddress), "confirmed");
-  if (!account) return { action: "wait", reason: "No locked deposit intent exists for this owner", signatures: [], spent };
+  if (!account) return { action: "wait", reason: "Locked deposit intent disappeared before settlement", intent: intentAddress, signatures: [], spent };
   const intent = await native.sdk.fetchRebalanceIntent(intentAddress);
   const chain = intent.chain_data;
-  if (chain.vault.toBase58() !== VAULT || chain.owner.toBase58() !== options.owner || chain.rebalanceType !== RebalanceType.Deposit) throw new Error("Native intent is not this user's Mag7 deposit");
+  const owner = chain.owner.toBase58();
+  if (chain.vault.toBase58() !== VAULT || chain.rebalanceType !== RebalanceType.Deposit || getRebalanceIntentPda(new PublicKey(VAULT), new PublicKey(owner)).toBase58() !== intentAddress) throw new Error("Native intent is not a Mag7 user deposit");
   const action = chain.currentAction;
   const now = Math.floor(Date.now() / 1000);
-  if (!options.execute) return { action: "dry-run", intent: intentAddress, nativeAction: intent.formatted_data.current_action, executionStart: chain.executionStartTime.toString(), now, signatures: [], spent };
+  if (!options.execute) return { action: "dry-run", owner, intent: intentAddress, nativeAction: intent.formatted_data.current_action, executionStart: chain.executionStartTime.toString(), now, signatures: [], spent };
 
   const keeper = loadExternalKeypair(options.keypair!);
   const managers = (vault.settings as { managers?: { managers?: { toBase58(): string }[] } }).managers?.managers ?? [];
   const keeperAddress = assertIndexKeeper(keeper.publicKey.toBase58(), {
     deployer: vault.settings.creator.toBase58(), host: vault.settings.host.toBase58(), strategy: managers.map(manager => manager.toBase58()), namedKeeper: record.keeper.pubkey,
   });
+  if (keeperAddress !== MAG7_KEEPER) throw new Error("MAG7_KEEPER_PUBKEY_MISMATCH");
   const missing = await missingKeeperAtas(native, record, keeperAddress);
   if (missing.length) throw new Error(`Missing keeper ATAs: ${missing.join(", ")}`);
   if (action === RebalanceAction.DepositTokens) return { action: "wait", reason: "User deposit is not locked/finalized yet", intent: intentAddress, signatures: [], spent };
@@ -193,17 +223,41 @@ async function tick(options: Options, spent: bigint) {
   return { action: "wait", reason: `Unsupported deposit intent action ${intent.formatted_data.current_action}`, intent: intentAddress, signatures: [], spent };
 }
 
+async function tick(options: Options) {
+  const native = kakuSanBuilders(false);
+  await native.assertNetwork();
+  const intentAddresses = options.owner
+    ? [getRebalanceIntentPda(new PublicKey(VAULT), new PublicKey(options.owner)).toBase58()]
+    : lockedMag7DepositIntentAddresses(await native.sdk.fetchVaultRebalanceIntents(VAULT) as ScanIntent[]);
+  let spent = 0n;
+  const results: Array<TickResult | { action: "error"; intent: string; error: string; signatures: []; spent: bigint }> = [];
+  for (const intentAddress of intentAddresses) {
+    try {
+      const result = await tickIntent(options, spent, intentAddress);
+      spent = result.spent;
+      results.push(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "MAG7_KEEPER_REFUSED";
+      results.push({ action: "error", intent: intentAddress, error: message, signatures: [], spent });
+      // Spending is a global per-tick cap. Do not try another deposit once it is exhausted.
+      if (message === "MAG7_KEEPER_SOL_DEBIT_CAP") break;
+    }
+  }
+  return { scannedLockedIntents: intentAddresses.length, results, spent };
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  let spent = 0n;
   do {
-    const result = await tick(options, spent);
-    spent = result.spent;
-    console.log(JSON.stringify({ schema: "insiderindex-mag7-direct-settler-v1", indexId: INDEX_ID, vault: VAULT, shareMint: SHARE_MINT, mode: options.execute ? "execute" : "dry-run", maxSolDebitLamports: MAX_SOL_DEBIT_LAMPORTS.toString(), ...result }, null, 2));
-    if (!options.watch || result.action === "cleanup" || ("reason" in result && result.reason?.includes("No locked"))) break;
-    await sleep(POLL_MS);
+    // The SOL cap is deliberately reset for each poll, not shared across a weekend-long watcher.
+    const result = await tick(options);
+    console.log(JSON.stringify({ schema: "insiderindex-mag7-direct-settler-v2", indexId: INDEX_ID, vault: VAULT, shareMint: SHARE_MINT, keeper: MAG7_KEEPER, mode: options.execute ? "execute" : "dry-run", watchVault: options.watchVault, pollSeconds: options.pollMs / 1_000, maxSolDebitLamports: MAX_SOL_DEBIT_LAMPORTS.toString(), ...result, spent: result.spent.toString(), results: result.results.map(item => ({ ...item, spent: item.spent.toString() })) }, null, 2));
+    if (!options.watch) break;
+    await sleep(options.pollMs);
   } while (true);
 }
 
-if (process.argv.includes("--help")) console.log(usage());
-else void main().catch(error => { console.error(error instanceof Error ? error.message : "MAG7_KEEPER_REFUSED"); process.exitCode = 1; });
+if (import.meta.url === pathToFileURL(resolve(process.argv[1] ?? "scripts/mag7-settle-deposit.mts")).href) {
+  if (process.argv.includes("--help")) console.log(usage());
+  else void main().catch(error => { console.error(error instanceof Error ? error.message : "MAG7_KEEPER_REFUSED"); process.exitCode = 1; });
+}

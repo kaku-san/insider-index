@@ -1,7 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getMint, unpackAccount } from "@solana/spl-token";
+import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { RebalanceAction, RebalanceType, type UIRebalanceIntent } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { getHeliusRpcUrl } from "../helius.ts";
-import type { IndexSharePosition, Network } from "../frontend/vault-api.ts";
+import type { IndexSharePosition, Network, ObservedOperation } from "../frontend/vault-api.ts";
 import type { NativeVaultBuilders } from "./symmetry-adapter.ts";
 import type { PublicVaultDefinition } from "./vault-definition-store.ts";
 
@@ -22,6 +24,24 @@ function createdIndex(index: PublicVaultDefinition): index is CreatedIndex {
   return (index.network === "mainnet-beta" || index.network === "devnet")
     && typeof index.vaultAddress === "string"
     && typeof index.shareMint === "string";
+}
+
+/** A native intent is the only pending-deposit source; a prepare response is never a receipt. */
+export function pendingNativeDeposit(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string): ObservedOperation | null {
+  const chain = intent.chain_data;
+  if (chain.vault.toBase58() !== vaultAddress || chain.owner.toBase58() !== owner || chain.rebalanceType !== RebalanceType.Deposit) throw new Error("Native deposit intent identity mismatch");
+  if (chain.currentAction === RebalanceAction.NotActive) return null;
+  const phase = chain.currentAction === RebalanceAction.DepositTokens ? "AWAITING_LOCK"
+    : chain.currentAction === RebalanceAction.UpdatePrices ? "PRICING"
+    : intent.mint_data ? "CLEANUP" : "AUCTION";
+  return { operationId: `native-deposit-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind: "deposit", phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: ["Deposit pending settlement"] };
+}
+
+async function pendingNativeDeposits(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string): Promise<ObservedOperation[]> {
+  const intentAddress = getRebalanceIntentPda(new PublicKey(vaultAddress), new PublicKey(owner)).toBase58();
+  if (!await native.connection.getAccountInfo(new PublicKey(intentAddress), "confirmed")) return [];
+  const pending = pendingNativeDeposit(await native.sdk.fetchRebalanceIntent(intentAddress), vaultAddress, shareMint, owner);
+  return pending ? [pending] : [];
 }
 
 async function readerFor(network: Network): Promise<NativeVaultBuilders> {
@@ -55,9 +75,11 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
     if (!account.isInitialized || account.owner.toBase58() !== owner || account.mint.toBase58() !== index.shareMint) throw new Error("Share account identity mismatch");
     shares += account.amount;
   }
+  const pendingOperations = await pendingNativeDeposits(activeNative, index.vaultAddress, index.shareMint, owner);
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
     shareDecimals: mint.decimals, sharesRaw: shares.toString(),
+    ...(pendingOperations.length ? { pendingOperations } : {}),
   };
 }
 
