@@ -4,10 +4,11 @@ import { register } from "node:module";
 import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, VersionedTransaction } from "@solana/web3.js";
 import { cycleTestOwner } from "./support/cycle-policy.mts";
-import { publicCycleFixture, ownerSignature, openTestRelease, publicTestOrigin } from "./support/public-cycle.mts";
+import { accessSignature, publicCycleFixture, ownerSignature, openTestRelease, publicTestOrigin } from "./support/public-cycle.mts";
 import { cycleTestKeeper, cycleTestPolicy } from "./support/cycle-policy.mts";
 import { cycleKeeperTick } from "../src/lib/index-vaults/cycle-keeper.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
+import { CycleJournal } from "../src/lib/index-vaults/cycle-store.ts";
 import { PUBLIC_MAG7 } from "../src/lib/index-vaults/public-cycle-parse.ts";
 import { cycleAccessMessage, validateCycleAccessBinding } from "../src/lib/index-vaults/cycle-access-parse.ts";
 import { publicCycleDirectory, publicCycleIndexEnabled } from "../src/lib/index-vaults/public-cycle-release.ts";
@@ -102,6 +103,23 @@ test("public readiness requires all releases, unique active policy and original 
     const directory = publicCycleDirectory([row, { ...row, indexId: "insiderindex-pelosi", vaultAddress: null, shareMint: null }, { ...row, indexId: "idx-theme-other-real-vault" }], f.env, f.release);
     assert.deepEqual(directory.indexes.map(r => r.publicFundsEnabled), [true, false, false]);
     assert.equal(directory.indexes[1].depositsEnabled, row.depositsEnabled, "publication gate does not rewrite the persisted per-vault gate");
+  } finally { await f.close(); }
+});
+
+test("public discovery rebinds an empty journal and stale configured definition hash to the live Mag7 record", async () => {
+  const f = await publicCycleFixture();
+  try {
+    const stale = { ...f.policy, definitionHash: "a".repeat(64) };
+    await new CycleJournal(stale, f.db.rpc).update(() => {});
+    const configured = JSON.parse(f.env.STOCKLANA_CYCLE_POLICIES_JSON!)[0];
+    f.env.STOCKLANA_CYCLE_POLICIES_JSON = JSON.stringify([{ ...configured, definitionHash: stale.definitionHash }]);
+    await f.client.discover();
+    assert.equal((await f.journal.read()).definitionHash, f.policy.definitionHash);
+    await f.client.authorize(accessSignature);
+    await assert.rejects(f.client.prepare(), error => {
+      assert.equal((error as { code?: string }).code, "CYCLE_KEEPER_SETUP_REQUIRED_BEFORE_DEPOSIT");
+      return true;
+    }, "the rebound normal wallet reaches native preparation rather than a policy identity block");
   } finally { await f.close(); }
 });
 

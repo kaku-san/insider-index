@@ -60,7 +60,7 @@ export async function publicCycleFixture(amountRaw = "100000000", selected?: { t
     return signature;
   };
   const env = { STOCKLANA_CYCLE_AUTH_SECRET: "SYNTHETIC-PUBLIC-CYCLE-TEST-NOT-PRODUCTION", STOCKLANA_CYCLE_POLICIES_JSON: JSON.stringify([template]) };
-  const release = openTestRelease(), dependencies = { env, release, rpc: db.rpc, runner: (configured: typeof policy) => new CycleRunner({ ...runner.input, policy: configured, journal: new CycleJournal(configured, db.rpc) }) };
+  const release = openTestRelease(), dependencies = { env, release, rpc: db.rpc, loadDefinition: async () => record, runner: (configured: typeof policy) => new CycleRunner({ ...runner.input, policy: configured, journal: new CycleJournal(configured, db.rpc) }) };
   const api = (body: unknown, indexId: string = PUBLIC_MAG7.indexId, origin = publicTestOrigin) => handlePublicCycleRequest(new Request(`${publicTestOrigin}/api/indexes/${indexId}/cycle`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) }), indexId, dependencies);
   const transport: typeof fetch = async (url, init) => { assert.equal(url, `/api/indexes/${PUBLIC_MAG7.indexId}/cycle`); return api(JSON.parse(String(init?.body))); };
   const client = new PublicCycleClient(policy.owner, publicTestOrigin, { fetch: transport, connection: vm.connection, metadata: vm.metadata });

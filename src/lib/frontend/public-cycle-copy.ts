@@ -7,6 +7,7 @@ export function publicCycleErrorCopy(error: unknown, mode: "deposit" | "withdraw
   if (!raw) return fallback(mode);
   if (/CYCLE_PUBLIC_AMOUNT_INVALID/.test(raw)) return "Enter a positive USDC amount with up to six decimal places.";
   if (/CYCLE_PUBLIC_AMOUNT_ALREADY_SELECTED/.test(raw)) return "Your saved investment amount is ready to continue.";
+  if (/CYCLE_(JOURNAL_IDENTITY_OR_POLICY_CHANGED|POLICY_IDENTITY_CHANGED)/.test(raw)) return "Investment setup changed. Tap Prepare again.";
   if (/CYCLE_INSUFFICIENT_USDC/.test(raw)) return "You don’t have enough USDC for this amount.";
   if (/CYCLE_(PERSISTED_KEEPER_AUTHORITY_REQUIRED|PARTIAL_COVERAGE_OR_DEPOSITS_CLOSED|PUBLIC_DEPOSITS_CLOSED|DEPOSITS_CLOSED|LEG_UNREADY)/.test(raw)) return "Invest isn't set up for this index yet.";
   if (/CYCLE_AUTHORIZATION_EXPIRED/.test(raw)) return "Your approval expired. Review the amount and confirm again.";
