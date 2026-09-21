@@ -114,7 +114,19 @@ async function assertTokenSemantics(native: NativeVaultBuilders, instructions: T
     if (amountRaw !== maxDebits[0]?.amountRaw) throw new Error("Token transfer amount is invalid.");
     validatedTransfers += 1;
   }
-  if (tokenInstructions > 0 && maxDebits.length > 0 && (maxDebits.length !== 1 || validatedTransfers !== 1)) throw new Error("Prepared transaction must contain exactly one USDC transfer.");
+  if (tokenInstructions !== (maxDebits.length ? 1 : 0) || validatedTransfers !== (maxDebits.length ? 1 : 0)) throw new Error("Prepared transaction must contain exactly one USDC transfer.");
+}
+
+function assertAncillarySemantics(instructions: TransactionInstruction[]) {
+  for (const instruction of instructions) {
+    const program = instruction.programId.toBase58();
+    if (program === SystemProgram.programId.toBase58() || program === ASSOCIATED_TOKEN_PROGRAM_ID.toBase58()) {
+      throw new Error("Unsupported ancillary instruction.");
+    }
+    if (program === ComputeBudgetProgram.programId.toBase58()) continue;
+    if (program === SYMMETRY_PROGRAM_ID || program === TOKEN_PROGRAM_ID.toBase58() || program === TOKEN_2022_PROGRAM_ID.toBase58()) continue;
+    throw new Error("Unsupported ancillary instruction.");
+  }
 }
 
 const SYMMETRY_DEPOSIT = Buffer.from([88, 92, 158, 219, 83, 71, 239, 164]);
@@ -140,6 +152,7 @@ function assertSymmetrySemantics(instructions: TransactionInstruction[], owner: 
     { pubkey: buyer, isSigner: true, isWritable: true }, { pubkey: intent, isSigner: false, isWritable: true }, { pubkey: getGlobalConfigPda(), isSigner: false, isWritable: false },
   ], data: SYMMETRY_LOCK });
   let deposits = 0;
+  let locks = 0;
   for (const instruction of instructions.filter(ix => ix.programId.toBase58() === SYMMETRY_PROGRAM_ID)) {
     const discriminator = instruction.data.subarray(0, 8);
     if (discriminator.equals(SYMMETRY_DEPOSIT)) {
@@ -147,6 +160,7 @@ function assertSymmetrySemantics(instructions: TransactionInstruction[], owner: 
       deposits += 1;
     } else if (discriminator.equals(SYMMETRY_LOCK)) {
       if (!sameInstruction(instruction, expectedLock)) throw new Error("Symmetry lock accounts are invalid.");
+      locks += 1;
     } else if (discriminator.equals(SYMMETRY_CREATE_INTENT)) {
       if (instruction.keys.length !== 9 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[1].pubkey.equals(buyer) || !instruction.keys[2].pubkey.equals(vault) || !instruction.keys[3].pubkey.equals(intent) || !instruction.keys[4].pubkey.equals(getRentPayerPda()) || !instruction.keys[5].pubkey.equals(getGlobalConfigPda()) || !instruction.keys[6].pubkey.equals(SYSVAR_INSTRUCTIONS_PUBKEY) || !instruction.keys[7].pubkey.equals(SYSVAR_RENT_PUBKEY) || !instruction.keys[8].pubkey.equals(SystemProgram.programId)) throw new Error("Symmetry intent accounts are invalid.");
     } else if (discriminator.equals(SYMMETRY_RESIZE_INTENT)) {
@@ -155,12 +169,12 @@ function assertSymmetrySemantics(instructions: TransactionInstruction[], owner: 
       if (instruction.data.length !== 126 || instruction.keys.length !== 18 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[1].pubkey.equals(buyer) || !instruction.keys[2].pubkey.equals(vault) || !instruction.keys[3].pubkey.equals(intent) || !instruction.keys[4].pubkey.equals(getRentPayerPda()) || !instruction.keys[5].pubkey.equals(mint) || !instruction.keys[6].pubkey.equals(getAta(buyer, mint, TOKEN_PROGRAM_ID)) || !instruction.keys[7].pubkey.equals(getGlobalConfigPda()) || !instruction.keys[8].pubkey.equals(new PublicKey(bountyMint)) || !instruction.keys[9].pubkey.equals(getAta(buyer, new PublicKey(bountyMint), TOKEN_PROGRAM_ID)) || !instruction.keys[10].pubkey.equals(getBountyVaultPda()) || !instruction.keys[11].pubkey.equals(getAta(getBountyVaultPda(), new PublicKey(bountyMint), TOKEN_PROGRAM_ID)) || !instruction.keys[12].pubkey.equals(getVaultFeesPda(vault)) || !instruction.keys[13].pubkey.equals(getAta(getVaultFeesPda(vault), mint, TOKEN_PROGRAM_ID)) || !instruction.keys[14].pubkey.equals(new PublicKey(SYMMETRY_PROGRAM_ID)) || !instruction.keys[15].pubkey.equals(SystemProgram.programId) || !instruction.keys[16].pubkey.equals(TOKEN_PROGRAM_ID) || !instruction.keys[17].pubkey.equals(ASSOCIATED_TOKEN_PROGRAM_ID) || !new PublicKey(instruction.data.subarray(8, 40)).equals(instruction.keys[4].pubkey) || instruction.data[40] !== 0 || instruction.data.readUInt16LE(41) !== 100 || instruction.data.readUInt16LE(43) !== 50) throw new Error("Symmetry intent parameters or accounts are invalid.");
     } else throw new Error("Unsupported Symmetry instruction.");
   }
-  if (amountRaw ? deposits !== 1 : deposits !== 0) throw new Error("Prepared transaction contains an unexpected Symmetry deposit.");
+  if (amountRaw ? deposits !== 1 || locks !== 0 : deposits !== 0 || locks !== 1) throw new Error("Prepared transaction contains an unexpected Symmetry operation.");
 }
 
 function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"], expectedRecipients: PreparedTransaction["expectedRecipients"]) {
   const tokenPrograms = new Set([TOKEN_PROGRAM_ID.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58()]);
-  const allowedPrograms = new Set([ComputeBudgetProgram.programId.toBase58(), SystemProgram.programId.toBase58(), ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(), ...tokenPrograms, SYMMETRY_PROGRAM_ID]);
+  const allowedPrograms = new Set([ComputeBudgetProgram.programId.toBase58(), ...tokenPrograms, SYMMETRY_PROGRAM_ID]);
   const programs = [...new Set(instructions.map(instruction => instruction.programId.toBase58()))];
   if (!programs.length || programs.some(program => !allowedPrograms.has(program))) throw new Error("Prepared transaction uses an unapproved program.");
   return {
@@ -193,6 +207,7 @@ async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload
   if (signers.length !== 1 || signers[0] !== owner || parsed.signatures.some(signature => signature.some(byte => byte !== 0))) throw new Error("Prepared transaction requires an unexpected signer.");
   if (parsed.message.staticAccountKeys[0]?.toBase58() !== owner || parsed.message.recentBlockhash !== tx.recent_blockhash) throw new Error("Prepared transaction identity mismatch.");
   const instructions = payloadInstructions(tx);
+  assertAncillarySemantics(instructions);
   await assertTokenSemantics(native, instructions, owner, vaultAddress, maxDebits);
   assertSymmetrySemantics(instructions, owner, vaultAddress, shareMint, maxDebits[0]?.amountRaw, bountyMint);
   const expectedRecipients = maxDebits.length ? [{ owner: vaultAddress, mint: networkUsdc("mainnet-beta") }] : [];
