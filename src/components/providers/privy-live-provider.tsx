@@ -242,7 +242,7 @@ export function PrivyLiveRoot({
         loginMethods: ["wallet", "email"],
         embeddedWallets: {
           solana: {
-            createOnLogin: "users-without-wallets",
+            createOnLogin: "off",
           },
           ethereum: {
             createOnLogin: "off",
