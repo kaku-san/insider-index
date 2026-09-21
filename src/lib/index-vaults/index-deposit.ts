@@ -1,7 +1,7 @@
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import type { TxPayload, TxPayloadBatchSequence } from "@symmetry-hq/sdk/dist/txUtils.js";
 import { ComputeBudgetProgram, PublicKey, SystemProgram, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
 import { createServiceSupabase } from "@/lib/supabase";
 import { address, hashObject, rawAmount, sdkRawAmount } from "./amounts.ts";
 import { validateAndSimulate } from "./transaction-policy.ts";
@@ -87,7 +87,32 @@ function payloadInstructions(tx: TxPayload): TransactionInstruction[] {
   }));
 }
 
-function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"]) {
+async function assertTokenSemantics(native: NativeVaultBuilders, instructions: TransactionInstruction[], owner: string, vaultAddress: string, maxDebits: PreparedTransaction["maxDebits"]) {
+  const tokenPrograms = new Set([TOKEN_PROGRAM_ID.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58()]);
+  for (const instruction of instructions) {
+    if (!tokenPrograms.has(instruction.programId.toBase58())) continue;
+    const discriminator = instruction.data[0];
+    if ((discriminator !== 3 && discriminator !== 12) || instruction.keys.length < 3 || instruction.data.length < (discriminator === 12 ? 10 : 9)) throw new Error("Unsupported token instruction");
+    const source = instruction.keys[0].pubkey;
+    const destination = instruction.keys[discriminator === 12 ? 2 : 1].pubkey;
+    const authority = instruction.keys[discriminator === 12 ? 3 : 2]?.pubkey;
+    if (!authority?.equals(new PublicKey(owner)) || !instruction.keys[0].isWritable || !instruction.keys[discriminator === 12 ? 2 : 1].isWritable) throw new Error("Token transfer authority or accounts are invalid.");
+    if (source.equals(destination)) throw new Error("Token transfer accounts are invalid.");
+    if (discriminator === 12 && !instruction.keys[1].pubkey.equals(new PublicKey(networkUsdc("mainnet-beta")))) throw new Error("Token transfer mint is invalid.");
+    const [sourceInfo, destinationInfo] = await Promise.all([
+      native.connection.getAccountInfo(source, "confirmed"),
+      native.connection.getAccountInfo(destination, "confirmed"),
+    ]);
+    if (!sourceInfo || !destinationInfo || !tokenPrograms.has(sourceInfo.owner.toBase58()) || !tokenPrograms.has(destinationInfo.owner.toBase58()) || !sourceInfo.owner.equals(destinationInfo.owner)) throw new Error("Token accounts are unavailable or use different programs.");
+    const sourceAccount = unpackAccount(source, sourceInfo, sourceInfo.owner);
+    const destinationAccount = unpackAccount(destination, destinationInfo, destinationInfo.owner);
+    if (sourceAccount.mint.toBase58() !== networkUsdc("mainnet-beta") || destinationAccount.mint.toBase58() !== networkUsdc("mainnet-beta") || sourceAccount.owner.toBase58() !== owner || destinationAccount.owner.toBase58() !== vaultAddress) throw new Error("Token transfer mint or custody account is invalid.");
+    const amountRaw = instruction.data.readBigUInt64LE(1).toString();
+    if (amountRaw !== maxDebits[0]?.amountRaw) throw new Error("Token transfer amount is invalid.");
+  }
+}
+
+function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"], expectedRecipients: PreparedTransaction["expectedRecipients"]) {
   const tokenPrograms = new Set([TOKEN_PROGRAM_ID.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58()]);
   const allowedPrograms = new Set([ComputeBudgetProgram.programId.toBase58(), SystemProgram.programId.toBase58(), ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(), ...tokenPrograms, SYMMETRY_PROGRAM_ID]);
   const programs = [...new Set(instructions.map(instruction => instruction.programId.toBase58()))];
@@ -99,7 +124,7 @@ function transactionPolicy(instructions: TransactionInstruction[], owner: string
     writableAccounts: [...new Set(instructions.flatMap(instruction => instruction.keys.filter(key => key.isWritable).map(key => key.pubkey.toBase58()))), owner],
     expectedInstructions: instructions,
     maxDebits,
-    recipients: [],
+    recipients: expectedRecipients,
     minima: [],
     maxComputeUnits: 1_400_000,
     maxMicroLamports: 100_000n,
@@ -108,12 +133,12 @@ function transactionPolicy(instructions: TransactionInstruction[], owner: string
       const discriminator = instruction.data[0];
       if (discriminator !== 3 && discriminator !== 12) throw new Error("Unsupported token instruction");
       if (instruction.data.length < 9) throw new Error("Malformed token instruction");
-      return { debits: [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw: instruction.data.readBigUInt64LE(1).toString() }], recipients: [], minima: [] };
+      return { debits: [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw: instruction.data.readBigUInt64LE(1).toString() }], recipients: expectedRecipients, minima: [] };
     },
   };
 }
 
-async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload, stepId: string, owner: string, maxDebits: PreparedTransaction["maxDebits"]): Promise<PreparedTransaction> {
+async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload, stepId: string, owner: string, vaultAddress: string, maxDebits: PreparedTransaction["maxDebits"]): Promise<PreparedTransaction> {
   if (tx.payer !== owner) throw new Error("Prepared transaction payer does not match the investing wallet.");
   const lastValidBlockHeight = tx.last_valid_block_height;
   if (!tx.tx_b64 || typeof lastValidBlockHeight !== "number" || !Number.isSafeInteger(lastValidBlockHeight) || lastValidBlockHeight <= 0) throw new Error("Prepared transaction is missing its expiry.");
@@ -122,13 +147,15 @@ async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload
   if (signers.length !== 1 || signers[0] !== owner || parsed.signatures.some(signature => signature.some(byte => byte !== 0))) throw new Error("Prepared transaction requires an unexpected signer.");
   if (parsed.message.staticAccountKeys[0]?.toBase58() !== owner || parsed.message.recentBlockhash !== tx.recent_blockhash) throw new Error("Prepared transaction identity mismatch.");
   const instructions = payloadInstructions(tx);
-  return validateAndSimulate(native.connection, { stepId, transactionBase64: tx.tx_b64, lastValidBlockHeight }, transactionPolicy(instructions, owner, maxDebits));
+  await assertTokenSemantics(native, instructions, owner, vaultAddress, maxDebits);
+  const expectedRecipients = maxDebits.length ? [{ owner: vaultAddress, mint: networkUsdc("mainnet-beta") }] : [];
+  return validateAndSimulate(native.connection, { stepId, transactionBase64: tx.tx_b64, lastValidBlockHeight }, transactionPolicy(instructions, owner, maxDebits, expectedRecipients));
 }
 
-async function transactionsFromPayload(native: NativeVaultBuilders, payload: TxPayloadBatchSequence, prefix: string, owner: string, amountRaw?: string): Promise<PreparedTransaction[]> {
+async function transactionsFromPayload(native: NativeVaultBuilders, payload: TxPayloadBatchSequence, prefix: string, owner: string, vaultAddress: string, amountRaw?: string): Promise<PreparedTransaction[]> {
   const all = payload.batches.flatMap(batch => batch.transactions);
   if (!all.length) throw new Error("The vault did not prepare a transaction.");
-  return Promise.all(all.map((tx, index) => transactionFromPayload(native, tx, `${prefix}-${index + 1}`, owner,
+  return Promise.all(all.map((tx, index) => transactionFromPayload(native, tx, `${prefix}-${index + 1}`, owner, vaultAddress,
     amountRaw && index === all.length - 1 ? [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw }] : [])));
 }
 
@@ -161,7 +188,7 @@ export async function prepareIndexDeposit(indexId: string, input: DepositInput, 
     operationId,
     phase: "AWAITING_SIGNATURE",
     requires: "user-signature" as const,
-    transactions: [...await transactionsFromPayload(native, buy, "deposit", input.owner, input.amountRaw), ...await transactionsFromPayload(native, lock, "lock", input.owner)],
+    transactions: [...await transactionsFromPayload(native, buy, "deposit", input.owner, definition.vaultAddress!, input.amountRaw), ...await transactionsFromPayload(native, lock, "lock", input.owner, definition.vaultAddress!)],
     configHash: hashObject({ indexId, vault: definition.vaultAddress, shareMint: definition.shareMint, depositsEnabled: definition.depositsEnabled }),
     constraints: [{ label: "Settlement", value: "Your deposit locks after wallet approval. A keeper mints shares later." }],
     costs: { hostEntryFeeBps: definition.hostEntryFeeBps ?? 25, hostExitFeeBps: definition.hostExitFeeBps ?? 0, estimatedOnly: true },
