@@ -19,7 +19,7 @@ The public Invest modal follows the release-gated deposit rail owned by [`src/li
 | Copy one eligible disclosure | Done | `/api/quote` + `/api/execute` | Existing same-origin quote/execute routes | Fail closed without production API + wallet |
 | Connect / wallet-scoped portfolio | Done | Privy React/Solana adapter + preview adapter | Production app ID/config required | Real external/email connect when configured; preview stays local |
 | Native index readiness | Done | Done | Native person-index route not present | Read-only until native backend exists |
-| Native index deposit | Done, including sequential contribution + lock confirmations | Done | Persisted-definition prepare route with release/gate checks | Release-gated; keeper mint remains later |
+| Native index deposit | Done, including atomic first-depositor contribution + lock signing | Done | Persisted-definition prepare route with release/gate checks | Release-gated; keeper mint remains later |
 | Native index position | Done | Done | Authoritative person-index position route not present | Read-only until backend exists |
 | Native withdrawal | Done | Done | Native redemption/claim routes not present | Fail closed |
 | Claim / partial claim / resume | Done | Done | Chain reconciliation route/store/worker not present | Fail closed |
@@ -97,10 +97,9 @@ All token/share amounts are raw decimal strings at the API boundary.
 
 ```text
 DRAFT
-→ AWAITING_SIGNATURE          investor reviews deposit payload
+→ AWAITING_SIGNATURE          investor reviews one atomic deposit payload
 → SUBMITTED
-→ CONTRIBUTION_CONFIRMED      wallet contribution confirmed on chain
-→ LOCK_CONFIRMED              wallet lock confirmed on chain
+→ CONTRIBUTION_AND_LOCK_CONFIRMED  contribution and lock confirmed on chain
 → KEEPER_MINT_PENDING         keeper mints shares later
 → SHARES_RECEIVED
 ```

@@ -1,6 +1,6 @@
 # Retained public Mag7 cycle surface — not mounted on Invest
 
-The public Mag7 cycle endpoint and `PublicCycleClient` remain retained compatibility infrastructure, but `VaultFlow` no longer mounts them for Invest. The Invest path is the release-gated `POST /api/indexes/:id/deposit/prepare` rail documented in [`src/lib/index-vaults/README.md`](../src/lib/index-vaults/README.md): the wallet signs SDK `buyVaultTx` contribution transactions and `lockDepositsTx`, then a keeper mints shares later. Other indexes are accepted only by the persisted-definition deposit route when their gates are open. No replacement vault, receipt token, server signer or wallet-side broadcast is introduced.
+The public Mag7 cycle endpoint and `PublicCycleClient` remain retained compatibility infrastructure, but `VaultFlow` no longer mounts them for Invest. The Invest path is the release-gated `POST /api/indexes/:id/deposit/prepare` rail documented in [`src/lib/index-vaults/README.md`](../src/lib/index-vaults/README.md): for a first depositor, the route combines SDK `buyVaultTx` contribution and `lockDepositsTx` into one atomic user-signed transaction, then a keeper mints shares later. Other indexes are accepted only by the persisted-definition deposit route when their gates are open. No replacement vault, receipt token, server signer or wallet-side broadcast is introduced.
 
 ## API and authority
 
