@@ -89,6 +89,7 @@ function payloadInstructions(tx: TxPayload): TransactionInstruction[] {
 
 async function assertTokenSemantics(native: NativeVaultBuilders, instructions: TransactionInstruction[], owner: string, vaultAddress: string, maxDebits: PreparedTransaction["maxDebits"]) {
   const tokenPrograms = new Set([TOKEN_PROGRAM_ID.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58()]);
+  let validatedTransfers = 0;
   for (const instruction of instructions) {
     if (!tokenPrograms.has(instruction.programId.toBase58())) continue;
     const discriminator = instruction.data[0];
@@ -109,7 +110,9 @@ async function assertTokenSemantics(native: NativeVaultBuilders, instructions: T
     if (sourceAccount.mint.toBase58() !== networkUsdc("mainnet-beta") || destinationAccount.mint.toBase58() !== networkUsdc("mainnet-beta") || sourceAccount.owner.toBase58() !== owner || destinationAccount.owner.toBase58() !== vaultAddress) throw new Error("Token transfer mint or custody account is invalid.");
     const amountRaw = instruction.data.readBigUInt64LE(1).toString();
     if (amountRaw !== maxDebits[0]?.amountRaw) throw new Error("Token transfer amount is invalid.");
+    validatedTransfers += 1;
   }
+  if (maxDebits.length > 0 && (maxDebits.length !== 1 || validatedTransfers !== 1)) throw new Error("Prepared transaction must contain exactly one USDC transfer.");
 }
 
 function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"], expectedRecipients: PreparedTransaction["expectedRecipients"]) {
