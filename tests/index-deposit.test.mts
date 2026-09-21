@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { register } from "node:module";
 import { PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
-import { getAta, getGlobalConfigPda, getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createSyncNativeInstruction, NATIVE_MINT, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { createRebalanceIntentIx, initRebalanceIntentIx, resizeRebalanceIntentIx } from "@symmetry-hq/sdk/dist/instructions/automation/rebalanceIntent.js";
+import { getAta, getGlobalConfigPda, getRebalanceIntentPda, getRentPayerPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { networkUsdc, SYMMETRY_PROGRAM_ID } from "../src/lib/index-vaults/symmetry-adapter.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
@@ -12,6 +13,16 @@ const { handleIndexDepositPrepare, parseIndexDepositRequest } = await import("..
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const shareMint = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
+
+function transaction(instructions: TransactionInstruction[]) {
+  const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions }).compileToV0Message();
+  const signed = new VersionedTransaction(message);
+  return {
+    tx_b64: Buffer.from(signed.serialize()).toString("base64"), message_version: "0" as const, recent_blockhash: owner,
+    last_valid_block_height: 99, payer: owner, lookup_tables: [],
+    instructions: instructions.map(instruction => ({ program_id: instruction.programId.toBase58(), accounts: instruction.keys.map(account => ({ pubkey: account.pubkey.toBase58(), is_signer: account.isSigner, is_writable: account.isWritable })), data: instruction.data.toString("base64") })),
+  };
+}
 
 function payload(kind: "deposit" | "lock") {
   const buyer = new PublicKey(owner);
@@ -34,15 +45,24 @@ function payload(kind: "deposit" | "lock") {
         data: Buffer.from([64, 238, 171, 198, 135, 253, 37, 9]),
       });
   if (kind === "deposit") instruction.data.writeBigUInt64LE(1_000_000n, 8);
-  const message = new TransactionMessage({ payerKey: buyer, recentBlockhash: owner, instructions: [instruction] }).compileToV0Message();
-  const transaction = new VersionedTransaction(message);
-  return {
-    batches: [{ transactions: [{
-      tx_b64: Buffer.from(transaction.serialize()).toString("base64"), message_version: "0" as const, recent_blockhash: owner,
-      last_valid_block_height: 99, payer: owner, lookup_tables: [],
-      instructions: [{ program_id: instruction.programId.toBase58(), accounts: instruction.keys.map(account => ({ pubkey: account.pubkey.toBase58(), is_signer: account.isSigner, is_writable: account.isWritable })), data: instruction.data.toString("base64") }],
-    }] }],
-  };
+  return { batches: [{ transactions: [transaction([instruction])] }] };
+}
+
+function firstDepositPayloadWithAncillaryCreates() {
+  const buyer = new PublicKey(owner);
+  const vaultKey = new PublicKey(vault);
+  const bountyMint = NATIVE_MINT;
+  const intent = getRebalanceIntentPda(vaultKey, buyer);
+  const setup = [
+    createAssociatedTokenAccountIdempotentInstruction(buyer, getAta(buyer, new PublicKey(shareMint), TOKEN_PROGRAM_ID), buyer, new PublicKey(shareMint)),
+    createAssociatedTokenAccountIdempotentInstruction(buyer, getAta(buyer, bountyMint, TOKEN_PROGRAM_ID), buyer, bountyMint),
+    SystemProgram.transfer({ fromPubkey: buyer, toPubkey: getAta(buyer, bountyMint, TOKEN_PROGRAM_ID), lamports: 1 }),
+    createSyncNativeInstruction(getAta(buyer, bountyMint, TOKEN_PROGRAM_ID)),
+    createRebalanceIntentIx({ signer: buyer, owner: buyer, vault: vaultKey }),
+    resizeRebalanceIntentIx(intent),
+    initRebalanceIntentIx({ signer: buyer, owner: buyer, vault: vaultKey, vaultTokenMint: new PublicKey(shareMint), rebalanceIntentRentPayer: getRentPayerPda(), bountyMint, rebalanceType: 0, rebalanceSlippageBps: 100, perTradeRebalanceSlippageBps: 50, executionStartTime: 0, minBountyAmount: 0, maxBountyAmount: 0, vaultRebalanceIntent: undefined }),
+  ];
+  return { batches: [{ transactions: [transaction(setup)] }, ...payload("deposit").batches] };
 }
 
 const definition = {
@@ -50,7 +70,7 @@ const definition = {
   depositsEnabled: true, depositReason: null, bookSource: null, provenance: {}, vaultAddress: vault, shareMint,
   vaultLegs: [], keeper: { pubkey: null, automationEnabled: false }, hostEntryFeeBps: 25, hostExitFeeBps: 0,
 };
-function dependencies(overrides: Record<string, unknown> = {}) {
+function dependencies(overrides: Record<string, unknown> = {}, buy = payload("deposit"), bountyMint = new PublicKey(shareMint)) {
   return {
     loadDefinition: async () => definition,
     nativeBuilder: () => ({
@@ -63,8 +83,8 @@ function dependencies(overrides: Record<string, unknown> = {}) {
         simulateTransaction: async () => ({ context: { slot: 1 }, value: { err: null, logs: [] } }),
       },
       sdk: {
-        fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint), settings: { bountyMint: new PublicKey(shareMint) } }),
-        buyVaultTx: async () => payload("deposit"), lockDepositsTx: async () => payload("lock"),
+        fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint), settings: { bountyMint } }),
+        buyVaultTx: async () => buy, lockDepositsTx: async () => payload("lock"),
       },
     }),
     release: { publicFundsEnabled: true },
@@ -87,6 +107,22 @@ test("deposit prepare builds the wallet's contribution and lock without a cycle 
   assert.equal(body.transactions[0].maxDebits[0].amountRaw, "1000000");
   assert.equal(body.transactions[1].maxDebits.length, 0);
   assert.doesNotMatch(JSON.stringify(body), /cycle|policy|recovery/i);
+});
+
+test("first-depositor SDK setup accepts only the buyer's expected share and WSOL bounty ATAs", async () => {
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({}, firstDepositPayloadWithAncillaryCreates(), NATIVE_MINT) as never);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.transactions.length, 3);
+  assert.deepEqual(body.transactions[0].allowedProgramIds.sort(), [ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(), SystemProgram.programId.toBase58(), TOKEN_PROGRAM_ID.toBase58(), SYMMETRY_PROGRAM_ID].sort());
+});
+
+test("deposit prepare still rejects an unknown ancillary program", async () => {
+  const randomProgram = PublicKey.unique();
+  const invalid = { batches: [{ transactions: [transaction([new TransactionInstruction({ programId: randomProgram, keys: [], data: Buffer.alloc(0) })])] }] };
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({}, invalid) as never);
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: "Unsupported ancillary instruction." });
 });
 
 test("deposit prepare rejects malformed amounts and every closed gate", async () => {

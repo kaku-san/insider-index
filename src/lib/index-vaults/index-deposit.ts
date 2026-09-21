@@ -1,7 +1,7 @@
 import { getBountyVaultPda, getGlobalConfigPda, getRebalanceIntentPda, getRentPayerPda, getVaultFeesPda, getAta } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import type { TxPayload, TxPayloadBatchSequence } from "@symmetry-hq/sdk/dist/txUtils.js";
 import { ComputeBudgetProgram, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, SYSVAR_RENT_PUBKEY, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
 import { createServiceSupabase } from "@/lib/supabase";
 import { address, hashObject, rawAmount, sdkRawAmount } from "./amounts.ts";
 import { validateAndSimulate } from "./transaction-policy.ts";
@@ -93,8 +93,11 @@ async function assertTokenSemantics(native: NativeVaultBuilders, instructions: T
   let tokenInstructions = 0;
   for (const instruction of instructions) {
     if (!tokenPrograms.has(instruction.programId.toBase58())) continue;
-    tokenInstructions += 1;
     const discriminator = instruction.data[0];
+    // SyncNative is only admitted after assertAncillarySemantics verifies its paired
+    // System transfer into the buyer's expected WSOL ATA.
+    if (discriminator === 17 && instruction.programId.equals(TOKEN_PROGRAM_ID)) continue;
+    tokenInstructions += 1;
     if ((discriminator !== 3 && discriminator !== 12) || instruction.keys.length < 3 || instruction.data.length < (discriminator === 12 ? 10 : 9)) throw new Error("Unsupported token instruction");
     const source = instruction.keys[0].pubkey;
     const destination = instruction.keys[discriminator === 12 ? 2 : 1].pubkey;
@@ -117,16 +120,37 @@ async function assertTokenSemantics(native: NativeVaultBuilders, instructions: T
   if (tokenInstructions > (maxDebits.length ? 1 : 0) || validatedTransfers !== tokenInstructions) throw new Error("Prepared transaction contains invalid USDC transfers.");
 }
 
-function assertAncillarySemantics(instructions: TransactionInstruction[]) {
+function assertAncillarySemantics(instructions: TransactionInstruction[], owner: string, shareMint: string, bountyMint: string) {
+  const buyer = new PublicKey(owner);
+  const permittedMints = new Set([networkUsdc("mainnet-beta"), shareMint, bountyMint]);
+  const permittedAta = (mint: PublicKey) => permittedMints.has(mint.toBase58()) && getAta(buyer, mint, TOKEN_PROGRAM_ID);
+  const bountyWsolAta = new PublicKey(bountyMint).equals(NATIVE_MINT) ? getAta(buyer, NATIVE_MINT, TOKEN_PROGRAM_ID) : null;
+  const systemTransfers = new Set<string>();
+
   for (const instruction of instructions) {
     const program = instruction.programId.toBase58();
-    if (program === SystemProgram.programId.toBase58() || program === ASSOCIATED_TOKEN_PROGRAM_ID.toBase58()) {
-      throw new Error("Unsupported ancillary instruction.");
+    if (program === SystemProgram.programId.toBase58()) {
+      if (instruction.data.length !== 12 || instruction.data.readUInt32LE(0) !== 2 || instruction.data.readBigUInt64LE(4) === 0n || instruction.keys.length !== 2 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[0].isWritable || !bountyWsolAta || !instruction.keys[1].pubkey.equals(bountyWsolAta) || instruction.keys[1].isSigner || !instruction.keys[1].isWritable) throw new Error("System transfer is not an approved WSOL bounty wrap.");
+      if (systemTransfers.has(bountyWsolAta.toBase58())) throw new Error("Duplicate WSOL bounty wrap.");
+      systemTransfers.add(bountyWsolAta.toBase58());
+      continue;
+    }
+    if (program === ASSOCIATED_TOKEN_PROGRAM_ID.toBase58()) {
+      const mint = instruction.keys[3]?.pubkey;
+      const ata = mint && permittedAta(mint);
+      if (!ata || (instruction.data.length !== 0 && !instruction.data.equals(Buffer.from([1]))) || instruction.keys.length !== 6 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[0].isWritable || !instruction.keys[1].pubkey.equals(ata) || instruction.keys[1].isSigner || !instruction.keys[1].isWritable || !instruction.keys[2].pubkey.equals(buyer) || instruction.keys[2].isSigner || instruction.keys[2].isWritable || instruction.keys[3].isSigner || instruction.keys[3].isWritable || !instruction.keys[4].pubkey.equals(SystemProgram.programId) || instruction.keys[4].isSigner || instruction.keys[4].isWritable || !instruction.keys[5].pubkey.equals(TOKEN_PROGRAM_ID) || instruction.keys[5].isSigner || instruction.keys[5].isWritable) throw new Error("Associated token account creation is invalid.");
+      continue;
     }
     if (program === ComputeBudgetProgram.programId.toBase58()) continue;
     if (program === SYMMETRY_PROGRAM_ID || program === TOKEN_PROGRAM_ID.toBase58() || program === TOKEN_2022_PROGRAM_ID.toBase58()) continue;
     throw new Error("Unsupported ancillary instruction.");
   }
+
+  for (const instruction of instructions) {
+    if (!instruction.programId.equals(TOKEN_PROGRAM_ID) || instruction.data[0] !== 17) continue;
+    if (instruction.data.length !== 1 || instruction.keys.length !== 1 || instruction.keys[0].isSigner || !instruction.keys[0].isWritable || !systemTransfers.delete(instruction.keys[0].pubkey.toBase58())) throw new Error("WSOL sync is invalid.");
+  }
+  if (systemTransfers.size) throw new Error("System transfer is missing its WSOL sync.");
 }
 
 const SYMMETRY_DEPOSIT = Buffer.from([88, 92, 158, 219, 83, 71, 239, 164]);
@@ -155,6 +179,9 @@ function assertSymmetrySemantics(instructions: TransactionInstruction[], owner: 
   let selectedRentPayer: PublicKey | null = null;
   let deposits = 0;
   let locks = 0;
+  let creates = 0;
+  let resizes = 0;
+  let initializations = 0;
   for (const instruction of instructions.filter(ix => ix.programId.toBase58() === SYMMETRY_PROGRAM_ID)) {
     const discriminator = instruction.data.subarray(0, 8);
     if (discriminator.equals(SYMMETRY_DEPOSIT)) {
@@ -164,25 +191,30 @@ function assertSymmetrySemantics(instructions: TransactionInstruction[], owner: 
       if (!sameInstruction(instruction, expectedLock)) throw new Error("Symmetry lock accounts are invalid.");
       locks += 1;
     } else if (discriminator.equals(SYMMETRY_CREATE_INTENT)) {
+      if (instruction.data.length !== 8) throw new Error("Symmetry intent parameters are invalid.");
       const candidateRentPayer = instruction.keys[4]?.pubkey;
       if (!candidateRentPayer || (!candidateRentPayer.equals(rentPayerPda) && !candidateRentPayer.equals(buyer)) || (selectedRentPayer && !candidateRentPayer.equals(selectedRentPayer))) throw new Error("Symmetry intent rent payer is invalid.");
       selectedRentPayer = candidateRentPayer;
+      creates += 1;
       if (instruction.keys.length !== 9 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[1].pubkey.equals(buyer) || !instruction.keys[2].pubkey.equals(vault) || !instruction.keys[3].pubkey.equals(intent) || !instruction.keys[5].pubkey.equals(getGlobalConfigPda()) || !instruction.keys[6].pubkey.equals(SYSVAR_INSTRUCTIONS_PUBKEY) || !instruction.keys[7].pubkey.equals(SYSVAR_RENT_PUBKEY) || !instruction.keys[8].pubkey.equals(SystemProgram.programId)) throw new Error("Symmetry intent accounts are invalid.");
     } else if (discriminator.equals(SYMMETRY_RESIZE_INTENT)) {
-      if (instruction.keys.length !== 1 || !instruction.keys[0].pubkey.equals(intent) || !instruction.keys[0].isWritable) throw new Error("Symmetry resize accounts are invalid.");
+      resizes += 1;
+      if (instruction.data.length !== 8 || instruction.keys.length !== 1 || !instruction.keys[0].pubkey.equals(intent) || !instruction.keys[0].isWritable) throw new Error("Symmetry resize accounts are invalid.");
     } else if (discriminator.equals(SYMMETRY_INIT_INTENT)) {
       const candidateRentPayer = instruction.keys[4]?.pubkey;
       if (!candidateRentPayer || (!candidateRentPayer.equals(rentPayerPda) && !candidateRentPayer.equals(buyer)) || (selectedRentPayer && !candidateRentPayer.equals(selectedRentPayer))) throw new Error("Symmetry intent rent payer is invalid.");
       selectedRentPayer = candidateRentPayer;
+      initializations += 1;
       if (instruction.data.length !== 126 || instruction.keys.length !== 18 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[1].pubkey.equals(buyer) || !instruction.keys[2].pubkey.equals(vault) || !instruction.keys[3].pubkey.equals(intent) || !instruction.keys[5].pubkey.equals(mint) || !instruction.keys[6].pubkey.equals(getAta(buyer, mint, TOKEN_PROGRAM_ID)) || !instruction.keys[7].pubkey.equals(getGlobalConfigPda()) || !instruction.keys[8].pubkey.equals(new PublicKey(bountyMint)) || !instruction.keys[9].pubkey.equals(getAta(buyer, new PublicKey(bountyMint), TOKEN_PROGRAM_ID)) || !instruction.keys[10].pubkey.equals(getBountyVaultPda()) || !instruction.keys[11].pubkey.equals(getAta(getBountyVaultPda(), new PublicKey(bountyMint), TOKEN_PROGRAM_ID)) || !instruction.keys[12].pubkey.equals(getVaultFeesPda(vault)) || !instruction.keys[13].pubkey.equals(getAta(getVaultFeesPda(vault), mint, TOKEN_PROGRAM_ID)) || !instruction.keys[14].pubkey.equals(new PublicKey(SYMMETRY_PROGRAM_ID)) || !instruction.keys[15].pubkey.equals(SystemProgram.programId) || !instruction.keys[16].pubkey.equals(TOKEN_PROGRAM_ID) || !instruction.keys[17].pubkey.equals(ASSOCIATED_TOKEN_PROGRAM_ID) || !new PublicKey(instruction.data.subarray(8, 40)).equals(instruction.keys[4].pubkey) || instruction.data[40] !== 0 || instruction.data.readUInt16LE(41) !== 100 || instruction.data.readUInt16LE(43) !== 50) throw new Error("Symmetry intent parameters or accounts are invalid.");
     } else throw new Error("Unsupported Symmetry instruction.");
   }
-  if (amountRaw ? deposits !== 1 || locks !== 0 : deposits !== 0 || locks !== 1) throw new Error("Prepared transaction contains an unexpected Symmetry operation.");
+  const setup = selectedRentPayer !== null;
+  if (amountRaw ? deposits !== 1 || locks !== 0 || setup : !((locks === 1 && !setup && !creates && !resizes && !initializations) || (locks === 0 && setup && creates === 1 && resizes === 1 && initializations === 1))) throw new Error("Prepared transaction contains an unexpected Symmetry operation.");
 }
 
 function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"], expectedRecipients: PreparedTransaction["expectedRecipients"]) {
   const tokenPrograms = new Set([TOKEN_PROGRAM_ID.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58()]);
-  const allowedPrograms = new Set([ComputeBudgetProgram.programId.toBase58(), ...tokenPrograms, SYMMETRY_PROGRAM_ID]);
+  const allowedPrograms = new Set([ComputeBudgetProgram.programId.toBase58(), SystemProgram.programId.toBase58(), ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(), ...tokenPrograms, SYMMETRY_PROGRAM_ID]);
   const programs = [...new Set(instructions.map(instruction => instruction.programId.toBase58()))];
   if (!programs.length || programs.some(program => !allowedPrograms.has(program))) throw new Error("Prepared transaction uses an unapproved program.");
   return {
@@ -199,6 +231,7 @@ function transactionPolicy(instructions: TransactionInstruction[], owner: string
     decode: (instruction: TransactionInstruction) => {
       if (!tokenPrograms.has(instruction.programId.toBase58())) return { debits: [], recipients: [], minima: [] };
       const discriminator = instruction.data[0];
+      if (discriminator === 17 && instruction.programId.equals(TOKEN_PROGRAM_ID)) return { debits: [], recipients: [], minima: [] };
       if (discriminator !== 3 && discriminator !== 12) throw new Error("Unsupported token instruction");
       if (instruction.data.length < 9) throw new Error("Malformed token instruction");
       return { debits: [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw: instruction.data.readBigUInt64LE(1).toString() }], recipients: expectedRecipients, minima: [] };
@@ -215,7 +248,7 @@ async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload
   if (signers.length !== 1 || signers[0] !== owner || parsed.signatures.some(signature => signature.some(byte => byte !== 0))) throw new Error("Prepared transaction requires an unexpected signer.");
   if (parsed.message.staticAccountKeys[0]?.toBase58() !== owner || parsed.message.recentBlockhash !== tx.recent_blockhash) throw new Error("Prepared transaction identity mismatch.");
   const instructions = payloadInstructions(tx);
-  assertAncillarySemantics(instructions);
+  assertAncillarySemantics(instructions, owner, shareMint, bountyMint);
   await assertTokenSemantics(native, instructions, owner, vaultAddress, maxDebits);
   assertSymmetrySemantics(instructions, owner, vaultAddress, shareMint, maxDebits[0]?.amountRaw, bountyMint);
   const expectedRecipients = maxDebits.length ? [{ owner: vaultAddress, mint: networkUsdc("mainnet-beta") }] : [];

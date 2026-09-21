@@ -14,7 +14,7 @@ Public funds, Invest Sign and public exit remain disabled. No live amount, fees/
 
 ## Public deposit rail — release-gated
 
-The public Mag7 modal uses `POST /api/indexes/idx-theme-mag7-caucus/deposit/prepare`: a connected wallet supplies USDC through SDK `buyVaultTx` plus `lockDepositsTx`, then signs each returned transaction. The route reads the persisted vault definition and requires mainnet, a created vault/share mint, the per-vault deposit gate, and `VAULT_RELEASE.publicFundsEnabled`. It has no cycle policy, access message, journal, recovery, or cash-out path. A keeper mints shares later; signing a deposit is not a completed share receipt. The retained public-cycle endpoint is not mounted on Invest.
+The public Mag7 modal uses `POST /api/indexes/idx-theme-mag7-caucus/deposit/prepare`: a connected wallet supplies USDC through SDK `buyVaultTx` plus `lockDepositsTx`, then signs each returned transaction. The route reads the persisted vault definition and requires mainnet, a created vault/share mint, the per-vault deposit gate, and `VAULT_RELEASE.publicFundsEnabled`. First-time setup may include only the buyer's expected share/USDC/WSOL ATAs and a matched buyer-to-WSOL-ATA wrap; all ancillary accounts, programs, and Symmetry setup instructions are independently constrained, and unknown ancillary programs fail closed. It has no cycle policy, access message, journal, recovery, or cash-out path. A keeper mints shares later; signing a deposit is not a completed share receipt. The retained public-cycle endpoint is not mounted on Invest.
 
 ## Full cycle contract
 
