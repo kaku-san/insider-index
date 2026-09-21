@@ -1,6 +1,6 @@
 import { getBountyVaultPda, getGlobalConfigPda, getRebalanceIntentPda, getRentPayerPda, getVaultFeesPda, getAta } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import type { TxPayload, TxPayloadBatchSequence } from "@symmetry-hq/sdk/dist/txUtils.js";
-import { ComputeBudgetProgram, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, SYSVAR_RENT_PUBKEY, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PACKET_DATA_SIZE, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, SYSVAR_RENT_PUBKEY, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
 import { createServiceSupabase } from "@/lib/supabase";
 import { address, hashObject, rawAmount, sdkRawAmount } from "./amounts.ts";
@@ -85,6 +85,37 @@ function payloadInstructions(tx: TxPayload): TransactionInstruction[] {
     keys: instruction.accounts.map(account => ({ pubkey: new PublicKey(address(account.pubkey)), isSigner: account.is_signer, isWritable: account.is_writable })),
     data: Buffer.from(instruction.data, "base64"),
   }));
+}
+
+function payloadTransaction(transaction: VersionedTransaction, recentBlockhash: string, lastValidBlockHeight: number, payer: string, instructions: TransactionInstruction[]): TxPayload {
+  return {
+    tx_b64: Buffer.from(transaction.serialize()).toString("base64"), message_version: "0", recent_blockhash: recentBlockhash, last_valid_block_height: lastValidBlockHeight,
+    payer, lookup_tables: [], instructions: instructions.map(instruction => ({ program_id: instruction.programId.toBase58(), data: instruction.data.toString("base64"),
+      accounts: instruction.keys.map(account => ({ pubkey: account.pubkey.toBase58(), is_signer: account.isSigner, is_writable: account.isWritable })) })),
+  };
+}
+
+/** SDK emits first-intent setup, contribution, and lock in separate batches. Simulation does not
+ * retain writes between transactions, so the latter two see the intent PDA as system-owned. Keep
+ * the user-visible first deposit atomic, after refusing ALT or compute-budget shape changes. */
+function atomicFirstDepositPayload(buy: TxPayloadBatchSequence, lock: TxPayloadBatchSequence, owner: string): TxPayloadBatchSequence {
+  const transactions = [...buy.batches.flatMap(batch => batch.transactions), ...lock.batches.flatMap(batch => batch.transactions)];
+  if (buy.batches.length !== 2 || buy.batches.some(batch => batch.transactions.length !== 1) || lock.batches.length !== 1 || lock.batches[0]?.transactions.length !== 1 || transactions.length !== 3) throw new Error("Unexpected first-depositor transaction sequence.");
+  const first = transactions[0]!;
+  if (typeof first.last_valid_block_height !== "number" || transactions.some(transaction => transaction.payer !== owner || transaction.lookup_tables.length !== 0)) throw new Error("First-depositor transaction identity is invalid.");
+  const instructions = transactions.flatMap(payloadInstructions);
+  const seenCompute = new Map<number, Buffer>();
+  const compacted = instructions.filter(instruction => {
+    if (!instruction.programId.equals(ComputeBudgetProgram.programId)) return true;
+    const discriminator = instruction.data[0];
+    const previous = seenCompute.get(discriminator);
+    if (!previous) { seenCompute.set(discriminator, instruction.data); return true; }
+    if (!previous.equals(instruction.data)) throw new Error("First-depositor compute budget is inconsistent.");
+    return false;
+  });
+  const combined = new VersionedTransaction(new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: first.recent_blockhash, instructions: compacted }).compileToV0Message());
+  if (combined.serialize().length > PACKET_DATA_SIZE) throw new Error("First-depositor transaction exceeds the Solana packet limit.");
+  return { batches: [{ transactions: [payloadTransaction(combined, first.recent_blockhash, first.last_valid_block_height, owner, compacted)] }] };
 }
 
 async function assertTokenSemantics(native: NativeVaultBuilders, instructions: TransactionInstruction[], owner: string, vaultAddress: string, maxDebits: PreparedTransaction["maxDebits"]) {
@@ -209,7 +240,8 @@ function assertSymmetrySemantics(instructions: TransactionInstruction[], owner: 
     } else throw new Error("Unsupported Symmetry instruction.");
   }
   const setup = selectedRentPayer !== null;
-  if (amountRaw ? deposits !== 1 || locks !== 0 || setup : !((locks === 1 && !setup && !creates && !resizes && !initializations) || (locks === 0 && setup && creates === 1 && resizes === 1 && initializations === 1))) throw new Error("Prepared transaction contains an unexpected Symmetry operation.");
+  const firstDeposit = deposits === 1 && locks === 1 && setup && creates === 1 && resizes === 1 && initializations === 1;
+  if (amountRaw ? !(deposits === 1 && locks === 0 && !setup) && !firstDeposit : !((locks === 1 && !setup && !creates && !resizes && !initializations) || (locks === 0 && setup && creates === 1 && resizes === 1 && initializations === 1))) throw new Error("Prepared transaction contains an unexpected Symmetry operation.");
 }
 
 function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"], expectedRecipients: PreparedTransaction["expectedRecipients"]) {
@@ -286,13 +318,14 @@ export async function prepareIndexDeposit(indexId: string, input: DepositInput, 
     per_trade_rebalance_slippage_bps: 50,
   });
   const lock = await native.sdk.lockDepositsTx({ buyer: input.owner, vault_mint: definition.shareMint! });
+  const prepared = atomicFirstDepositPayload(buy, lock, input.owner);
   const operationId = `deposit-${hashObject({ indexId, owner: input.owner, amountRaw: input.amountRaw, key: input.idempotencyKey ?? "" }).slice(0, 32)}`;
   return {
     network: "mainnet-beta" as const,
     operationId,
     phase: "AWAITING_SIGNATURE",
     requires: "user-signature" as const,
-    transactions: [...await transactionsFromPayload(native, buy, "deposit", input.owner, definition.vaultAddress!, definition.shareMint!, vault.settings.bountyMint.toBase58(), input.amountRaw), ...await transactionsFromPayload(native, lock, "lock", input.owner, definition.vaultAddress!, definition.shareMint!, vault.settings.bountyMint.toBase58())],
+    transactions: await transactionsFromPayload(native, prepared, "deposit", input.owner, definition.vaultAddress!, definition.shareMint!, vault.settings.bountyMint.toBase58(), input.amountRaw),
     configHash: hashObject({ indexId, vault: definition.vaultAddress, shareMint: definition.shareMint, depositsEnabled: definition.depositsEnabled }),
     constraints: [{ label: "Settlement", value: "Your deposit locks after wallet approval. A keeper mints shares later." }],
     costs: { hostEntryFeeBps: definition.hostEntryFeeBps ?? 25, hostExitFeeBps: definition.hostExitFeeBps ?? 0, estimatedOnly: true },

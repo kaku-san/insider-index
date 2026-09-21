@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { register } from "node:module";
-import { PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createSyncNativeInstruction, NATIVE_MINT, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { createRebalanceIntentIx, initRebalanceIntentIx, resizeRebalanceIntentIx } from "@symmetry-hq/sdk/dist/instructions/automation/rebalanceIntent.js";
 import { getAta, getGlobalConfigPda, getRebalanceIntentPda, getRentPayerPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
@@ -70,7 +70,7 @@ const definition = {
   depositsEnabled: true, depositReason: null, bookSource: null, provenance: {}, vaultAddress: vault, shareMint,
   vaultLegs: [], keeper: { pubkey: null, automationEnabled: false }, hostEntryFeeBps: 25, hostExitFeeBps: 0,
 };
-function dependencies(overrides: Record<string, unknown> = {}, buy = payload("deposit"), bountyMint = new PublicKey(shareMint)) {
+function dependencies(overrides: Record<string, unknown> = {}, buy = firstDepositPayloadWithAncillaryCreates(), bountyMint = NATIVE_MINT) {
   return {
     loadDefinition: async () => definition,
     nativeBuilder: () => ({
@@ -95,17 +95,19 @@ function request(body: unknown) {
   return new Request(`http://localhost/api/indexes/${definition.indexId}/deposit/prepare`, { method: "POST", body: JSON.stringify(body) });
 }
 
-test("deposit prepare builds the wallet's contribution and lock without a cycle rail", async () => {
+test("deposit prepare atomically simulates and signs first-depositor setup, contribution, and lock without a cycle rail", async () => {
   const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000", idempotencyKey: "demo-1" }), definition.indexId, dependencies() as never);
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.requires, "user-signature");
   assert.equal(body.network, "mainnet-beta");
-  assert.equal(body.transactions.length, 2);
-  assert.deepEqual(body.transactions.map((transaction: { stepId: string }) => transaction.stepId), ["deposit-1", "lock-1"]);
+  assert.equal(body.transactions.length, 1);
+  assert.deepEqual(body.transactions.map((transaction: { stepId: string }) => transaction.stepId), ["deposit-1"]);
   assert.equal(body.transactions[0].maxDebits[0].owner, owner);
   assert.equal(body.transactions[0].maxDebits[0].amountRaw, "1000000");
-  assert.equal(body.transactions[1].maxDebits.length, 0);
+  assert.equal(body.transactions[0].expectedRecipients[0].owner, vault);
+  const merged = TransactionMessage.decompile(VersionedMessage.deserialize(Buffer.from(body.transactions[0].messageBase64, "base64"))).instructions;
+  assert.equal(merged.filter(instruction => instruction.programId.toBase58() === SYMMETRY_PROGRAM_ID).length, 5);
   assert.doesNotMatch(JSON.stringify(body), /cycle|policy|recovery/i);
 });
 
@@ -113,13 +115,14 @@ test("first-depositor SDK setup accepts only the buyer's expected share and WSOL
   const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({}, firstDepositPayloadWithAncillaryCreates(), NATIVE_MINT) as never);
   assert.equal(response.status, 200);
   const body = await response.json();
-  assert.equal(body.transactions.length, 3);
+  assert.equal(body.transactions.length, 1);
   assert.deepEqual(body.transactions[0].allowedProgramIds.sort(), [ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(), SystemProgram.programId.toBase58(), TOKEN_PROGRAM_ID.toBase58(), SYMMETRY_PROGRAM_ID].sort());
 });
 
 test("deposit prepare still rejects an unknown ancillary program", async () => {
   const randomProgram = PublicKey.unique();
-  const invalid = { batches: [{ transactions: [transaction([new TransactionInstruction({ programId: randomProgram, keys: [], data: Buffer.alloc(0) })])] }] };
+  const invalid = firstDepositPayloadWithAncillaryCreates();
+  invalid.batches[0]!.transactions[0]!.instructions.push({ program_id: randomProgram.toBase58(), accounts: [], data: "" });
   const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({}, invalid) as never);
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { error: "Unsupported ancillary instruction." });
