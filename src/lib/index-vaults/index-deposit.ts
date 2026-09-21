@@ -114,7 +114,7 @@ async function assertTokenSemantics(native: NativeVaultBuilders, instructions: T
     if (amountRaw !== maxDebits[0]?.amountRaw) throw new Error("Token transfer amount is invalid.");
     validatedTransfers += 1;
   }
-  if (tokenInstructions !== (maxDebits.length ? 1 : 0) || validatedTransfers !== (maxDebits.length ? 1 : 0)) throw new Error("Prepared transaction must contain exactly one USDC transfer.");
+  if (tokenInstructions > (maxDebits.length ? 1 : 0) || validatedTransfers !== tokenInstructions) throw new Error("Prepared transaction contains invalid USDC transfers.");
 }
 
 function assertAncillarySemantics(instructions: TransactionInstruction[]) {
