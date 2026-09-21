@@ -1,6 +1,6 @@
-import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { getBountyVaultPda, getGlobalConfigPda, getRebalanceIntentPda, getRentPayerPda, getVaultFeesPda, getAta } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import type { TxPayload, TxPayloadBatchSequence } from "@symmetry-hq/sdk/dist/txUtils.js";
-import { ComputeBudgetProgram, PublicKey, SystemProgram, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, SYSVAR_RENT_PUBKEY, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount } from "@solana/spl-token";
 import { createServiceSupabase } from "@/lib/supabase";
 import { address, hashObject, rawAmount, sdkRawAmount } from "./amounts.ts";
@@ -90,8 +90,10 @@ function payloadInstructions(tx: TxPayload): TransactionInstruction[] {
 async function assertTokenSemantics(native: NativeVaultBuilders, instructions: TransactionInstruction[], owner: string, vaultAddress: string, maxDebits: PreparedTransaction["maxDebits"]) {
   const tokenPrograms = new Set([TOKEN_PROGRAM_ID.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58()]);
   let validatedTransfers = 0;
+  let tokenInstructions = 0;
   for (const instruction of instructions) {
     if (!tokenPrograms.has(instruction.programId.toBase58())) continue;
+    tokenInstructions += 1;
     const discriminator = instruction.data[0];
     if ((discriminator !== 3 && discriminator !== 12) || instruction.keys.length < 3 || instruction.data.length < (discriminator === 12 ? 10 : 9)) throw new Error("Unsupported token instruction");
     const source = instruction.keys[0].pubkey;
@@ -112,7 +114,48 @@ async function assertTokenSemantics(native: NativeVaultBuilders, instructions: T
     if (amountRaw !== maxDebits[0]?.amountRaw) throw new Error("Token transfer amount is invalid.");
     validatedTransfers += 1;
   }
-  if (maxDebits.length > 0 && (maxDebits.length !== 1 || validatedTransfers !== 1)) throw new Error("Prepared transaction must contain exactly one USDC transfer.");
+  if (tokenInstructions > 0 && maxDebits.length > 0 && (maxDebits.length !== 1 || validatedTransfers !== 1)) throw new Error("Prepared transaction must contain exactly one USDC transfer.");
+}
+
+const SYMMETRY_DEPOSIT = Buffer.from([88, 92, 158, 219, 83, 71, 239, 164]);
+const SYMMETRY_CREATE_INTENT = Buffer.from([120, 80, 245, 123, 212, 149, 163, 47]);
+const SYMMETRY_RESIZE_INTENT = Buffer.from([71, 204, 243, 183, 209, 118, 111, 94]);
+const SYMMETRY_INIT_INTENT = Buffer.from([127, 215, 41, 110, 244, 179, 131, 7]);
+const SYMMETRY_LOCK = Buffer.from([64, 238, 171, 198, 135, 253, 37, 9]);
+
+function sameInstruction(actual: TransactionInstruction, expected: TransactionInstruction) {
+  return actual.programId.equals(expected.programId) && actual.data.equals(expected.data) && actual.keys.length === expected.keys.length && actual.keys.every((key, index) => key.pubkey.equals(expected.keys[index].pubkey) && key.isSigner === expected.keys[index].isSigner && key.isWritable === expected.keys[index].isWritable);
+}
+
+function assertSymmetrySemantics(instructions: TransactionInstruction[], owner: string, vaultAddress: string, shareMint: string, amountRaw: string | undefined, bountyMint: string) {
+  const vault = new PublicKey(vaultAddress), buyer = new PublicKey(owner), mint = new PublicKey(shareMint), usdc = new PublicKey(networkUsdc("mainnet-beta"));
+  const intent = getRebalanceIntentPda(vault, buyer);
+  const expectedDeposit = new TransactionInstruction({ programId: new PublicKey(SYMMETRY_PROGRAM_ID), keys: [
+    { pubkey: buyer, isSigner: true, isWritable: true }, { pubkey: vault, isSigner: false, isWritable: true }, { pubkey: intent, isSigner: false, isWritable: true },
+    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false }, { pubkey: TOKEN_2022_PROGRAM_ID, isSigner: false, isWritable: false }, { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false }, { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    { pubkey: usdc, isSigner: false, isWritable: false }, { pubkey: getAta(buyer, usdc, TOKEN_PROGRAM_ID), isSigner: false, isWritable: true }, { pubkey: getAta(vault, usdc, TOKEN_PROGRAM_ID), isSigner: false, isWritable: true },
+  ], data: Buffer.concat([SYMMETRY_DEPOSIT, Buffer.alloc(80)]) });
+  if (amountRaw) expectedDeposit.data.writeBigUInt64LE(BigInt(amountRaw), 8);
+  const expectedLock = new TransactionInstruction({ programId: new PublicKey(SYMMETRY_PROGRAM_ID), keys: [
+    { pubkey: buyer, isSigner: true, isWritable: true }, { pubkey: intent, isSigner: false, isWritable: true }, { pubkey: getGlobalConfigPda(), isSigner: false, isWritable: false },
+  ], data: SYMMETRY_LOCK });
+  let deposits = 0;
+  for (const instruction of instructions.filter(ix => ix.programId.toBase58() === SYMMETRY_PROGRAM_ID)) {
+    const discriminator = instruction.data.subarray(0, 8);
+    if (discriminator.equals(SYMMETRY_DEPOSIT)) {
+      if (!amountRaw || !sameInstruction(instruction, expectedDeposit)) throw new Error("Symmetry deposit accounts or amount are invalid.");
+      deposits += 1;
+    } else if (discriminator.equals(SYMMETRY_LOCK)) {
+      if (!sameInstruction(instruction, expectedLock)) throw new Error("Symmetry lock accounts are invalid.");
+    } else if (discriminator.equals(SYMMETRY_CREATE_INTENT)) {
+      if (instruction.keys.length !== 9 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[1].pubkey.equals(buyer) || !instruction.keys[2].pubkey.equals(vault) || !instruction.keys[3].pubkey.equals(intent) || !instruction.keys[4].pubkey.equals(getRentPayerPda()) || !instruction.keys[5].pubkey.equals(getGlobalConfigPda()) || !instruction.keys[6].pubkey.equals(SYSVAR_INSTRUCTIONS_PUBKEY) || !instruction.keys[7].pubkey.equals(SYSVAR_RENT_PUBKEY) || !instruction.keys[8].pubkey.equals(SystemProgram.programId)) throw new Error("Symmetry intent accounts are invalid.");
+    } else if (discriminator.equals(SYMMETRY_RESIZE_INTENT)) {
+      if (instruction.keys.length !== 1 || !instruction.keys[0].pubkey.equals(intent) || !instruction.keys[0].isWritable) throw new Error("Symmetry resize accounts are invalid.");
+    } else if (discriminator.equals(SYMMETRY_INIT_INTENT)) {
+      if (instruction.data.length !== 126 || instruction.keys.length !== 18 || !instruction.keys[0].pubkey.equals(buyer) || !instruction.keys[0].isSigner || !instruction.keys[1].pubkey.equals(buyer) || !instruction.keys[2].pubkey.equals(vault) || !instruction.keys[3].pubkey.equals(intent) || !instruction.keys[4].pubkey.equals(getRentPayerPda()) || !instruction.keys[5].pubkey.equals(mint) || !instruction.keys[6].pubkey.equals(getAta(buyer, mint, TOKEN_PROGRAM_ID)) || !instruction.keys[7].pubkey.equals(getGlobalConfigPda()) || !instruction.keys[8].pubkey.equals(new PublicKey(bountyMint)) || !instruction.keys[9].pubkey.equals(getAta(buyer, new PublicKey(bountyMint), TOKEN_PROGRAM_ID)) || !instruction.keys[10].pubkey.equals(getBountyVaultPda()) || !instruction.keys[11].pubkey.equals(getAta(getBountyVaultPda(), new PublicKey(bountyMint), TOKEN_PROGRAM_ID)) || !instruction.keys[12].pubkey.equals(getVaultFeesPda(vault)) || !instruction.keys[13].pubkey.equals(getAta(getVaultFeesPda(vault), mint, TOKEN_PROGRAM_ID)) || !instruction.keys[14].pubkey.equals(new PublicKey(SYMMETRY_PROGRAM_ID)) || !instruction.keys[15].pubkey.equals(SystemProgram.programId) || !instruction.keys[16].pubkey.equals(TOKEN_PROGRAM_ID) || !instruction.keys[17].pubkey.equals(ASSOCIATED_TOKEN_PROGRAM_ID) || !new PublicKey(instruction.data.subarray(8, 40)).equals(instruction.keys[4].pubkey) || instruction.data[40] !== 0 || instruction.data.readUInt16LE(41) !== 100 || instruction.data.readUInt16LE(43) !== 50) throw new Error("Symmetry intent parameters or accounts are invalid.");
+    } else throw new Error("Unsupported Symmetry instruction.");
+  }
+  if (amountRaw ? deposits !== 1 : deposits !== 0) throw new Error("Prepared transaction contains an unexpected Symmetry deposit.");
 }
 
 function transactionPolicy(instructions: TransactionInstruction[], owner: string, maxDebits: PreparedTransaction["maxDebits"], expectedRecipients: PreparedTransaction["expectedRecipients"]) {
@@ -141,7 +184,7 @@ function transactionPolicy(instructions: TransactionInstruction[], owner: string
   };
 }
 
-async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload, stepId: string, owner: string, vaultAddress: string, maxDebits: PreparedTransaction["maxDebits"]): Promise<PreparedTransaction> {
+async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload, stepId: string, owner: string, vaultAddress: string, shareMint: string, bountyMint: string, maxDebits: PreparedTransaction["maxDebits"]): Promise<PreparedTransaction> {
   if (tx.payer !== owner) throw new Error("Prepared transaction payer does not match the investing wallet.");
   const lastValidBlockHeight = tx.last_valid_block_height;
   if (!tx.tx_b64 || typeof lastValidBlockHeight !== "number" || !Number.isSafeInteger(lastValidBlockHeight) || lastValidBlockHeight <= 0) throw new Error("Prepared transaction is missing its expiry.");
@@ -151,14 +194,15 @@ async function transactionFromPayload(native: NativeVaultBuilders, tx: TxPayload
   if (parsed.message.staticAccountKeys[0]?.toBase58() !== owner || parsed.message.recentBlockhash !== tx.recent_blockhash) throw new Error("Prepared transaction identity mismatch.");
   const instructions = payloadInstructions(tx);
   await assertTokenSemantics(native, instructions, owner, vaultAddress, maxDebits);
+  assertSymmetrySemantics(instructions, owner, vaultAddress, shareMint, maxDebits[0]?.amountRaw, bountyMint);
   const expectedRecipients = maxDebits.length ? [{ owner: vaultAddress, mint: networkUsdc("mainnet-beta") }] : [];
   return validateAndSimulate(native.connection, { stepId, transactionBase64: tx.tx_b64, lastValidBlockHeight }, transactionPolicy(instructions, owner, maxDebits, expectedRecipients));
 }
 
-async function transactionsFromPayload(native: NativeVaultBuilders, payload: TxPayloadBatchSequence, prefix: string, owner: string, vaultAddress: string, amountRaw?: string): Promise<PreparedTransaction[]> {
+async function transactionsFromPayload(native: NativeVaultBuilders, payload: TxPayloadBatchSequence, prefix: string, owner: string, vaultAddress: string, shareMint: string, bountyMint: string, amountRaw?: string): Promise<PreparedTransaction[]> {
   const all = payload.batches.flatMap(batch => batch.transactions);
   if (!all.length) throw new Error("The vault did not prepare a transaction.");
-  return Promise.all(all.map((tx, index) => transactionFromPayload(native, tx, `${prefix}-${index + 1}`, owner, vaultAddress,
+  return Promise.all(all.map((tx, index) => transactionFromPayload(native, tx, `${prefix}-${index + 1}`, owner, vaultAddress, shareMint, bountyMint,
     amountRaw && index === all.length - 1 ? [{ owner, mint: networkUsdc("mainnet-beta"), amountRaw }] : [])));
 }
 
@@ -169,6 +213,7 @@ async function assertLiveVault(native: NativeVaultBuilders, definition: Persiste
   if (vault.ownAddress.toBase58() !== definition.vaultAddress || vault.mint.toBase58() !== definition.shareMint) throw new Error("Native vault identity mismatch.");
   const intent = getRebalanceIntentPda(new PublicKey(definition.vaultAddress!), new PublicKey(owner));
   if (await native.connection.getAccountInfo(intent, "confirmed")) throw new Error("An existing deposit is awaiting keeper minting.");
+  return vault;
 }
 
 export async function prepareIndexDeposit(indexId: string, input: DepositInput, dependencies: IndexDepositDependencies = defaultDependencies()) {
@@ -176,7 +221,7 @@ export async function prepareIndexDeposit(indexId: string, input: DepositInput, 
   if (!definition) throw new Error("Index not found.");
   requireDepositGate(definition, dependencies.release);
   const native = dependencies.nativeBuilder();
-  await assertLiveVault(native, definition, input.owner);
+  const vault = await assertLiveVault(native, definition, input.owner);
   const buy = await native.sdk.buyVaultTx({
     buyer: input.owner,
     vault_mint: definition.shareMint!,
@@ -191,7 +236,7 @@ export async function prepareIndexDeposit(indexId: string, input: DepositInput, 
     operationId,
     phase: "AWAITING_SIGNATURE",
     requires: "user-signature" as const,
-    transactions: [...await transactionsFromPayload(native, buy, "deposit", input.owner, definition.vaultAddress!, input.amountRaw), ...await transactionsFromPayload(native, lock, "lock", input.owner, definition.vaultAddress!)],
+    transactions: [...await transactionsFromPayload(native, buy, "deposit", input.owner, definition.vaultAddress!, definition.shareMint!, vault.settings.bountyMint.toBase58(), input.amountRaw), ...await transactionsFromPayload(native, lock, "lock", input.owner, definition.vaultAddress!, definition.shareMint!, vault.settings.bountyMint.toBase58())],
     configHash: hashObject({ indexId, vault: definition.vaultAddress, shareMint: definition.shareMint, depositsEnabled: definition.depositsEnabled }),
     constraints: [{ label: "Settlement", value: "Your deposit locks after wallet approval. A keeper mints shares later." }],
     costs: { hostEntryFeeBps: definition.hostEntryFeeBps ?? 25, hostExitFeeBps: definition.hostExitFeeBps ?? 0, estimatedOnly: true },
