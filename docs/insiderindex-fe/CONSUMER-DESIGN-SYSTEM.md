@@ -89,7 +89,7 @@ A social transaction tape, not another dashboard. Copy only appears on genuinely
 
 ### Positions
 
-Keep signed copy-fill receipts and future vault-share balances visually and conceptually separate.
+Keep signed copy-fill receipts and vault-share balances visually and conceptually separate.
 
 ## Review questions
 

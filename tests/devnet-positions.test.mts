@@ -116,6 +116,7 @@ for (const failure of ["rpc", "genesis", "vault", "mint", "owner", "program", "m
 test("share display keeps raw precision, including one base unit and large balances", () => {
   assert.equal(formatVaultShares("0", 6), "0");
   assert.equal(formatVaultShares("1", 6), "0.000001");
+  assert.equal(formatVaultShares("3", 6), "0.000003", "dust shares remain visible rather than reading as empty");
   assert.equal(formatVaultShares("1230000", 6), "1.23");
   assert.equal(formatVaultShares("9007199254740993", 6), "9,007,199,254.740993");
   assert.equal(formatVaultShares("1000", 0), "1,000");

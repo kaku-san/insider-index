@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { PublicKey } from "@solana/web3.js";
 import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
-import { handleIndexPosition, handleIndexPositions, pendingNativeDeposit, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
+import { handleIndexPosition, handleIndexPositions, pendingNativeDeposit, pendingNativeOperation, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
 import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 
 const owner = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
@@ -38,6 +38,11 @@ test("position endpoint exposes only a chain-backed locked native deposit as pen
   });
   assert.equal(pendingNativeDeposit({ ...intent, chain_data: { ...intent.chain_data, currentAction: RebalanceAction.NotActive } } as never, vault, mint, owner), null);
   assert.throws(() => pendingNativeDeposit({ ...intent, chain_data: { ...intent.chain_data, owner: new PublicKey(mint) } } as never, vault, mint, owner), /identity mismatch/);
+  const withdrawal = { ...intent, chain_data: { ...intent.chain_data, rebalanceType: RebalanceType.Withdraw, currentAction: RebalanceAction.Auction } } as never;
+  assert.equal(pendingNativeDeposit(withdrawal, vault, mint, owner), null, "a locked cash out is not mislabeled as a deposit");
+  assert.deepEqual(pendingNativeOperation(withdrawal, vault, mint, owner), {
+    operationId: "native-withdraw-native-intent", identity: { vaultAccount: vault, shareMint: mint }, owner, kind: "withdraw", phase: "AUCTION", nativeIntent: "native-intent", complete: false, blockers: ["Cash out pending settlement"],
+  });
 });
 
 test("position endpoints accept only the connected wallet and return chain-backed positions", async () => {
@@ -52,6 +57,14 @@ test("position endpoints accept only the connected wallet and return chain-backe
   const all = await handleIndexPositions(request(), { listIndexes: async () => [index()], readPosition });
   assert.equal(all.status, 200);
   assert.deepEqual((await all.json()).positions.map((position: { indexId: string }) => position.indexId), ["idx-theme-mag7-caucus"]);
+  const pending = await handleIndexPositions(request(), { listIndexes: async () => [index()], readPosition: async (definition, wallet) => ({
+    indexId: definition.indexId, indexName: definition.name, owner: wallet, shareMint: definition.shareMint, shareDecimals: 6, sharesRaw: "0",
+    pendingOperations: [{ operationId: "native-deposit-locked", kind: "deposit", phase: "AUCTION", complete: false, blockers: ["Deposit pending settlement"] }],
+  }) });
+  assert.deepEqual(await pending.json(), { positions: [{
+    indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner, shareMint: mint, shareDecimals: 6, sharesRaw: "0",
+    pendingOperations: [{ operationId: "native-deposit-locked", kind: "deposit", phase: "AUCTION", complete: false, blockers: ["Deposit pending settlement"] }],
+  }] }, "the portfolio response preserves locked native deposits instead of calling it empty");
   for (const wallet of ["", "not-a-wallet", "privy-stub:test"]) {
     const response = await handleIndexPositions(request("/api/positions/indexes", wallet), { listIndexes: async () => [index()], readPosition });
     assert.equal(response.status, 400);
