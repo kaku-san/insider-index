@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { register } from "node:module";
-import { PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { getAta, getGlobalConfigPda, getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { networkUsdc, SYMMETRY_PROGRAM_ID } from "../src/lib/index-vaults/symmetry-adapter.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { handleIndexDepositPrepare, parseIndexDepositRequest } = await import("../src/lib/index-vaults/index-deposit.ts");
@@ -10,9 +13,28 @@ const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const shareMint = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
 
-function payload() {
-  const instruction = SystemProgram.transfer({ fromPubkey: new PublicKey(owner), toPubkey: new PublicKey(vault), lamports: 1 });
-  const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions: [instruction] }).compileToV0Message();
+function payload(kind: "deposit" | "lock") {
+  const buyer = new PublicKey(owner);
+  const vaultKey = new PublicKey(vault);
+  const usdc = new PublicKey(networkUsdc("mainnet-beta"));
+  const intent = getRebalanceIntentPda(vaultKey, buyer);
+  const instruction = kind === "deposit"
+    ? new TransactionInstruction({
+        programId: new PublicKey(SYMMETRY_PROGRAM_ID),
+        keys: [
+          { pubkey: buyer, isSigner: true, isWritable: true }, { pubkey: vaultKey, isSigner: false, isWritable: true }, { pubkey: intent, isSigner: false, isWritable: true },
+          { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false }, { pubkey: TOKEN_2022_PROGRAM_ID, isSigner: false, isWritable: false }, { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false }, { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+          { pubkey: usdc, isSigner: false, isWritable: false }, { pubkey: getAta(buyer, usdc, TOKEN_PROGRAM_ID), isSigner: false, isWritable: true }, { pubkey: getAta(vaultKey, usdc, TOKEN_PROGRAM_ID), isSigner: false, isWritable: true },
+        ],
+        data: Buffer.concat([Buffer.from([88, 92, 158, 219, 83, 71, 239, 164]), Buffer.alloc(80)]),
+      })
+    : new TransactionInstruction({
+        programId: new PublicKey(SYMMETRY_PROGRAM_ID),
+        keys: [{ pubkey: buyer, isSigner: true, isWritable: true }, { pubkey: intent, isSigner: false, isWritable: true }, { pubkey: getGlobalConfigPda(), isSigner: false, isWritable: false }],
+        data: Buffer.from([64, 238, 171, 198, 135, 253, 37, 9]),
+      });
+  if (kind === "deposit") instruction.data.writeBigUInt64LE(1_000_000n, 8);
+  const message = new TransactionMessage({ payerKey: buyer, recentBlockhash: owner, instructions: [instruction] }).compileToV0Message();
   const transaction = new VersionedTransaction(message);
   return {
     batches: [{ transactions: [{
@@ -41,8 +63,8 @@ function dependencies(overrides: Record<string, unknown> = {}) {
         simulateTransaction: async () => ({ context: { slot: 1 }, value: { err: null, logs: [] } }),
       },
       sdk: {
-        fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint) }),
-        buyVaultTx: async () => payload(), lockDepositsTx: async () => payload(),
+        fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint), settings: { bountyMint: new PublicKey(shareMint) } }),
+        buyVaultTx: async () => payload("deposit"), lockDepositsTx: async () => payload("lock"),
       },
     }),
     release: { publicFundsEnabled: true },
