@@ -66,6 +66,21 @@ function positionSharesText(position?:IndexSharePosition|null){
   try{return typeof position.shareDecimals==="number"?rawToDecimal(position.sharesRaw,position.shareDecimals):null;}catch{return null;}
 }
 
+async function confirmSignature(signature:string, network:"mainnet-beta"|"devnet"){
+  const endpoint=network==="devnet"?"https://api.devnet.solana.com":typeof window==="undefined"?"/api/rpc":`${window.location.origin}/api/rpc`;
+  for(let attempt=0;attempt<60;attempt+=1){
+    const response=await fetch(endpoint,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:`deposit-confirm-${attempt}`,method:"getSignatureStatuses",params:[[signature],{searchTransactionHistory:true}]})});
+    if(!response.ok)throw new Error("Transaction confirmation is unavailable.");
+    const payload=await response.json() as {error?:{message?:string};result?:{value?:Array<{confirmationStatus?:string|null;err?:unknown}|null>}};
+    if(payload.error)throw new Error(payload.error.message||"Transaction confirmation failed.");
+    const status=payload.result?.value?.[0];
+    if(status?.err)throw new Error("The wallet transaction failed on chain.");
+    if(status?.confirmationStatus==="confirmed"||status?.confirmationStatus==="finalized")return;
+    await new Promise(resolve=>setTimeout(resolve,500));
+  }
+  throw new Error(`Transaction confirmation timed out on ${network}.`);
+}
+
 export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposit",position}:{open:boolean;onClose:()=>void;indexId:string;indexName:string;readiness?:VaultReadiness|null;mode?:Mode;position?:IndexSharePosition|null;indexKind?:IndexKind}){
   const wallet=usePrivySolana();
   const [screen,setScreen]=useState<Screen>("amount");
@@ -125,6 +140,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
       let observed:ObservedOperation|null=null;
       for(const tx of txs){
         const signature=await wallet.signAndSendTransaction(tx.messageBase64,prepared.network);
+        await confirmSignature(signature,prepared.network);
         if(mode==="withdraw"){
           observed=await submitReceipts(prepared.operationId,wallet.solanaAddress,[{stepId:tx.stepId,signature}]);
           setOperation(observed);
