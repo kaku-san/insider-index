@@ -26,21 +26,34 @@ function createdIndex(index: PublicVaultDefinition): index is CreatedIndex {
     && typeof index.shareMint === "string";
 }
 
-/** A native intent is the only pending-deposit source; a prepare response is never a receipt. */
-export function pendingNativeDeposit(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string): ObservedOperation | null {
+/** A native intent is the only pending-operation source; a prepare response is never a receipt. */
+export function pendingNativeOperation(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string): ObservedOperation | null {
   const chain = intent.chain_data;
-  if (chain.vault.toBase58() !== vaultAddress || chain.owner.toBase58() !== owner || chain.rebalanceType !== RebalanceType.Deposit) throw new Error("Native deposit intent identity mismatch");
+  if (chain.vault.toBase58() !== vaultAddress || chain.owner.toBase58() !== owner) throw new Error("Native intent identity mismatch");
   if (chain.currentAction === RebalanceAction.NotActive) return null;
-  const phase = chain.currentAction === RebalanceAction.DepositTokens ? "AWAITING_LOCK"
+  const deposit = chain.rebalanceType === RebalanceType.Deposit;
+  const withdrawal = chain.rebalanceType === RebalanceType.Withdraw;
+  if (!deposit && !withdrawal) throw new Error("Native intent type is unavailable");
+  const phase = chain.currentAction === RebalanceAction.DepositTokens ? deposit ? "AWAITING_LOCK" : "REDEMPTION_CLAIM"
     : chain.currentAction === RebalanceAction.UpdatePrices ? "PRICING"
     : intent.mint_data ? "CLEANUP" : "AUCTION";
-  return { operationId: `native-deposit-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind: "deposit", phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: ["Deposit pending settlement"] };
+  const kind = deposit ? "deposit" : "withdraw";
+  return { operationId: `native-${kind}-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind, phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: [deposit ? "Deposit pending settlement" : "Cash out pending settlement"] };
 }
 
-async function pendingNativeDeposits(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string): Promise<ObservedOperation[]> {
+/** Kept as the deposit-specific seam for callers that must never label a withdrawal as a deposit. */
+export function pendingNativeDeposit(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string): ObservedOperation | null {
+  const operation = pendingNativeOperation(intent, vaultAddress, shareMint, owner);
+  return operation?.kind === "deposit" ? operation : null;
+}
+
+async function pendingNativeOperations(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string): Promise<ObservedOperation[]> {
   const intentAddress = getRebalanceIntentPda(new PublicKey(vaultAddress), new PublicKey(owner)).toBase58();
-  if (!await native.connection.getAccountInfo(new PublicKey(intentAddress), "confirmed")) return [];
-  const pending = pendingNativeDeposit(await native.sdk.fetchRebalanceIntent(intentAddress), vaultAddress, shareMint, owner);
+  const account = await native.connection.getAccountInfo(new PublicKey(intentAddress), "confirmed");
+  if (!account) return [];
+  const { SYMMETRY_PROGRAM_ID } = await import("./symmetry-adapter.ts");
+  if (!account.owner.equals(new PublicKey(SYMMETRY_PROGRAM_ID))) throw new Error("Native intent is unavailable");
+  const pending = pendingNativeOperation(await native.sdk.fetchRebalanceIntent(intentAddress), vaultAddress, shareMint, owner);
   return pending ? [pending] : [];
 }
 
@@ -75,7 +88,7 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
     if (!account.isInitialized || account.owner.toBase58() !== owner || account.mint.toBase58() !== index.shareMint) throw new Error("Share account identity mismatch");
     shares += account.amount;
   }
-  const pendingOperations = await pendingNativeDeposits(activeNative, index.vaultAddress, index.shareMint, owner);
+  const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner);
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
     shareDecimals: mint.decimals, sharesRaw: shares.toString(),
@@ -83,11 +96,12 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
   };
 }
 
-/** Only positive chain balances are portfolio positions. A read failure is not converted to zero. */
+/** Positive chain balances and locked native settlement intents are portfolio positions. A read
+ * failure is not converted to zero, and a pending intent is not hidden as an empty portfolio. */
 export async function readOwnedIndexPositions(owner: string, indexes: readonly PublicVaultDefinition[], readPosition: PositionReader = readPublishedIndexPosition): Promise<IndexSharePosition[]> {
   walletOwner(owner);
   const positions = await Promise.all(indexes.filter(createdIndex).map(index => readPosition(index, owner)));
-  return positions.filter(position => BigInt(position.sharesRaw) > 0n);
+  return positions.filter(position => BigInt(position.sharesRaw) > 0n || position.pendingOperations?.some(operation => !operation.complete));
 }
 
 function requestOwner(request: Request): string {

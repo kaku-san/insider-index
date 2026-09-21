@@ -28,6 +28,7 @@ export function PositionsTable() {
   const indexes = useResource<IndexPositionsResponse>(connected ? `/api/positions/indexes?wallet=${encodeURIComponent(connected)}` : null);
   const fills = copies.data?.positions ?? [];
   const ownedIndexes = indexes.data?.positions ?? [];
+  const pendingIndexOperations = ownedIndexes.flatMap(position => position.pendingOperations?.filter(operation => !operation.complete) ?? []);
   const visible = fills.filter((p) => `${p.ticker} ${p.tokenSymbol}`.toLowerCase().includes(query.toLowerCase()));
 
   if (!connected) {
@@ -94,7 +95,7 @@ export function PositionsTable() {
         <div className={styles.balanceStats}>
           <span><b>{indexes.loading ? "—" : ownedIndexes.length}</b> index {ownedIndexes.length === 1 ? "position" : "positions"}</span>
           <span><b>{fills.length}</b> copied moves</span>
-          <span><b>—</b> pending unavailable</span>
+          <span><b>{indexes.loading ? "—" : pendingIndexOperations.length}</b> settlement{pendingIndexOperations.length === 1 ? "" : "s"} pending</span>
         </div>
         <Link href="/">Explore <Icon name="arrow" size={13} /></Link>
       </section>
@@ -121,9 +122,12 @@ export function PositionsTable() {
             <h2>No index shares yet.</h2>
             <p>When you own shares in an index, they will appear here.</p>
             <Link href="/">Explore indexes <Icon name="arrow" size={13} /></Link>
-          </div> : <div className={styles.indexGrid}>{ownedIndexes.map(position => <Link className={styles.indexCard} key={position.indexId} href={`/indexes/${encodeURIComponent(position.indexId)}`}>
-            <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX SHARES</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}><span><b>{formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)}</b><small>shares owned</small></span><span><b>{position.markedValueUsdc ?? "—"}</b><small>{position.markedValueUsdc == null ? "value unavailable" : "verified value"}</small></span></div></div>
-          </Link>)}</div>}
+          </div> : <div className={styles.indexGrid}>{ownedIndexes.map(position => {
+            const pending = position.pendingOperations?.filter(operation => !operation.complete) ?? [];
+            return <Link className={styles.indexCard} key={position.indexId} href={`/positions/${encodeURIComponent(position.indexId)}`}>
+              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX SHARES</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}><span><b>{formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)}</b><small>shares owned</small></span><span><b>{position.markedValueUsdc ?? "—"}</b><small>{position.markedValueUsdc == null ? "value unavailable" : "verified value"}</small></span></div>{pending.length ? <div className={styles.pending}><i />{pending[0].kind === "withdraw" ? "Cash out pending settlement" : "Deposit pending settlement"}</div> : null}</div>
+            </Link>;
+          })}</div>}
         </section>
       ) : null}
 

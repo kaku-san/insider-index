@@ -14,6 +14,7 @@ import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { PUBLIC_MAG7 } from "@/lib/index-vaults/public-cycle-parse";
+import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import styles from "./consumer-index.module.css";
 
@@ -42,6 +43,8 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const [investMode, setInvestMode] = useState<"deposit" | "withdraw">("deposit");
   const [vault, setVault] = useState<VaultReadiness | null>(null);
   const [position, setPosition] = useState<IndexSharePosition | null>(null);
+  const [positionError, setPositionError] = useState<string | null>(null);
+  const [positionRefresh, setPositionRefresh] = useState(0);
   const wallet = usePrivySolana();
   useEffect(() => {
     let alive = true;
@@ -50,10 +53,11 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   }, [vaultId]);
   useEffect(() => {
     let alive = true;
-    if (vaultId !== PUBLIC_MAG7.indexId || !wallet.solanaAddress) { setPosition(null); return; }
-    getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(() => { if (alive) setPosition(null); });
+    if (vaultId !== PUBLIC_MAG7.indexId || !wallet.solanaAddress) { setPosition(null); setPositionError(null); return; }
+    setPositionError(null);
+    getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(error => { if (alive) { setPosition(null); setPositionError(error instanceof Error ? error.message : "Your share balance is unavailable right now."); } });
     return () => { alive = false; };
-  }, [vaultId, wallet.solanaAddress]);
+  }, [vaultId, wallet.solanaAddress, positionRefresh]);
   if (resource.loading && !resource.data) return <Skeleton />;
   if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
   if (!index) return null;
@@ -68,6 +72,8 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const status = publicIndexStatus(liveState);
   const availability = publicIndexStatusCopy(status);
   const canCashOut = vaultId === PUBLIC_MAG7.indexId && hasIndexShares(position);
+  const pendingOperations = position?.pendingOperations?.filter(operation => !operation.complete) ?? [];
+  const ownedShares = hasIndexShares(position) && position ? formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0) : null;
   const readiness = vault ?? (initialVault ? vaultReadinessFromIndex(vaultId, {
     index: { vaultAddress: initialVault.vaultAddress, shareMint: initialVault.shareMint, network: initialVault.network },
     depositsEnabled: initialVault.depositsEnabled,
@@ -88,6 +94,9 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
           <button type="button" className={live ? styles.secondary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
+        {ownedShares ? <p className={styles.ownedPosition}>Your position: <strong>{ownedShares} shares</strong> <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
+        {pendingOperations.length ? <p className={styles.ownedPosition}>{pendingOperations[0].kind === "withdraw" ? "Cash out pending settlement." : "Deposit pending settlement."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
+        {positionError ? <p className={styles.availability}>{positionError}</p> : null}
       </div>
       <div className={styles.returnHero}><span>1Y RETURN</span><strong>—</strong><small>Awaiting dated series</small></div>
     </section>
@@ -131,6 +140,6 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName} kind="Theme index" detail={`${holdings.length} stocks`} image={`/index-assets/themes/${index.id}-hero.png`} />
-    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} position={position} />
+    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); setPositionRefresh(current => current + 1); }} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} position={position} />
   </div>;
 }

@@ -123,3 +123,14 @@ test("Mag7 invest sheet shows chain share balance as Your position", () => {
   assert.match(html, /1 shares/);
   assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation/i);
 });
+
+test("Mag7 invest sheet keeps dust shares visible", () => {
+  const html = renderToStaticMarkup(wrap(createElement(VaultFlow, {
+    open: true, onClose() {}, indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus",
+    position: {
+      indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner: "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+      shareMint: mag7Vault.shareMint!, shareDecimals: 6, sharesRaw: "3",
+    },
+  })));
+  assert.match(html, /0\.000003 shares/);
+});
