@@ -8,7 +8,7 @@ The normal path scans the one fixed Mag7 vault
 `AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh` for **every** locked user deposit,
 then advances each through Raydium-only price update, fill, mint, and bounty cleanup.
 No depositor wallet (`USER` or `--owner`) is needed. `--owner` remains a narrow,
-read-only/single-intent troubleshooting option.
+single-intent troubleshooting option.
 
 The keeper must be the persisted wallet
 `GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq`. The command refuses a different
@@ -44,7 +44,7 @@ configuration, and Pyth/Hermes environment all refuse before settlement.
 Use a dedicated VPS user and a dedicated keeper hot wallet. Keep the 64-byte JSON
 key **outside** the checkout and outside Vercel/Next environment configuration. The
 service role values are needed only to read the persisted definition; put them in a
-root-readable VPS environment file, never in git.
+service-user-readable VPS environment file, never in git.
 
 1. Deploy this checkout on the VPS and install dependencies/build artifacts as your
    normal release process requires.
@@ -52,8 +52,9 @@ root-readable VPS environment file, never in git.
    `insiderindex` service user). Confirm its public key is the configured
    `GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq`.
 3. Put only required RPC/Supabase variables in
-   `/etc/insiderindex/mag7-keeper.env` (`0600`). Do **not** put the keypair in that
-   file and do not set a `USER` variable.
+   `/etc/insiderindex/mag7-keeper.env` (readable by the `insiderindex` service user,
+   for example `0640` root:insiderindex). Do **not** put the keypair in that file and
+   do not set a `USER` variable.
 4. Dry-run once from the checkout using the first command above, then install the
    systemd unit below. Monitor JSON output with `journalctl`; a locked deposit is
    complete only after its owner's on-chain share balance is positive.

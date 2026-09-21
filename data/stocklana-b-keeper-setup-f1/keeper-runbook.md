@@ -156,11 +156,13 @@ VPS unit and deployment instructions in
 
 ## 4. Verify share supply and user position
 
-After the keeper prints a finalized `mint` signature, run this read-only check. It
-prints raw and UI amounts and exits nonzero unless the native share supply and the
-locking user's canonical share ATA are both positive.
+After the keeper prints a finalized `mint` signature, set `USER` to the wallet that
+made the deposit, then run this read-only check. It prints raw and UI amounts and
+exits nonzero unless the native share supply and that user's canonical share ATA are
+both positive.
 
 ```sh
+export USER=<base58-wallet-that-finalized-buyVaultTx-and-lockDepositsTx>
 node --input-type=module - "$USER" "$SHARE_MINT" <<'NODE'
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
