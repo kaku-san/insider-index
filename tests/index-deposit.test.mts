@@ -10,6 +10,7 @@ import { networkUsdc, SYMMETRY_PROGRAM_ID } from "../src/lib/index-vaults/symmet
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { handleIndexDepositPrepare, parseIndexDepositRequest } = await import("../src/lib/index-vaults/index-deposit.ts");
+const { MAG7_UNROUTABLE_AMOUNT } = await import("../src/lib/index-vaults/mag7-deposit-slices.ts");
 
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
@@ -91,6 +92,7 @@ function dependencies(overrides: Record<string, unknown> = {}, buy = firstDeposi
       },
     }),
     release: { publicFundsEnabled: true, publicInvestSign: true },
+    assertSlicesRoutable: async () => {},
     ...overrides,
   };
 }
@@ -178,4 +180,55 @@ test("deposit prepare rejects malformed amounts and every closed gate", async ()
   const absent = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ loadDefinition: async () => null }) as never);
   assert.equal(absent.status, 503);
   assert.deepEqual(await absent.json(), { error: "Index not found." });
+});
+
+test("default Mag7 prepare quotes Raydium slices and refuses before buyVaultTx when they cannot fill", async () => {
+  const MAG7_WEIGHTS = [3448, 2740, 1424, 1151, 854, 322, 61];
+  let contributions = 0;
+  const deps = dependencies({
+    assertSlicesRoutable: undefined,
+    loadDefinition: async () => ({ ...definition, vaultLegs: definition.vaultLegs.map((leg, i) => ({ ...leg, targetWeightBps: MAG7_WEIGHTS[i]! })) }),
+  });
+  const native = deps.nativeBuilder();
+  native.sdk.buyVaultTx = async () => { contributions++; throw new Error("must refuse before funding"); };
+  deps.nativeBuilder = () => native;
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, deps as never);
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: MAG7_UNROUTABLE_AMOUNT });
+  assert.equal(contributions, 0);
+});
+
+test("an unroutable Mag7 slice refuses before buyVaultTx and does not take USDC", async () => {
+  let contributions = 0;
+  const deps = dependencies({
+    assertSlicesRoutable: async () => { throw new Error(MAG7_UNROUTABLE_AMOUNT); },
+  });
+  const native = deps.nativeBuilder();
+  native.sdk.buyVaultTx = async () => { contributions++; throw new Error("must refuse before funding"); };
+  deps.nativeBuilder = () => native;
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, deps as never);
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: MAG7_UNROUTABLE_AMOUNT });
+  assert.equal(contributions, 0);
+});
+
+test("Mag7 prepare quotes the requested size, not the $1 floor, before lock", async () => {
+  const quoted: string[] = [];
+  const TEN_USDC = "10000000";
+  let contributions = 0;
+  const deps = dependencies({
+    assertSlicesRoutable: async (_native: unknown, _definition: unknown, amountRaw: string) => {
+      quoted.push(amountRaw);
+      throw new Error(MAG7_UNROUTABLE_AMOUNT);
+    },
+  });
+  const native = deps.nativeBuilder();
+  native.sdk.buyVaultTx = async () => { contributions++; throw new Error("must refuse before funding"); };
+  deps.nativeBuilder = () => native;
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: TEN_USDC }), definition.indexId, deps as never);
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: MAG7_UNROUTABLE_AMOUNT });
+  assert.deepEqual(quoted, [TEN_USDC]);
+  assert.notEqual(quoted[0], DEPOSIT_RAW);
+  assert.equal(contributions, 0);
 });

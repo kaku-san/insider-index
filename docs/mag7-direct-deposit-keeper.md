@@ -53,9 +53,9 @@ USDC repayment. Keeper inventory is not the funding source. The settler re-reads
 each sale. A USDC-only intent needs no pairs: wait through the window, return vault USDC
 to the owner's canonical ATA, then close the bounty/intent. Missing owner USDC ATA is
 created in that redemption transaction; unrelated keeper stock ATAs do not block it.
-Unsold non-USDC claims after expiry **fail closed in native custody**, never become an
-in-kind payout. No native restart, post-expiry stock sale, or keeper side-payment exists
-in this path. An empty-keep stock auction with no USDC receive target also refuses.
+An empty sale list during the window waits and rereads. After expiry, leftover USDC
+and/or stocks redeem as-is to the owner wallet. No native restart, keeper side-payment,
+or invented refund exists in this path.
 
 Public deposits remain paused. Even if the release gate is later enabled, the prepare
 path refuses positive-supply cash-only/partial Mag7 backing and zero-supply accounted
