@@ -18,6 +18,6 @@ Prints the unproven gate. No signer, no RPC send, no Chrome.
 
 ## Proven vs unproven
 
-A stage is proven only by a `CycleReceipt` (signature + slot + matching vault/share mint). `publicInvestSignAllowed` also requires `VAULT_RELEASE.publicFundsEnabled`, `nativeUsdcExitVerified` and `publicInvestSign` — all false in this tree. Do not flip those flags because a unit test passed.
+A stage is proven only by a `CycleReceipt` (signature + slot + matching vault/share mint). `publicInvestSignAllowed` also requires `VAULT_RELEASE.publicFundsEnabled`, `nativeUsdcExitVerified` and `publicInvestSign` — `publicFundsEnabled` is true, `publicInvestSign` is true, while `nativeUsdcExitVerified` remains false. Do not flip those flags because a unit test passed.
 
 Devnet first. Kaku San 5-stock mainnet create is operator-signed and out of band; this tree does not broadcast it.
