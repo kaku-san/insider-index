@@ -14,6 +14,8 @@ import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
+import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { PUBLIC_MAG7 } from "@/lib/index-vaults/public-cycle-parse";
 import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
@@ -61,6 +63,9 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
     getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive) { setPosition(value); setLoadedPositionKey(key); } }).catch(error => { if (alive) { setPosition(null); setLoadedPositionKey(null); setPositionError(error instanceof Error ? error.message : "Your share balance is unavailable right now."); setPositionErrorKey(key); } });
     return () => { alive = false; };
   }, [vaultId, wallet.solanaAddress, positionRefresh]);
+  const positionKey = wallet.solanaAddress ? `${vaultId}:${wallet.solanaAddress}` : null;
+  const currentPosition = loadedPositionKey === positionKey ? position : null;
+  useIndexPositionListen(vaultId, wallet.solanaAddress, currentPosition, value => { setPosition(value); if (wallet.solanaAddress) setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); }, !investOpen);
   if (resource.loading && !resource.data) return <Skeleton />;
   if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
   if (!index) return null;
@@ -75,8 +80,6 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const live = publicIndexIsLive(liveState);
   const status = publicIndexStatus(liveState);
   const availability = publicIndexStatusCopy(status);
-  const positionKey = wallet.solanaAddress ? `${vaultId}:${wallet.solanaAddress}` : null;
-  const currentPosition = loadedPositionKey === positionKey ? position : null;
   const pendingOperations = currentPosition?.pendingOperations?.filter(operation => !operation.complete) ?? [];
   const activeOperation = pendingOperations[0] ?? null;
   const ownedShares = hasIndexShares(currentPosition) && currentPosition ? formatVaultShares(currentPosition.sharesRaw, currentPosition.shareDecimals ?? 0) : null;
@@ -101,7 +104,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
         {ownedShares ? <p className={styles.ownedPosition}>Your position: <strong>{ownedShares} shares</strong> <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
-        {activeOperation ? <p className={styles.ownedPosition}>{activeOperation.phase === "FAILED" ? "This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares." : activeOperation.kind === "withdraw" ? "A cash-out auction is in progress for this wallet." : "A deposit auction is in progress for this wallet."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
+        {activeOperation ? <p className={styles.ownedPosition} data-settlement-status={plainStatusForOperation(activeOperation)}>{plainStatusForOperation(activeOperation)}{activeOperation.phase === "FAILED" ? ". This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares." : "."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}
       </div>
     </section>
@@ -145,6 +148,6 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName} kind="Theme index" detail={`${holdings.length} stocks`} image={`/index-assets/themes/${index.id}-hero.png`} />
-    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); setPositionRefresh(current => current + 1); }} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} position={currentPosition} />
+    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); setPositionRefresh(current => current + 1); }} onPosition={value => { if (!value || !wallet.solanaAddress) return; setPosition(value); setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); }} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} position={currentPosition} />
   </div>;
 }

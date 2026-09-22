@@ -9,6 +9,7 @@ import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { indexContentFor } from "@/lib/frontend/index-content";
@@ -201,6 +202,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
     getIndexPosition(routeId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(() => { if (alive) setPosition(null); });
     return () => { alive = false; };
   }, [id, routeId, wallet.solanaAddress]);
+  useIndexPositionListen(id ? routeId : null, wallet.solanaAddress, position, value => setPosition(value), !investOpen);
 
   if (resource.loading && !index) return <Skeleton />;
   if (resource.error && !index) return <PageError error={resource.error} retry={resource.reload} />;
@@ -282,7 +284,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} stocks`} image={image} />
-    <VaultFlow open={investOpen} onClose={() => setInvestOpen(false)} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} position={position} />
+    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); if (wallet.solanaAddress) void getIndexPosition(routeId, wallet.solanaAddress).then(value => setPosition(value)).catch(() => {}); }} onPosition={value => { if (value) setPosition(value); }} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} position={position} />
   </div>;
 }
 
