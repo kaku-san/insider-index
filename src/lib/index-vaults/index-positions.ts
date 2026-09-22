@@ -98,7 +98,7 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
   const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString());
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
-    shareDecimals: mint.decimals, sharesRaw: shares.toString(),
+    shareDecimals: mint.decimals, sharesRaw: shares.toString(), shareSupplyRaw: mint.supply.toString(),
     ...(pendingOperations.length ? { pendingOperations } : {}),
   };
 }
