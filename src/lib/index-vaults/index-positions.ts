@@ -2,6 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getMint, unpackAccount } from "@solana/spl-token";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { RebalanceAction, RebalanceType, type UIRebalanceIntent } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
+import type { Vault } from "@symmetry-hq/sdk";
+import Decimal from "decimal.js";
 import { getHeliusRpcUrl } from "../helius.ts";
 import type { IndexSharePosition, Network, ObservedOperation } from "../frontend/vault-api.ts";
 import type { NativeVaultBuilders } from "./symmetry-adapter.ts";
@@ -54,6 +56,24 @@ export function pendingNativeOperationForPosition(intent: UIRebalanceIntent, vau
   return pendingNativeOperation(intent, vaultAddress, shareMint, owner);
 }
 
+async function currentVaultValueUsdc(native: NativeVaultBuilders, vault: Vault): Promise<string | null> {
+  try {
+    const { loadVaultPrice } = await import("@symmetry-hq/sdk/dist/states/basket.js");
+    const priced = await loadVaultPrice(vault, native.connection);
+    let total = new Decimal(0);
+    for (const asset of priced.composition.slice(0, priced.numTokens)) {
+      if (!asset.price || asset.price.validated !== true) return null;
+      const account = await native.connection.getAccountInfo(asset.mint, "confirmed");
+      if (!account || !tokenPrograms.some(program => account.owner.equals(program))) return null;
+      const mint = await getMint(native.connection, asset.mint, "confirmed", account.owner);
+      total = total.plus(new Decimal(asset.amount.toString()).div(new Decimal(10).pow(mint.decimals)).times(asset.price.price.toString()));
+    }
+    return total.toDecimalPlaces(6).toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0";
+  } catch {
+    return null;
+  }
+}
+
 async function pendingNativeOperations(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string, sharesRaw: string): Promise<ObservedOperation[]> {
   const intentAddress = getRebalanceIntentPda(new PublicKey(vaultAddress), new PublicKey(owner)).toBase58();
   const account = await native.connection.getAccountInfo(new PublicKey(intentAddress), "confirmed");
@@ -96,9 +116,11 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
     shares += account.amount;
   }
   const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString());
+  const vaultValueUsdc = await currentVaultValueUsdc(activeNative, vault);
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
     shareDecimals: mint.decimals, sharesRaw: shares.toString(), shareSupplyRaw: mint.supply.toString(),
+    ...(vaultValueUsdc ? { vaultValueUsdc } : {}),
     ...(pendingOperations.length ? { pendingOperations } : {}),
   };
 }
