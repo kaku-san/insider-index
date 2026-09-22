@@ -253,6 +253,9 @@ export async function prepareIndexKeeperStep(
       const current = await native.sdk.fetchRebalanceIntent(intent);
       const pairs = getSwapPairs(current, observation.vault).filter(pair => pair.outMint === MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
       if (!pairs.length) throw new Error("Withdrawal auction has no sellable vault assets");
+      if (pairs.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount))) {
+        throw new Error("This position cannot be sold right now. Please try again later.");
+      }
       const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
         keeper: keeperPk, vault: observation.vaultAddress, rebalance_intent: intent,
         mint_in: pair.inMint, mint_out: pair.outMint, amount_in: pair.inAmount, amount_out: pair.outAmount,
