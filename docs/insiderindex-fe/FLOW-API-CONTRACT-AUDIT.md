@@ -21,13 +21,13 @@ The public Invest modal follows the release-gated deposit rail owned by [`src/li
 | Native index readiness | Done | Done | Native person-index route not present | Read-only until native backend exists |
 | Native index deposit | Done, including atomic first-depositor contribution + lock signing | Done | Persisted-definition prepare route with release/gate checks | Release-gated; keeper mint remains later |
 | Native index position | Done | Done | Authoritative person-index position route not present | Read-only until backend exists |
-| Native withdrawal | Done | Done | Native redemption/claim routes not present | Fail closed |
-| Claim / partial claim / resume | Done | Done | Chain reconciliation route/store/worker not present | Fail closed |
-| Optional redeemed-token → USDC conversion | Done | Done | Redeemed-credit conversion route not present | Fail closed |
-| Operation resume / recovery UI | Done | Done | Durable operation/recovery routes not present | Fail closed |
+| Mag7 USDC cash-out | Done | Done | Narrow simulated auction-prepare route; keeper settlement is operator-owned | Mainnet Mag7 identity only; dust attempt blocked by native intent constraint |
+| Generic native withdrawal / claim / resume | UI contract retained | Done | Not provided by the new cash-out route | Fail closed |
+| Optional redeemed-token → USDC conversion | UI contract retained | Done | Not used by the one-approval Mag7 auction rail | Fail closed |
+| Operation resume / recovery UI | UI contract retained | Done | Not used by the one-approval Mag7 auction rail | Fail closed |
 | Retired multi-leg basket stub | Safe tombstone only | No calls | N/A | **Never sign** |
 
-The rework does not add a generic API proxy. Existing same-origin routes continue to own research and copy behavior. The deposit prepare route is available behind persisted-definition and release gates; withdrawal, reconciliation, recovery and keeper settlement remain separately gated or operator-owned.
+The rework does not add a generic API proxy. Existing same-origin routes continue to own research and copy behavior. The deposit prepare route is available behind persisted-definition and release gates. The narrow Mag7 cash-out prepare route simulates one empty-keep auction before signing; its keeper sale and settlement remain operator-owned. Generic withdrawal, reconciliation and recovery remain fail-closed.
 
 ---
 
@@ -106,21 +106,18 @@ DRAFT
 
 **Important:** the prepare response does not certify minting or a completed share receipt.
 
-### Withdrawal lifecycle shown in UI
+### Mag7 cash-out lifecycle shown in UI
 
 ```text
 DRAFT
 → AWAITING_SIGNATURE          exact share amount
-→ SUBMITTED
-→ REDEMPTION_CLAIM
-→ CLAIM_PENDING               every composition token/account reconciled
-→ TOKENS_RECEIVED
-→ choose:
-   A. COMPLETE_IN_KIND
-   B. CONVERTING → PARTIAL_USDC | COMPLETE_USDC
+→ SUBMITTED                   one wallet approval
+→ keeper sells vault-held assets to USDC
+→ keeper settles the withdrawal
+→ USDC lands in the wallet
 ```
 
-If only some post-redemption sales succeed, the user owns the confirmed USDC **plus the remaining tokens**. There is no second share burn and no second withdrawal fee.
+The route does not expose in-kind claims, per-stock user sales, or a Resume page. Generic withdrawal lifecycle text is retained only as an unmounted compatibility contract.
 
 ### Exact share sizing fix
 
@@ -176,7 +173,7 @@ These method names describe the native SDK mapping; the public deposit rail curr
 9. Optional USDC conversion spends only `verified credited amount - already sold`, never the wallet's whole balance of that mint.
 10. `COMPLETE_USDC` requires all attributed credits sold or an explicit tested dust policy; otherwise show `PARTIAL_USDC`.
 
-`keep_tokens: [USDC]` is **not** assumed to mean “sell everything to USDC”. Native guaranteed-USDC exit stays disabled until proven by the pinned SDK/IDL and negative tests.
+`keep_tokens: [USDC]` is **not** assumed to mean “sell everything to USDC”. Generic native guaranteed-USDC exit stays disabled until proven by the pinned SDK/IDL and negative tests; the narrow Mag7 auction rail is the separately documented exception.
 
 ---
 

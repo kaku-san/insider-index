@@ -245,6 +245,11 @@ export function publicIndexIsLive(state: PublicVaultDepositState): boolean {
   return publicVaultDepositIsEnabled(state);
 }
 
+/** Only Mag7 has the public withdrawal-prepare endpoint. A share balance alone never implies a cash-out rail. */
+export function publicIndexCanCashOut(indexId: string, state: PublicVaultDepositState): boolean {
+  return indexId === "idx-theme-mag7-caucus" && hasPublicVaultIdentity(state) && state.network === "mainnet-beta";
+}
+
 export type PublicIndexStatus = "Live" | "Coming soon" | "Research";
 
 export function publicIndexStatus(state: PublicVaultDepositState): PublicIndexStatus {

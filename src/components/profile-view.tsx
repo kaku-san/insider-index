@@ -16,7 +16,7 @@ import { Icon } from "./social/icon";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
 import { formatUsd } from "@/lib/format";
@@ -128,7 +128,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const liveState={vaultAddress:vaultIndex?.vaultAddress,shareMint:vaultIndex?.shareMint,network:vaultIndex?.network,depositsEnabled:vaultIndex?.depositsEnabled,publicFundsEnabled:vaultIndex?.publicFundsEnabled===true};
  const live=Boolean(vaultIndex)&&publicIndexIsLive(liveState);
  const liveStatus=vaultIndex?publicIndexStatus(liveState):null;
- const canCashOut=live&&hasIndexShares(position);
+ const canCashOut=Boolean(vaultIndexId)&&publicIndexCanCashOut(vaultIndexId!,liveState)&&hasIndexShares(position);
  const resourceReadiness=vaultIndex&&vaultIndexId?vaultReadinessFromIndex(vaultIndexId,{index:{vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network},depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultIndex.publicFundsEnabled===true}):null;
  const flowReadiness=vault??resourceReadiness;
 
