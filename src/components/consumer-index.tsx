@@ -54,16 +54,26 @@ function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
 }
 
-function performanceReturn(points: IndexPerformancePoint[]): number | null {
-  const valid = points.filter(point => Number.isFinite(point.value) && point.value > 0 && Number.isFinite(Date.parse(point.observedAt)))
-    .sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
-  if (valid.length < 2) return null;
-  return (valid.at(-1)!.value / valid[0].value - 1) * 100;
+function alignedPerformanceReturns(performance?: IndexPerformance): [number, number] | null {
+  const series = [performance?.vault ?? [], performance?.sp500 ?? []].map(points => new Map(
+    points
+      .filter(point => Number.isFinite(point.value) && point.value > 0 && Number.isFinite(Date.parse(point.observedAt)))
+      .map(point => [new Date(point.observedAt).toISOString().slice(0, 10), point.value] as const),
+  ));
+  const dates = [...series[0].keys()].filter(date => series[1].has(date)).sort();
+  if (dates.length < 2) return null;
+  const first = dates[0];
+  const last = dates.at(-1)!;
+  return [
+    (series[0].get(last)! / series[0].get(first)! - 1) * 100,
+    (series[1].get(last)! / series[1].get(first)! - 1) * 100,
+  ];
 }
 
 export function IndexPerformanceLine({ performance }: { performance?: IndexPerformance }) {
-  const vaultReturn = performanceReturn(performance?.vault ?? []);
-  const benchmarkReturn = performanceReturn(performance?.sp500 ?? []);
+  const returns = alignedPerformanceReturns(performance);
+  const vaultReturn = returns?.[0] ?? null;
+  const benchmarkReturn = returns?.[1] ?? null;
   const hasDatedVaultValue = (performance?.vault ?? []).some(point => Number.isFinite(point.value) && Number.isFinite(Date.parse(point.observedAt)));
   if (vaultReturn === null || benchmarkReturn === null) {
     return <p className={styles.performanceLine}>Performance versus S&amp;P: {hasDatedVaultValue ? "awaiting a second dated vault value and benchmark series." : "unavailable until a dated vault value exists."}</p>;

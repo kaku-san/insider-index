@@ -92,7 +92,7 @@ async function readerFor(network: Network): Promise<NativeVaultBuilders> {
 
 /** Reads native SPL share accounts for a persisted vault definition. Definitions choose the vault
  * and mint; callers never provide an RPC, vault, mint, or network selector. */
-export async function readPublishedIndexPosition(index: CreatedIndex, owner: string, native?: NativeVaultBuilders): Promise<IndexSharePosition> {
+export async function readPublishedIndexPosition(index: CreatedIndex, owner: string, native?: NativeVaultBuilders, options: { includeVaultValue?: boolean } = {}): Promise<IndexSharePosition> {
   walletOwner(owner);
   const activeNative = native ?? await readerFor(index.network);
   if (activeNative.network !== index.network) throw new Error("Index network mismatch");
@@ -116,7 +116,7 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
     shares += account.amount;
   }
   const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString());
-  const vaultValueUsdc = await currentVaultValueUsdc(activeNative, vault);
+  const vaultValueUsdc = options.includeVaultValue === false ? null : await currentVaultValueUsdc(activeNative, vault);
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
     shareDecimals: mint.decimals, sharesRaw: shares.toString(), shareSupplyRaw: mint.supply.toString(),
@@ -127,9 +127,10 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
 
 /** Positive chain balances and locked native settlement intents are portfolio positions. A read
  * failure is not converted to zero, and a pending intent is not hidden as an empty portfolio. */
-export async function readOwnedIndexPositions(owner: string, indexes: readonly PublicVaultDefinition[], readPosition: PositionReader = readPublishedIndexPosition): Promise<IndexSharePosition[]> {
+export async function readOwnedIndexPositions(owner: string, indexes: readonly PublicVaultDefinition[], readPosition?: PositionReader): Promise<IndexSharePosition[]> {
   walletOwner(owner);
-  const positions = await Promise.all(indexes.filter(createdIndex).map(index => readPosition(index, owner)));
+  const reader = readPosition ?? ((index: CreatedIndex, wallet: string) => readPublishedIndexPosition(index, wallet, undefined, { includeVaultValue: false }));
+  const positions = await Promise.all(indexes.filter(createdIndex).map(index => reader(index, owner)));
   return positions.filter(position => BigInt(position.sharesRaw) > 0n || position.pendingOperations?.some(operation => !operation.complete));
 }
 
