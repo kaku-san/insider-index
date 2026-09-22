@@ -78,21 +78,18 @@ USDC amount
 → shares received
 ```
 
-Exit:
+Exit (Mag7 only):
 
 ```text
 exact share amount
 → POST /api/indexes/:id/withdraw/prepare
-→ user approves native redemption
-→ claim every underlying token entitlement
-→ tokens received
-→ keep basket
-   OR
-→ separately approve conversion of verified redeemed credits only
-→ complete USDC / partial USDC
+→ one wallet approval starts an empty-keep native auction
+→ keeper sells vault-held assets to USDC
+→ keeper settles the withdrawal
+→ USDC lands in the wallet
 ```
 
-A partial exit converts the entered share amount to raw units using the share mint decimals. It never silently sends the full wallet balance.
+The prepare route is restricted to the installed mainnet Mag7 identity and simulates the exact transaction before returning it. Failed or unsupported positions receive plain failure copy; no generic withdrawal route is implied. The entered share amount is converted to raw units using the share mint decimals and never silently replaced with the full wallet balance.
 
 ## Native operation API contract
 
@@ -103,7 +100,7 @@ GET  /api/vault-indexes/:id                 # published index readiness, release
 GET  /api/indexes/:id/position?owner=...     # wallet-scoped share position
 POST /api/indexes/:id/deposit/prepare
 POST /api/indexes/:id/withdraw/prepare
-POST /api/operations/:id/receipts
+POST /api/operations/:id/receipts   # retained operation flows only
 GET  /api/operations/:id
 POST /api/operations/:id/next
 POST /api/operations/:id/convert/prepare
@@ -125,7 +122,7 @@ POST /api/indexes/execute
 
 ## Important implementation boundary
 
-The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Public pages show **Live / Invest** when `publicIndexIsLive` is true (created vault identity + per-index deposit gate). Wallet signing still requires `depositIsEnabled` (that gate plus `publicFundsEnabled`). Lifecycle calls fail closed; indexes without a vault stay Research with no fake Invest. Do not print internal flag names in the UI.
+The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Public pages show **Live / Invest** when `publicIndexIsLive` is true (created vault identity + per-index deposit gate). Wallet signing still requires `depositIsEnabled` (that gate plus `publicFundsEnabled`); the separate `publicIndexCanCashOut` predicate currently exposes Cash out only for the installed mainnet Mag7 identity. Lifecycle calls fail closed; indexes without a vault stay Research with no fake Invest. Do not print internal flag names in the UI.
 
 The preparation UI is not a production-readiness claim: wallet ownership proof/session validation, RPC simulation, chain reconciliation and keeper infrastructure remain required before public funds are enabled.
 
