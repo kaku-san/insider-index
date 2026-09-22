@@ -37,7 +37,14 @@ function defaultDependencies(): IndexWithdrawDependencies {
   };
 }
 function plainError(error: unknown, status = 503) {
-  return Response.json({ error: error instanceof Error ? error.message : "Cash out preparation is unavailable." }, { status, headers: HEADERS });
+  const message = error instanceof Error ? error.message : "Cash out preparation is unavailable.";
+  const safe = [
+    "Invalid index ID.", "Request too large.", "A cash out request is required.", "Unexpected cash out field.",
+    "Wallet owner is required.", "Share amount is required.", "USDC cash out is required.", "Idempotency key is invalid.",
+    "Cash out is not available for this vault.", "This vault is not on mainnet.", "Cash out is not open for signatures.",
+    "Index not found.", "A cash out is already settling for this wallet.", "This position cannot be sold right now. Please try again later.",
+  ].includes(message);
+  return Response.json({ error: safe ? message : "This position cannot be sold right now. Please try again later." }, { status, headers: HEADERS });
 }
 
 export function parseIndexWithdrawalRequest(body: unknown): WithdrawalInput {
@@ -116,7 +123,12 @@ export async function prepareIndexWithdrawal(indexId: string, input: WithdrawalI
   if (parsed.signatures.some(signature => signature.some(byte => byte !== 0)) || parsed.message.staticAccountKeys[0]?.toBase58() !== input.owner || parsed.message.recentBlockhash !== source.recent_blockhash) throw new Error("Cash out transaction identity mismatch.");
   const instructions = instructionsFrom(parsed);
   assertUsdcAuctionIntent(instructions, input.owner, definition.vaultAddress!, definition.shareMint!, input.shareAmountRaw, vault.composition.slice(0, vault.numTokens).map(token => token.mint.toBase58()));
-  const transaction = await validateAndSimulate(native.connection, { stepId: "cash-out-auction", transactionBase64: source.tx_b64, lastValidBlockHeight: source.last_valid_block_height }, transactionPolicy(instructions, input.owner, definition.shareMint!, input.shareAmountRaw));
+  let transaction: Awaited<ReturnType<typeof validateAndSimulate>>;
+  try {
+    transaction = await validateAndSimulate(native.connection, { stepId: "cash-out-auction", transactionBase64: source.tx_b64, lastValidBlockHeight: source.last_valid_block_height }, transactionPolicy(instructions, input.owner, definition.shareMint!, input.shareAmountRaw));
+  } catch {
+    throw new Error("This position cannot be sold right now. Please try again later.");
+  }
   const operationId = `withdraw-${hashObject({ indexId, owner: input.owner, sharesRaw: input.shareAmountRaw, key: input.idempotencyKey ?? "" }).slice(0, 32)}`;
   return {
     network: "mainnet-beta" as const, operationId, phase: "AWAITING_SIGNATURE", requires: "user-signature" as const, transactions: [transaction],

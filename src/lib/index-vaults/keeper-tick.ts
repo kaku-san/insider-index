@@ -134,6 +134,13 @@ export function plannedTrades(drift: readonly KakuSanDriftRow[]): IndexKeeperPla
   });
 }
 
+export type WithdrawalIntentStage = "prices" | "redeem" | "claim-bounty" | "wait" | "unknown";
+export interface WithdrawalIntent {
+  address: string;
+  owner: string;
+  stage: WithdrawalIntentStage;
+}
+
 export interface IndexKeeperObservation {
   vault: Vault;
   vaultAddress: string;
@@ -144,6 +151,7 @@ export interface IndexKeeperObservation {
   drift: KakuSanDriftRow[];
   eligibility: KakuSanEligibility;
   intents: number;
+  withdrawalIntents?: WithdrawalIntent[];
   bindings: RaydiumPoolBinding[];
 }
 
@@ -170,6 +178,16 @@ export async function observeIndexVault(record: PersistedVaultDefinition, native
   const targets = keeperTargets(record);
   const drift = kakuSanDrift(vault, targets);
   const intents = await native.sdk.fetchVaultRebalanceIntents(vaultAddress);
+  const withdrawalIntents: WithdrawalIntent[] = intents.flatMap(intent => {
+    const chain = intent.chain_data;
+    const type = intent.rebalance_type as unknown;
+    if (!(type === 1 || /withdraw/i.test(String(type)))) return [];
+    const stage: WithdrawalIntentStage = intent.price_updates_data ? "prices"
+      : intent.redeem_data ? "redeem"
+      : intent.claim_bounty_data ? "claim-bounty"
+      : intent.auction_data ? "wait" : "unknown";
+    return [{ address: chain.ownAddress.toBase58(), owner: chain.owner.toBase58(), stage }];
+  });
   const eligibility = intents.length
     ? ({ required: null, reason: "Existing intents take priority over a new rebalance" } satisfies KakuSanEligibility)
     : await kakuSanRebalanceEligibility(vault, native.connection);
@@ -177,7 +195,7 @@ export async function observeIndexVault(record: PersistedVaultDefinition, native
   const mintSupply = await readShareSupply(native, vault);
   return {
     vault, vaultAddress, shareMint, shareSupplyRaw: mintSupply, drift, eligibility, targets, bindings,
-    intents: intents.length,
+    intents: intents.length, withdrawalIntents,
     guards: { deployer: vault.settings.creator.toBase58(), host: vault.settings.host.toBase58(), strategy: managers, namedKeeper: record.keeper?.pubkey ?? null },
   };
 }
@@ -198,7 +216,7 @@ async function readShareSupply(native: NativeVaultBuilders, vault: Vault): Promi
 }
 
 export interface IndexKeeperRebalancePlan {
-  step: "prices" | "rebalance";
+  step: "prices" | "redeem" | "claim-bounty" | "rebalance" | "wait";
   eligible: boolean;
   reason: string;
   transactions: { txBase64: string }[];
@@ -217,11 +235,28 @@ export async function prepareIndexKeeperStep(
   const keeperPk = address(keeper);
   if (hasUnreconciledSupportBalance(observation.vault)) return { step: "rebalance", eligible: false, reason: NATIVE_SUPPORT_BALANCE_REASON, transactions: [] };
   if (observation.intents > 0) {
-    const intent = getRebalanceIntentPda(new PublicKey(observation.vaultAddress), new PublicKey(observation.vaultAddress)).toBase58();
-    const { payload } = await native.priceUpdateFromVault(observation.vault, keeperPk, intent, observation.bindings);
+    const withdrawal = observation.withdrawalIntents?.[0];
+    const intent = withdrawal?.address ?? getRebalanceIntentPda(new PublicKey(observation.vaultAddress), new PublicKey(observation.vaultAddress)).toBase58();
+    let step: IndexKeeperRebalancePlan["step"] = "prices";
+    let payload;
+    let reason = "Updating Raydium prices for the existing rebalance intent";
+    if (withdrawal?.stage === "redeem") {
+      step = "redeem";
+      reason = "Settling the completed withdrawal auction to the owner";
+      payload = await native.sdk.redeemTokensTx({ keeper: keeperPk, rebalance_intent: intent });
+    } else if (withdrawal?.stage === "claim-bounty") {
+      step = "claim-bounty";
+      reason = "Closing the completed withdrawal auction";
+      payload = await native.sdk.claimBountyTx({ keeper: keeperPk, rebalance_intent: intent });
+    } else if (withdrawal?.stage === "wait") {
+      return { step: "wait", eligible: true, reason: "Withdrawal auction is open; waiting for its settlement window", transactions: [] };
+    } else {
+      const priced = await native.priceUpdateFromVault(observation.vault, keeperPk, intent, observation.bindings);
+      payload = priced.payload;
+    }
     const transactions = payloadTransactions(payload, keeperPk);
     if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
-    return { step: "prices", eligible: true, reason: "Updating Raydium prices for the existing rebalance intent", transactions };
+    return { step, eligible: true, reason, transactions };
   }
   if (observation.eligibility.required !== true) {
     return { step: "rebalance", eligible: false, reason: observation.eligibility.reason, transactions: [] };
@@ -387,7 +422,7 @@ export async function runIndexKeeperTick(args: IndexKeeperArgs, io: IndexKeeperI
   const signed = io.sign(plan.transactions, keypair);
   const submitted = await io.submit({ keeper, signedTransactions: signed });
   const recordedAt = now();
-  const outcome = plan.step === "prices" ? "prices-updated" : "rebalanced";
+  const outcome = plan.step === "prices" ? "prices-updated" : plan.step === "redeem" ? "withdrawal-redeemed" : plan.step === "claim-bounty" ? "withdrawal-closed" : plan.step === "wait" ? "withdrawal-auction-open" : "rebalanced";
   const result: IndexKeeperTickResult = { ...base, mode: "execute", keeper, broadcasts: submitted.signatures.length, signatures: submitted.signatures, outcome, recordedAt };
   await io.recordOutcome(args.indexId, { mode: "execute", outcome, step: plan.step, at: recordedAt, signatures: submitted.signatures, slot: submitted.slot, broadcasts: submitted.signatures.length });
   return result;
