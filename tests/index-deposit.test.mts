@@ -88,7 +88,7 @@ function dependencies(overrides: Record<string, unknown> = {}, buy = firstDeposi
         buyVaultTx: async () => buy, lockDepositsTx: async () => payload("lock"),
       },
     }),
-    release: { publicFundsEnabled: true },
+    release: { publicFundsEnabled: true, publicInvestSign: true },
     ...overrides,
   };
 }
@@ -138,9 +138,17 @@ test("deposit prepare rejects malformed amounts and every closed gate", async ()
   const belowMinimum = await handleIndexDepositPrepare(request({ owner, amountRaw: "999999" }), definition.indexId, dependencies() as never);
   assert.equal(belowMinimum.status, 400);
   assert.deepEqual(await belowMinimum.json(), { error: "Minimum is $1." });
-  const closed = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ release: { publicFundsEnabled: false } }) as never);
+  const closed = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ release: { publicFundsEnabled: false, publicInvestSign: true } }) as never);
   assert.equal(closed.status, 503);
   assert.deepEqual(await closed.json(), { error: "Investing is not open for signatures." });
+  let nativeBuilderCalled = false;
+  const paused = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({
+    release: { publicFundsEnabled: true, publicInvestSign: false },
+    nativeBuilder: () => { nativeBuilderCalled = true; throw new Error("Deposit builder must not run while paused."); },
+  }) as never);
+  assert.equal(paused.status, 503);
+  assert.equal(nativeBuilderCalled, false);
+  assert.deepEqual(await paused.json(), { error: "Investing is not open for signatures." });
   const absent = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ loadDefinition: async () => null }) as never);
   assert.equal(absent.status, 503);
   assert.deepEqual(await absent.json(), { error: "Index not found." });
