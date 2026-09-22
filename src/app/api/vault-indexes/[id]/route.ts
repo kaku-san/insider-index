@@ -47,7 +47,6 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       depositsEnabled: index.depositsEnabled,
       depositReason: index.depositReason,
       publicFundsEnabled: publicCycleIndexEnabled(index),
-      ...(index.reconciledNavUsdc && index.reconciledNavAt ? { reconciledNavUsdc: index.reconciledNavUsdc, reconciledNavAt: index.reconciledNavAt } : {}),
       storage: "supabase",
     }, { headers });
   } catch {

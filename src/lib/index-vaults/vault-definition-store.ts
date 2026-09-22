@@ -168,8 +168,6 @@ export type PublicVaultDefinition = {
   depositsEnabled: boolean;
   /** Per-index public-surface eligibility, added by the public response projector. */
   publicFundsEnabled?: boolean;
-  reconciledNavUsdc?: string | null;
-  reconciledNavAt?: string | null;
   depositReason: string | null;
   coverage: {
     tickerCount?: number;

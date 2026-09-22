@@ -8,7 +8,6 @@ import type { NativeVaultBuilders } from "./symmetry-adapter.ts";
 import type { PublicVaultDefinition } from "./vault-definition-store.ts";
 
 const headers = { "Cache-Control": "no-store" };
-const reconciledNavPattern = /^(0|[1-9][0-9]*)(?:\.([0-9]{1,6}))?$/;
 const tokenPrograms = [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID];
 
 type CreatedIndex = PublicVaultDefinition & { network: Network; vaultAddress: string; shareMint: string };
@@ -97,14 +96,9 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
     shares += account.amount;
   }
   const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString());
-  const nav = typeof index.reconciledNavUsdc === "string" && reconciledNavPattern.test(index.reconciledNavUsdc)
-    ? index.reconciledNavUsdc : null;
-  const navAt = nav && typeof index.reconciledNavAt === "string" && !Number.isNaN(Date.parse(index.reconciledNavAt))
-    ? index.reconciledNavAt : null;
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
     shareDecimals: mint.decimals, sharesRaw: shares.toString(), shareSupplyRaw: mint.supply.toString(),
-    ...(nav && navAt ? { vaultValueUsdc: nav, markedAt: navAt, priceBasis: "reconciled-native-nav" } : {}),
     ...(pendingOperations.length ? { pendingOperations } : {}),
   };
 }
