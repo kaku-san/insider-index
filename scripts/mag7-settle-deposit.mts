@@ -100,15 +100,19 @@ export function parseArgs(argv: readonly string[]): Options {
   return { ...(owner ? { owner } : {}), watchVault, execute, watch, pollMs, ...(keypair ? { keypair } : {}) };
 }
 
-/** Select only finalized/locked deposit intents from the fixed Mag7 vault. */
-export function lockedMag7DepositIntentAddresses(intents: readonly ScanIntent[]): string[] {
+/** Select finalized intents from the fixed Mag7 vault, including user withdrawals. */
+export function lockedMag7IntentAddresses(intents: readonly ScanIntent[]): string[] {
   return intents
     .filter(intent => intent.chain_data.vault.toBase58() === VAULT
-      && intent.chain_data.rebalanceType === RebalanceType.Deposit
+      && (intent.chain_data.rebalanceType === RebalanceType.Deposit || intent.chain_data.rebalanceType === RebalanceType.Withdraw)
       && intent.chain_data.currentAction !== RebalanceAction.DepositTokens
       && intent.chain_data.currentAction !== RebalanceAction.NotActive)
     .map(intent => intent.formatted_data.pubkey)
     .filter((intent, index, all) => all.indexOf(intent) === index);
+}
+
+export function lockedMag7DepositIntentAddresses(intents: readonly ScanIntent[]): string[] {
+  return lockedMag7IntentAddresses(intents.filter(intent => intent.chain_data.rebalanceType === RebalanceType.Deposit));
 }
 
 function loadExternalKeypair(path: string): Keypair {
@@ -190,7 +194,8 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
   const intent = await native.sdk.fetchRebalanceIntent(intentAddress);
   const chain = intent.chain_data;
   const owner = chain.owner.toBase58();
-  if (chain.vault.toBase58() !== VAULT || chain.rebalanceType !== RebalanceType.Deposit || getRebalanceIntentPda(new PublicKey(VAULT), new PublicKey(owner)).toBase58() !== intentAddress) throw new Error("Native intent is not a Mag7 user deposit");
+  if (chain.vault.toBase58() !== VAULT || (chain.rebalanceType !== RebalanceType.Deposit && chain.rebalanceType !== RebalanceType.Withdraw) || getRebalanceIntentPda(new PublicKey(VAULT), new PublicKey(owner)).toBase58() !== intentAddress) throw new Error("Native intent is not a Mag7 user operation");
+  const isWithdrawal = chain.rebalanceType === RebalanceType.Withdraw;
   const action = chain.currentAction;
   const now = Math.floor(Date.now() / 1000);
   if (!options.execute) return { action: "dry-run", owner, intent: intentAddress, nativeAction: intent.formatted_data.current_action, executionStart: chain.executionStartTime.toString(), now, signatures: [], spent };
@@ -203,7 +208,32 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
   if (keeperAddress !== MAG7_KEEPER) throw new Error("MAG7_KEEPER_PUBKEY_MISMATCH");
   const missing = await missingKeeperAtas(native, record, keeperAddress);
   if (missing.length) throw new Error(`Missing keeper ATAs: ${missing.join(", ")}`);
-  if (action === RebalanceAction.DepositTokens) return { action: "wait", reason: "User deposit is not locked/finalized yet", intent: intentAddress, signatures: [], spent };
+  if (action === RebalanceAction.DepositTokens) return { action: "wait", reason: "User operation is not locked/finalized yet", intent: intentAddress, signatures: [], spent };
+
+  if (isWithdrawal && intent.redeem_data) {
+    const payload = await native.sdk.redeemTokensTx({ keeper: keeperAddress, rebalance_intent: intentAddress });
+    const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
+    return { action: "redeem", intent: intentAddress, ...result };
+  }
+
+  if (isWithdrawal && intent.claim_bounty_data) {
+    const payload = await native.sdk.claimBountyTx({ keeper: keeperAddress, rebalance_intent: intentAddress });
+    const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
+    return { action: "cleanup", intent: intentAddress, ...result };
+  }
+
+  if (isWithdrawal && action === RebalanceAction.Auction) {
+    const pairs = getSwapPairs(chain, vault).filter(pair => pair.inMint === MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
+    if (pairs.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount))) throw new Error("This position cannot be sold right now. Please try again later.");
+    if (!pairs.length) return { action: "wait", reason: "No sellable Mag7 withdrawal assets are available yet", intent: intentAddress, signatures: [], spent };
+    const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
+      keeper: keeperAddress, vault: VAULT, rebalance_intent: intentAddress,
+      mint_in: pair.outMint, mint_out: pair.inMint, amount_in: pair.outAmount, amount_out: pair.inAmount,
+    })));
+    const payload = { batches: payloads.flatMap(result => result.batches) };
+    const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
+    return { action: "sell", intent: intentAddress, ...result };
+  }
 
   if (action === RebalanceAction.UpdatePrices) {
     if (now < Number(chain.executionStartTime.toString())) return { action: "wait", reason: "Native execution start time has not arrived", intent: intentAddress, signatures: [], spent };
@@ -270,7 +300,7 @@ export async function settleMag7IntentBurst(
     spent = result.spent;
     // A fill transaction holds at most two swaps. Refresh the intent and immediately
     // prepare the next one while its native auction remains open; polling is idle-only.
-    if (result.action !== "fill" || spent >= MAX_SOL_DEBIT_LAMPORTS) return results;
+    if (!(["fill", "sell"] as const).includes(result.action as "fill" | "sell") || spent >= MAX_SOL_DEBIT_LAMPORTS) return results;
   } while (true);
 }
 
@@ -279,7 +309,7 @@ async function tick(options: Options) {
   await native.assertNetwork();
   const intentAddresses = options.owner
     ? [getRebalanceIntentPda(new PublicKey(VAULT), new PublicKey(options.owner)).toBase58()]
-    : lockedMag7DepositIntentAddresses(await native.sdk.fetchVaultRebalanceIntents(VAULT) as ScanIntent[]);
+    : lockedMag7IntentAddresses(await native.sdk.fetchVaultRebalanceIntents(VAULT) as ScanIntent[]);
   let spent = 0n;
   const results: Array<TickResult | { action: "error"; intent: string; error: string; signatures: []; spent: bigint }> = [];
   for (const intentAddress of intentAddresses) {

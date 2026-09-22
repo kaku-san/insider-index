@@ -252,14 +252,14 @@ export async function prepareIndexKeeperStep(
       payload = await native.sdk.claimBountyTx({ keeper: keeperPk, rebalance_intent: intent });
     } else if (withdrawal?.stage === "auction") {
       const current = await native.sdk.fetchRebalanceIntent(intent);
-      const pairs = getSwapPairs(current.chain_data, observation.vault).filter(pair => pair.outMint === MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
+      const pairs = getSwapPairs(current.chain_data, observation.vault).filter(pair => pair.inMint === MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
       if (!pairs.length) throw new Error("Withdrawal auction has no sellable vault assets");
       if (pairs.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount))) {
         throw new Error("This position cannot be sold right now. Please try again later.");
       }
       const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
         keeper: keeperPk, vault: observation.vaultAddress, rebalance_intent: intent,
-        mint_in: pair.inMint, mint_out: pair.outMint, amount_in: pair.inAmount, amount_out: pair.outAmount,
+        mint_in: pair.outMint, mint_out: pair.inMint, amount_in: pair.outAmount, amount_out: pair.inAmount,
       })));
       step = "auction";
       reason = "Selling withdrawal assets to USDC in the open auction";
