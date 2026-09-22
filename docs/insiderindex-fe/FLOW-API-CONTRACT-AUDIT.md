@@ -173,7 +173,7 @@ These method names describe the native SDK mapping; the public deposit rail curr
 9. Optional USDC conversion spends only `verified credited amount - already sold`, never the wallet's whole balance of that mint.
 10. `COMPLETE_USDC` requires all attributed credits sold or an explicit tested dust policy; otherwise show `PARTIAL_USDC`.
 
-`keep_tokens: [USDC]` is **not** assumed to mean “sell everything to USDC”. Native guaranteed-USDC exit stays disabled until proven by the pinned SDK/IDL and negative tests.
+`keep_tokens: [USDC]` is **not** assumed to mean “sell everything to USDC”. Generic native guaranteed-USDC exit stays disabled until proven by the pinned SDK/IDL and negative tests; the narrow Mag7 auction rail is the separately documented exception.
 
 ---
 

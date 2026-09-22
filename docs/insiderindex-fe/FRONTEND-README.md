@@ -124,7 +124,7 @@ POST /api/indexes/execute
 
 The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Public pages show **Live / Invest** when `publicIndexIsLive` is true (created vault identity + per-index deposit gate). Wallet signing still requires `depositIsEnabled` (that gate plus `publicFundsEnabled`); the separate `publicIndexCanCashOut` predicate currently exposes Cash out only for the installed mainnet Mag7 identity. Lifecycle calls fail closed; indexes without a vault stay Research with no fake Invest. Do not print internal flag names in the UI.
 
-The preparation UI is not a production-readiness claim: wallet ownership proof/session validation, RPC simulation, chain reconciliation and keeper infrastructure remain required before public funds are enabled.
+The preparation UI is not a production-readiness claim: wallet ownership proof/session validation, RPC simulation, chain reconciliation and keeper infrastructure remain required before broader public funding is enabled.
 
 ## Design principles
 
