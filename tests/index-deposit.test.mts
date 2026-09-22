@@ -13,7 +13,7 @@ const { handleIndexDepositPrepare, parseIndexDepositRequest } = await import("..
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const shareMint = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
-const DEPOSIT_RAW = "30000";
+const DEPOSIT_RAW = "1000000";
 
 function transaction(instructions: TransactionInstruction[]) {
   const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions }).compileToV0Message();
@@ -133,11 +133,11 @@ test("deposit prepare still rejects an unknown ancillary program", async () => {
 
 test("deposit prepare rejects malformed amounts and every closed gate", async () => {
   assert.throws(() => parseIndexDepositRequest({ owner, amountRaw: "1", amountUsdc: "1" }), /either amountRaw/);
-  assert.equal(parseIndexDepositRequest({ owner, amountUsdc: "0.03" }).amountRaw, DEPOSIT_RAW);
-  assert.throws(() => parseIndexDepositRequest({ owner, amountUsdc: "0.029999" }), /Minimum is \$0.03/);
-  const belowMinimum = await handleIndexDepositPrepare(request({ owner, amountRaw: "29999" }), definition.indexId, dependencies() as never);
+  assert.equal(parseIndexDepositRequest({ owner, amountUsdc: "1" }).amountRaw, DEPOSIT_RAW);
+  assert.throws(() => parseIndexDepositRequest({ owner, amountUsdc: "0.999999" }), /Minimum is \$1/);
+  const belowMinimum = await handleIndexDepositPrepare(request({ owner, amountRaw: "999999" }), definition.indexId, dependencies() as never);
   assert.equal(belowMinimum.status, 400);
-  assert.deepEqual(await belowMinimum.json(), { error: "Minimum is $0.03." });
+  assert.deepEqual(await belowMinimum.json(), { error: "Minimum is $1." });
   const closed = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ release: { publicFundsEnabled: false } }) as never);
   assert.equal(closed.status, 503);
   assert.deepEqual(await closed.json(), { error: "Investing is not open for signatures." });
