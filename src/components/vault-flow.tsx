@@ -148,7 +148,6 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
     if(!prepared||!wallet.solanaAddress)return;
     setBusy(true);setError(null);
     try{
-      let observed:ObservedOperation|null=null;
       for(const tx of txs){
         const signature=await wallet.signAndSendTransaction(tx.messageBase64,prepared.network);
         await confirmSignature(signature,prepared.network);
@@ -159,7 +158,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
         setPrepared(null);
         setSettlementPosition(null);
         setScreen("submitted");
-      }else if(observed){setPrepared(null);setScreen("submitted");}
+      }else{setPrepared(null);setScreen("submitted");}
     }catch(e){setError(errorText(e));}finally{setBusy(false)}
   }
 

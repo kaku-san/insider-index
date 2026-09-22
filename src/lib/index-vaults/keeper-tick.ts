@@ -26,8 +26,9 @@ import { resolve } from "node:path";
 import { Keypair, PublicKey, VersionedTransaction, type Connection } from "@solana/web3.js";
 import type { Vault } from "@symmetry-hq/sdk";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import { address } from "./amounts.ts";
-import { assertNativeSupportTargets, hasUnreconciledSupportBalance, NATIVE_SUPPORT_BALANCE_REASON, NATIVE_DEFAULT_BINDINGS } from "./native-defaults.ts";
+import { assertNativeSupportTargets, hasUnreconciledSupportBalance, NATIVE_SUPPORT_BALANCE_REASON, NATIVE_DEFAULT_BINDINGS, MAINNET_USDC } from "./native-defaults.ts";
 import {
   KAKU_SAN_NATIVE_TOKEN_CAP, assertNativeTokenCap, kakuSanDrift, kakuSanRebalanceEligibility,
   type KakuSanDriftRow, type KakuSanEligibility,
@@ -134,7 +135,7 @@ export function plannedTrades(drift: readonly KakuSanDriftRow[]): IndexKeeperPla
   });
 }
 
-export type WithdrawalIntentStage = "prices" | "redeem" | "claim-bounty" | "wait" | "unknown";
+export type WithdrawalIntentStage = "prices" | "redeem" | "claim-bounty" | "auction" | "unknown";
 export interface WithdrawalIntent {
   address: string;
   owner: string;
@@ -185,7 +186,7 @@ export async function observeIndexVault(record: PersistedVaultDefinition, native
     const stage: WithdrawalIntentStage = intent.price_updates_data ? "prices"
       : intent.redeem_data ? "redeem"
       : intent.claim_bounty_data ? "claim-bounty"
-      : intent.auction_data ? "wait" : "unknown";
+      : intent.auction_data ? "auction" : "unknown";
     return [{ address: chain.ownAddress.toBase58(), owner: chain.owner.toBase58(), stage }];
   });
   const eligibility = intents.length
@@ -216,7 +217,7 @@ async function readShareSupply(native: NativeVaultBuilders, vault: Vault): Promi
 }
 
 export interface IndexKeeperRebalancePlan {
-  step: "prices" | "redeem" | "claim-bounty" | "rebalance" | "wait";
+  step: "prices" | "auction" | "redeem" | "claim-bounty" | "rebalance" | "wait";
   eligible: boolean;
   reason: string;
   transactions: { txBase64: string }[];
@@ -248,8 +249,17 @@ export async function prepareIndexKeeperStep(
       step = "claim-bounty";
       reason = "Closing the completed withdrawal auction";
       payload = await native.sdk.claimBountyTx({ keeper: keeperPk, rebalance_intent: intent });
-    } else if (withdrawal?.stage === "wait") {
-      return { step: "wait", eligible: true, reason: "Withdrawal auction is open; waiting for its settlement window", transactions: [] };
+    } else if (withdrawal?.stage === "auction") {
+      const current = await native.sdk.fetchRebalanceIntent(intent);
+      const pairs = getSwapPairs(current, observation.vault).filter(pair => pair.outMint === MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
+      if (!pairs.length) throw new Error("Withdrawal auction has no sellable vault assets");
+      const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
+        keeper: keeperPk, vault: observation.vaultAddress, rebalance_intent: intent,
+        mint_in: pair.inMint, mint_out: pair.outMint, amount_in: pair.inAmount, amount_out: pair.outAmount,
+      })));
+      step = "auction";
+      reason = "Selling withdrawal assets to USDC in the open auction";
+      payload = { batches: payloads.flatMap(result => result.batches) };
     } else {
       const priced = await native.priceUpdateFromVault(observation.vault, keeperPk, intent, observation.bindings);
       payload = priced.payload;
@@ -422,7 +432,7 @@ export async function runIndexKeeperTick(args: IndexKeeperArgs, io: IndexKeeperI
   const signed = io.sign(plan.transactions, keypair);
   const submitted = await io.submit({ keeper, signedTransactions: signed });
   const recordedAt = now();
-  const outcome = plan.step === "prices" ? "prices-updated" : plan.step === "redeem" ? "withdrawal-redeemed" : plan.step === "claim-bounty" ? "withdrawal-closed" : plan.step === "wait" ? "withdrawal-auction-open" : "rebalanced";
+  const outcome = plan.step === "prices" ? "prices-updated" : plan.step === "auction" ? "withdrawal-assets-sold" : plan.step === "redeem" ? "withdrawal-redeemed" : plan.step === "claim-bounty" ? "withdrawal-closed" : "rebalanced";
   const result: IndexKeeperTickResult = { ...base, mode: "execute", keeper, broadcasts: submitted.signatures.length, signatures: submitted.signatures, outcome, recordedAt };
   await io.recordOutcome(args.indexId, { mode: "execute", outcome, step: plan.step, at: recordedAt, signatures: submitted.signatures, slot: submitted.slot, broadcasts: submitted.signatures.length });
   return result;
