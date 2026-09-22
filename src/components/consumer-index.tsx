@@ -11,6 +11,7 @@ import { errorText } from "@/lib/frontend/api";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
+import { indexContentFor } from "@/lib/frontend/index-content";
 import { useUI } from "./providers/ui-provider";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
@@ -231,7 +232,8 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   }) && hasIndexShares(position);
   const excluded = index.definition?.excluded ?? [];
   const holdings = sortedHoldings(index);
-  const summary = `A public annual-disclosure model led by ${holdings.slice(0, 4).map((item) => companyNameFor(item.ticker, item.issuer)).join(", ")}.`;
+  const content = indexContentFor(routeId);
+  const summary = content?.portfolioIntro ?? `A public annual-disclosure model led by ${holdings.slice(0, 4).map((item) => companyNameFor(item.ticker, item.issuer)).join(", ")}.`;
   const updated = index.published_at ? new Date(index.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "Unavailable";
   const disclosedCount = resource.data?.coverage?.tickerCount ?? index.constituents.length + excluded.length;
   const activityProfileId = id ? resource.data?.activityProfileId : index.person_id;
@@ -243,8 +245,8 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       <div className={styles.heroCopy}>
         <div className={styles.titleLine}><span>Person index</span><em>{index.period ? `${index.period} annual holdings` : "Annual disclosure"}</em></div>
         <h1>{index.indexName ?? "Person index"}</h1>
-        <p>The stocks in this index, the mix, and how it was built — in one place.</p>
-        <div className={styles.proof}>{index.constituents.length} stocks · updated {updated}</div>
+        <p>{content?.cardHook ?? "The stocks in this index, the mix, and how it was built — in one place."}</p>
+        <div className={styles.proof}>{content?.heroProof ?? `${index.constituents.length} stocks`} · updated {updated}</div>
         <div className={styles.actions}>
           {live ? <button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button> : null}{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
@@ -274,7 +276,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         ? <ActivityTab personId={activityProfileId!} />
         : <div className={styles.activityEmpty}><div className={styles.activityIcon}><Icon name="file" size={22} /></div><h3>Person-specific activity is unavailable.</h3><p>This index does not have a verified bioguide identifier, so InsiderIndex will not guess which disclosure rows belong here.</p><Link href="/feed">Open full disclosure feed <Icon name="arrow" size={13} /></Link></div>) : null}
       {tab === "about" ? <div className={styles.aboutGrid}>
-        <section><span>HOW IT IS BUILT</span><h3>Public filings, published mix</h3><p>{index.definition?.label ?? "This index is built from a public annual disclosure."}</p>{excluded.length ? <p>{excluded.length} disclosed names are not in the published mix.</p> : null}</section>
+        <section><span>HOW IT IS BUILT</span><h3>Public filings, published mix</h3><p>{index.definition?.label ?? "This index is built from a public annual disclosure."}</p>{content?.coverageCopy ? <p>{content.coverageCopy}</p> : null}{excluded.length ? <p>{excluded.length} disclosed names are not in the published mix.</p> : null}</section>
         <section><span>SOURCE</span><h3>Public annual disclosure</h3><p>{index.period ? `Holdings year ${index.period}` : "Holdings year unavailable"} · updated {updated}.</p></section>
         <section className={styles.disclaimer}><span>STATUS</span><h3>{status}</h3><p>{availability}</p></section>
       </div> : null}

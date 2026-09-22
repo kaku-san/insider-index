@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ConsumerIndex } from "@/components/consumer-index";
 import { ThematicIndexPage } from "@/components/thematic-index";
 import { TrackerIndex } from "@/components/tracker-index";
@@ -7,6 +8,28 @@ import { publicCycleIndexEnabled } from "@/lib/index-vaults/public-cycle-release
 import { vaultIndexService } from "@/lib/index-vaults/server";
 import { getThematicView } from "@/lib/thematic/views";
 import { trackerPersonView } from "@/lib/tracker/views";
+import { indexContentFor, shareImageForIndex } from "@/lib/frontend/index-content";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const indexId = id.startsWith("theme-") ? `idx-${id}` : id;
+  const image = shareImageForIndex(indexId);
+  if (!image) return {};
+
+  const thematic = getThematicView(indexId);
+  const definition = thematic ? null : await vaultIndexService.get(indexId).catch(() => null);
+  const title = thematic?.indexName ?? definition?.name ?? "Public filings, mapped";
+  const description = indexContentFor(indexId)?.cardHook ?? "A public-disclosure index from InsiderIndex.";
+  const imageAlt = `${title} share card`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/indexes/${encodeURIComponent(id)}` },
+    openGraph: { title, description, images: [{ url: image, width: 1080, height: 1350, alt: imageAlt }] },
+    twitter: { card: "summary_large_image", title, description, images: [{ url: image, alt: imageAlt }] },
+  };
+}
 
 export default async function IndexPage({
   params,

@@ -31,7 +31,7 @@ function NoPersonIndexNotice({ id }: { id: string }) {
   if (!person) return null;
   return <div className={styles.notice} role="note">
     <Icon name="info" size={15} />
-    <span><strong>No InsiderIndex person index.</strong> {noIndexExplanation(person)} Browse the <Link href="/#themes">thematic research indexes</Link> instead.</span>
+    <span><strong>No InsiderIndex person index.</strong> {noIndexExplanation(person)} Browse the <Link href="/#all-indexes-title">thematic research indexes</Link> instead.</span>
   </div>;
 }
 const savedDate = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
