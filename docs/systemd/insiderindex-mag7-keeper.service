@@ -13,7 +13,7 @@ Group=insiderindex
 WorkingDirectory=/srv/insiderindex/stocklana
 Environment=NODE_ENV=production
 EnvironmentFile=/etc/insiderindex/mag7-keeper.env
-ExecStart=/usr/bin/npm run keeper:mag7-watch -- --keypair /etc/insiderindex/mag7-keeper.json
+ExecStart=/usr/bin/npm run keeper:mag7-watch -- --interval-seconds 15 --keypair /etc/insiderindex/mag7-keeper.json
 Restart=always
 RestartSec=15
 NoNewPrivileges=true

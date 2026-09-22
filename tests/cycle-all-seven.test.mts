@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { register } from "node:module";
 import type { Vault } from "@symmetry-hq/sdk";
 import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import { getVaultFeesPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
@@ -13,6 +14,9 @@ import { completeKeepTokens } from "../src/lib/index-vaults/symmetry-adapter.ts"
 import { buildCycleRoute } from "../src/lib/index-vaults/cycle-routes.ts";
 import { buildCycleFillWire } from "../src/lib/index-vaults/cycle-wire.ts";
 import { attributeCycleClaim, creditSaleAmount, applyCreditSale, assertCycleBacking, assertMintEffects, fractionRaw } from "../src/lib/index-vaults/cycle-accounting.ts";
+
+register("./support/ui-loader.mjs", import.meta.url);
+const { prepareMag7Mint } = await import("../scripts/mag7-settle-deposit.mts");
 
 async function begin(vm: ReturnType<typeof allSevenVm>, amount = 100_000_000n) {
   vm.seed(vm.owner, MAINNET_USDC, amount);
@@ -64,6 +68,12 @@ test("all seven persisted >$10k pools: bounded DEX fills in native auction windo
     assert.equal(filled.size, 7);
     const beforeMint = (await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data;
     vm.time(Number(initial.auctions[2].endTime.toString()) + 1);
+    // This legacy private-cycle fixture buys every name only once. Later auction
+    // target refreshes leave some legs below target: the direct public keeper must
+    // refuse that book, even though the permissionless native program accepts it.
+    await assert.rejects(prepareMag7Mint({ investmentLegMints: definition.vaultLegs.map(leg => leg.mint),
+      tokens: beforeMint.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString(), targetAmount: token.targetAmount.toString() })), wsolMint: WSOL_MINT },
+    () => vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent })), /MAG7_PARTIAL_FILL_DO_NOT_MINT/);
     vm.apply(await vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent }));
     const minted = await vm.balance(vm.owner, vm.shareMint), vault = await vm.native.sdk.fetchVault(vm.vault);
     assert(minted > 0n);

@@ -7,6 +7,7 @@ import { address, hashObject, rawAmount, sdkRawAmount } from "./amounts.ts";
 import { validateAndSimulate } from "./transaction-policy.ts";
 import { kakuSanBuilders } from "./kaku-san-create.ts";
 import { VAULT_RELEASE } from "./release.ts";
+import { assertMag7DepositBacking } from "./mag7-deposit-backing.ts";
 import { networkUsdc, SYMMETRY_PROGRAM_ID, type NativeVaultBuilders } from "./symmetry-adapter.ts";
 import { readVaultDefinition, type PersistedVaultDefinition } from "./vault-definition-store.ts";
 import { PUBLIC_DEPOSIT_MINIMUM_USDC_RAW, publicDepositMinimumMessage } from "./deposit-floor.ts";
@@ -318,6 +319,7 @@ export async function prepareIndexDeposit(indexId: string, input: DepositInput, 
   requireDepositGate(definition, dependencies.release);
   const native = dependencies.nativeBuilder();
   const vault = await assertLiveVault(native, definition, input.owner);
+  assertMag7DepositBacking(vault, definition);
   const buy = await native.sdk.buyVaultTx({
     buyer: input.owner,
     vault_mint: definition.shareMint!,
