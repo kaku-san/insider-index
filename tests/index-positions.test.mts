@@ -3,8 +3,11 @@ import test from "node:test";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
-import { handleIndexPosition, handleIndexPositions, nativeDepositAuctionState, pendingNativeDeposit, pendingNativeOperation, pendingNativeOperationForPosition, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
+import { attachPositionNav, clmmSpotUsdcRaw, handleIndexPosition, handleIndexPositions, holdingsWithVaultBalances, installedRaydiumPool, markedVaultNavUsdc, nativeDepositAuctionState, pendingNativeDeposit, pendingNativeOperation, pendingNativeOperationForPosition, raydiumNavQuote, readOwnedIndexPositions, vaultNavHoldings } from "../src/lib/index-vaults/index-positions.ts";
 import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
+import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
+import { RAYDIUM_ORACLE_KINDS, WSOL_MINT } from "../src/lib/index-vaults/raydium-oracles.ts";
+import { formatVaultShares } from "../src/lib/index-vaults/positions-contract.ts";
 
 const owner = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
@@ -88,4 +91,104 @@ test("position endpoints accept only the connected wallet and return chain-backe
     const response = await handleIndexPositions(request("/api/positions/indexes", wallet), { listIndexes: async () => [index()], readPosition });
     assert.equal(response.status, 400);
   }
+});
+
+const stock = new PublicKey(new Uint8Array(32).fill(7)).toBase58();
+const pk = (value: string) => ({ toBase58: () => value });
+const quote = (amountRaw: string, usdcRaw: string) => ({
+  mint: stock, venue: "raydium" as const, inMint: stock, outMint: MAINNET_USDC, inAmountRaw: amountRaw, outAmountRaw: usdcRaw,
+});
+
+test("vault NAV is USDC plus marked stocks and never the formatted share amount", () => {
+  assert.equal(formatVaultShares("9", 6), "0.000009");
+  assert.equal(markedVaultNavUsdc([{ mint: MAINNET_USDC, amountRaw: "100000000" }], []), "100");
+  assert.equal(markedVaultNavUsdc(
+    [{ mint: MAINNET_USDC, amountRaw: "100000000" }, { mint: stock, amountRaw: "2" }],
+    [quote("2", "50000000")],
+  ), "150");
+  assert.equal(markedVaultNavUsdc([{ mint: MAINNET_USDC, amountRaw: "100000000" }, { mint: stock, amountRaw: "2" }], []), null);
+  assert.equal(markedVaultNavUsdc([{ mint: MAINNET_USDC, amountRaw: "100000000" }, { mint: stock, amountRaw: "2" }], null), null);
+  assert.notEqual(markedVaultNavUsdc(
+    [{ mint: MAINNET_USDC, amountRaw: "100000000" }, { mint: stock, amountRaw: "2" }],
+    [quote("2", "50000000")],
+  ), "0.000009");
+});
+
+test("WSOL support and the share mint are not treated as stock marks", () => {
+  const holdings = vaultNavHoldings({
+    numTokens: 4,
+    composition: [
+      { mint: pk(MAINNET_USDC), amount: { toString: () => "40000000" } },
+      { mint: pk(stock), amount: { toString: () => "1" } },
+      { mint: pk(WSOL_MINT), amount: { toString: () => "1000000000" } },
+      { mint: pk(mint), amount: { toString: () => "9" } },
+    ],
+  }, mint);
+  assert.deepEqual(holdings, [{ mint: MAINNET_USDC, amountRaw: "40000000" }, { mint: stock, amountRaw: "1" }]);
+  assert.equal(markedVaultNavUsdc(holdings!, [quote("1", "10000000")]), "50");
+});
+
+test("token-account balances replace a stale zero composition amount", () => {
+  const slots = [{ mint: MAINNET_USDC, amountRaw: "0" }, { mint: stock, amountRaw: "0" }];
+  const live = holdingsWithVaultBalances(slots, new Map([[stock, 445981n], [MAINNET_USDC, 25000000n]]));
+  assert.deepEqual(live, [{ mint: MAINNET_USDC, amountRaw: "25000000" }, { mint: stock, amountRaw: "445981" }]);
+  assert.equal(markedVaultNavUsdc(live, [quote("445981", "125000000")]), "150");
+  assert.deepEqual(holdingsWithVaultBalances(slots, null), slots);
+});
+
+test("a CLMM spot mark prices the stock leg in USDC and never the formatted share count", () => {
+  const sqrt = (1n << 64n).toString();
+  const oneToken = "100000000";
+  assert.equal(clmmSpotUsdcRaw({ mint0: stock, mint1: MAINNET_USDC, sqrtPriceX64: sqrt, stockMint: stock, amountRaw: oneToken }), oneToken);
+  assert.equal(clmmSpotUsdcRaw({ mint0: MAINNET_USDC, mint1: stock, sqrtPriceX64: sqrt, stockMint: stock, amountRaw: oneToken }), oneToken);
+  assert.equal(clmmSpotUsdcRaw({ mint0: stock, mint1: WSOL_MINT, sqrtPriceX64: sqrt, stockMint: stock, amountRaw: oneToken }), null);
+  assert.equal(clmmSpotUsdcRaw({ mint0: stock, mint1: MAINNET_USDC, sqrtPriceX64: "0", stockMint: stock, amountRaw: oneToken }), null);
+  const quoteFromSpot = raydiumNavQuote({ mint: stock, amountRaw: "3" }, { mint0: stock, mint1: MAINNET_USDC, sqrtPriceX64: sqrt });
+  assert.equal(quoteFromSpot?.outAmountRaw, "3");
+  assert.notEqual(quoteFromSpot?.outAmountRaw, formatVaultShares("9", 6));
+  const pool = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
+  assert.deepEqual(installedRaydiumPool({
+    mint: pk(stock), amount: { toString: () => "1" },
+    oracleAggregator: { numOracles: 2, oracles: [
+      { oracleSettings: { oracleType: 0 }, accountsToLoadLutIds: [0], accountsToLoadLutIndices: [0] },
+      { oracleSettings: { oracleType: RAYDIUM_ORACLE_KINDS.raydium_clmm }, accountsToLoadLutIds: [0], accountsToLoadLutIndices: [1] },
+    ] },
+  }, [{ state: { addresses: [pk(mint), pk(pool)] } }]), { pool, kind: "raydium_clmm" });
+  assert.equal(installedRaydiumPool({ mint: pk(stock), amount: { toString: () => "1" }, oracleAggregator: { numOracles: 1, oracles: [{ oracleSettings: { oracleType: 0 } }] } }), null);
+});
+
+test("a 9/9 Mag7 holder is marked at the full vault NAV, not a dash or 0.000009", async () => {
+  const holdings = [{ mint: MAINNET_USDC, amountRaw: "25000000" }, { mint: stock, amountRaw: "3" }];
+  const position = attachPositionNav({
+    indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner, shareMint: mint,
+    shareDecimals: 6, sharesRaw: "9", shareSupplyRaw: "9",
+  }, holdings, [quote("3", "125000000")]);
+  assert.equal(position.vaultValueUsdc, "150");
+  assert.equal(position.markedValueUsdc, "150");
+  assert.equal(position.priceBasis, "pro-rata-vault-nav");
+  assert.notEqual(position.vaultValueUsdc, formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0));
+  const third = attachPositionNav({
+    indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner, shareMint: mint,
+    shareDecimals: 6, sharesRaw: "3", shareSupplyRaw: "9",
+  }, holdings, [quote("3", "125000000")]);
+  assert.equal(third.markedValueUsdc, "50");
+  const unread = attachPositionNav({
+    indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner, shareMint: mint,
+    shareDecimals: 6, sharesRaw: "9", shareSupplyRaw: "9",
+  }, holdings, null);
+  assert.equal(unread.vaultValueUsdc, undefined);
+  assert.equal(unread.markedValueUsdc, undefined);
+  const one = await handleIndexPosition(request(`/api/indexes/${index().indexId}/position`), index().indexId, {
+    getIndex: async () => index(),
+    readPosition: async (definition, wallet) => attachPositionNav({
+      indexId: definition.indexId, indexName: definition.name, owner: wallet, shareMint: definition.shareMint,
+      shareDecimals: 6, sharesRaw: "9", shareSupplyRaw: "9",
+    }, holdings, [quote("3", "125000000")]),
+  });
+  assert.equal(one.status, 200);
+  assert.deepEqual(await one.json(), {
+    indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner, shareMint: mint,
+    shareDecimals: 6, sharesRaw: "9", shareSupplyRaw: "9", vaultValueUsdc: "150", markedValueUsdc: "150",
+    priceBasis: "pro-rata-vault-nav",
+  });
 });

@@ -87,7 +87,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   const settlementStatus = activeOperation ? plainStatusForOperation(activeOperation) : sharesArrived ? "shares received" : null;
   const name = position?.indexName ?? indexId;
   const sharesText = position ? position.sharesText ?? formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0) : null;
-  const valueText = position ? markedDollars(positionValueUsdc(position)) : "—";
+  const valueText = position ? markedDollars(positionValueUsdc(position) ?? position.markedValueUsdc) : "—";
 
   if (!wallet.solanaAddress) return <div className={styles.page}><Link className={styles.back} href="/positions"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />Your portfolio</Link><div className={styles.gate}><span>POSITION DETAIL</span><h1>Connect to open<br />this position.</h1><p>Connect your wallet to see your shares.</p><WalletButton /></div></div>;
 
