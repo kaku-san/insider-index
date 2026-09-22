@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
-import { handleIndexPosition, handleIndexPositions, pendingNativeDeposit, pendingNativeOperation, pendingNativeOperationForPosition, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
+import { handleIndexPosition, handleIndexPositions, nativeDepositAuctionState, pendingNativeDeposit, pendingNativeOperation, pendingNativeOperationForPosition, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
 import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 
 const owner = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
@@ -45,6 +46,22 @@ test("position endpoint exposes only a chain-backed locked native deposit as pen
   });
   assert.equal(pendingNativeOperationForPosition(withdrawal, vault, mint, owner, "3"), null, "minted dust shares are the receipt; the leftover intent is not resumable");
   assert.deepEqual(pendingNativeOperationForPosition(withdrawal, vault, mint, owner, "0"), pendingNativeOperation(withdrawal, vault, mint, owner));
+});
+
+test("a closed Mag7 deposit auction without basket fills is failed, while an open auction remains pending", () => {
+  const intent = {
+    formatted_data: { pubkey: "native-intent" }, mint_data: null,
+    chain_data: {
+      vault: new PublicKey(vault), owner: new PublicKey(owner), rebalanceType: RebalanceType.Deposit, currentAction: RebalanceAction.Auction,
+      auctions: [{ endTime: new BN(100) }],
+      tokens: [{ mint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), amount: new BN(1) }],
+    },
+  };
+  assert.equal(nativeDepositAuctionState(intent as never, 99_000), "PENDING");
+  assert.equal(nativeDepositAuctionState(intent as never, 101_000), "FAILED");
+  const operation = pendingNativeOperation(intent as never, vault, mint, owner, 101_000)!;
+  assert.equal(operation.phase, "FAILED");
+  assert.deepEqual(operation.blockers, ["This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares."]);
 });
 
 test("position endpoints accept only the connected wallet and return chain-backed positions", async () => {

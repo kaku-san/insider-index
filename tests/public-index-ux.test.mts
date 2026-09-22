@@ -8,7 +8,7 @@ import { getThematicView } from "../src/lib/thematic/views.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { ThematicIndexPage } = await import("../src/components/thematic-index.tsx");
-const { VaultFlow } = await import("../src/components/vault-flow.tsx");
+const { VaultFlow, sharesIncreasedAfterSignature } = await import("../src/components/vault-flow.tsx");
 const { WalletConnectSheet } = await import("../src/components/wallet-connect-sheet.tsx");
 const { PrivySolanaContext, PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
@@ -76,8 +76,10 @@ test("invest sheet uses plain language and skips a separate review step", () => 
       },
     },
   })));
-  assert.match(html, /Enter an amount in USDC\. After wallet approval, a keeper settles your deposit\. Shares may take a short time to appear\./);
+  assert.match(html, /Choose USDC to start a Mag7 auction\. Small amounts may buy only some names or none\./);
   assert.match(html, /Alpha software — experimental; you can lose funds\./);
+  assert.match(html, /value="1"/);
+  assert.match(html, /USDC in this wallet/);
   assert.match(html, /Minimum is \$1\./);
   for (const preset of [1, 5, 10, 25, 50]) assert.match(html, new RegExp(`>\\$${preset}<`));
   assert.doesNotMatch(html, />\$250</);
@@ -138,6 +140,12 @@ test("Mag7 invest sheet keeps dust shares visible", () => {
   assert.match(html, /0\.000003 shares/);
 });
 
+test("shares received requires an increase after this signature, not old dust", () => {
+  assert.equal(sharesIncreasedAfterSignature("3", { sharesRaw: "3" }), false);
+  assert.equal(sharesIncreasedAfterSignature("3", { sharesRaw: "4" }), true);
+  assert.equal(sharesIncreasedAfterSignature("3", { sharesRaw: "bad" }), false);
+});
+
 test("Mag7 cash out uses the position's verified dust decimals", () => {
   const html = renderToStaticMarkup(wrap(createElement(VaultFlow, {
     open: true, onClose() {}, indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", mode: "withdraw",
@@ -150,6 +158,6 @@ test("Mag7 cash out uses the position's verified dust decimals", () => {
   assert.match(html, /value="0\.000003"/);
   assert.match(html, /Cash out\./);
   assert.match(html, /1 approval now/);
-  assert.match(html, /USDC arrives after settlement/);
+  assert.match(html, /USDC auction/);
   assert.doesNotMatch(html, /verified share decimals|claim every asset|Exit mechanics/i);
 });
