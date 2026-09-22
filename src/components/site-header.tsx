@@ -10,8 +10,6 @@ import { BrandMark, Icon } from "@/components/social/icon";
 
 const nav = [
   { label: "Explore", href: "/", icon: "grid" },
-  { label: "Feed", href: "/feed", icon: "file" },
-  { label: "Following", href: "/following", icon: "people" },
   { label: "Positions", href: "/positions", icon: "wallet" },
 ] as const;
 
