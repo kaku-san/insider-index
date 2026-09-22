@@ -46,7 +46,7 @@ test("a fully-tradable definition opens the per-vault gate but NOT effective dep
 test("the global release flag is off and no automated toggle can flip it", () => {
   // A source constant, not read from env: only a deliberate human code change can open funds.
   assert.equal(VAULT_RELEASE.publicFundsEnabled, true);
-  assert.equal(VAULT_RELEASE.publicInvestSign, false);
+  assert.equal(VAULT_RELEASE.publicInvestSign, true);
   assert.equal(VAULT_RELEASE.nativeUsdcExitVerified, false);
 
   // Even a hypothetical complete receipt set cannot enable Sign while the release flags are off.

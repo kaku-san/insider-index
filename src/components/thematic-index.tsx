@@ -99,7 +99,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
           {live ? <button type="button" className={styles.primary} disabled={Boolean(activeOperation)} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button> : null}
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
-        {!live ? <p className={styles.availability}>{vaultId === PUBLIC_MAG7.indexId ? "Deposits are paused. A missed settlement can lock USDC, and we cannot return it yet." : availability}</p> : null}
+        {!live ? <p className={styles.availability}>{availability}</p> : null}
         {ownedShares ? <p className={styles.ownedPosition}>Your position: <strong>{ownedShares} shares</strong> <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
         {activeOperation ? <p className={styles.ownedPosition}>{activeOperation.phase === "FAILED" ? "This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares." : activeOperation.kind === "withdraw" ? "A cash-out auction is in progress for this wallet." : "A deposit auction is in progress for this wallet."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}

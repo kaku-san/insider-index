@@ -47,7 +47,7 @@ test("clicking Mag7 shows stocks, breakdown, and Invest on one page", () => {
   assert.doesNotMatch(html, /Research only|Deposits closed|token mapped|Pool ready|publicFundsEnabled|VAULT_RELEASE|View holdings/);
 });
 
-test("paused Mag7 removes Invest but keeps the index page visible", () => {
+test("Mag7 without public funds hides Invest without paused deposit copy", () => {
   const view = getThematicView("idx-theme-mag7-caucus");
   assert.ok(view);
   const html = renderToStaticMarkup(wrap(createElement(ThematicIndexPage, {
@@ -55,7 +55,8 @@ test("paused Mag7 removes Invest but keeps the index page visible", () => {
     initialData: { index: view, storage: "static-feed" },
     initialVault: { ...mag7Vault, publicFundsEnabled: false },
   })));
-  assert.match(html, /Deposits are paused\. A missed settlement can lock USDC, and we cannot return it yet\./);
+  assert.doesNotMatch(html, /Deposits are paused/);
+  assert.match(html, /This index has a vault\. Investing is not open yet\./);
   assert.doesNotMatch(html, />Invest</);
   assert.match(html, />Stocks</);
   assert.match(html, />Breakdown</);
