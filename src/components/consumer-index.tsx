@@ -51,21 +51,6 @@ function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
 }
 
-export function IndexPerformancePlaceholder() {
-  return <section className={styles.performance} aria-label="Index performance">
-    <div className={styles.performanceTop}>
-      <div><span>PERFORMANCE</span><strong>—</strong><small>1Y return</small></div>
-      <div className={styles.periods} aria-label="Performance period">
-        <button type="button">1M</button><button type="button">3M</button><button type="button" className={styles.periodActive}>1Y</button><button type="button">ALL</button>
-      </div>
-    </div>
-    <div className={styles.chartShell}>
-      <svg viewBox="0 0 800 180" preserveAspectRatio="none" aria-hidden="true"><path d="M5 118 C95 118, 115 80, 190 96 S305 138, 360 102 S475 74, 545 94 S665 120, 795 86" /></svg>
-      <div><strong>Performance series not live yet</strong><span>This panel is ready for a verified dated price series. InsiderIndex does not invent historical returns.</span></div>
-    </div>
-  </section>;
-}
-
 function TopHoldings({ index }: { index: PublishedIndex }) {
   const rows = sortedHoldings(index).slice(0, 5);
   const max = Math.max(...rows.map((item) => item.weight_bps), 1);
@@ -232,10 +217,8 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
       </div>
-      <div className={styles.returnHero}><span>1Y RETURN</span><strong>—</strong><small>Awaiting dated series</small></div>
     </section>
 
-    <IndexPerformancePlaceholder />
     <section className={styles.statStrip}>
       <div><span>Stocks</span><strong>{index.constituents.length}</strong><small>{index.period ? `${index.period} holdings` : "published mix"}</small></div>
       <div><span>Names in the source</span><strong>{disclosedCount}</strong></div>

@@ -8,7 +8,7 @@ import type { ThematicIndexView } from "@/lib/thematic/views";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { Icon } from "./social/icon";
-import { IndexPerformancePlaceholder, type IndexResourceResponse } from "./consumer-index";
+import type { IndexResourceResponse } from "./consumer-index";
 import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
@@ -103,10 +103,8 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
         {pendingOperations.length ? <p className={styles.ownedPosition}>{pendingOperations[0].kind === "withdraw" ? "Cash out pending settlement." : "Deposit pending settlement."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}
       </div>
-      <div className={styles.returnHero}><span>1Y RETURN</span><strong>—</strong><small>Awaiting dated series</small></div>
     </section>
 
-    <IndexPerformancePlaceholder />
     <section className={styles.statStrip}>
       <div><span>Stocks</span><strong>{holdings.length}</strong></div>
       <div><span>Members</span><strong>{index.members.length}</strong></div>

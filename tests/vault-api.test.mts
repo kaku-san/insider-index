@@ -6,7 +6,7 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { creditHasRemainingAmount, depositIsEnabled, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, publicVaultDepositIsEnabled, uiStateFrom, validatePreparedStep, vaultReadinessFromIndex } = await import("../src/lib/frontend/vault-api.ts");
+const { creditHasRemainingAmount, depositIsEnabled, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, publicVaultDepositIsEnabled, uiStateFrom, validatePreparedStep, vaultReadinessFromIndex } = await import("../src/lib/frontend/vault-api.ts");
 const { markedDollars, moneyBand, stockActBandFromMidpoint } = await import("../src/lib/frontend/research-format.ts");
 
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
@@ -55,6 +55,16 @@ test("unavailable marked values never render as zero", () => {
   assert.equal(markedDollars(""), "—");
   assert.equal(markedDollars("  "), "—");
   assert.equal(markedDollars("0"), "$0.00");
+});
+
+test("position value display stays unavailable when the share supply is zero", () => {
+  assert.equal(markedDollars(positionValueUsdc({ sharesRaw: "500000", shareSupplyRaw: "0", vaultValueUsdc: "100" })), "—");
+  assert.equal(markedDollars(positionValueUsdc({ sharesRaw: "500000", shareSupplyRaw: "1000000", vaultValueUsdc: null })), "—");
+});
+
+test("position value display uses the wallet's pro-rata share of a current vault value", () => {
+  assert.equal(markedDollars(positionValueUsdc({ sharesRaw: "250000", shareSupplyRaw: "1000000", vaultValueUsdc: "100" })), "$25.00");
+  assert.equal(markedDollars(positionValueUsdc({ sharesRaw: "1", shareSupplyRaw: "3", vaultValueUsdc: "1" })), "$0.33");
 });
 
 test("undisclosed and invalid money bands never render zero", () => {

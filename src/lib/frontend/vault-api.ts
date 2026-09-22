@@ -134,6 +134,9 @@ export type IndexSharePosition = {
   shareDecimals?: number;
   sharesRaw: RawAmount;
   sharesText?: string;
+  /** Optional current mark inputs. A position value is absent until both are supplied. */
+  shareSupplyRaw?: RawAmount;
+  vaultValueUsdc?: string | null;
   markedValueUsdc?: string | null;
   markedAt?: string | null;
   priceBasis?: string | null;
@@ -146,6 +149,22 @@ export type VaultUiState = "NO_VAULT" | "PREVIEW_ONLY" | "PREPARE_BLOCKED" | "LI
 export function hasIndexShares(position?: IndexSharePosition | null): boolean {
   try { return Boolean(position && rawAmountPattern.test(position.sharesRaw) && BigInt(position.sharesRaw) > 0n); }
   catch { return false; }
+}
+
+const usdcValuePattern = /^(0|[1-9][0-9]*)(?:\.([0-9]{1,6}))?$/;
+
+/** A wallet's pro-rata value from a current vault mark. Missing or zero marks remain unavailable. */
+export function positionValueUsdc(position: Pick<IndexSharePosition, "sharesRaw" | "shareSupplyRaw" | "vaultValueUsdc">): string | null {
+  if (!rawAmountPattern.test(position.sharesRaw) || !position.shareSupplyRaw || !rawAmountPattern.test(position.shareSupplyRaw)) return null;
+  const match = typeof position.vaultValueUsdc === "string" ? usdcValuePattern.exec(position.vaultValueUsdc) : null;
+  if (!match) return null;
+  const supply = BigInt(position.shareSupplyRaw);
+  const vaultValueMicroUsdc = BigInt(match[1]) * 1_000_000n + BigInt((match[2] ?? "").padEnd(6, "0") || "0");
+  if (supply === 0n || vaultValueMicroUsdc === 0n) return null;
+  const valueMicroUsdc = BigInt(position.sharesRaw) * vaultValueMicroUsdc / supply;
+  const whole = valueMicroUsdc / 1_000_000n;
+  const fraction = (valueMicroUsdc % 1_000_000n).toString().padStart(6, "0").replace(/0+$/, "");
+  return fraction ? `${whole}.${fraction}` : whole.toString();
 }
 
 export const DEPOSIT_PHASES = [
