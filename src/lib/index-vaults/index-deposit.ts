@@ -15,6 +15,7 @@ const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
 
 type DepositInput = { owner: string; amountRaw: string; idempotencyKey?: string };
+type DepositRelease = { publicFundsEnabled: boolean; publicInvestSign: boolean };
 type PreparedTransaction = {
   stepId: string;
   messageBase64: string;
@@ -30,7 +31,7 @@ type PreparedTransaction = {
 export type IndexDepositDependencies = {
   loadDefinition: (indexId: string) => Promise<PersistedVaultDefinition | null>;
   nativeBuilder: () => NativeVaultBuilders;
-  release: Pick<typeof VAULT_RELEASE, "publicFundsEnabled">;
+  release: DepositRelease;
 };
 
 function defaultDependencies(): IndexDepositDependencies {
@@ -77,12 +78,12 @@ export function parseIndexDepositRequest(body: unknown): DepositInput {
   return { owner: input.owner, amountRaw, ...(typeof input.idempotencyKey === "string" ? { idempotencyKey: input.idempotencyKey } : {}) };
 }
 
-function requireDepositGate(definition: PersistedVaultDefinition, release: Pick<typeof VAULT_RELEASE, "publicFundsEnabled">) {
+function requireDepositGate(definition: PersistedVaultDefinition, release: DepositRelease) {
   if (definition.network !== "mainnet-beta") throw new Error("This vault is not on mainnet.");
   if (!definition.vaultAddress || !definition.shareMint) throw new Error("This index does not have a created vault.");
   address(definition.vaultAddress); address(definition.shareMint);
   if (definition.depositsEnabled !== true) throw new Error("This vault is not accepting deposits.");
-  if (release.publicFundsEnabled !== true) throw new Error("Investing is not open for signatures.");
+  if (release.publicFundsEnabled !== true || release.publicInvestSign !== true) throw new Error("Investing is not open for signatures.");
 }
 
 function payloadInstructions(tx: TxPayload): TransactionInstruction[] {

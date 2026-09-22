@@ -3,11 +3,11 @@ export const VAULT_RELEASE = {
   mode: "native-vault-full-cycle-gated",
   publicFundsEnabled: true,
   nativeUsdcExitVerified: false,
-  publicInvestSign: true,
+  publicInvestSign: false,
   hostEntryFeeBps: 25,
   hostExitFeeBps: 0,
   exitMode: "zap-usdc-only-unproven",
-  status: "MAG7_PUBLIC_INVEST_TEST",
+  status: "MAG7_DEPOSITS_PAUSED",
 } as const;
 export function unavailableVaultResponse(): Response {
   return Response.json({ ...VAULT_RELEASE, error: "Native index investing is disabled until create→mint→rebalance→USDC-out has a receipt. Individual copy trades remain separate." }, { status: 503, headers: { "Cache-Control": "no-store" } });

@@ -63,7 +63,7 @@ test("the tracker-first person page labels every tracker figure PelosiTracker ·
   assert.match(index, /no solana mint/);
   assert.match(index, /10,000 bps|No investable slice yet/);
   assert.match(index, /trades not used/);
-  assert.match(index, /Public funds remain disabled \(MAG7_PUBLIC_INVEST_TEST\)/);
+  assert.match(index, /Public funds remain disabled \(MAG7_DEPOSITS_PAUSED\)/);
   assert.match(index, /href="\/indexes\/tracker-P000197"/);
   // FMP comparison on the same bioguide: both sides present.
   const compare = html.slice(html.indexOf('id="compare-title"'), html.indexOf('id="sectors-title"'));

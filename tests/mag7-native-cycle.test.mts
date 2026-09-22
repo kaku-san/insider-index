@@ -142,6 +142,6 @@ test("deployed native IOC + Jupiter token ledger executes captured real Raydium 
     const credited = (await vm.native.sdk.fetchRebalanceIntent(intentAddress)).chain_data.tokens.find(t => t.mint.toBase58() === pair.inMint)!;
     assert.equal(credited.amount.toString(), "165970");
     assert.equal(credited.targetAmount.toString(), "165970");
-    assert.equal(VAULT_RELEASE.publicInvestSign, true);
+    assert.equal(VAULT_RELEASE.publicInvestSign, false);
   });
 });

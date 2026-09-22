@@ -47,6 +47,20 @@ test("clicking Mag7 shows stocks, breakdown, and Invest on one page", () => {
   assert.doesNotMatch(html, /Research only|Deposits closed|token mapped|Pool ready|publicFundsEnabled|VAULT_RELEASE|View holdings/);
 });
 
+test("paused Mag7 removes Invest but keeps the index page visible", () => {
+  const view = getThematicView("idx-theme-mag7-caucus");
+  assert.ok(view);
+  const html = renderToStaticMarkup(wrap(createElement(ThematicIndexPage, {
+    id: "idx-theme-mag7-caucus",
+    initialData: { index: view, storage: "static-feed" },
+    initialVault: { ...mag7Vault, publicFundsEnabled: false },
+  })));
+  assert.match(html, /Deposits are paused\. A missed settlement can lock USDC, and we cannot return it yet\./);
+  assert.doesNotMatch(html, />Invest</);
+  assert.match(html, />Stocks</);
+  assert.match(html, />Breakdown</);
+});
+
 test("a research theme without a vault does not fake Invest", () => {
   const view = getThematicView("idx-theme-silicon-hill");
   assert.ok(view);
