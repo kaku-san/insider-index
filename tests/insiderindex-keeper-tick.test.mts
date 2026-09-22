@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { Keypair } from "@solana/web3.js";
 import {
   assertCreatedVault, assertIndexKeeper, assertNotWebAppKeypair, formatKeeperReport, loadKeeperKeypair,
-  parseIndexKeeperArgs, plannedTrades, runIndexKeeperTick,
+  parseIndexKeeperArgs, plannedTrades, runIndexKeeperTick, withdrawalAuctionSales,
   type IndexKeeperIo, type IndexKeeperObservation,
 } from "../src/lib/index-vaults/keeper-tick.ts";
 import { recordRebalanceOutcome, type PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
@@ -208,6 +208,23 @@ test("runIndexKeeperTick refuses an uncreated index before any observe or record
   );
   assert.equal(observed, false);
   assert.equal(recorded.length, 0, "a refused index records nothing");
+});
+
+test("withdrawal auction selects every stock sale to USDC and refuses an unsellable auction", () => {
+  const stockA = Keypair.generate().publicKey.toBase58();
+  const stockB = Keypair.generate().publicKey.toBase58();
+  const usdc = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+  const sales = withdrawalAuctionSales([
+    { inMint: usdc, outMint: stockA, inAmount: 99, outAmount: 1 },
+    { inMint: stockA, outMint: usdc, inAmount: 10, outAmount: 100 },
+    { inMint: stockB, outMint: usdc, inAmount: 20, outAmount: 200 },
+  ]);
+  assert.deepEqual(sales, [
+    { inMint: stockA, outMint: usdc, inAmount: 10, outAmount: 100 },
+    { inMint: stockB, outMint: usdc, inAmount: 20, outAmount: 200 },
+  ]);
+  assert.throws(() => withdrawalAuctionSales([{ inMint: usdc, outMint: stockA, inAmount: 1, outAmount: 1 }]), /cannot be settled to USDC/);
+  assert.throws(() => withdrawalAuctionSales([{ inMint: stockA, outMint: usdc, inAmount: Number.MAX_SAFE_INTEGER + 1, outAmount: 1 }]), /cannot be settled to USDC/);
 });
 
 test("planned trades read buy underweight / sell overweight from drift", () => {

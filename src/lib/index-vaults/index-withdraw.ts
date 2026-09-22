@@ -16,6 +16,7 @@ const REQUEST_LIMIT = 4096;
 const INIT_REBALANCE_INTENT = Buffer.from([127, 215, 41, 110, 244, 179, 131, 7]);
 const CREATE_REBALANCE_INTENT = Buffer.from([120, 80, 245, 123, 212, 149, 163, 47]);
 const RESIZE_REBALANCE_INTENT = Buffer.from([71, 204, 243, 183, 209, 118, 111, 94]);
+const UNSIMULABLE_CASH_OUT = "This cash out cannot be settled to USDC right now. Please try again later.";
 
 type WithdrawalInput = { owner: string; shareAmountRaw: string; requestedExitMode: "verified-native-usdc"; idempotencyKey?: string };
 type PayloadTransaction = { tx_b64: string; recent_blockhash: string; last_valid_block_height: number; payer: string; lookup_tables: unknown[] };
@@ -42,9 +43,9 @@ function plainError(error: unknown, status = 503) {
     "Invalid index ID.", "Request too large.", "A cash out request is required.", "Unexpected cash out field.",
     "Wallet owner is required.", "Share amount is required.", "USDC cash out is required.", "Idempotency key is invalid.",
     "Cash out is not available for this vault.", "This vault is not on mainnet.", "Cash out is not open for signatures.",
-    "Index not found.", "A cash out is already settling for this wallet.", "This position cannot be sold right now. Please try again later.",
+    "Index not found.", "A cash out is already settling for this wallet.", UNSIMULABLE_CASH_OUT,
   ].includes(message);
-  return Response.json({ error: safe ? message : "This position cannot be sold right now. Please try again later." }, { status, headers: HEADERS });
+  return Response.json({ error: safe ? message : UNSIMULABLE_CASH_OUT }, { status, headers: HEADERS });
 }
 
 export function parseIndexWithdrawalRequest(body: unknown): WithdrawalInput {
@@ -127,7 +128,7 @@ export async function prepareIndexWithdrawal(indexId: string, input: WithdrawalI
   try {
     transaction = await validateAndSimulate(native.connection, { stepId: "cash-out-auction", transactionBase64: source.tx_b64, lastValidBlockHeight: source.last_valid_block_height }, transactionPolicy(instructions, input.owner, definition.shareMint!, input.shareAmountRaw));
   } catch {
-    throw new Error("This position cannot be sold right now. Please try again later.");
+    throw new Error(UNSIMULABLE_CASH_OUT);
   }
   const operationId = `withdraw-${hashObject({ indexId, owner: input.owner, sharesRaw: input.shareAmountRaw, key: input.idempotencyKey ?? "" }).slice(0, 32)}`;
   return {
