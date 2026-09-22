@@ -8,7 +8,7 @@ import type { ThematicIndexView } from "@/lib/thematic/views";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { Icon } from "./social/icon";
-import type { IndexResourceResponse } from "./consumer-index";
+import { IndexPerformanceLine, type IndexResourceResponse } from "./consumer-index";
 import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
@@ -105,6 +105,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
       </div>
     </section>
 
+    <IndexPerformanceLine performance={vaultResource.data?.performance} />
     <section className={styles.statStrip}>
       <div><span>Stocks</span><strong>{holdings.length}</strong></div>
       <div><span>Members</span><strong>{index.members.length}</strong></div>

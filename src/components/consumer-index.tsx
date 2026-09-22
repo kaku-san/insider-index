@@ -30,7 +30,10 @@ export type IndexCoverage = {
   poolReadyOfMappedBps?: number;
 };
 export type UnmappedIndexLeg = { ticker: string; name?: string | null; bookWeightBps?: number; reason?: string };
+export type IndexPerformancePoint = { observedAt: string; value: number };
+export type IndexPerformance = { vault: IndexPerformancePoint[]; sp500: IndexPerformancePoint[] };
 export type IndexResourceResponse = Omit<PublishedIndexResponse, "index"> & {
+  performance?: IndexPerformance;
   index: PublishedIndex & {
     vaultAddress?: string | null;
     shareMint?: string | null;
@@ -49,6 +52,23 @@ type ActivityResponse = { disclosures: Disclosure[]; total: number; hasMore?: bo
 
 function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
+}
+
+function performanceReturn(points: IndexPerformancePoint[]): number | null {
+  const valid = points.filter(point => Number.isFinite(point.value) && point.value > 0 && Number.isFinite(Date.parse(point.observedAt)))
+    .sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
+  if (valid.length < 2) return null;
+  return (valid.at(-1)!.value / valid[0].value - 1) * 100;
+}
+
+export function IndexPerformanceLine({ performance }: { performance?: IndexPerformance }) {
+  const vaultReturn = performanceReturn(performance?.vault ?? []);
+  const benchmarkReturn = performanceReturn(performance?.sp500 ?? []);
+  const hasDatedVaultValue = (performance?.vault ?? []).some(point => Number.isFinite(point.value) && Number.isFinite(Date.parse(point.observedAt)));
+  if (vaultReturn === null || benchmarkReturn === null) {
+    return <p className={styles.performanceLine}>Performance versus S&amp;P: {hasDatedVaultValue ? "awaiting a second dated vault value and benchmark series." : "unavailable until a dated vault value exists."}</p>;
+  }
+  return <p className={styles.performanceLine}>Performance versus S&amp;P: {vaultReturn >= 0 ? "+" : ""}{vaultReturn.toFixed(1)}% vs {benchmarkReturn >= 0 ? "+" : ""}{benchmarkReturn.toFixed(1)}%.</p>;
 }
 
 function TopHoldings({ index }: { index: PublishedIndex }) {
@@ -219,6 +239,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       </div>
     </section>
 
+    <IndexPerformanceLine performance={resource.data?.performance} />
     <section className={styles.statStrip}>
       <div><span>Stocks</span><strong>{index.constituents.length}</strong><small>{index.period ? `${index.period} holdings` : "published mix"}</small></div>
       <div><span>Names in the source</span><strong>{disclosedCount}</strong></div>
