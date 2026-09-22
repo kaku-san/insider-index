@@ -65,6 +65,8 @@ test("position value display stays unavailable when the share supply is zero", (
 test("position value display uses the wallet's pro-rata share of a current vault value", () => {
   assert.equal(markedDollars(positionValueUsdc({ sharesRaw: "250000", shareSupplyRaw: "1000000", vaultValueUsdc: "100" })), "$25.00");
   assert.equal(markedDollars(positionValueUsdc({ sharesRaw: "1", shareSupplyRaw: "3", vaultValueUsdc: "1" })), "$0.33");
+  assert.equal(markedDollars(positionValueUsdc({ sharesRaw: "9", shareSupplyRaw: "9", vaultValueUsdc: "150" })), "$150.00");
+  assert.notEqual(positionValueUsdc({ sharesRaw: "9", shareSupplyRaw: "9", vaultValueUsdc: "150" }), "0.000009");
 });
 
 test("undisclosed and invalid money bands never render zero", () => {
