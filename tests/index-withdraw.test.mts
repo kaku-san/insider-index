@@ -39,7 +39,7 @@ const definition = {
   depositsEnabled: true, depositReason: null, bookSource: null, provenance: {}, vaultAddress: vault, shareMint, vaultLegs: [],
   keeper: { pubkey: "keeper", automationEnabled: true }, hostEntryFeeBps: 25, hostExitFeeBps: 0,
 };
-function dependencies(payload = auctionPayload()) {
+function dependencies(payload = auctionPayload(), simulationError: unknown = null) {
   return {
     loadDefinition: async () => definition,
     nativeBuilder: () => ({
@@ -48,7 +48,7 @@ function dependencies(payload = auctionPayload()) {
         getAccountInfo: async () => null,
         getAddressLookupTable: async () => ({ value: null }),
         getBlockHeight: async () => 1,
-        simulateTransaction: async () => ({ context: { slot: 42 }, value: { err: null, logs: ["auction simulation"] } }),
+        simulateTransaction: async () => ({ context: { slot: 42 }, value: { err: simulationError, logs: ["auction simulation"] } }),
       },
       sdk: {
         fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint), numTokens: 1, composition: [{ mint: new PublicKey(stockMint) }], settings: { bountyMint: NATIVE_MINT } }),
@@ -81,6 +81,17 @@ test("withdraw prepare returns one simulated user-signed empty-keep auction for 
   assert.equal(init.data.readBigUInt64LE(69), 3n, "exact share burn");
   assert.equal(init.data.readBigUInt64LE(109), 0n, "empty keep mask routes through the auction");
   assert.equal(init.data[125], 0, "keep-all is disabled");
+  assert.deepEqual(instructions.filter(instruction => instruction.programId.equals(TOKEN_PROGRAM_ID)).map(instruction => Array.from(instruction.data)), [[17]], "the one user approval only syncs the bounty wrap; it never delegates wallet tokens to the keeper");
+});
+
+test("withdraw prepare refuses in plain language when the USDC auction cannot simulate", async () => {
+  const response = await handleIndexWithdrawalPrepare(
+    request({ owner, shareAmountRaw: "3", requestedExitMode: "verified-native-usdc" }),
+    definition.indexId,
+    dependencies(auctionPayload(), { InstructionError: [0, "AuctionUnavailable"] }) as never,
+  );
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: "This cash out cannot be settled to USDC right now. Please try again later." });
 });
 
 test("withdraw request refuses in-kind mode, malformed shares, and other vaults", async () => {

@@ -142,6 +142,26 @@ export interface WithdrawalIntent {
   stage: WithdrawalIntentStage;
 }
 
+export interface WithdrawalAuctionPair {
+  inMint: string;
+  outMint: string;
+  inAmount: number;
+  outAmount: number;
+}
+
+/**
+ * A withdrawal auction pays the keeper USDC (`outMint`) for vault stock (`inMint`).
+ * Select every sell in the currently open auction so the keeper can settle the whole
+ * cash-out burst without any authority over the withdrawing wallet.
+ */
+export function withdrawalAuctionSales(pairs: readonly WithdrawalAuctionPair[]): WithdrawalAuctionPair[] {
+  const sales = pairs.filter(pair => pair.outMint === MAINNET_USDC && pair.inMint !== MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
+  if (!sales.length || sales.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount))) {
+    throw new Error("This cash out cannot be settled to USDC right now. Please try again later.");
+  }
+  return sales;
+}
+
 export interface IndexKeeperObservation {
   vault: Vault;
   vaultAddress: string;
@@ -252,11 +272,9 @@ export async function prepareIndexKeeperStep(
       payload = await native.sdk.claimBountyTx({ keeper: keeperPk, rebalance_intent: intent });
     } else if (withdrawal?.stage === "auction") {
       const current = await native.sdk.fetchRebalanceIntent(intent);
-      const pairs = getSwapPairs(current.chain_data, observation.vault).filter(pair => pair.inMint === MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
-      if (!pairs.length) throw new Error("Withdrawal auction has no sellable vault assets");
-      if (pairs.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount))) {
-        throw new Error("This position cannot be sold right now. Please try again later.");
-      }
+      const pairs = withdrawalAuctionSales(getSwapPairs(current.chain_data, observation.vault));
+      // Prepare every native fill together, as for a deposit auction. The keeper pays the
+      // vault's quoted USDC and receives stock; it never receives a wallet-token delegate.
       const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
         keeper: keeperPk, vault: observation.vaultAddress, rebalance_intent: intent,
         mint_in: pair.outMint, mint_out: pair.inMint, amount_in: pair.outAmount, amount_out: pair.inAmount,

@@ -12,7 +12,7 @@ import { address } from "../src/lib/index-vaults/amounts.ts";
 import { buildCycleFillWire } from "../src/lib/index-vaults/cycle-wire.ts";
 import { buildCycleRoute } from "../src/lib/index-vaults/cycle-routes.ts";
 import { kakuSanBuilders, kakuSanConnection, simulateUnsigned } from "../src/lib/index-vaults/kaku-san-create.ts";
-import { assertIndexKeeper, legBindings } from "../src/lib/index-vaults/keeper-tick.ts";
+import { assertIndexKeeper, legBindings, withdrawalAuctionSales } from "../src/lib/index-vaults/keeper-tick.ts";
 import { MAINNET_USDC, NATIVE_DEFAULT_BINDINGS, assertNativeSupportTargets } from "../src/lib/index-vaults/native-defaults.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyVault, WSOL_MINT } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { createServiceSupabase } from "../src/lib/supabase.ts";
@@ -223,9 +223,9 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
   }
 
   if (isWithdrawal && action === RebalanceAction.Auction) {
-    const pairs = getSwapPairs(chain, vault).filter(pair => pair.inMint === MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
-    if (pairs.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount))) throw new Error("This position cannot be sold right now. Please try again later.");
-    if (!pairs.length) return { action: "wait", reason: "No sellable Mag7 withdrawal assets are available yet", intent: intentAddress, signatures: [], spent };
+    const pairs = withdrawalAuctionSales(getSwapPairs(chain, vault));
+    // One immediate keeper burst pays USDC into the vault and takes every quoted stock leg.
+    // This requires no delegate or additional signature from the withdrawing wallet.
     const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
       keeper: keeperAddress, vault: VAULT, rebalance_intent: intentAddress,
       mint_in: pair.outMint, mint_out: pair.inMint, amount_in: pair.outAmount, amount_out: pair.inAmount,
