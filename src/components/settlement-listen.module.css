@@ -1,0 +1,5 @@
+.card{background:#10172c;color:white;border-radius:20px;padding:18px;margin:18px 0;display:grid;gap:8px}
+.card h3{font-size:23px;margin:0;letter-spacing:-.035em;text-transform:none}
+.card p{font-size:12px;line-height:1.5;color:#bdc6db;margin:0}
+.loader{width:18px;height:18px;border:2px solid rgba(255,255,255,.28);border-top-color:#fff;border-radius:50%;animation:settlement-spin .8s linear infinite}
+@keyframes settlement-spin{to{transform:rotate(360deg)}}

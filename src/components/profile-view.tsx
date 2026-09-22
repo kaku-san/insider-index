@@ -17,6 +17,7 @@ import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
 import { formatUsd } from "@/lib/format";
@@ -110,6 +111,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const vaultIndexId=vaultIndex?.indexId??null;
  useEffect(()=>{let alive=true;if(!vaultIndexId){setVault(null);return;}getVaultReadiness(vaultIndexId).then(value=>{if(alive)setVault(value)}).catch(()=>{if(alive)setVault(null)});return()=>{alive=false}},[vaultIndexId]);
  useEffect(()=>{let alive=true;if(!vaultIndexId||!wallet.solanaAddress){setPosition(null);return;}getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(alive)setPosition(value)}).catch(()=>{if(alive)setPosition(null)});return()=>{alive=false}},[vaultIndexId,wallet.solanaAddress]);
+ useIndexPositionListen(vaultIndexId, wallet.solanaAddress, position, value=>setPosition(value), !investOpen);
  const loading=!trackerPerson&&!researchBook&&!legacyProfile&&(tracker.loading||research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));
  if(loading)return <Skeleton cards={3}/>;
  if(!trackerPerson&&!researchBook&&!legacyProfile&&tracker.error&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{tracker.reload();research.reload();legacy.reload()}}/>;
@@ -160,6 +162,6 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
 
    <div className={`${styles.mobileBar} ${live?styles.liveBar:""}`}><button className={following?styles.following:""} onClick={()=>ui.toggleDeviceFollow(id)}>{following?"Following":"Follow"}</button>{live?<>{canCashOut?<button onClick={()=>{setInvestMode("withdraw");setInvestOpen(true)}}>Cash out</button>:null}<button onClick={()=>{setInvestMode("deposit");setInvestOpen(true)}}>Invest</button></>:<button onClick={()=>setShareOpen(true)}>Share</button>}</div>
    <ShareSheet open={shareOpen} onClose={()=>setShareOpen(false)} name={name} indexName={indexName} image={image} profile={legacyProfile} holdings={holdings}/>
-   {live&&vaultIndexId?<VaultFlow open={investOpen} onClose={()=>setInvestOpen(false)} indexId={vaultIndexId} indexName={indexName} readiness={flowReadiness} mode={investMode} position={position}/>:null}
+   {live&&vaultIndexId?<VaultFlow open={investOpen} onClose={()=>{setInvestOpen(false); if(wallet.solanaAddress) void getIndexPosition(vaultIndexId, wallet.solanaAddress).then(value=>{if(value)setPosition(value)}).catch(()=>{})}} onPosition={value=>{if(value)setPosition(value)}} indexId={vaultIndexId} indexName={indexName} readiness={flowReadiness} mode={investMode} position={position}/>:null}
  </div>
 }

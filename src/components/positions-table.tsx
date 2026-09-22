@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { usePrivySolana } from "./providers/privy-provider";
 import { useResource } from "@/lib/frontend/use-resource";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
 import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
 import type { IndexSharePosition } from "@/lib/frontend/vault-api";
+import { plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS } from "@/lib/frontend/settlement-progress";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton } from "./social/shared";
 import { WalletButton } from "./wallet-button";
@@ -21,6 +23,12 @@ export function PositionsTable() {
   const indexes = useResource<IndexPositionsResponse>(connected ? `/api/positions/indexes?wallet=${encodeURIComponent(connected)}` : null);
   const ownedIndexes = indexes.data?.positions ?? [];
   const pendingIndexOperations = ownedIndexes.flatMap(position => position.pendingOperations?.filter(operation => !operation.complete) ?? []);
+  const listenKey = ownedIndexes.filter(position => positionNeedsListen(position)).map(position => position.indexId).join(",");
+  useEffect(() => {
+    if (!listenKey) return;
+    const timer = setInterval(() => indexes.reload(), SETTLEMENT_POLL_MS);
+    return () => clearInterval(timer);
+  }, [listenKey, indexes.reload]);
 
   if (!connected) {
     return (
@@ -97,7 +105,7 @@ export function PositionsTable() {
               <p>Your shares in each index. These are read directly from your wallet.</p>
             </div>
           </div>
-          {indexes.loading ? <Skeleton cards={2} /> : indexes.error ? <PageError error={indexes.error} retry={indexes.reload} /> : !ownedIndexes.length ? <div className={styles.empty}>
+          {indexes.loading && !indexes.data ? <Skeleton cards={2} /> : indexes.error ? <PageError error={indexes.error} retry={indexes.reload} /> : !ownedIndexes.length ? <div className={styles.empty}>
             <Icon name="grid" size={26} />
             <h2>No index shares yet.</h2>
             <p>When you own shares in an index, they will appear here.</p>
@@ -105,7 +113,7 @@ export function PositionsTable() {
           </div> : <div className={styles.indexGrid}>{ownedIndexes.map(position => {
             const pending = position.pendingOperations?.filter(operation => !operation.complete) ?? [];
             return <Link className={styles.indexCard} key={position.indexId} href={`/positions/${encodeURIComponent(position.indexId)}`}>
-              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX SHARES</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}><span><b>{formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)}</b><small>shares owned</small></span><span><b>{position.markedValueUsdc ?? "—"}</b><small>{position.markedValueUsdc == null ? "value unavailable" : "verified value"}</small></span></div>{pending.length ? <div className={styles.pending}><i />{pending[0].kind === "withdraw" ? "Cash out pending settlement" : "Deposit pending settlement"}</div> : null}</div>
+              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX SHARES</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}><span><b>{formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)}</b><small>shares owned</small></span><span><b>{position.markedValueUsdc ?? "—"}</b><small>{position.markedValueUsdc == null ? "value unavailable" : "verified value"}</small></span></div>{pending.length ? <div className={styles.pending} data-settlement-status={plainStatusForOperation(pending[0])} aria-busy={positionNeedsListen(position) ? true : undefined}><i />{plainStatusForOperation(pending[0])}</div> : null}</div>
             </Link>;
           })}</div>}
         </section>

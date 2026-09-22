@@ -10,8 +10,14 @@ import { getIndexPosition, getVaultReadiness, positionValueUsdc, prepareWithdraw
 import { markedDollars } from "@/lib/frontend/research-format";
 import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
 import { errorText } from "@/lib/frontend/api";
+import { noticedShareArrival, plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS, settlementDetail } from "@/lib/frontend/settlement-progress";
 import { VaultFlow } from "./vault-flow";
+import { SettlementListen } from "./settlement-listen";
 import styles from "./position-detail.module.css";
+
+function pendingKey(position?: IndexSharePosition | null) {
+  return position?.pendingOperations?.map(operation => `${operation.operationId}:${operation.phase}:${operation.complete === true}`).join("|") ?? "";
+}
 
 export function PositionDetail({ indexId }: { indexId: string }) {
   const wallet = usePrivySolana();
@@ -21,6 +27,8 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [cashOutReady, setCashOutReady] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
+  const [sharesArrived, setSharesArrived] = useState(false);
+  const pendingSignature = pendingKey(position);
 
   // Synchronize the wallet-scoped view with the external position endpoints.
   useEffect(() => {
@@ -55,13 +63,28 @@ export function PositionDetail({ indexId }: { indexId: string }) {
     void prepareWithdrawal(indexId, { owner: wallet.solanaAddress, shareAmountRaw: position.sharesRaw, requestedExitMode: "verified-native-usdc", idempotencyKey: crypto.randomUUID() }, network)
       .then(() => { if (alive) setCashOutReady(true); }).catch(() => { if (alive) setCashOutReady(false); });
     return () => { alive = false; };
-  }, [indexId, wallet.solanaAddress, position?.sharesRaw, position?.pendingOperations, readiness?.identity?.vaultAccount, readiness?.identity?.shareMint, readiness?.identity?.network, readiness?.vault?.vaultAccount, readiness?.vault?.shareMint, readiness?.vault?.network]);
+  }, [indexId, wallet.solanaAddress, position?.sharesRaw, pendingSignature, readiness?.identity?.vaultAccount, readiness?.identity?.shareMint, readiness?.identity?.network, readiness?.vault?.vaultAccount, readiness?.vault?.shareMint, readiness?.vault?.network]);
+
+  useEffect(() => {
+    if (!wallet.solanaAddress || cashOutOpen || !positionNeedsListen(position)) return;
+    let alive = true;
+    const timer = setInterval(() => {
+      void getIndexPosition(indexId, wallet.solanaAddress!).then(next => {
+        if (!alive || !next) return;
+        setSharesArrived(noticedShareArrival(position, next) || (sharesArrived && !positionNeedsListen(next)));
+        if (positionNeedsListen(next)) setSharesArrived(false);
+        setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next);
+      }).catch(() => {});
+    }, SETTLEMENT_POLL_MS);
+    return () => { alive = false; clearInterval(timer); };
+  }, [indexId, wallet.solanaAddress, cashOutOpen, position, sharesArrived, pendingSignature]);
 
   const targetMix = useMemo(
     () => [...(readiness?.targetWeights ?? [])].sort((a, b) => b.weightBps - a.weightBps),
     [readiness],
   );
   const activeOperation = position?.pendingOperations?.find(operation => !operation.complete) ?? null;
+  const settlementStatus = activeOperation ? plainStatusForOperation(activeOperation) : sharesArrived ? "shares received" : null;
   const name = position?.indexName ?? indexId;
   const sharesText = position ? position.sharesText ?? formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0) : null;
   const valueText = position ? markedDollars(positionValueUsdc(position)) : "—";
@@ -79,7 +102,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
             <div><strong>{valueText}</strong><span>USDC value</span></div>
           </div>
           <div className={styles.actions}><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link>{activeOperation ? <button type="button" disabled> {activeOperation.kind === "withdraw" ? "Cash out in progress" : "Deposit in progress"}</button> : cashOutReady ? <button type="button" onClick={() => setCashOutOpen(true)}>Cash out</button> : null}</div>
-          {activeOperation ? <p className={styles.operation}>{activeOperation.phase === "FAILED" ? "This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares." : activeOperation.kind === "withdraw" ? "A cash-out auction is in progress for this wallet." : "A deposit auction is in progress for this wallet."}</p> : null}
+          {settlementStatus ? <SettlementListen status={settlementStatus} listening={positionNeedsListen(position)} detail={activeOperation ? settlementDetail({ status: settlementStatus, listening: positionNeedsListen(position), cashOutFinished: false }, position, activeOperation.kind === "withdraw" ? "withdraw" : "deposit") : "Your share balance increased."} /> : null}
           {!activeOperation && !cashOutReady ? <p className={styles.operation}>Cash out is unavailable until a USDC sale can be prepared.</p> : null}
         </div>
       </section>
@@ -87,7 +110,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
       <div className={styles.grid}><section className={styles.panel}><header><h2>Target mix</h2><p>Published target allocation</p></header>{targetMix.length ? <div className={styles.weights}>{targetMix.map((weight, index) => <div key={weight.mint}><span>{String(index + 1).padStart(2, "0")}</span><StockIcon ticker={weight.ticker ?? weight.mint.slice(0, 5)} size="sm" /><strong>{weight.ticker ?? weight.mint.slice(0, 5)}</strong><i><b style={{ width: `${Math.max(3, weight.weightBps / Math.max(1, targetMix[0].weightBps) * 100)}%` }} /></i><em>{(weight.weightBps / 100).toFixed(1)}%</em></div>)}</div> : <div className={styles.empty}>The target mix is unavailable right now.</div>}</section></div>
 
       {position.outstandingClaims?.length ? <section className={styles.claims}><h2>Outstanding claims</h2>{position.outstandingClaims.map((claim) => <div key={claim.mint}><strong>{claim.symbol ?? claim.mint.slice(0, 7)}</strong><span>{claim.amountRemainingRaw} units remaining</span><b>{claim.transferBlocked ? "NEEDS ATTENTION" : "PENDING"}</b></div>)}</section> : null}
-      <VaultFlow open={cashOutOpen} onClose={() => setCashOutOpen(false)} indexId={indexId} indexName={name} readiness={readiness} mode="withdraw" position={position} />
+      <VaultFlow open={cashOutOpen} onClose={() => setCashOutOpen(false)} indexId={indexId} indexName={name} readiness={readiness} mode="withdraw" position={position} onPosition={next => { if (!next) return; setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next); }} />
     </>}
   </div>;
 }
