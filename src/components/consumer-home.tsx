@@ -11,6 +11,7 @@ import type { PeopleDirectoryResponse, ResearchPerson } from "@/lib/frontend/res
 import type { CopySignal } from "@/lib/disclosures/types";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import { publicIndexStatus } from "@/lib/frontend/vault-api";
+import { indexContentFor } from "@/lib/frontend/index-content";
 import { Icon } from "./social/icon";
 import { PageError, StockIcon } from "./social/shared";
 import styles from "./consumer-home.module.css";
@@ -128,12 +129,13 @@ function vaultRow(
     publicFundsEnabled: publicFundsEnabled && index.publicFundsEnabled === true,
   });
   const coverage = (index.coverage.mappableByWeightBps ?? 0) / 100;
+  const content = indexContentFor(index.indexId);
   return {
     id: index.indexId,
     href: `/indexes/${index.indexId}`,
     kind: index.kind === "person" ? "person" : "theme",
     name: index.name,
-    description: theme?.headline || (index.kind === "person"
+    description: content?.cardHook || theme?.headline || (index.kind === "person"
       ? `Public holdings for ${person?.name ?? index.personSlug.replaceAll("-", " ")}.`
       : index.provenance.note ?? "A multi-member research basket built from public filings."),
     image: index.kind === "thematic" ? themeImage(index.indexId) : person ? portraitForPerson(person) : portraitFor(index.personSlug),
@@ -198,8 +200,10 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
       <div>
         <span className={styles.eyebrow}>PUBLIC-MARKET INDEXES</span>
         <h1>They disclose it.<br />We index it.</h1>
-        <p>Public filings rebuilt into clean, inspectable indexes — with holdings, mapping coverage and funding status in one place.</p>
+        <p>Explore portfolios built from public congressional financial disclosures — mapped into simple, transparent indexes you can inspect.</p>
+        <small className={styles.heroTrust}>No rumors. No fake returns. No made-up fills.</small>
       </div>
+      <div className={styles.heroArtwork} aria-hidden="true"><Image src="/index-assets/home/home-hero-fallback.png" alt="" fill sizes="260px" priority /></div>
       <div className={styles.heroMeta}>
         <strong>{total || 20}</strong><span>indexes</span><i />
         <strong>{peopleCount || 10}</strong><span>people</span><i />
@@ -230,6 +234,11 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
         {!loading && !rows.length ? <div className={styles.empty}><strong>No indexes match this view.</strong><span>{investableOnly ? "No indexes are open to invest yet." : indexResource.error ?? "Clear the filters or search to see the index catalog."}</span></div> : null}
         {loading ? <div className={styles.empty}><strong>Loading index catalog…</strong></div> : null}
       </div>
+    </section>
+
+    <section className={styles.themeCallout} aria-labelledby="theme-callout-title">
+      <div><span className={styles.eyebrow}>FROM PEOPLE TO PATTERNS</span><h2 id="theme-callout-title">The filing tells a story. The themes show the repeat.</h2><p>Research views ask a different question: what keeps showing up across public disclosures? They are not person portfolios and they are not open to invest.</p></div>
+      <div className={styles.themeArtwork}><Image src="/index-assets/home/thematic-grid.jpg" alt="Abstract artwork representing InsiderIndex research themes" fill sizes="(max-width: 820px) 100vw, 520px" /></div>
     </section>
 
     <section className={styles.solanaSection}>

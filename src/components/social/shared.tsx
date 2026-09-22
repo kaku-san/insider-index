@@ -3,13 +3,13 @@ import Link from "next/link";
 import {useState} from "react";
 import {Icon} from "./icon";
 import type {PoliticalParty} from "@/lib/disclosures/types";
-import {COMPANY_LOGOS} from "@/lib/frontend/company-logos";
+import {companyLogoFor} from "@/lib/frontend/company-logos";
 export function PartyBadge({party,kind}: {party:PoliticalParty|null;kind?:string}) {const name=party==="Democratic"?"Democrat":party==="Republican"?"Republican":party??(kind==="insider"?"Executive":"Public filing");return <span className={`party-pill ${party==="Democratic"?"democrat":party==="Republican"?"republican":"executive"}`}><span/>{name}</span>;}
 type StockIconProps = {ticker:string;size?:"sm"|"md"|"lg"};
 function StockIconSource({ticker,normalized,size}: StockIconProps & {normalized:string}) {
- const bundled=COMPANY_LOGOS[normalized]??null;
+ const source=companyLogoFor(normalized);
  const [failed,setFailed]=useState(false);
- return <span aria-label={`${ticker} company logo`} className={`stock-icon stock-logo stock-${ticker.toLowerCase().replace(/[^a-z0-9-]/g,"-")} stock-size-${size}`}>{bundled&&!failed?<img src={bundled} alt="" loading="lazy" onError={()=>setFailed(true)}/>:<b>{ticker==="OTHER"?"+":ticker.slice(0,2)}</b>}</span>;
+ return <span aria-label={`${ticker} company logo`} className={`stock-icon stock-logo stock-${ticker.toLowerCase().replace(/[^a-z0-9-]/g,"-")} stock-size-${size}`}>{!failed?<img src={source} alt="" loading="lazy" onError={()=>setFailed(true)}/>:<b>{ticker==="OTHER"?"+":ticker.slice(0,2)}</b>}</span>;
 }
 export function StockIcon({ticker,size="md"}: StockIconProps) {
  const normalized=ticker.toUpperCase().replace(/\.L$/i,"").replace(/[^A-Z0-9.-]/g,"");
