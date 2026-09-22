@@ -12,7 +12,7 @@ import { address } from "../src/lib/index-vaults/amounts.ts";
 import { buildCycleFillWire } from "../src/lib/index-vaults/cycle-wire.ts";
 import { buildCycleRoute } from "../src/lib/index-vaults/cycle-routes.ts";
 import { kakuSanBuilders, kakuSanConnection, simulateUnsigned } from "../src/lib/index-vaults/kaku-san-create.ts";
-import { assertIndexKeeper, legBindings, withdrawalAuctionSales } from "../src/lib/index-vaults/keeper-tick.ts";
+import { assertIndexKeeper, legBindings, prepareWithdrawalKeeperStep } from "../src/lib/index-vaults/keeper-tick.ts";
 import { MAINNET_USDC, NATIVE_DEFAULT_BINDINGS, assertNativeSupportTargets } from "../src/lib/index-vaults/native-defaults.ts";
 import { assertNoPythEnvironment, assertRaydiumOnlyVault, WSOL_MINT } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { createServiceSupabase } from "../src/lib/supabase.ts";
@@ -22,7 +22,7 @@ const INDEX_ID = "idx-theme-mag7-caucus";
 const VAULT = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const SHARE_MINT = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
 const MAG7_KEEPER = "GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq";
-const DEFAULT_POLL_MS = 300_000;
+const DEFAULT_POLL_MS = 15_000;
 const MAX_SOL_DEBIT_LAMPORTS = 50_000_000n; // 0.05 SOL per watcher tick.
 
 type Options = { owner?: string; watchVault: boolean; execute: boolean; watch: boolean; pollMs: number; keypair?: string };
@@ -31,7 +31,7 @@ type ScanIntent = {
   chain_data: { vault: { toBase58(): string }; owner: { toBase58(): string }; rebalanceType: RebalanceType; currentAction: RebalanceAction };
 };
 type TickResult = { action: string; intent?: string; signatures: string[]; spent: bigint; [key: string]: unknown };
-type Mag7MintToken = { mint: string; amount: string };
+type Mag7MintToken = { mint: string; amount: string; targetAmount: string };
 
 const MAG7_SKIPPABLE_ROUTE_ERRORS = new Set([
   "CYCLE_ROUTE_MINIMUM_UNSATISFIABLE",
@@ -40,14 +40,24 @@ const MAG7_SKIPPABLE_ROUTE_ERRORS = new Set([
   "CYCLE_NO_FULL_SIZE_ROUTE",
 ]);
 
-/** A Mag7-only auction may mint its filled subset; Symmetry keeps unspent USDC in the intent. */
+/** Refuse zero/partial books even though the native mint instruction would accept them. */
 export function mag7MintPlan(input: { investmentLegMints: readonly string[]; tokens: readonly Mag7MintToken[]; wsolMint: string }) {
   const amounts = new Map(input.tokens.map(token => [token.mint, BigInt(token.amount)]));
-  const filledLegMints = input.investmentLegMints.filter(mint => (amounts.get(mint) ?? 0n) > 0n);
-  const skippedLegMints = input.investmentLegMints.filter(mint => (amounts.get(mint) ?? 0n) === 0n);
+  const targets = new Map(input.tokens.map(token => [token.mint, BigInt(token.targetAmount)]));
+  const filledLegMints = input.investmentLegMints.filter(mint => (amounts.get(mint) ?? 0n) > 0n && (targets.get(mint) ?? 0n) > 0n && amounts.get(mint)! >= targets.get(mint)!);
+  const skippedLegMints = input.investmentLegMints.filter(mint => !filledLegMints.includes(mint));
+  if (input.investmentLegMints.length !== 7 || new Set(input.investmentLegMints).size !== 7) return { mayMint: false, reason: "MAG7_EXPECTED_SEVEN_DISTINCT_LEGS", filledLegMints, skippedLegMints };
   if ((amounts.get(input.wsolMint) ?? 0n) > 0n) return { mayMint: false, reason: "MAG7_ACCOUNTED_SUPPORT_REQUIRES_RECONCILIATION", filledLegMints, skippedLegMints };
   if (!filledLegMints.length) return { mayMint: false, reason: "MAG7_NO_FILLED_LEGS_DO_NOT_MINT", filledLegMints, skippedLegMints };
+  if (skippedLegMints.length) return { mayMint: false, reason: "MAG7_PARTIAL_FILL_DO_NOT_MINT", filledLegMints, skippedLegMints };
   return { mayMint: true, filledLegMints, skippedLegMints, unspentUsdcRaw: (amounts.get(MAINNET_USDC) ?? 0n).toString() };
+}
+
+/** Keep the all-seven check on the actual mint preparation boundary. */
+export async function prepareMag7Mint<T>(input: Parameters<typeof mag7MintPlan>[0], mint: () => Promise<T>) {
+  const plan = mag7MintPlan(input);
+  if (!plan.mayMint) throw new Error(plan.reason);
+  return { plan, payload: await mint() };
 }
 
 /** Only quote-size failures are dust skips; every other route failure stays fail-closed. */
@@ -60,12 +70,12 @@ function usage() {
   return `Usage:
   npm run keeper:mag7-deposit -- --watch-vault --dry-run
   npm run keeper:mag7-deposit -- --watch-vault --execute --keypair /absolute/external/keeper.json --watch
-  npm run keeper:mag7-deposit -- --watch-vault --execute --keypair /absolute/external/keeper.json --watch --interval-seconds 300
+  npm run keeper:mag7-deposit -- --watch-vault --execute --keypair /absolute/external/keeper.json --watch --interval-seconds 15
   npm run keeper:mag7-deposit -- --owner <locked-deposit-wallet> --dry-run
 
 External VPS-only Mag7 deposit settler. With no --owner (the default) it scans every locked
 native deposit intent for the fixed Mag7 vault, regardless of depositor, and settles each through
-Raydium price/fill/mint/cleanup. --watch polls until Ctrl-C (five minutes by default); each poll has
+Raydium price/fill/mint/cleanup. --watch polls until Ctrl-C (15 seconds by default); each poll has
 its own 0.05 SOL keeper SOL-debit cap. It never creates a user deposit, opens public funds, uses
 Pyth/Hermes, uses the cycle journal, or loads a key in the app. Dry-run is the default and
 broadcasts nothing.`;
@@ -206,34 +216,19 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
     deployer: vault.settings.creator.toBase58(), host: vault.settings.host.toBase58(), strategy: managers.map(manager => manager.toBase58()), namedKeeper: record.keeper.pubkey,
   });
   if (keeperAddress !== MAG7_KEEPER) throw new Error("MAG7_KEEPER_PUBKEY_MISMATCH");
-  const missing = await missingKeeperAtas(native, record, keeperAddress);
-  if (missing.length) throw new Error(`Missing keeper ATAs: ${missing.join(", ")}`);
   if (action === RebalanceAction.DepositTokens) return { action: "wait", reason: "User operation is not locked/finalized yet", intent: intentAddress, signatures: [], spent };
 
-  if (isWithdrawal && intent.redeem_data) {
-    const payload = await native.sdk.redeemTokensTx({ keeper: keeperAddress, rebalance_intent: intentAddress });
-    const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
-    return { action: "redeem", intent: intentAddress, ...result };
-  }
-
-  if (isWithdrawal && intent.claim_bounty_data) {
-    const payload = await native.sdk.claimBountyTx({ keeper: keeperAddress, rebalance_intent: intentAddress });
-    const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
-    return { action: "cleanup", intent: intentAddress, ...result };
-  }
-
   if (isWithdrawal && action === RebalanceAction.Auction) {
-    const pairs = withdrawalAuctionSales(getSwapPairs(chain, vault));
-    // One immediate keeper burst pays USDC into the vault and takes every quoted stock leg.
-    // This requires no delegate or additional signature from the withdrawing wallet.
-    const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
-      keeper: keeperAddress, vault: VAULT, rebalance_intent: intentAddress,
-      mint_in: pair.outMint, mint_out: pair.inMint, amount_in: pair.outAmount, amount_out: pair.inAmount,
-    })));
-    const payload = { batches: payloads.flatMap(result => result.batches) };
-    const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
-    return { action: "sell", intent: intentAddress, ...result };
+    const plan = await prepareWithdrawalKeeperStep({ native, vault, intentAddress, keeper: keeperAddress,
+      legs: record.vaultLegs, maxPriorityFeeLamports: (MAX_SOL_DEBIT_LAMPORTS - spent).toString() });
+    if (!plan.eligible) return { action: "wait", reason: plan.reason, intent: intentAddress, signatures: [], spent };
+    const result = await sendTransactions({ transactions: plan.transactions, keeper, native, spent });
+    return { action: plan.step === "auction" ? "sell" : plan.step === "claim-bounty" ? "cleanup" : plan.step, intent: intentAddress, ...result };
   }
+
+  // Cash-only redemption must not depend on unrelated keeper stock ATAs.
+  const missing = await missingKeeperAtas(native, record, keeperAddress);
+  if (missing.length) throw new Error(`Missing keeper ATAs: ${missing.join(", ")}`);
 
   if (action === RebalanceAction.UpdatePrices) {
     if (now < Number(chain.executionStartTime.toString())) return { action: "wait", reason: "Native execution start time has not arrived", intent: intentAddress, signatures: [], spent };
@@ -246,18 +241,18 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
   if (action === RebalanceAction.Auction) {
     const end = Number(chain.auctions[2]?.endTime.toString() ?? "0");
     if (now > end) {
-      // Symmetry's mint instruction accepts a partial initial composition and retains
-      // unused USDC in the deposit intent. Mint only after at least one real stock
-      // fill; unfillable dust legs are reported rather than blocking those shares.
-      const plan = mag7MintPlan({ investmentLegMints: record.vaultLegs.map(leg => leg.mint), tokens: chain.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString() })), wsolMint: WSOL_MINT });
-      if (!plan.mayMint) throw new Error(plan.reason);
-      const payload = await native.sdk.mintTx({ keeper: keeperAddress, rebalance_intent: intentAddress });
+      // No unsupported cancel/restart/empty mint to escape an expired failed deposit.
+      const { plan, payload } = await prepareMag7Mint({ investmentLegMints: record.vaultLegs.map(leg => leg.mint), tokens: chain.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString(), targetAmount: token.targetAmount.toString() })), wsolMint: WSOL_MINT },
+        () => native.sdk.mintTx({ keeper: keeperAddress, rebalance_intent: intentAddress }));
       const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
       return { action: "mint", intent: intentAddress, filledLegMints: plan.filledLegMints, skippedLegMints: plan.skippedLegMints, unspentUsdcRaw: plan.unspentUsdcRaw, ...result };
     }
-    const missingLegs = new Set(record.vaultLegs.filter(leg => !chain.tokens.some(token => token.mint.toBase58() === leg.mint && !token.amount.isZero())).map(leg => leg.mint));
+    // getSwapPairs refreshes native targets for the current auction window.
+    const availablePairs = getSwapPairs(chain, vault);
+    const plan = mag7MintPlan({ investmentLegMints: record.vaultLegs.map(leg => leg.mint), tokens: chain.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString(), targetAmount: token.targetAmount.toString() })), wsolMint: WSOL_MINT });
+    const missingLegs = new Set(plan.skippedLegMints);
     if (!missingLegs.size) return { action: "wait", reason: "All Mag7 investment legs are filled; waiting for the native auction to close", intent: intentAddress, signatures: [], spent };
-    const pairs = getSwapPairs(chain, vault).filter(pair => pair.outMint === MAINNET_USDC && missingLegs.has(pair.inMint));
+    const pairs = availablePairs.filter(pair => pair.outMint === MAINNET_USDC && missingLegs.has(pair.inMint));
     const fills = [], skipped: Array<{ mint: string; ticker: string; reason: string }> = [];
     for (const pair of pairs) {
       const leg = record.vaultLegs.find(candidate => candidate.mint === pair.inMint);
@@ -298,9 +293,9 @@ export async function settleMag7IntentBurst(
     const result = await advance(options, spent, intentAddress);
     results.push(result);
     spent = result.spent;
-    // A fill transaction holds at most two swaps. Refresh the intent and immediately
-    // prepare the next one while its native auction remains open; polling is idle-only.
-    if (!(["fill", "sell"] as const).includes(result.action as "fill" | "sell") || spent >= MAX_SOL_DEBIT_LAMPORTS) return results;
+    // Price updates open the short auction: do not sleep before the first fill.
+    // Mint/redeem can leave cash/bounty cleanup; finish that before the next deposit.
+    if (!["prices", "fill", "sell", "mint", "redeem"].includes(result.action) || spent >= MAX_SOL_DEBIT_LAMPORTS) return results;
   } while (true);
 }
 

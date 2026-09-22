@@ -210,21 +210,24 @@ test("runIndexKeeperTick refuses an uncreated index before any observe or record
   assert.equal(recorded.length, 0, "a refused index records nothing");
 });
 
-test("withdrawal auction selects every stock sale to USDC and refuses an unsellable auction", () => {
+test("withdrawal auction selects stock OUT / USDC IN, never buys or invents an empty-list failure", () => {
   const stockA = Keypair.generate().publicKey.toBase58();
   const stockB = Keypair.generate().publicKey.toBase58();
   const usdc = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
   const sales = withdrawalAuctionSales([
     { inMint: usdc, outMint: stockA, inAmount: 99, outAmount: 1 },
     { inMint: stockA, outMint: usdc, inAmount: 10, outAmount: 100 },
-    { inMint: stockB, outMint: usdc, inAmount: 20, outAmount: 200 },
+    { inMint: usdc, outMint: stockB, inAmount: 200, outAmount: 20 },
   ]);
   assert.deepEqual(sales, [
-    { inMint: stockA, outMint: usdc, inAmount: 10, outAmount: 100 },
-    { inMint: stockB, outMint: usdc, inAmount: 20, outAmount: 200 },
+    { inMint: usdc, outMint: stockA, inAmount: 99, outAmount: 1 },
+    { inMint: usdc, outMint: stockB, inAmount: 200, outAmount: 20 },
   ]);
-  assert.throws(() => withdrawalAuctionSales([{ inMint: usdc, outMint: stockA, inAmount: 1, outAmount: 1 }]), /cannot be settled to USDC/);
-  assert.throws(() => withdrawalAuctionSales([{ inMint: stockA, outMint: usdc, inAmount: Number.MAX_SAFE_INTEGER + 1, outAmount: 1 }]), /cannot be settled to USDC/);
+  assert.deepEqual(withdrawalAuctionSales([]), []);
+  assert.deepEqual(withdrawalAuctionSales([{ inMint: stockA, outMint: usdc, inAmount: 1, outAmount: 1 }]), []);
+  for (const inAmount of [0, -1, NaN, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => withdrawalAuctionSales([{ inMint: usdc, outMint: stockA, inAmount, outAmount: 1 }]), /INVALID_SELL_AMOUNT/);
+  }
 });
 
 test("planned trades read buy underweight / sell overweight from drift", () => {

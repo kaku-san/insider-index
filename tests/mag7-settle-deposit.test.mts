@@ -11,7 +11,7 @@ import { legBindings } from "../src/lib/index-vaults/keeper-tick.ts";
 import { allSevenVm, definition } from "./support/all-seven-vm.mts";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { lockedMag7DepositIntentAddresses, mag7MintPlan, mag7SkippableRouteReason, parseArgs, settleMag7IntentBurst } = await import("../scripts/mag7-settle-deposit.mts");
+const { lockedMag7DepositIntentAddresses, mag7MintPlan, mag7SkippableRouteReason, parseArgs, prepareMag7Mint, settleMag7IntentBurst } = await import("../scripts/mag7-settle-deposit.mts");
 
 const VAULT = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const OTHER_VAULT = "8vQmbDWWSph7qQvSdvYcJ4W3xQnn6Nwg3Bh85P6iyReL";
@@ -25,7 +25,7 @@ function intent(pubkey: string, vault = VAULT, action = RebalanceAction.UpdatePr
 test("Mag7 watcher defaults to the fixed vault and keeps external-key safeguards", () => {
   const defaults = parseArgs([]);
   assert.equal(defaults.watchVault, true);
-  assert.equal(defaults.pollMs, 300_000);
+  assert.equal(defaults.pollMs, 15_000);
   assert.equal(defaults.execute, false);
   assert.deepEqual(parseArgs(["--watch-vault", "--dry-run"]), defaults);
   assert.equal(parseArgs(["--watch-vault", "--execute", "--keypair", "/external/keeper.json", "--watch", "--interval-seconds", "60"]).pollMs, 60_000);
@@ -68,26 +68,43 @@ test("Mag7 auction burst stops at the per-poll SOL cap", async () => {
   assert.equal(results.length, 1);
 });
 
-test("Mag7 settler skips only dust route failures and mints its filled subset", () => {
+test("Mag7 settler skips only quote-size failures while seeking all seven fills", () => {
   assert.equal(mag7SkippableRouteReason(new Error("CYCLE_ROUTE_MINIMUM_UNSATISFIABLE")), "CYCLE_ROUTE_MINIMUM_UNSATISFIABLE");
   assert.equal(mag7SkippableRouteReason(new Error("CYCLE_NO_FULL_SIZE_ROUTE")), "CYCLE_NO_FULL_SIZE_ROUTE");
   assert.equal(mag7SkippableRouteReason(new Error("CYCLE_POOL_OWNER")), null);
 
-  const plan = mag7MintPlan({
-    investmentLegMints: ["filled", "dust", "skipped"],
-    tokens: [{ mint: "filled", amount: "42" }, { mint: "dust", amount: "0" }, { mint: "skipped", amount: "0" }, { mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: "1500000" }],
-    wsolMint: "So11111111111111111111111111111111111111112",
-  });
-  assert.equal(plan.mayMint, true);
-  assert.deepEqual(plan.filledLegMints, ["filled"]);
-  assert.deepEqual(plan.skippedLegMints, ["dust", "skipped"]);
-  assert.equal(plan.unspentUsdcRaw, "1500000");
-
-  const noFill = mag7MintPlan({ investmentLegMints: ["dust"], tokens: [{ mint: "dust", amount: "0" }], wsolMint: "wsol" });
-  assert.deepEqual(noFill, { mayMint: false, reason: "MAG7_NO_FILLED_LEGS_DO_NOT_MINT", filledLegMints: [], skippedLegMints: ["dust"] });
 });
 
-test("Symmetry mints a Mag7 deposit after a dust route skip with USDC left in the intent", async () => {
+test("Mag7 never invokes mint for zero, partial, duplicate, or under-target legs", async () => {
+  const investmentLegMints = definition.vaultLegs.map(leg => leg.mint);
+  let mints = 0;
+  for (let count = 0; count <= 7; count++) {
+    const tokens = investmentLegMints.map((mint, n) => ({ mint, amount: n < count ? "42" : "0", targetAmount: "42" }));
+    const input = { investmentLegMints, tokens, wsolMint: "wsol" };
+    if (count < 7) {
+      assert.equal(mag7MintPlan(input).mayMint, false);
+      await assert.rejects(prepareMag7Mint(input, async () => ++mints), count ? /PARTIAL_FILL/ : /NO_FILLED_LEGS/);
+      assert.equal(mints, 0);
+    } else {
+      assert.equal((await prepareMag7Mint(input, async () => ++mints)).payload, 1);
+      tokens[0].amount = "1";
+      await assert.rejects(prepareMag7Mint(input, async () => ++mints), /PARTIAL_FILL/);
+      assert.equal(mag7MintPlan({ ...input, investmentLegMints: Array(7).fill(investmentLegMints[1]) }).mayMint, false);
+      tokens[0].amount = "42";
+      tokens[0].targetAmount = "0";
+      assert.equal(mag7MintPlan(input).mayMint, false);
+    }
+  }
+  assert.equal(mints, 1);
+});
+
+test("price update immediately advances to fills; mint advances to cash cleanup", async () => {
+  const steps = ["prices", "fill", "mint", "redeem", "cleanup"];
+  const results = await settleMag7IntentBurst(parseArgs([]), 0n, "intent", async (_, spent) => ({ action: steps.shift()!, signatures: ["signature"], spent: spent + 1n }));
+  assert.deepEqual(results.map(result => result.action), ["prices", "fill", "mint", "redeem", "cleanup"]);
+});
+
+test("native partial deposit with USDC leftover is failed without minting shares", async () => {
   const vm = allSevenVm(), realNow = Date.now;
   Date.now = vm.now;
   try {
@@ -123,14 +140,12 @@ test("Symmetry mints a Mag7 deposit after a dust route skip with USDC left in th
     const wire = await buildCycleFillWire({ native: vm.native, keeper: vm.keeper, vault: vm.vault, intent: vm.intent, fills: [fill], computeUnits: 1_400_000, microLamports: "0", maxPriorityFeeLamports: "0" });
     vm.apply({ batches: [{ transactions: [{ tx_b64: wire.txBase64 }] }] });
     intent = (await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data;
-    const plan = mag7MintPlan({ investmentLegMints: definition.vaultLegs.map(leg => leg.mint), tokens: intent.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString() })), wsolMint: "So11111111111111111111111111111111111111112" });
-    if (!plan.mayMint) assert.fail(plan.reason ?? "Mag7 partial mint plan refused");
-    assert(plan.skippedLegMints.length > 0);
-    if (plan.unspentUsdcRaw === undefined) assert.fail("Mag7 partial mint plan lacks unspent USDC");
-    assert(BigInt(plan.unspentUsdcRaw) > 0n);
+    const input = { investmentLegMints: definition.vaultLegs.map(leg => leg.mint), tokens: intent.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString(), targetAmount: token.targetAmount.toString() })), wsolMint: "So11111111111111111111111111111111111111112" };
+    assert.equal(mag7MintPlan(input).mayMint, false);
     vm.time(Number(intent.auctions[2].endTime.toString()) + 1);
-    vm.apply(await vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent }));
-    assert(await vm.balance(vm.owner, vm.shareMint) > 0n);
+    await assert.rejects(prepareMag7Mint(input, () => vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent })), /PARTIAL_FILL/);
+    assert.equal(await vm.balance(vm.owner, vm.shareMint), 0n);
+    assert.equal((await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data.rebalanceType, RebalanceType.Deposit);
   } finally {
     Date.now = realNow;
   }

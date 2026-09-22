@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import BN from "bn.js";
 import { register } from "node:module";
 import { PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createSyncNativeInstruction, NATIVE_MINT, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
@@ -14,6 +15,7 @@ const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const shareMint = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
 const DEPOSIT_RAW = "1000000";
+const investmentMints = Array.from({ length: 7 }, () => PublicKey.unique());
 
 function transaction(instructions: TransactionInstruction[]) {
   const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions }).compileToV0Message();
@@ -69,7 +71,7 @@ function firstDepositPayloadWithAncillaryCreates() {
 const definition = {
   indexId: "idx-theme-mag7-caucus", network: "mainnet-beta", name: "Mag7 Caucus", symbol: "IIMAG7", status: "CREATABLE",
   depositsEnabled: true, depositReason: null, bookSource: null, provenance: {}, vaultAddress: vault, shareMint,
-  vaultLegs: [], keeper: { pubkey: null, automationEnabled: false }, hostEntryFeeBps: 25, hostExitFeeBps: 0,
+  vaultLegs: investmentMints.map((mint, i) => ({ mint: mint.toBase58(), ticker: `LEG${i}`, targetWeightBps: 1428, decimals: 6, pool: PublicKey.unique().toBase58(), kind: "raydium_clmm" })), keeper: { pubkey: null, automationEnabled: false }, hostEntryFeeBps: 25, hostExitFeeBps: 0,
 };
 function dependencies(overrides: Record<string, unknown> = {}, buy = firstDepositPayloadWithAncillaryCreates(), bountyMint = NATIVE_MINT) {
   return {
@@ -84,7 +86,7 @@ function dependencies(overrides: Record<string, unknown> = {}, buy = firstDeposi
         simulateTransaction: async () => ({ context: { slot: 1 }, value: { err: null, logs: [] } }),
       },
       sdk: {
-        fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint), settings: { bountyMint } }),
+        fetchVault: async () => ({ ownAddress: new PublicKey(vault), mint: new PublicKey(shareMint), settings: { bountyMint }, supplyOutstanding: new BN(0), composition: [], numTokens: 0 }),
         buyVaultTx: async () => buy, lockDepositsTx: async () => payload("lock"),
       },
     }),
@@ -95,6 +97,30 @@ function dependencies(overrides: Record<string, unknown> = {}, buy = firstDeposi
 function request(body: unknown) {
   return new Request(`http://localhost/api/indexes/${definition.indexId}/deposit/prepare`, { method: "POST", body: JSON.stringify(body) });
 }
+
+test("cash-only, partial, and zero-supply residual backing refuse before preparing another contribution", async () => {
+  for (const [supply, count, cash] of [[2, 0, 3_000_000], [4, 2, 100], [0, 0, 3_000_000]]) {
+    const deps = dependencies(), native = deps.nativeBuilder(), before = await native.sdk.fetchVault();
+    native.sdk.fetchVault = async () => ({ ...before, supplyOutstanding: new BN(supply), numTokens: count + 1,
+      composition: [...investmentMints.slice(0, count).map(mint => ({ mint, amount: new BN(100) })), { mint: new PublicKey(networkUsdc("mainnet-beta")), amount: new BN(cash) }] } as never);
+    let contributions = 0;
+    native.sdk.buyVaultTx = async () => { contributions++; throw new Error("must refuse before funding"); };
+    deps.nativeBuilder = () => native;
+    const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, deps as never);
+    assert.equal(response.status, 503);
+    assert.match((await response.json()).error, /reconcile/);
+    assert.equal(contributions, 0);
+  }
+});
+
+test("a fully backed seven-leg positive-supply vault passes the backing gate", async () => {
+  const deps = dependencies(), native = deps.nativeBuilder(), before = await native.sdk.fetchVault();
+  native.sdk.fetchVault = async () => ({ ...before, supplyOutstanding: new BN(99), numTokens: 7,
+    composition: investmentMints.map(mint => ({ mint, amount: new BN(100) })) } as never);
+  deps.nativeBuilder = () => native;
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, deps as never);
+  assert.equal(response.status, 200);
+});
 
 test("deposit prepare accepts the measured minimum and atomically simulates first-depositor setup, contribution, and lock", async () => {
   const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW, idempotencyKey: "demo-1" }), definition.indexId, dependencies() as never);

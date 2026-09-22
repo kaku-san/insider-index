@@ -25,6 +25,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Keypair, PublicKey, VersionedTransaction, type Connection } from "@solana/web3.js";
 import type { Vault } from "@symmetry-hq/sdk";
+import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
+import { redeemTokensIx } from "@symmetry-hq/sdk/dist/instructions/user/withdraw.js";
+import { buildCycleRoute } from "./cycle-routes.ts";
+import { buildCycleFillWire, encodeCycleWire } from "./cycle-wire.ts";
 import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import { address } from "./amounts.ts";
@@ -149,17 +154,67 @@ export interface WithdrawalAuctionPair {
   outAmount: number;
 }
 
-/**
- * A withdrawal auction pays the keeper USDC (`outMint`) for vault stock (`inMint`).
- * Select every sell in the currently open auction so the keeper can settle the whole
- * cash-out burst without any authority over the withdrawing wallet.
- */
+/** SDK pairs are vault-relative: stock OUT, USDC IN. An empty list is not proof of failure. */
 export function withdrawalAuctionSales(pairs: readonly WithdrawalAuctionPair[]): WithdrawalAuctionPair[] {
-  const sales = pairs.filter(pair => pair.outMint === MAINNET_USDC && pair.inMint !== MAINNET_USDC && pair.inAmount > 0 && pair.outAmount > 0);
-  if (!sales.length || sales.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount))) {
-    throw new Error("This cash out cannot be settled to USDC right now. Please try again later.");
+  const sales = pairs.filter(pair => pair.inMint === MAINNET_USDC && pair.outMint !== MAINNET_USDC);
+  if (sales.some(pair => !Number.isSafeInteger(pair.inAmount) || !Number.isSafeInteger(pair.outAmount) || pair.inAmount <= 0 || pair.outAmount <= 0)) {
+    throw new Error("CASH_OUT_INVALID_SELL_AMOUNT");
   }
   return sales;
+}
+
+/** Shared by both keepers, including native post-mint cash leftovers (type Withdraw).
+ * Never redeem a stock claim after a missed window, restart an auction, or subsidize a sale.
+ * One atomic Raydium sale per step; callers refresh before preparing the next stock. */
+export async function prepareWithdrawalKeeperStep(input: {
+  native: NativeVaultBuilders; vault: Vault; intentAddress: string; keeper: string;
+  legs: readonly PersistedVaultLeg[]; maxPriorityFeeLamports?: string;
+}, routeBuilder: typeof buildCycleRoute = buildCycleRoute): Promise<IndexKeeperRebalancePlan> {
+  const { native, vault, intentAddress, keeper } = input;
+  const current = await native.sdk.fetchRebalanceIntent(intentAddress), chain = current.chain_data;
+  if (chain.rebalanceType !== RebalanceType.Withdraw || !chain.vault.equals(vault.ownAddress)
+    || getRebalanceIntentPda(vault.ownAddress, chain.owner).toBase58() !== intentAddress) throw new Error("CASH_OUT_INTENT_IDENTITY");
+  if (chain.currentAction !== RebalanceAction.Auction) throw new Error("CASH_OUT_NOT_IN_AUCTION");
+  const end = Number(chain.auctions[2]?.endTime.toString());
+  if (!Number.isSafeInteger(end) || end <= 0) throw new Error("CASH_OUT_INVALID_WINDOW");
+  const now = Math.floor(Date.now() / 1000);
+  const remaining = chain.tokens.filter(token => !token.amount.isZero());
+  const stocks = remaining.filter(token => token.mint.toBase58() !== MAINNET_USDC);
+  if (now > end) {
+    if (stocks.length) throw new Error("CASH_OUT_WINDOW_MISSED_UNSOLD_ASSETS: refusing in-kind redemption; native recovery required");
+    if (!remaining.length) {
+      const payload = await native.sdk.claimBountyTx({ keeper, rebalance_intent: intentAddress });
+      return { step: "claim-bounty", eligible: true, reason: "Closing the fully settled native intent", transactions: payloadTransactions(payload, keeper) };
+    }
+    // Build only the USDC claim, with a canonical owner ATA. Unlike SDK redeemTokensTx,
+    // this cannot silently skip a missing ATA or include a stock from a second read.
+    const usdc = new PublicKey(MAINNET_USDC), payer = new PublicKey(keeper);
+    const ata = getAssociatedTokenAddressSync(usdc, chain.owner);
+    const { blockhash } = await native.connection.getLatestBlockhash("confirmed");
+    const wire = encodeCycleWire({ payer: keeper, blockhash, computeUnits: 400_000, microLamports: "25000",
+      maxPriorityFeeLamports: input.maxPriorityFeeLamports ?? "50000000", instructions: [
+        createAssociatedTokenAccountIdempotentInstruction(payer, ata, chain.owner, usdc),
+        redeemTokensIx({ keeper: payer, vault: vault.ownAddress, owner: chain.owner, tokenMints: [usdc], tokenPrograms: [TOKEN_PROGRAM_ID] }),
+      ] });
+    return { step: "redeem", eligible: true, reason: "Returning only native USDC to the intent owner", transactions: [{ txBase64: wire.txBase64 }] };
+  }
+  if (!stocks.length) return { step: "wait", eligible: false, reason: "Only USDC remains; waiting for the native redemption window", transactions: [] };
+  // There may be gaps between auction windows, including the exact final boundary.
+  if (!chain.auctions.some(auction => now >= Number(auction.startTime.toString()) && now < Number(auction.endTime.toString()))) {
+    return { step: "wait", eligible: false, reason: "Waiting for an open native sale window", transactions: [] };
+  }
+  const pairs = withdrawalAuctionSales(getSwapPairs(chain, vault));
+  if (!pairs.length) throw new Error("CASH_OUT_NO_STOCK_TO_USDC_PAIRS: assets remain in native custody");
+  const pair = pairs[0];
+  const leg = input.legs.find(candidate => candidate.mint === pair.outMint);
+  if (!leg) throw new Error("CASH_OUT_UNBOUND_STOCK");
+  const route = await routeBuilder({ connection: native.connection, leg, owner: keeper,
+    inputMint: pair.outMint, outputMint: MAINNET_USDC, amountInRaw: String(pair.outAmount),
+    minimumOutRaw: String(pair.inAmount), slippageBps: 50, maxAgeMs: 60_000 });
+  const wire = await buildCycleFillWire({ native, keeper, vault: vault.ownAddress.toBase58(), intent: intentAddress,
+    fills: [{ route, maxRepaymentRaw: String(pair.inAmount) }], computeUnits: 1_400_000,
+    microLamports: "25000", maxPriorityFeeLamports: input.maxPriorityFeeLamports ?? "50000000" });
+  return { step: "auction", eligible: true, reason: "Selling native stock on Raydium and repaying USDC into the vault", transactions: [{ txBase64: wire.txBase64 }] };
 }
 
 export interface IndexKeeperObservation {
@@ -173,6 +228,7 @@ export interface IndexKeeperObservation {
   eligibility: KakuSanEligibility;
   intents: number;
   withdrawalIntents?: WithdrawalIntent[];
+  legs?: readonly PersistedVaultLeg[];
   bindings: RaydiumPoolBinding[];
 }
 
@@ -201,8 +257,8 @@ export async function observeIndexVault(record: PersistedVaultDefinition, native
   const intents = await native.sdk.fetchVaultRebalanceIntents(vaultAddress);
   const withdrawalIntents: WithdrawalIntent[] = intents.flatMap(intent => {
     const chain = intent.chain_data;
-    const type = intent.rebalance_type as unknown;
-    if (!(type === 1 || /withdraw/i.test(String(type)))) return [];
+    // The SDK UI labels post-mint leftovers "deposit"; native Withdraw is authoritative.
+    if (chain.rebalanceType !== RebalanceType.Withdraw) return [];
     const stage: WithdrawalIntentStage = intent.price_updates_data ? "prices"
       : intent.redeem_data ? "redeem"
       : intent.claim_bounty_data ? "claim-bounty"
@@ -217,7 +273,7 @@ export async function observeIndexVault(record: PersistedVaultDefinition, native
   const mintSupply = await readShareSupply(native, vault);
   return {
     vault, vaultAddress, shareMint, shareSupplyRaw: mintSupply, drift, eligibility, targets, bindings,
-    intents: intents.length, withdrawalIntents,
+    intents: intents.length, withdrawalIntents, legs: record.vaultLegs,
     guards: { deployer: vault.settings.creator.toBase58(), host: vault.settings.host.toBase58(), strategy: managers, namedKeeper: record.keeper?.pubkey ?? null },
   };
 }
@@ -259,36 +315,15 @@ export async function prepareIndexKeeperStep(
   if (observation.intents > 0) {
     const withdrawal = observation.withdrawalIntents?.[0];
     const intent = withdrawal?.address ?? getRebalanceIntentPda(new PublicKey(observation.vaultAddress), new PublicKey(observation.vaultAddress)).toBase58();
-    let step: IndexKeeperRebalancePlan["step"] = "prices";
-    let payload;
-    let reason = "Updating Raydium prices for the existing rebalance intent";
-    if (withdrawal?.stage === "redeem") {
-      step = "redeem";
-      reason = "Settling the completed withdrawal auction to the owner";
-      payload = await native.sdk.redeemTokensTx({ keeper: keeperPk, rebalance_intent: intent });
-    } else if (withdrawal?.stage === "claim-bounty") {
-      step = "claim-bounty";
-      reason = "Closing the completed withdrawal auction";
-      payload = await native.sdk.claimBountyTx({ keeper: keeperPk, rebalance_intent: intent });
-    } else if (withdrawal?.stage === "auction") {
-      const current = await native.sdk.fetchRebalanceIntent(intent);
-      const pairs = withdrawalAuctionSales(getSwapPairs(current.chain_data, observation.vault));
-      // Prepare every native fill together, as for a deposit auction. The keeper pays the
-      // vault's quoted USDC and receives stock; it never receives a wallet-token delegate.
-      const payloads = await Promise.all(pairs.map(pair => native.sdk.flashSwapTx({
-        keeper: keeperPk, vault: observation.vaultAddress, rebalance_intent: intent,
-        mint_in: pair.outMint, mint_out: pair.inMint, amount_in: pair.outAmount, amount_out: pair.inAmount,
-      })));
-      step = "auction";
-      reason = "Selling withdrawal assets to USDC in the open auction";
-      payload = { batches: payloads.flatMap(result => result.batches) };
-    } else {
-      const priced = await native.priceUpdateFromVault(observation.vault, keeperPk, intent, observation.bindings);
-      payload = priced.payload;
+    if (withdrawal && withdrawal.stage !== "prices") {
+      const plan = await prepareWithdrawalKeeperStep({ native, vault: observation.vault, intentAddress: intent, keeper: keeperPk, legs: observation.legs ?? [] });
+      if (simulate) for (const tx of plan.transactions) await simulateUnsigned(native.connection, tx.txBase64);
+      return plan;
     }
-    const transactions = payloadTransactions(payload, keeperPk);
+    const priced = await native.priceUpdateFromVault(observation.vault, keeperPk, intent, observation.bindings);
+    const transactions = payloadTransactions(priced.payload, keeperPk);
     if (simulate) for (const tx of transactions) await simulateUnsigned(native.connection, tx.txBase64);
-    return { step, eligible: true, reason, transactions };
+    return { step: "prices", eligible: true, reason: "Updating Raydium prices for the existing rebalance intent", transactions };
   }
   if (observation.eligibility.required !== true) {
     return { step: "rebalance", eligible: false, reason: observation.eligibility.reason, transactions: [] };
