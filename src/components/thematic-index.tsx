@@ -75,7 +75,6 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const availability = publicIndexStatusCopy(status);
   const positionKey = wallet.solanaAddress ? `${vaultId}:${wallet.solanaAddress}` : null;
   const currentPosition = loadedPositionKey === positionKey ? position : null;
-  const canCashOut = vaultId === PUBLIC_MAG7.indexId && hasIndexShares(currentPosition);
   const pendingOperations = currentPosition?.pendingOperations?.filter(operation => !operation.complete) ?? [];
   const ownedShares = hasIndexShares(currentPosition) && currentPosition ? formatVaultShares(currentPosition.sharesRaw, currentPosition.shareDecimals ?? 0) : null;
   const readiness = vault ?? (initialVault ? vaultReadinessFromIndex(vaultId, {
@@ -94,7 +93,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
         <p>{index.headline}</p>
         <div className={styles.proof}>{holdings.length} stocks · {index.members.length} members · updated {updated}</div>
         <div className={styles.actions}>
-          {live ? <><button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button>{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}</> : null}
+          {live ? <button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button> : null}
           <button type="button" className={live ? styles.secondary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}

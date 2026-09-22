@@ -173,11 +173,21 @@ export type VaultIndexResponse = {
     vaultAddress?: string | null;
     shareMint?: string | null;
     network?: Network | null;
+    constituents?: { ticker?: string; mint?: string; weight_bps?: number }[];
   };
   depositsEnabled?: boolean;
   depositReason?: string | null;
   publicFundsEnabled?: boolean;
 };
+
+function publishedTargetWeights(payload: VaultIndexResponse): VaultReadiness["targetWeights"] {
+  const constituents = payload.index?.constituents;
+  if (!Array.isArray(constituents)) return undefined;
+  const weights = constituents.flatMap(row => typeof row?.mint === "string" && row.mint && typeof row.weight_bps === "number" && Number.isInteger(row.weight_bps) && row.weight_bps > 0
+    ? [{ mint: row.mint, weightBps: row.weight_bps, ...(typeof row.ticker === "string" && row.ticker ? { ticker: row.ticker } : {}) }]
+    : []);
+  return weights.length === constituents.length && weights.reduce((total, row) => total + row.weightBps, 0) === 10_000 ? weights : undefined;
+}
 
 function publicBlocker(payload: VaultIndexResponse, hasIdentity: boolean): string {
   if (!hasIdentity) return "This index is for research. Investing is not available yet.";
@@ -196,8 +206,10 @@ export function vaultReadinessFromIndex(indexId: string, payload: VaultIndexResp
     && typeof shareMint === "string" && addressPattern.test(shareMint)
     && (network === "mainnet-beta" || network === "devnet");
   const depositEnabled = hasIdentity && payload.depositsEnabled === true && payload.publicFundsEnabled === true;
+  const targetWeights = publishedTargetWeights(payload);
   return {
     indexId,
+    ...(targetWeights ? { targetWeights } : {}),
     depositEnabled,
     ready: depositEnabled,
     redeemEnabled: hasIdentity,

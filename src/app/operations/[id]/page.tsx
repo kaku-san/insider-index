@@ -1,10 +1,7 @@
-import { OperationStatus } from "@/components/operation-status";
+import { redirect } from "next/navigation";
 
-export default async function OperationPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  return <OperationStatus operationId={decodeURIComponent(id)} />;
+/** Native intent IDs are not saved operations. Keep old links in product navigation instead of
+ * attempting a missing API read and rendering an implementation error. */
+export default function OperationPage() {
+  redirect("/positions");
 }

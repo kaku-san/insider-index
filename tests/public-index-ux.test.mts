@@ -78,6 +78,7 @@ test("invest sheet uses plain language and skips a separate review step", () => 
   })));
   assert.match(html, /Enter an amount in USDC\. After wallet approval, a keeper settles your deposit\. Shares may take a short time to appear\./);
   assert.match(html, /Alpha software — experimental; you can lose funds\./);
+  assert.match(html, /Minimum deposit: \$250/);
   assert.match(html, /INVEST/);
   assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);
   assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation|recovery required/i);
@@ -133,4 +134,18 @@ test("Mag7 invest sheet keeps dust shares visible", () => {
     },
   })));
   assert.match(html, /0\.000003 shares/);
+});
+
+test("Mag7 cash out uses the position's verified dust decimals", () => {
+  const html = renderToStaticMarkup(wrap(createElement(VaultFlow, {
+    open: true, onClose() {}, indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", mode: "withdraw",
+    readiness: { indexId: "idx-theme-mag7-caucus", redeemEnabled: true, identity: { network: "mainnet-beta", vaultAccount: mag7Vault.vaultAddress!, shareMint: mag7Vault.shareMint! } },
+    position: {
+      indexId: "idx-theme-mag7-caucus", indexName: "Mag7 Caucus", owner: "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB",
+      shareMint: mag7Vault.shareMint!, shareDecimals: 6, sharesRaw: "3",
+    },
+  })));
+  assert.match(html, /value="0\.000003"/);
+  assert.match(html, /Cash out\./);
+  assert.doesNotMatch(html, /verified share decimals|claim every asset|Exit mechanics/i);
 });
