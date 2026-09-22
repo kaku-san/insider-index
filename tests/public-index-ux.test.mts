@@ -99,7 +99,7 @@ test("invest sheet uses plain language and skips a separate review step", () => 
   assert.doesNotMatch(html, />\$250</);
   assert.match(html, /INVEST/);
   assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);
-  assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation|recovery required/i);
+  assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation|recovery required|public-deposit-amount|Connect your wallet to continue\./i, "Mag7 Invest mounts the one-approval VaultFlow, never the retained cycle wizard");
 });
 
 test("Mag7 invest sheet names the same selected wallet used by the header", () => {

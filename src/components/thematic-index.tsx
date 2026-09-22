@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useResource } from "@/lib/frontend/use-resource";
 import type { ThematicIndexView } from "@/lib/thematic/views";
 import { companyNameFor } from "@/lib/frontend/company-logos";
+import { indexContentFor } from "@/lib/frontend/index-content";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import { Icon } from "./social/icon";
 import { IndexPerformanceLine, type IndexResourceResponse } from "./consumer-index";
@@ -65,6 +66,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   if (!index) return null;
 
   const holdings = [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps);
+  const content = indexContentFor(vaultId);
   const top = holdings.slice(0, 5);
   const max = Math.max(...top.map((item) => item.weight_bps), 1);
   const shown = top.reduce((sum, item) => sum + item.weight_bps, 0);
@@ -91,8 +93,8 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
       <div className={styles.heroCopy}>
         <div className={styles.titleLine}><span>Theme index</span><em>{index.members.length} members</em></div>
         <h1>{index.indexName}</h1>
-        <p>{index.headline}</p>
-        <div className={styles.proof}>{holdings.length} stocks · {index.members.length} members · updated {updated}</div>
+        <p>{content?.cardHook ?? index.headline}</p>
+        <div className={styles.proof}>{content?.heroProof ?? `${holdings.length} stocks`} · {index.members.length} members · updated {updated}</div>
         <div className={styles.actions}>
           {live ? <button type="button" className={styles.primary} disabled={Boolean(activeOperation)} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button> : null}
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
@@ -134,7 +136,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
           <div className={styles.allocationStrip}>{top.map((item, position) => <i key={item.mint} style={{ width: `${item.weight_bps / 100}%`, background: palette[position % palette.length] }} title={`${item.ticker} ${(item.weight_bps / 100).toFixed(2)}%`} />)}{shown < 10_000 ? <i style={{ width: `${(10_000 - shown) / 100}%`, background: "var(--surface-alt)" }} title="Other holdings" /> : null}</div>
           <div className={styles.allocationLegend}>{top.map((item, position) => <div key={item.mint}><i style={{ background: palette[position % palette.length] }} /><StockIcon ticker={item.ticker} size="sm" /><span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.name)}</small></span><b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b></div>)}</div>
         </div>
-        <div className={styles.summaryCard}><span>WHAT THIS MIX IS</span><p>{index.narrative}</p><small>Weights come from public filings. They are not a live brokerage account.</small></div>
+        <div className={styles.summaryCard}><span>WHAT THIS MIX IS</span><p>{content?.portfolioIntro ?? index.narrative}</p><small>Weights come from public filings. They are not a live brokerage account.</small></div>
       </div> : null}
       {tab === "about" ? <div className={styles.aboutGrid}>
         <section><span>HOW IT IS BUILT</span><h3>Public filings, published mix</h3><p>{index.whyItExists}</p><p>{index.rule}</p></section>
