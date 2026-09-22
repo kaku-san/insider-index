@@ -100,7 +100,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
   const [connectOpen,setConnectOpen]=useState(false);
   function close(){onClose();}
   // Reset the reusable modal when a new operation opens; derived state cannot preserve this boundary.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(()=>{if(open){setScreen("amount");setPrepared(null);setOperation(null);setSettlementPosition(null);setError(null);setAvailableUsdcRaw(null);setAmount(mode==="deposit"?"1000":positionSharesText(position)??"0");}},[open,mode,indexId,position?.sharesText,position?.sharesRaw,position?.shareDecimals]);
   useEffect(()=>{
     if(!open||screen!=="amount"||mode!=="deposit"||!wallet.solanaAddress)return;

@@ -191,7 +191,12 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
 
   useEffect(() => {
     let alive = true;
-    if (!id || !wallet.solanaAddress) { setPosition(null); return; }
+    if (!id || !wallet.solanaAddress) {
+      // Reset the wallet-scoped view when the external wallet identity disappears.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPosition(null);
+      return;
+    }
     getIndexPosition(routeId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(() => { if (alive) setPosition(null); });
     return () => { alive = false; };
   }, [id, routeId, wallet.solanaAddress]);
