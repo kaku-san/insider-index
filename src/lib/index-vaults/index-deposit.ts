@@ -9,6 +9,7 @@ import { kakuSanBuilders } from "./kaku-san-create.ts";
 import { VAULT_RELEASE } from "./release.ts";
 import { networkUsdc, SYMMETRY_PROGRAM_ID, type NativeVaultBuilders } from "./symmetry-adapter.ts";
 import { readVaultDefinition, type PersistedVaultDefinition } from "./vault-definition-store.ts";
+import { PUBLIC_DEPOSIT_MINIMUM_USDC_RAW, publicDepositMinimumMessage } from "./deposit-floor.ts";
 
 const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
@@ -48,6 +49,10 @@ function plainError(error: unknown, status = 503) {
   return Response.json({ error: error instanceof Error ? error.message : "Deposit preparation is unavailable." }, { status, headers: HEADERS });
 }
 
+export function assertPublicDepositMinimum(amountRaw: string) {
+  if (BigInt(amountRaw) < BigInt(PUBLIC_DEPOSIT_MINIMUM_USDC_RAW)) throw new Error(publicDepositMinimumMessage());
+}
+
 function usdcDisplayToRaw(value: unknown): string {
   const text = typeof value === "number" && Number.isSafeInteger(value) ? String(value) : typeof value === "string" ? value : "";
   if (!/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/.test(text)) throw new Error("USDC amount is invalid.");
@@ -68,6 +73,7 @@ export function parseIndexDepositRequest(body: unknown): DepositInput {
   address(input.owner);
   rawAmount(amountRaw, true);
   sdkRawAmount(amountRaw);
+  assertPublicDepositMinimum(amountRaw);
   return { owner: input.owner, amountRaw, ...(typeof input.idempotencyKey === "string" ? { idempotencyKey: input.idempotencyKey } : {}) };
 }
 
@@ -305,6 +311,7 @@ async function assertLiveVault(native: NativeVaultBuilders, definition: Persiste
 }
 
 export async function prepareIndexDeposit(indexId: string, input: DepositInput, dependencies: IndexDepositDependencies = defaultDependencies()) {
+  assertPublicDepositMinimum(input.amountRaw);
   const definition = await dependencies.loadDefinition(indexId);
   if (!definition) throw new Error("Index not found.");
   requireDepositGate(definition, dependencies.release);

@@ -13,6 +13,7 @@ const { handleIndexDepositPrepare, parseIndexDepositRequest } = await import("..
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const shareMint = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
+const DEPOSIT_RAW = "250000000";
 
 function transaction(instructions: TransactionInstruction[]) {
   const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions }).compileToV0Message();
@@ -44,7 +45,7 @@ function payload(kind: "deposit" | "lock") {
         keys: [{ pubkey: buyer, isSigner: true, isWritable: true }, { pubkey: intent, isSigner: false, isWritable: true }, { pubkey: getGlobalConfigPda(), isSigner: false, isWritable: false }],
         data: Buffer.from([64, 238, 171, 198, 135, 253, 37, 9]),
       });
-  if (kind === "deposit") instruction.data.writeBigUInt64LE(1_000_000n, 8);
+  if (kind === "deposit") instruction.data.writeBigUInt64LE(BigInt(DEPOSIT_RAW), 8);
   return { batches: [{ transactions: [transaction([instruction])] }] };
 }
 
@@ -96,7 +97,7 @@ function request(body: unknown) {
 }
 
 test("deposit prepare atomically simulates and signs first-depositor setup, contribution, and lock without a cycle rail", async () => {
-  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000", idempotencyKey: "demo-1" }), definition.indexId, dependencies() as never);
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW, idempotencyKey: "demo-1" }), definition.indexId, dependencies() as never);
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.requires, "user-signature");
@@ -104,7 +105,7 @@ test("deposit prepare atomically simulates and signs first-depositor setup, cont
   assert.equal(body.transactions.length, 1);
   assert.deepEqual(body.transactions.map((transaction: { stepId: string }) => transaction.stepId), ["deposit-1"]);
   assert.equal(body.transactions[0].maxDebits[0].owner, owner);
-  assert.equal(body.transactions[0].maxDebits[0].amountRaw, "1000000");
+  assert.equal(body.transactions[0].maxDebits[0].amountRaw, DEPOSIT_RAW);
   assert.equal(body.transactions[0].expectedRecipients[0].owner, vault);
   const preparedTransaction = VersionedTransaction.deserialize(Buffer.from(body.transactions[0].messageBase64, "base64"));
   assert.ok(preparedTransaction.signatures.every(signature => signature.every(byte => byte === 0)));
@@ -114,7 +115,7 @@ test("deposit prepare atomically simulates and signs first-depositor setup, cont
 });
 
 test("first-depositor SDK setup accepts only the buyer's expected share and WSOL bounty ATAs", async () => {
-  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({}, firstDepositPayloadWithAncillaryCreates(), NATIVE_MINT) as never);
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({}, firstDepositPayloadWithAncillaryCreates(), NATIVE_MINT) as never);
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.transactions.length, 1);
@@ -125,18 +126,22 @@ test("deposit prepare still rejects an unknown ancillary program", async () => {
   const randomProgram = PublicKey.unique();
   const invalid = firstDepositPayloadWithAncillaryCreates();
   invalid.batches[0]!.transactions[0]!.instructions.push({ program_id: randomProgram.toBase58(), accounts: [], data: "" });
-  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({}, invalid) as never);
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({}, invalid) as never);
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { error: "Unsupported ancillary instruction." });
 });
 
 test("deposit prepare rejects malformed amounts and every closed gate", async () => {
   assert.throws(() => parseIndexDepositRequest({ owner, amountRaw: "1", amountUsdc: "1" }), /either amountRaw/);
-  assert.equal(parseIndexDepositRequest({ owner, amountUsdc: "1.25" }).amountRaw, "1250000");
-  const closed = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({ release: { publicFundsEnabled: false } }) as never);
+  assert.equal(parseIndexDepositRequest({ owner, amountUsdc: "250.25" }).amountRaw, "250250000");
+  assert.throws(() => parseIndexDepositRequest({ owner, amountUsdc: "1.25" }), /Minimum deposit is \$250/);
+  const belowMinimum = await handleIndexDepositPrepare(request({ owner, amountRaw: "249999999" }), definition.indexId, dependencies() as never);
+  assert.equal(belowMinimum.status, 400);
+  assert.deepEqual(await belowMinimum.json(), { error: "Minimum deposit is $250." });
+  const closed = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ release: { publicFundsEnabled: false } }) as never);
   assert.equal(closed.status, 503);
   assert.deepEqual(await closed.json(), { error: "Investing is not open for signatures." });
-  const absent = await handleIndexDepositPrepare(request({ owner, amountRaw: "1000000" }), definition.indexId, dependencies({ loadDefinition: async () => null }) as never);
+  const absent = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ loadDefinition: async () => null }) as never);
   assert.equal(absent.status, 503);
   assert.deepEqual(await absent.json(), { error: "Index not found." });
 });

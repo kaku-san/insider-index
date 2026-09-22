@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { PublicKey } from "@solana/web3.js";
 import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
-import { handleIndexPosition, handleIndexPositions, pendingNativeDeposit, pendingNativeOperation, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
+import { handleIndexPosition, handleIndexPositions, pendingNativeDeposit, pendingNativeOperation, pendingNativeOperationForPosition, readOwnedIndexPositions } from "../src/lib/index-vaults/index-positions.ts";
 import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 
 const owner = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
@@ -43,6 +43,8 @@ test("position endpoint exposes only a chain-backed locked native deposit as pen
   assert.deepEqual(pendingNativeOperation(withdrawal, vault, mint, owner), {
     operationId: "native-withdraw-native-intent", identity: { vaultAccount: vault, shareMint: mint }, owner, kind: "withdraw", phase: "AUCTION", nativeIntent: "native-intent", complete: false, blockers: ["Cash out pending settlement"],
   });
+  assert.equal(pendingNativeOperationForPosition(withdrawal, vault, mint, owner, "3"), null, "minted dust shares are the receipt; the leftover intent is not resumable");
+  assert.deepEqual(pendingNativeOperationForPosition(withdrawal, vault, mint, owner, "0"), pendingNativeOperation(withdrawal, vault, mint, owner));
 });
 
 test("position endpoints accept only the connected wallet and return chain-backed positions", async () => {

@@ -47,13 +47,20 @@ export function pendingNativeDeposit(intent: UIRebalanceIntent, vaultAddress: st
   return operation?.kind === "deposit" ? operation : null;
 }
 
-async function pendingNativeOperations(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string): Promise<ObservedOperation[]> {
+/** A completed mint is the wallet's receipt. Symmetry can leave its prior intent account around
+ * after dust cleanup, but this app has no native-intent resume API to safely expose as an action. */
+export function pendingNativeOperationForPosition(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string, sharesRaw: string): ObservedOperation | null {
+  if (BigInt(sharesRaw) > 0n) return null;
+  return pendingNativeOperation(intent, vaultAddress, shareMint, owner);
+}
+
+async function pendingNativeOperations(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string, sharesRaw: string): Promise<ObservedOperation[]> {
   const intentAddress = getRebalanceIntentPda(new PublicKey(vaultAddress), new PublicKey(owner)).toBase58();
   const account = await native.connection.getAccountInfo(new PublicKey(intentAddress), "confirmed");
   if (!account) return [];
   const { SYMMETRY_PROGRAM_ID } = await import("./symmetry-adapter.ts");
   if (!account.owner.equals(new PublicKey(SYMMETRY_PROGRAM_ID))) throw new Error("Native intent is unavailable");
-  const pending = pendingNativeOperation(await native.sdk.fetchRebalanceIntent(intentAddress), vaultAddress, shareMint, owner);
+  const pending = pendingNativeOperationForPosition(await native.sdk.fetchRebalanceIntent(intentAddress), vaultAddress, shareMint, owner, sharesRaw);
   return pending ? [pending] : [];
 }
 
@@ -88,7 +95,7 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
     if (!account.isInitialized || account.owner.toBase58() !== owner || account.mint.toBase58() !== index.shareMint) throw new Error("Share account identity mismatch");
     shares += account.amount;
   }
-  const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner);
+  const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString());
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
     shareDecimals: mint.decimals, sharesRaw: shares.toString(),

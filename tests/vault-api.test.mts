@@ -110,6 +110,22 @@ test("public deposit eligibility requires a complete identity and the global rel
   assert.deepEqual(noIdentity.blockers, ["This index is for research. Investing is not available yet."]);
 });
 
+test("published vault constituents become honest position target weights", () => {
+  const readiness = vaultReadinessFromIndex("idx-theme-mag7-caucus", {
+    index: {
+      vaultAddress: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh", shareMint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4", network: "mainnet-beta",
+      constituents: [
+        { ticker: "MSFT", mint: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh", weight_bps: 6_000 },
+        { ticker: "AAPL", mint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4", weight_bps: 4_000 },
+      ],
+    }, depositsEnabled: true, publicFundsEnabled: true,
+  });
+  assert.deepEqual(readiness.targetWeights, [
+    { ticker: "MSFT", mint: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh", weightBps: 6_000 },
+    { ticker: "AAPL", mint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4", weightBps: 4_000 },
+  ]);
+});
+
 test("a public index is Live only when the active signing path also allows deposits", () => {
   const mag7 = {
     vaultAddress: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh",

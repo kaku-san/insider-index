@@ -5,6 +5,7 @@ import { usePrivySolana } from "./providers/privy-provider";
 import { WalletConnectSheet } from "./wallet-connect-sheet";
 import { Icon } from "./social/icon";
 import { errorText } from "@/lib/frontend/api";
+import { PUBLIC_DEPOSIT_MINIMUM_USDC, PUBLIC_DEPOSIT_MINIMUM_USDC_RAW, publicDepositMinimumMessage } from "@/lib/index-vaults/deposit-floor";
 import {
   DEPOSIT_PHASES, creditHasRemainingAmount, depositIsEnabled, getIndexPosition, getOperation, hasIndexShares, prepareConversion, prepareDeposit,
   prepareNext, prepareWithdrawal, submitReceipts,
@@ -55,10 +56,14 @@ function rawToDecimal(rawText:string,decimals:number){
   return fraction?`${whole}.${fraction}`:whole;
 }
 function withdrawalDecimals(readiness?:VaultReadiness|null,position?:IndexSharePosition|null){
-  const decimals=readiness?.identity?.shareDecimals??readiness?.vault?.shareDecimals;
-  if(typeof decimals!=="number"||!Number.isInteger(decimals)||decimals<0||decimals>18)throw new Error("The verified share decimals are unavailable.");
-  if(position?.shareDecimals!=null&&position.shareDecimals!==decimals)throw new Error("The position and vault share decimals do not match.");
-  return decimals;
+  const positionDecimals=position?.shareDecimals;
+  const vaultDecimals=readiness?.identity?.shareDecimals??readiness?.vault?.shareDecimals;
+  if(positionDecimals!=null&&(!Number.isInteger(positionDecimals)||positionDecimals<0||positionDecimals>18))throw new Error("Cash out is not available until your share details refresh.");
+  if(vaultDecimals!=null&&(!Number.isInteger(vaultDecimals)||vaultDecimals<0||vaultDecimals>18))throw new Error("Cash out is not available until your share details refresh.");
+  if(positionDecimals!=null&&vaultDecimals!=null&&positionDecimals!==vaultDecimals)throw new Error("Cash out is not available until your share details refresh.");
+  if(positionDecimals!=null)return positionDecimals;
+  if(vaultDecimals!=null)return vaultDecimals;
+  throw new Error("Cash out is not available until your share details refresh.");
 }
 function positionSharesText(position?:IndexSharePosition|null){
   if(!position)return null;
@@ -84,7 +89,7 @@ async function confirmSignature(signature:string, network:"mainnet-beta"|"devnet
 export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposit",position}:{open:boolean;onClose:()=>void;indexId:string;indexName:string;readiness?:VaultReadiness|null;mode?:Mode;position?:IndexSharePosition|null;indexKind?:IndexKind}){
   const wallet=usePrivySolana();
   const [screen,setScreen]=useState<Screen>("amount");
-  const [amount,setAmount]=useState(mode==="deposit"?"1000":"100");
+  const [amount,setAmount]=useState(()=>mode==="deposit"?"1000":positionSharesText(position)??"0");
   const [prepared,setPrepared]=useState<PreparedStep|null>(null);
   const [operation,setOperation]=useState<ObservedOperation|null>(null);
   const [settlementPosition,setSettlementPosition]=useState<IndexSharePosition|null>(null);
@@ -94,7 +99,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
   function close(){onClose();}
   // Reset the reusable modal when a new operation opens; derived state cannot preserve this boundary.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(()=>{if(open){setScreen("amount");setPrepared(null);setOperation(null);setSettlementPosition(null);setError(null);setAmount(mode==="deposit"?"1000":(position?.sharesText??"0"));}},[open,mode,indexId,position?.sharesText]);
+  useEffect(()=>{if(open){setScreen("amount");setPrepared(null);setOperation(null);setSettlementPosition(null);setError(null);setAmount(mode==="deposit"?"1000":positionSharesText(position)??"0");}},[open,mode,indexId,position?.sharesText,position?.sharesRaw,position?.shareDecimals]);
   // A wallet-confirmed lock is not a share receipt. Poll only the public position reader and
   // never turn this state into completion until a positive native share balance is observed.
   useEffect(()=>{if(!open||screen!=="submitted"||mode!=="deposit"||!wallet.solanaAddress)return;let alive=true;let timer:ReturnType<typeof setTimeout>|null=null;const observe=()=>{void getIndexPosition(indexId,wallet.solanaAddress!).then(value=>{if(alive){setSettlementPosition(value);if(!hasIndexShares(value))timer=setTimeout(observe,15_000);}}).catch(()=>{if(alive)timer=setTimeout(observe,15_000);});};observe();return()=>{alive=false;if(timer)clearTimeout(timer)};},[open,screen,mode,indexId,wallet.solanaAddress]);
@@ -114,8 +119,10 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
 
   function start(){
     try{
-      if(mode==="deposit")usdcRaw(amount);
-      else decimalToRaw(amount,withdrawalDecimals(readiness,position),"share");
+      if(mode==="deposit"){
+        const raw=usdcRaw(amount);
+        if(BigInt(raw)<BigInt(PUBLIC_DEPOSIT_MINIMUM_USDC_RAW))throw new Error(publicDepositMinimumMessage());
+      }else decimalToRaw(amount,withdrawalDecimals(readiness,position),"share");
       setError(null);
       void doPrepare();
     }catch(e){setError(errorText(e));}
@@ -175,7 +182,7 @@ export function VaultFlow({open,onClose,indexId,indexName,readiness,mode="deposi
     <div className={styles.body}>
       {mode === "deposit" ? <div className={styles.notice}><Icon name="shield" size={18}/><p><strong>Alpha software — experimental; you can lose funds.</strong>Review every wallet approval before signing.</p></div> : null}
       {screen==="amount"?<><div className={styles.intro}><h3>{mode==="deposit"?"Invest in USDC.":"Cash out."}</h3><p>{mode==="deposit"?"Enter an amount in USDC. After wallet approval, a keeper settles your deposit. Shares may take a short time to appear.":"Enter how many shares to cash out. You approve in your wallet before anything moves."}</p></div>
-        {mode==="deposit"?<div className={styles.amountWrap}><label>Amount</label><div className={styles.amount}><span>$</span><input value={amount} inputMode="decimal" onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,""))}/></div><div className={styles.quick}>{[250,1000,2500,5000].map(v=><button key={v} onClick={()=>setAmount(String(v))}>${v.toLocaleString()}</button>)}</div></div>:<div className={styles.amountWrap}><label>Shares</label><div className={styles.amount}><input value={amount} onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,""))}/><span>shares</span></div><div className={styles.quick}>{[25,50,100].map(p=><button key={p} onClick={()=>{try{const decimals=withdrawalDecimals(readiness,position);const percentageRaw=BigInt(position?.sharesRaw??"0")*BigInt(p)/100n;setError(null);setAmount(rawToDecimal(percentageRaw.toString(),decimals))}catch(e){setError(errorText(e))}}}>{p}%</button>)}</div></div>}
+        {mode==="deposit"?<div className={styles.amountWrap}><label>Amount</label><div className={styles.amount}><span>$</span><input value={amount} inputMode="decimal" onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,""))}/></div><div className={styles.quick}>{[250,1000,2500,5000].map(v=><button key={v} onClick={()=>setAmount(String(v))}>${v.toLocaleString()}</button>)}</div><p className={styles.minimum}>Minimum deposit: ${PUBLIC_DEPOSIT_MINIMUM_USDC}</p></div>:<div className={styles.amountWrap}><label>Shares</label><div className={styles.amount}><input value={amount} onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,""))}/><span>shares</span></div><div className={styles.quick}>{[25,50,100].map(p=><button key={p} onClick={()=>{try{const decimals=withdrawalDecimals(readiness,position);const percentageRaw=BigInt(position?.sharesRaw??"0")*BigInt(p)/100n;setError(null);setAmount(rawToDecimal(percentageRaw.toString(),decimals))}catch(e){setError(errorText(e))}}}>{p}%</button>)}</div></div>}
         <div className={styles.summary}><div className={styles.row}><span>{mode==="deposit"?"You invest":"You cash out"}</span><strong>{mode==="deposit"?`${amount} USDC`:`${amount} shares`}</strong></div>{mode==="deposit"&&wallet.solanaAddress?<div className={styles.row}><span>Investing as</span><strong>{wallet.solanaAddress.slice(0,8)}…{wallet.solanaAddress.slice(-8)}</strong></div>:null}{mode==="deposit"&&currentShares?<div className={styles.row}><span>Your position</span><strong>{currentShares} shares</strong></div>:null}<div className={styles.row}><span>Fees</span><strong>Shown before you approve</strong></div></div>{error?<div className={styles.blockers}>{error}</div>:null}{blocked?<div className={styles.blockers}><strong>Not ready to sign</strong><ul>{(readiness?.blockers??[]).map((x,i)=><li key={i}>{x}</li>)}</ul></div>:null}<div className={styles.notice}><Icon name="shield" size={18}/><p><strong>Nothing moves until you approve.</strong>Connecting a wallet does not invest or cash out.</p></div><div className={styles.cta}><button className={styles.primary} disabled={busy} onClick={start}>{!wallet.authenticated?"Connect to continue":busy?"Preparing…":mode==="deposit"?"Invest":"Cash out"}</button></div></>
       :screen==="prepare"?<><div className={styles.intro}><h3>{prepared?.blockers?.length?"This stopped here.":"Not ready to sign yet."}</h3><p>Nothing was sent. You can go back and try again when investing is open.</p></div><PreparedDetails prepared={prepared}/><div className={styles.blockers}><ul>{(prepared?.blockers?.length?prepared.blockers:readiness?.blockers?.length?readiness.blockers:[error||"This action is not available yet."]).map((x,i)=><li key={i}>{x}</li>)}</ul></div><div className={styles.cta}><button className={styles.secondary} onClick={()=>setScreen("amount")}>Back</button></div></>
       :screen==="approval"?<><div className={styles.intro}><h3>Approve in your wallet.</h3><p>{txs.length} {txs.length===1?"approval":"approvals"} ready. Check the amount before you sign.</p></div><PreparedDetails prepared={prepared}/>{txs.map((tx,i)=><div className={styles.approval} key={tx.stepId}><div className={styles.approvalTop}><span>APPROVAL {i+1} OF {txs.length}</span></div><h4>{phaseLabel(tx.stepId)}</h4></div>)}{error?<div className={styles.blockers}>{error}</div>:null}<div className={styles.cta}><button className={styles.secondary} onClick={()=>setScreen("amount")}>Back</button><button className={styles.primary} disabled={busy||!txs.length||Boolean(prepared?.blockers.length)} onClick={()=>void approve()}>{busy?"Waiting for wallet…":"Approve in wallet"}</button></div></>
