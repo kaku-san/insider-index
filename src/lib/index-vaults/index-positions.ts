@@ -6,6 +6,8 @@ import { getHeliusRpcUrl } from "../helius.ts";
 import type { IndexSharePosition, Network, ObservedOperation } from "../frontend/vault-api.ts";
 import type { NativeVaultBuilders } from "./symmetry-adapter.ts";
 import type { PublicVaultDefinition } from "./vault-definition-store.ts";
+import { MAINNET_USDC } from "./native-defaults.ts";
+import { WSOL_MINT } from "./raydium-oracles.ts";
 
 const headers = { "Cache-Control": "no-store" };
 const tokenPrograms = [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID];
@@ -26,19 +28,36 @@ function createdIndex(index: PublicVaultDefinition): index is CreatedIndex {
     && typeof index.shareMint === "string";
 }
 
+/** The native intent remains an active obligation even after an unfilled auction closes. */
+export function nativeDepositAuctionState(intent: UIRebalanceIntent, now = Date.now()): "PENDING" | "FAILED" {
+  const chain = intent.chain_data;
+  if (chain.rebalanceType !== RebalanceType.Deposit || chain.currentAction !== RebalanceAction.Auction) return "PENDING";
+  const auctions = Array.isArray(chain.auctions) ? chain.auctions : [];
+  const tokens = Array.isArray(chain.tokens) ? chain.tokens : [];
+  const ends = auctions.map(auction => Number(auction.endTime.toString())).filter(Number.isFinite);
+  const auctionClosed = ends.length > 0 && Math.max(...ends) * 1000 <= now;
+  const boughtAnyBasketLeg = tokens.some(token => token.mint.toBase58() !== MAINNET_USDC && token.mint.toBase58() !== WSOL_MINT && !token.amount.isZero());
+  return auctionClosed && !boughtAnyBasketLeg ? "FAILED" : "PENDING";
+}
+
 /** A native intent is the only pending-operation source; a prepare response is never a receipt. */
-export function pendingNativeOperation(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string): ObservedOperation | null {
+export function pendingNativeOperation(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string, now = Date.now()): ObservedOperation | null {
   const chain = intent.chain_data;
   if (chain.vault.toBase58() !== vaultAddress || chain.owner.toBase58() !== owner) throw new Error("Native intent identity mismatch");
   if (chain.currentAction === RebalanceAction.NotActive) return null;
   const deposit = chain.rebalanceType === RebalanceType.Deposit;
   const withdrawal = chain.rebalanceType === RebalanceType.Withdraw;
   if (!deposit && !withdrawal) throw new Error("Native intent type is unavailable");
-  const phase = chain.currentAction === RebalanceAction.DepositTokens ? deposit ? "AWAITING_LOCK" : "REDEMPTION_CLAIM"
-    : chain.currentAction === RebalanceAction.UpdatePrices ? "PRICING"
-    : intent.mint_data ? "CLEANUP" : "AUCTION";
+  const auctionState = nativeDepositAuctionState(intent, now);
+  const phase = auctionState === "FAILED" ? "FAILED"
+    : chain.currentAction === RebalanceAction.DepositTokens ? deposit ? "AWAITING_LOCK" : "REDEMPTION_CLAIM"
+      : chain.currentAction === RebalanceAction.UpdatePrices ? "PRICING"
+        : intent.mint_data ? "CLEANUP" : "AUCTION";
   const kind = deposit ? "deposit" : "withdraw";
-  return { operationId: `native-${kind}-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind, phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: [deposit ? "Deposit pending settlement" : "Cash out pending settlement"] };
+  const blocker = auctionState === "FAILED"
+    ? "This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares."
+    : deposit ? "Deposit pending settlement" : "Cash out pending settlement";
+  return { operationId: `native-${kind}-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind, phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: [blocker] };
 }
 
 /** Kept as the deposit-specific seam for callers that must never label a withdrawal as a deposit. */
