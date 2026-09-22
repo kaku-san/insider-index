@@ -226,6 +226,7 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
       return { action: "mint", intent: intentAddress, filledLegMints: plan.filledLegMints, skippedLegMints: plan.skippedLegMints, unspentUsdcRaw: plan.unspentUsdcRaw, ...result };
     }
     const missingLegs = new Set(record.vaultLegs.filter(leg => !chain.tokens.some(token => token.mint.toBase58() === leg.mint && !token.amount.isZero())).map(leg => leg.mint));
+    if (!missingLegs.size) return { action: "wait", reason: "All Mag7 investment legs are filled; waiting for the native auction to close", intent: intentAddress, signatures: [], spent };
     const pairs = getSwapPairs(chain, vault).filter(pair => pair.outMint === MAINNET_USDC && missingLegs.has(pair.inMint));
     const fills = [], skipped: Array<{ mint: string; ticker: string; reason: string }> = [];
     for (const pair of pairs) {
@@ -256,6 +257,23 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
   return { action: "wait", reason: `Unsupported deposit intent action ${intent.formatted_data.current_action}`, intent: intentAddress, signatures: [], spent };
 }
 
+export async function settleMag7IntentBurst(
+  options: Options,
+  spent: bigint,
+  intentAddress: string,
+  advance: (options: Options, spent: bigint, intentAddress: string) => Promise<TickResult> = tickIntent,
+): Promise<TickResult[]> {
+  const results: TickResult[] = [];
+  do {
+    const result = await advance(options, spent, intentAddress);
+    results.push(result);
+    spent = result.spent;
+    // A fill transaction holds at most two swaps. Refresh the intent and immediately
+    // prepare the next one while its native auction remains open; polling is idle-only.
+    if (result.action !== "fill" || spent >= MAX_SOL_DEBIT_LAMPORTS) return results;
+  } while (true);
+}
+
 async function tick(options: Options) {
   const native = kakuSanBuilders(false);
   await native.assertNetwork();
@@ -266,9 +284,12 @@ async function tick(options: Options) {
   const results: Array<TickResult | { action: "error"; intent: string; error: string; signatures: []; spent: bigint }> = [];
   for (const intentAddress of intentAddresses) {
     try {
-      const result = await tickIntent(options, spent, intentAddress);
+      const intentResults = await settleMag7IntentBurst(options, spent, intentAddress);
+      const result = intentResults.at(-1)!;
       spent = result.spent;
-      results.push(result);
+      results.push(...intentResults);
+      // Spending is global to this poll, including an exact-cap final fill.
+      if (spent >= MAX_SOL_DEBIT_LAMPORTS) break;
     } catch (error) {
       const message = error instanceof Error ? error.message : "MAG7_KEEPER_REFUSED";
       results.push({ action: "error", intent: intentAddress, error: message, signatures: [], spent });

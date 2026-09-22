@@ -11,7 +11,7 @@ import { legBindings } from "../src/lib/index-vaults/keeper-tick.ts";
 import { allSevenVm, definition } from "./support/all-seven-vm.mts";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { lockedMag7DepositIntentAddresses, mag7MintPlan, mag7SkippableRouteReason, parseArgs } = await import("../scripts/mag7-settle-deposit.mts");
+const { lockedMag7DepositIntentAddresses, mag7MintPlan, mag7SkippableRouteReason, parseArgs, settleMag7IntentBurst } = await import("../scripts/mag7-settle-deposit.mts");
 
 const VAULT = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const OTHER_VAULT = "8vQmbDWWSph7qQvSdvYcJ4W3xQnn6Nwg3Bh85P6iyReL";
@@ -40,6 +40,32 @@ test("Mag7 watcher selects every locked Mag7 deposit but no unlocked or foreign 
     intent("unlocked", VAULT, RebalanceAction.DepositTokens), intent("inactive", VAULT, RebalanceAction.NotActive),
     intent("other-vault", OTHER_VAULT), intent("withdraw", VAULT, RebalanceAction.UpdatePrices, RebalanceType.Withdraw),
   ]), ["locked-price", "locked-auction"]);
+});
+
+test("Mag7 auction burst immediately walks seven legs in four two-swap-capped fills", async () => {
+  const fills = [["one", "two"], ["three", "four"], ["five", "six"], ["seven"]];
+  const sentWithSpent: bigint[] = [];
+  const results = await settleMag7IntentBurst(parseArgs([]), 0n, "seven-leg-auction", async (_options, spent, intentAddress) => {
+    sentWithSpent.push(spent);
+    const filled = fills.shift();
+    if (!filled) return { action: "wait", reason: "All Mag7 investment legs are filled", intent: intentAddress, signatures: [], spent };
+    return { action: "fill", intent: intentAddress, filled, signatures: [`fill-${filled[0]}`], spent: spent + 1n };
+  });
+
+  assert.deepEqual(results.filter(result => result.action === "fill").flatMap(result => result.filled), ["one", "two", "three", "four", "five", "six", "seven"]);
+  assert.deepEqual(sentWithSpent, [0n, 1n, 2n, 3n, 4n]);
+  assert.equal(results.at(-1)?.action, "wait");
+});
+
+test("Mag7 auction burst stops at the per-poll SOL cap", async () => {
+  let attemptedFills = 0;
+  const results = await settleMag7IntentBurst(parseArgs([]), 0n, "capped-auction", async (_options, spent, intentAddress) => {
+    attemptedFills++;
+    return { action: "fill", intent: intentAddress, filled: ["one", "two"], signatures: ["fill"], spent: spent + 50_000_000n };
+  });
+
+  assert.equal(attemptedFills, 1);
+  assert.equal(results.length, 1);
 });
 
 test("Mag7 settler skips only dust route failures and mints its filled subset", () => {
