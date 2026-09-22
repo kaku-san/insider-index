@@ -147,5 +147,7 @@ test("Mag7 cash out uses the position's verified dust decimals", () => {
   })));
   assert.match(html, /value="0\.000003"/);
   assert.match(html, /Cash out\./);
+  assert.match(html, /1 approval now/);
+  assert.match(html, /USDC arrives after settlement/);
   assert.doesNotMatch(html, /verified share decimals|claim every asset|Exit mechanics/i);
 });

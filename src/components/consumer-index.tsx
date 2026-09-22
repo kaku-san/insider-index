@@ -8,7 +8,7 @@ import type { PublishedIndex, PublishedIndexResponse } from "@/lib/frontend/rese
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { useUI } from "./providers/ui-provider";
@@ -204,7 +204,11 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const resourceReadiness = id && resource.data ? vaultReadinessFromIndex(routeId, resource.data) : null;
   const flowReadiness = vault ?? resourceReadiness;
   const following = ui.deviceFollows.includes(index.person_id);
-  const canCashOut = live && hasIndexShares(position);
+  const canCashOut = publicIndexCanCashOut(routeId, {
+    vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
+    shareMint: vault?.identity?.shareMint ?? resource.data?.index.shareMint,
+    network: vault?.identity?.network ?? resource.data?.index.network,
+  }) && hasIndexShares(position);
   const excluded = index.definition?.excluded ?? [];
   const holdings = sortedHoldings(index);
   const summary = `A public annual-disclosure model led by ${holdings.slice(0, 4).map((item) => companyNameFor(item.ticker, item.issuer)).join(", ")}.`;
@@ -222,7 +226,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         <p>The stocks in this index, the mix, and how it was built — in one place.</p>
         <div className={styles.proof}>{index.constituents.length} stocks · updated {updated}</div>
         <div className={styles.actions}>
-          {live ? <><button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button>{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}</> : null}
+          {live ? <button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button> : null}{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
           <button type="button" className={styles.tertiary} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(index.person_id)}><Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}</button>
         </div>
