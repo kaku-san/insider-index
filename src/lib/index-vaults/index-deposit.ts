@@ -8,6 +8,7 @@ import { validateAndSimulate } from "./transaction-policy.ts";
 import { kakuSanBuilders } from "./kaku-san-create.ts";
 import { VAULT_RELEASE } from "./release.ts";
 import { assertMag7DepositBacking } from "./mag7-deposit-backing.ts";
+import { assertWeightedSlicesRoutable } from "./mag7-deposit-slices.ts";
 import { networkUsdc, SYMMETRY_PROGRAM_ID, type NativeVaultBuilders } from "./symmetry-adapter.ts";
 import { readVaultDefinition, type PersistedVaultDefinition } from "./vault-definition-store.ts";
 import { PUBLIC_DEPOSIT_MINIMUM_USDC_RAW, publicDepositMinimumMessage } from "./deposit-floor.ts";
@@ -33,6 +34,7 @@ export type IndexDepositDependencies = {
   loadDefinition: (indexId: string) => Promise<PersistedVaultDefinition | null>;
   nativeBuilder: () => NativeVaultBuilders;
   release: DepositRelease;
+  assertSlicesRoutable?: (native: NativeVaultBuilders, definition: PersistedVaultDefinition, amountRaw: string, owner: string) => Promise<void>;
 };
 
 function defaultDependencies(): IndexDepositDependencies {
@@ -320,6 +322,9 @@ export async function prepareIndexDeposit(indexId: string, input: DepositInput, 
   const native = dependencies.nativeBuilder();
   const vault = await assertLiveVault(native, definition, input.owner);
   assertMag7DepositBacking(vault, definition);
+  await (dependencies.assertSlicesRoutable ?? ((builders, record, amountRaw, owner) => assertWeightedSlicesRoutable({
+    connection: builders.connection, definition: record, amountRaw, owner,
+  })))(native, definition, input.amountRaw, input.owner);
   const buy = await native.sdk.buyVaultTx({
     buyer: input.owner,
     vault_mint: definition.shareMint!,

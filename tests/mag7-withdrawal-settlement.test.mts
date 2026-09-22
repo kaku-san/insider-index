@@ -103,17 +103,30 @@ test("withdrawal sales use actual SDK direction and Raydium proceeds, with zero 
   } finally { Date.now = realNow; }
 });
 
-test("missed stock window, no receive target, and unavailable route never prepare in-kind claims or keeper-funded swaps", async () => {
+test("empty sale list during the window waits; missed window redeems leftover USDC and stocks as-is", async () => {
   const realNow = Date.now;
   try {
     const { vm, chain, input } = await withdrawalFixture(true, false);
-    await assert.rejects(prepareWithdrawalKeeperStep(input), /NO_STOCK_TO_USDC_PAIRS/);
+    const stock = definition.vaultLegs[0].mint;
+    const neverQuote = async () => { throw new Error("EMPTY_LIST_MUST_NOT_QUOTE"); };
+    const waiting = await prepareWithdrawalKeeperStep(input, neverQuote);
+    assert.equal(waiting.step, "wait");
+    assert.equal(waiting.eligible, false);
+    assert.match(waiting.reason, /reread the native sale list/);
     vm.time(Number(chain.auctions[2].endTime.toString()) + 1);
-    await assert.rejects(prepareWithdrawalKeeperStep(input), /WINDOW_MISSED_UNSOLD_ASSETS/);
-    // The generic keeper must use the same guard even when SDK advertises redeem readiness.
     const observation = { vault: input.vault, vaultAddress: vm.vault, intents: 1,
       withdrawalIntents: [{ address: vm.intent, owner: vm.owner, stage: "redeem" }], legs: definition.vaultLegs } as unknown as IndexKeeperObservation;
-    await assert.rejects(prepareIndexKeeperStep(observation, vm.keeper, vm.native), /WINDOW_MISSED_UNSOLD_ASSETS/);
+    const plan = await prepareIndexKeeperStep(observation, vm.keeper, vm.native);
+    assert.equal(plan.step, "redeem");
+    assert.match(plan.reason, /as-is/);
+    for (const tx of plan.transactions) vm.apply({ batches: [{ transactions: [{ tx_b64: tx.txBase64 }] }] });
+    assert.equal(await vm.balance(vm.owner, stock, TOKEN_2022_PROGRAM_ID), 1_000_000n);
+    assert.equal(await vm.balance(vm.owner, MAINNET_USDC), 100_000_000n);
+    assert.equal(await vm.balance(vm.vault, stock, TOKEN_2022_PROGRAM_ID), 0n);
+    assert.equal(await vm.balance(vm.vault, MAINNET_USDC), 0n);
+    assert.equal(await vm.balance(vm.keeper, stock, TOKEN_2022_PROGRAM_ID), 0n);
+    assert.equal(await vm.balance(vm.keeper, MAINNET_USDC), 0n);
+    assert((await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data.tokens.every(token => token.amount.isZero()));
     const second = await withdrawalFixture(true);
     await assert.rejects(prepareWithdrawalKeeperStep(second.input, async () => { throw new Error("CYCLE_ROUTE_MINIMUM_UNSATISFIABLE"); }), /CYCLE_ROUTE_MINIMUM_UNSATISFIABLE/);
     assert.equal(await second.vm.balance(second.vm.keeper, MAINNET_USDC), 0n);

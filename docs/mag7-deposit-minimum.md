@@ -5,7 +5,10 @@ paused; this route measurement does not change any release gate.
 
 This is the public Mag7 **route-coverage** floor. It replaces the prior
 unverified $1 value with a live, weighted-slice check against the installed
-Mag7 definition.
+Mag7 definition. It is **not** proof that a later contribution can fill: deposit
+prepare quotes all seven weighted Raydium slices at the requested size before
+`buyVaultTx`/lock (`mag7-deposit-slices.ts`) and refuses with "This amount cannot
+buy Mag7 right now" if any name cannot fill.
 
 ## Live route check
 

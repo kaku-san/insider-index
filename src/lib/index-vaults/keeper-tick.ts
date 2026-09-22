@@ -25,12 +25,12 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Keypair, PublicKey, VersionedTransaction, type Connection } from "@solana/web3.js";
 import type { Vault } from "@symmetry-hq/sdk";
-import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { createAssociatedTokenAccountIdempotentInstruction, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { RebalanceAction, RebalanceType } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { redeemTokensIx } from "@symmetry-hq/sdk/dist/instructions/user/withdraw.js";
 import { buildCycleRoute } from "./cycle-routes.ts";
 import { buildCycleFillWire, encodeCycleWire } from "./cycle-wire.ts";
-import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { getAta, getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import { getSwapPairs } from "@symmetry-hq/sdk/dist/states/intents/rebalanceIntent.js";
 import { address } from "./amounts.ts";
 import { assertNativeSupportTargets, hasUnreconciledSupportBalance, NATIVE_SUPPORT_BALANCE_REASON, NATIVE_DEFAULT_BINDINGS, MAINNET_USDC } from "./native-defaults.ts";
@@ -164,8 +164,37 @@ export function withdrawalAuctionSales(pairs: readonly WithdrawalAuctionPair[]):
 }
 
 /** Shared by both keepers, including native post-mint cash leftovers (type Withdraw).
- * Never redeem a stock claim after a missed window, restart an auction, or subsidize a sale.
+ * Empty sale lists during an open window wait. After the window, leftover USDC and/or stocks
+ * redeem as-is to the intent owner. Never restart an auction, keeper-fund a sale, or invent a refund.
  * One atomic Raydium sale per step; callers refresh before preparing the next stock. */
+async function redeemRemainingToOwner(input: {
+  native: NativeVaultBuilders; vault: Vault; owner: PublicKey; keeper: string;
+  remaining: { mint: PublicKey; amount: { isZero(): boolean } }[]; maxPriorityFeeLamports?: string; reason: string;
+}): Promise<IndexKeeperRebalancePlan> {
+  const batch = input.remaining.filter(token => !token.amount.isZero()).slice(0, 5);
+  if (!batch.length) throw new Error("CASH_OUT_NOTHING_TO_REDEEM");
+  const mintInfos = await input.native.connection.getMultipleAccountsInfo(batch.map(token => token.mint), "confirmed");
+  const payer = new PublicKey(input.keeper);
+  const instructions = [];
+  const tokenMints = [];
+  const tokenPrograms = [];
+  for (const [index, token] of batch.entries()) {
+    const info = mintInfos[index];
+    if (!info || ![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].some(program => program.equals(info.owner))) throw new Error("CASH_OUT_REDEEM_MINT_PROGRAM");
+    const ata = getAta(input.owner, token.mint, info.owner);
+    instructions.push(createAssociatedTokenAccountIdempotentInstruction(payer, ata, input.owner, token.mint, info.owner));
+    tokenMints.push(token.mint);
+    tokenPrograms.push(info.owner);
+  }
+  instructions.push(redeemTokensIx({ keeper: payer, vault: input.vault.ownAddress, owner: input.owner, tokenMints, tokenPrograms }));
+  const { blockhash } = await input.native.connection.getLatestBlockhash("confirmed");
+  const wire = encodeCycleWire({
+    payer: input.keeper, blockhash, computeUnits: 400_000, microLamports: "25000",
+    maxPriorityFeeLamports: input.maxPriorityFeeLamports ?? "50000000", instructions,
+  });
+  return { step: "redeem", eligible: true, reason: input.reason, transactions: [{ txBase64: wire.txBase64 }] };
+}
+
 export async function prepareWithdrawalKeeperStep(input: {
   native: NativeVaultBuilders; vault: Vault; intentAddress: string; keeper: string;
   legs: readonly PersistedVaultLeg[]; maxPriorityFeeLamports?: string;
@@ -181,22 +210,17 @@ export async function prepareWithdrawalKeeperStep(input: {
   const remaining = chain.tokens.filter(token => !token.amount.isZero());
   const stocks = remaining.filter(token => token.mint.toBase58() !== MAINNET_USDC);
   if (now > end) {
-    if (stocks.length) throw new Error("CASH_OUT_WINDOW_MISSED_UNSOLD_ASSETS: refusing in-kind redemption; native recovery required");
     if (!remaining.length) {
       const payload = await native.sdk.claimBountyTx({ keeper, rebalance_intent: intentAddress });
       return { step: "claim-bounty", eligible: true, reason: "Closing the fully settled native intent", transactions: payloadTransactions(payload, keeper) };
     }
-    // Build only the USDC claim, with a canonical owner ATA. Unlike SDK redeemTokensTx,
-    // this cannot silently skip a missing ATA or include a stock from a second read.
-    const usdc = new PublicKey(MAINNET_USDC), payer = new PublicKey(keeper);
-    const ata = getAssociatedTokenAddressSync(usdc, chain.owner);
-    const { blockhash } = await native.connection.getLatestBlockhash("confirmed");
-    const wire = encodeCycleWire({ payer: keeper, blockhash, computeUnits: 400_000, microLamports: "25000",
-      maxPriorityFeeLamports: input.maxPriorityFeeLamports ?? "50000000", instructions: [
-        createAssociatedTokenAccountIdempotentInstruction(payer, ata, chain.owner, usdc),
-        redeemTokensIx({ keeper: payer, vault: vault.ownAddress, owner: chain.owner, tokenMints: [usdc], tokenPrograms: [TOKEN_PROGRAM_ID] }),
-      ] });
-    return { step: "redeem", eligible: true, reason: "Returning only native USDC to the intent owner", transactions: [{ txBase64: wire.txBase64 }] };
+    // Create owner ATAs then redeem every leftover mint. Unlike SDK redeemTokensTx, this cannot
+    // silently skip a missing ATA. After the window this is as-is, not a USDC-only exit or refund.
+    return redeemRemainingToOwner({
+      native, vault, owner: chain.owner, keeper, remaining,
+      maxPriorityFeeLamports: input.maxPriorityFeeLamports,
+      reason: stocks.length ? "Returning remaining native USDC and stocks to the intent owner as-is" : "Returning only native USDC to the intent owner",
+    });
   }
   if (!stocks.length) return { step: "wait", eligible: false, reason: "Only USDC remains; waiting for the native redemption window", transactions: [] };
   // There may be gaps between auction windows, including the exact final boundary.
@@ -204,7 +228,7 @@ export async function prepareWithdrawalKeeperStep(input: {
     return { step: "wait", eligible: false, reason: "Waiting for an open native sale window", transactions: [] };
   }
   const pairs = withdrawalAuctionSales(getSwapPairs(chain, vault));
-  if (!pairs.length) throw new Error("CASH_OUT_NO_STOCK_TO_USDC_PAIRS: assets remain in native custody");
+  if (!pairs.length) return { step: "wait", eligible: false, reason: "Auction active but no stock-to-USDC pairs; waiting to reread the native sale list", transactions: [] };
   const pair = pairs[0];
   const leg = input.legs.find(candidate => candidate.mint === pair.outMint);
   if (!leg) throw new Error("CASH_OUT_UNBOUND_STOCK");
