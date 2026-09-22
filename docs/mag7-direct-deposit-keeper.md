@@ -33,7 +33,10 @@ npm run keeper:mag7-deposit -- --watch-vault --execute --watch \
 ```
 
 Every poll begins with a fresh **0.05 SOL** observed-debit cap for the keeper.
-The process stops starting more deposits in that poll when the cap is reached;
+While a native auction is open, the keeper immediately refreshes and sends the next
+fill transaction after each confirmed fill (each remains capped at two swaps), until
+all legs are filled, the auction closes, or the debit cap is reached. The five-minute
+poll is idle-only. The process stops starting more deposits in that poll when the cap is reached;
 inspect the emitted JSON and let the next scheduled poll resume. It never creates a
 user deposit or opens public funds. After at least one stock leg is filled, Symmetry
 may mint a partial book; unspent USDC remains in the deposit intent and the emitted
