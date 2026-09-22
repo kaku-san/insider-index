@@ -1,46 +1,41 @@
 # Mag7 deposit minimum
 
-**Measured 2026-09-22T07:00:26Z UTC: Minimum is $1.**
+**Measured 2026-09-22T10:33:43.969Z UTC: Minimum is $1.** Deposits remain
+paused; this route measurement does not change any release gate.
 
-This is the public Mag7 **route-coverage** floor. It replaces the old $0.03
-one-raw-atom calculation: that calculation only established that a stock mint
-could receive one atom and did not quote the user's weighted deposit slices.
+This is the public Mag7 **route-coverage** floor. It replaces the prior
+unverified $1 value with a live, weighted-slice check against the installed
+Mag7 definition.
 
 ## Live route check
 
-The check used `buildCycleRoute` against the seven persisted Mag7 Raydium CLMM
-pools for vault `AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh`. Each candidate
-was split at the live vault target weight, using
-`floor(depositRaw × targetWeightBps / 10,000)`, then quoted USDC → that leg on
-its persisted pool with the keeper's 50 bps slippage. A candidate passes only
-when every direct Raydium route builds and its on-chain `minOutRaw` is positive.
-This is a real slice quote, not a one-atom input probe.
+The check read the persisted seven-leg Mag7 definition for vault
+`AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh`, then ran
+`buildCycleRoute` on each persisted Raydium CLMM pool. A $1 contribution
+(`1,000,000` raw USDC) was split using
+`floor(depositRaw × targetWeightBps / 10,000)`, with the keeper's 50 bps
+slippage. Each route must build and have a positive on-chain `minOutRaw`.
 
-| Leg | Weight (bps) | Pool |
-| --- | ---: | --- |
-| MSFT | 3,448 | `CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL` |
-| AAPL | 2,740 | `ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT` |
-| AMZN | 1,151 | `6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD` |
-| GOOGL | 1,424 | `B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw` |
-| NVDA | 854 | `49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6` |
-| META | 322 | `3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j` |
-| TSLA | 61 | `8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF` |
+The seven routes were read sequentially from one alternate mainnet RPC without
+sleeping to avoid rate limits. Their 60-second quote validity windows overlap:
+the last quote began at `2026-09-22T10:33:54.006Z` and the first expires at
+`2026-09-22T10:34:43.975Z`. Therefore all seven live routes were valid at once
+for 49.969 seconds.
 
-The following cells are `weighted USDC input raw → 50 bps min output raw`.
-All output mints have eight decimals. Every quoted minimum is positive, so all
-five candidates passed; $1 is the smallest candidate and is the enforced floor.
+All output mints have eight decimals. Cells are `weighted USDC input raw →
+expected output raw → 50 bps minimum output raw`.
 
-| Leg | $1 | $5 | $10 | $25 | $50 |
-| --- | --- | --- | --- | --- | --- |
-| MSFT | 344,800 → 67,534 | 1,724,000 → 337,676 | 3,448,000 → 675,353 | 8,620,000 → 1,688,381 | 17,240,000 → 3,376,757 |
-| AAPL | 274,000 → 80,005 | 1,370,000 → 400,033 | 2,740,000 → 800,068 | 6,850,000 → 2,000,171 | 13,700,000 → 4,000,340 |
-| AMZN | 115,100 → 44,110 | 575,500 → 220,552 | 1,151,000 → 441,156 | 2,877,500 → 1,102,889 | 5,755,000 → 2,205,779 |
-| GOOGL | 142,400 → 39,572 | 712,000 → 197,864 | 1,424,000 → 395,729 | 3,560,000 → 989,323 | 7,120,000 → 1,978,646 |
-| NVDA | 85,400 → 37,427 | 427,000 → 187,164 | 854,000 → 374,320 | 2,135,000 → 935,805 | 4,270,000 → 1,871,921 |
-| META | 32,200 → 4,275 | 161,000 → 21,381 | 322,000 → 42,764 | 805,000 → 106,911 | 1,610,000 → 213,823 |
-| TSLA | 6,100 → 1,613 | 30,500 → 8,070 | 61,000 → 16,141 | 152,500 → 40,355 | 305,000 → 80,712 |
+| Leg | Weight (bps) | Pool | Live quote |
+| --- | ---: | --- | --- |
+| MSFT | 3,448 | `CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL` | 344,800 → 67,974 → 67,634 |
+| AAPL | 2,740 | `ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT` | 274,000 → 80,498 → 80,095 |
+| AMZN | 1,151 | `6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD` | 115,100 → 44,162 → 43,941 |
+| GOOGL | 1,424 | `B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw` | 142,400 → 39,623 → 39,424 |
+| NVDA | 854 | `49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6` | 85,400 → 37,508 → 37,320 |
+| META | 322 | `3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j` | 32,200 → 4,324 → 4,302 |
+| TSLA | 61 | `8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF` | 6,100 → 1,612 → 1,603 |
 
 The host's 25 bps entry fee is paid in native shares, not withheld from the
 USDC contribution, so it does not reduce a quoted leg slice. Route availability
-and prices are live conditions; a later route failure still fails closed rather
-than substituting a different pool or weakening the 50 bps limit.
+and prices are live conditions: a later failure still fails closed rather than
+substituting a pool or weakening the 50 bps limit.
