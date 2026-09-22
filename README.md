@@ -22,7 +22,7 @@ In V1:
 - Day-1 alternative to research-only baskets: follow the filer and copy one trade (same name, user-signed swap into its Solana mint)
 - Buys (and copy-sells) are allowed only against a mint in the **live Solana catalog** — xStocks + Backpack tokenised stocks (see [Buy catalog](#buy-catalog)); names without a mint stay visible in the book but are not copy-eligible
 - One-trade copying remains available separately. Native index entry is release-gated until deployer setup, settlement and claim-recovery evidence pass; enabled indexes expose the validated preparation flow
-- Performance is never invented: return / hit rate stay `—` until a real dated-trade price series exists
+- Performance is never invented: return / hit rate stay `—` until a real dated series exists; index pages show one honest versus-S&P line only when dated vault and benchmark values align
 - Native vaults are deployer-created/named; holders authorize entry/redemption, never fund rebalances. Policy-valid strategy/keeper automation is planned but currently read-only; see [native integration status](src/lib/index-vaults/README.md)
 - Social frontend: lime editorial discover, party-tinted profiles, person-index tickets, light/dark theme (`src/app` pages + `src/components` + `src/lib/frontend`)
 
@@ -84,7 +84,7 @@ UI routes:
 - `/feed` the disclosure tape served from the committed PelosiTracker/FMP bundle (research-only rows, live lanes reported off); Everything / Following, search, buy/sell filter
 - `/p/[id]` disclosed book (every name, status, est. range, venue, copy) + paper trail, 24h/30d/90d disclosed volume ranges; for the 20 PelosiTracker handoff people the page is tracker-first (shown book, vault-ready index, FMP comparison, trades as info) with the FMP annual filing labelled as the older disclosure
 - `/indexes/tracker-[bioguide]` tracker-positions index: weights, mints, Raydium USDC pools, readiness, disabled Invest (exit is USDC only; nothing enabled)
-- `/indexes/[id]` model allocation, native lifecycle/fee disclosure and release-gated investment preparation; no holder rebalance button
+- `/indexes/[id]` model allocation, an honest dated performance-versus-S&P line when aligned values exist, native lifecycle/fee disclosure and release-gated investment preparation; no holder rebalance button
 - `/disclosures/[id]` inspect
 - `/trade/[id]` one-print live Jupiter quote + explicit Privy approval/signature
 - `/positions` connected wallet’s saved copy receipts, no invented balances or NAV; existing devnet share diagnostic is separate and opt-in

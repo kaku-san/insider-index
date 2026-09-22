@@ -98,16 +98,17 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
   const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString());
   return {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
-    shareDecimals: mint.decimals, sharesRaw: shares.toString(),
+    shareDecimals: mint.decimals, sharesRaw: shares.toString(), shareSupplyRaw: mint.supply.toString(),
     ...(pendingOperations.length ? { pendingOperations } : {}),
   };
 }
 
 /** Positive chain balances and locked native settlement intents are portfolio positions. A read
  * failure is not converted to zero, and a pending intent is not hidden as an empty portfolio. */
-export async function readOwnedIndexPositions(owner: string, indexes: readonly PublicVaultDefinition[], readPosition: PositionReader = readPublishedIndexPosition): Promise<IndexSharePosition[]> {
+export async function readOwnedIndexPositions(owner: string, indexes: readonly PublicVaultDefinition[], readPosition?: PositionReader): Promise<IndexSharePosition[]> {
   walletOwner(owner);
-  const positions = await Promise.all(indexes.filter(createdIndex).map(index => readPosition(index, owner)));
+  const reader = readPosition ?? readPublishedIndexPosition;
+  const positions = await Promise.all(indexes.filter(createdIndex).map(index => reader(index, owner)));
   return positions.filter(position => BigInt(position.sharesRaw) > 0n || position.pendingOperations?.some(operation => !operation.complete));
 }
 

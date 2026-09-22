@@ -30,7 +30,10 @@ export type IndexCoverage = {
   poolReadyOfMappedBps?: number;
 };
 export type UnmappedIndexLeg = { ticker: string; name?: string | null; bookWeightBps?: number; reason?: string };
+export type IndexPerformancePoint = { observedAt: string; value: number };
+export type IndexPerformance = { vault: IndexPerformancePoint[]; sp500: IndexPerformancePoint[] };
 export type IndexResourceResponse = Omit<PublishedIndexResponse, "index"> & {
+  performance?: IndexPerformance;
   index: PublishedIndex & {
     vaultAddress?: string | null;
     shareMint?: string | null;
@@ -51,19 +54,31 @@ function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
 }
 
-export function IndexPerformancePlaceholder() {
-  return <section className={styles.performance} aria-label="Index performance">
-    <div className={styles.performanceTop}>
-      <div><span>PERFORMANCE</span><strong>—</strong><small>1Y return</small></div>
-      <div className={styles.periods} aria-label="Performance period">
-        <button type="button">1M</button><button type="button">3M</button><button type="button" className={styles.periodActive}>1Y</button><button type="button">ALL</button>
-      </div>
-    </div>
-    <div className={styles.chartShell}>
-      <svg viewBox="0 0 800 180" preserveAspectRatio="none" aria-hidden="true"><path d="M5 118 C95 118, 115 80, 190 96 S305 138, 360 102 S475 74, 545 94 S665 120, 795 86" /></svg>
-      <div><strong>Performance series not live yet</strong><span>This panel is ready for a verified dated price series. InsiderIndex does not invent historical returns.</span></div>
-    </div>
-  </section>;
+function alignedPerformanceReturns(performance?: IndexPerformance): [number, number] | null {
+  const series = [performance?.vault ?? [], performance?.sp500 ?? []].map(points => new Map(
+    points
+      .filter(point => Number.isFinite(point.value) && point.value > 0 && Number.isFinite(Date.parse(point.observedAt)))
+      .map(point => [new Date(point.observedAt).toISOString().slice(0, 10), point.value] as const),
+  ));
+  const dates = [...series[0].keys()].filter(date => series[1].has(date)).sort();
+  if (dates.length < 2) return null;
+  const first = dates[0];
+  const last = dates.at(-1)!;
+  return [
+    (series[0].get(last)! / series[0].get(first)! - 1) * 100,
+    (series[1].get(last)! / series[1].get(first)! - 1) * 100,
+  ];
+}
+
+export function IndexPerformanceLine({ performance }: { performance?: IndexPerformance }) {
+  const returns = alignedPerformanceReturns(performance);
+  const vaultReturn = returns?.[0] ?? null;
+  const benchmarkReturn = returns?.[1] ?? null;
+  const hasDatedVaultValue = (performance?.vault ?? []).some(point => Number.isFinite(point.value) && Number.isFinite(Date.parse(point.observedAt)));
+  if (vaultReturn === null || benchmarkReturn === null) {
+    return <p className={styles.performanceLine}>Performance versus S&amp;P: {hasDatedVaultValue ? "awaiting a second dated vault value and benchmark series." : "unavailable until a dated vault value exists."}</p>;
+  }
+  return <p className={styles.performanceLine}>Performance versus S&amp;P: {vaultReturn >= 0 ? "+" : ""}{vaultReturn.toFixed(1)}% vs {benchmarkReturn >= 0 ? "+" : ""}{benchmarkReturn.toFixed(1)}%.</p>;
 }
 
 function TopHoldings({ index }: { index: PublishedIndex }) {
@@ -176,7 +191,12 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
 
   useEffect(() => {
     let alive = true;
-    if (!id || !wallet.solanaAddress) { setPosition(null); return; }
+    if (!id || !wallet.solanaAddress) {
+      // Reset the wallet-scoped view when the external wallet identity disappears.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPosition(null);
+      return;
+    }
     getIndexPosition(routeId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(() => { if (alive) setPosition(null); });
     return () => { alive = false; };
   }, [id, routeId, wallet.solanaAddress]);
@@ -232,10 +252,9 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
       </div>
-      <div className={styles.returnHero}><span>1Y RETURN</span><strong>—</strong><small>Awaiting dated series</small></div>
     </section>
 
-    <IndexPerformancePlaceholder />
+    <IndexPerformanceLine performance={resource.data?.performance} />
     <section className={styles.statStrip}>
       <div><span>Stocks</span><strong>{index.constituents.length}</strong><small>{index.period ? `${index.period} holdings` : "published mix"}</small></div>
       <div><span>Names in the source</span><strong>{disclosedCount}</strong></div>

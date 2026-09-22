@@ -76,15 +76,6 @@ function portraitForPerson(person: ResearchPerson) {
   return person.image ?? portraitFor(slugifyPerson(person.name));
 }
 
-function SparklinePending() {
-  return <div className={styles.sparkPending} aria-label="Performance series not available yet">
-    <svg viewBox="0 0 108 34" role="img" aria-hidden="true">
-      <path d="M2 22 C18 22, 24 15, 38 18 S58 23, 70 16 S91 13, 106 17" />
-    </svg>
-    <span>Awaiting series</span>
-  </div>;
-}
-
 function HoldingLogos({ tickers, count }: { tickers: string[]; count: number | null }) {
   const top = tickers.slice(0, 4);
   const overflow = count == null ? 0 : Math.max(count - top.length, 0);
@@ -109,8 +100,6 @@ function IndexRow({ row }: { row: IndexRowData }) {
       <div><strong>{row.name}</strong><span>{row.kind === "person" ? "Person index" : "Theme index"}</span></div>
     </Link>
     <Link href={row.href} className={styles.description}>{row.description}</Link>
-    <div className={styles.returnCell}><strong>—</strong><span>1Y return</span></div>
-    <SparklinePending />
     <div className={styles.holdingsCell}>
       <HoldingLogos tickers={row.tickers} count={row.holdings} />
       <span>{row.holdings == null ? "Loading holdings" : `${row.holdings} holdings`}</span>
@@ -234,14 +223,13 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
         </div>
       </div>
       <div className={styles.columnHead} aria-hidden="true">
-        <span>Index</span><span>Description</span><span>Return</span><span>Performance</span><span>Holdings</span><span>Metrics</span><span />
+        <span>Index</span><span>Description</span><span>Holdings</span><span>Metrics</span><span />
       </div>
       <div className={styles.tableBody}>
         {rows.map((row) => <IndexRow key={row.id} row={row} />)}
         {!loading && !rows.length ? <div className={styles.empty}><strong>No indexes match this view.</strong><span>{investableOnly ? "No indexes are open to invest yet." : indexResource.error ?? "Clear the filters or search to see the index catalog."}</span></div> : null}
         {loading ? <div className={styles.empty}><strong>Loading index catalog…</strong></div> : null}
       </div>
-      <p className={styles.performanceNote}>Return and performance stay blank until InsiderIndex has a verified dated price series. We do not invent alpha.</p>
     </section>
 
     <section className={styles.solanaSection}>
