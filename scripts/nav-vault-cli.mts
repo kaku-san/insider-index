@@ -134,6 +134,7 @@ async function keeper() {
   const once = async () => {
     const result = await keeperTick({
       connection, indexId, keeper: keeperKey, programId, ...venue,
+      priorityMicroLamports: Number(opt("--priority-micro-lamports") ?? (network === "mainnet-beta" ? 20_000 : 0)),
       execute: keypair ? async (tx, step) => {
         tx.sign([keypair]);
         const signature = await connection.sendTransaction(tx);

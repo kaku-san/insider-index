@@ -262,6 +262,8 @@ export async function keeperTick(input: {
   nowSeconds?: () => number;
   /** 0 = marks only (no crosses, swaps, fulfills or settles). */
   maxSwaps?: number;
+  /** Optional compute-unit price for every keeper transaction (mainnet landing). */
+  priorityMicroLamports?: number;
 }): Promise<KeeperTickResult> {
   const programId = input.programId ?? defaultProgramId();
   const now = input.nowSeconds ?? (() => Math.floor(Date.now() / 1000));
@@ -283,9 +285,10 @@ export async function keeperTick(input: {
     marks: marks.map((mark, i) => ({ mint: state.legs[i]!.mint.toBase58(), price: mark.price.toString(), venue: mark.venue })),
     plan: [], requests: { open: requests.length, crosses: 0, fulfills: 0, settled: 0, deliveredInKind: 0 }, signatures: [], skipped: [],
   };
+  const priority = input.priorityMicroLamports ? [ComputeBudgetProgram.setComputeUnitPrice({ microLamports: input.priorityMicroLamports })] : [];
   const compile = async (instructions: TransactionInstruction[], tables: AddressLookupTableAccount[] = []) => {
     const latest = await input.connection.getLatestBlockhash("confirmed");
-    return new VersionedTransaction(new TransactionMessage({ payerKey: input.keeper, recentBlockhash: latest.blockhash, instructions }).compileToV0Message(tables));
+    return new VersionedTransaction(new TransactionMessage({ payerKey: input.keeper, recentBlockhash: latest.blockhash, instructions: [...priority, ...instructions] }).compileToV0Message(tables));
   };
   const vaultTables = state.lookupTable ? [(await input.connection.getAddressLookupTable(state.lookupTable)).value].filter((t): t is AddressLookupTableAccount => Boolean(t)) : [];
   const priced: NavVaultSnapshot = { ...snapshot, state: { ...state, legs: state.legs.map((leg, i) => ({ ...leg, price: marks[i]!.price })) } };
