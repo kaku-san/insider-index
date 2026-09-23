@@ -12,6 +12,8 @@ import type { CopySignal } from "@/lib/disclosures/types";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import { navVaultEnabledFor, publicIndexStatus } from "@/lib/frontend/vault-api";
 import { indexContentFor } from "@/lib/frontend/index-content";
+import { themeArtFor } from "@/lib/frontend/theme-art";
+import { EcosystemLogos } from "./ecosystem-logos";
 import { Icon } from "./social/icon";
 import { PageError, StockIcon } from "./social/shared";
 import styles from "./consumer-home.module.css";
@@ -70,7 +72,7 @@ const FEATURED_INDEX_IDS = [
 const featuredRank = new Map<string, number>(FEATURED_INDEX_IDS.map((id, rank) => [id, rank]));
 
 function themeImage(id: string) {
-  return `/index-assets/themes/${id}-hero.png`;
+  return themeArtFor(id)?.thumb ?? `/index-assets/themes/${id}-hero.png`;
 }
 
 function portraitForPerson(person: ResearchPerson) {
@@ -89,13 +91,13 @@ function HoldingLogos({ tickers, count }: { tickers: string[]; count: number | n
 function IndexThumb({ row }: { row: IndexRowData }) {
   const [failed, setFailed] = useState(false);
   return <div className={`${styles.thumb} ${row.kind === "theme" ? styles.themeThumb : ""}`}>
-    {row.image && !failed ? <Image src={row.image} alt="" fill sizes="46px" unoptimized={row.image.startsWith("http")} onError={() => setFailed(true)} /> : <span>{row.name.slice(0, 2)}</span>}
+    {row.image && !failed ? <Image src={row.image} alt="" fill sizes="52px" unoptimized={row.image.startsWith("http")} onError={() => setFailed(true)} /> : <span>{row.name.slice(0, 2)}</span>}
   </div>;
 }
 
 function IndexRow({ row }: { row: IndexRowData }) {
-  const statusLabel = row.status === "Research" && row.featured ? "Featured" : row.status === "Coming soon" ? "Soon" : row.status;
-  return <article className={`${styles.indexRow} ${row.featured ? styles.featuredRow : ""}`}>
+  const statusLabel = row.status;
+  return <article className={styles.indexRow}>
     <Link href={row.href} className={styles.indexIdentity}>
       <IndexThumb row={row} />
       <div><strong>{row.name}</strong><span>{row.kind === "person" ? "Person index" : "Theme index"}</span></div>
@@ -130,7 +132,7 @@ function vaultRow(
     depositsEnabled: index.depositsEnabled,
     publicFundsEnabled: publicFundsEnabled && index.publicFundsEnabled === true,
   });
-  const coverage = (index.coverage.mappableByWeightBps ?? 0) / 100;
+  const coverage = index.coverage.mappableByWeightBps == null ? null : index.coverage.mappableByWeightBps / 100;
   const content = indexContentFor(index.indexId);
   return {
     id: index.indexId,
@@ -144,16 +146,12 @@ function vaultRow(
     holdings: index.legs.length,
     coverage,
     coverageLabel: index.kind === "thematic" ? "mapped" : "mapped",
-    tickers: index.legs.slice(0, 4).map((item) => item.ticker),
+    tickers: [...index.legs].sort((a, b) => b.targetWeightBps - a.targetWeightBps).map((item) => item.ticker),
     status,
     featured: featuredRank.has(index.indexId),
   };
 }
 
-const infra = [
-  ["Solana", "Network"], ["Jupiter", "Routing"], ["Privy", "Wallet"], ["xStocks", "Tokenized stocks"],
-  ["Backpack", "Stock tokens"], ["Raydium", "Liquidity"], ["FMP", "Market data"],
-] as const;
 
 export function FilingTape({ disclosures, error, loading = false, retry }: { disclosures: CopySignal[]; error: string | null; loading?: boolean; retry: () => void }) {
   if (error && !disclosures.length) return <PageError error={error} retry={retry} />;
@@ -168,7 +166,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
 }) {
   const params = useSearchParams();
   const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<Sort>("featured");
+  const [sort, setSort] = useState<Sort>("name");
   const [investableOnly, setInvestableOnly] = useState(false);
   const peopleResource = useResource<PeopleDirectoryResponse>("/api/people", initialData);
   const themeResource = useResource<ThematicDirectory>("/api/thematic-indexes", initialThemes);
@@ -202,23 +200,22 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
 
   return <div className={styles.home}>
     <section className={styles.hero}>
-      <div>
-        <span className={styles.eyebrow}>PUBLIC-MARKET INDEXES</span>
+      <div className={styles.heroCopy}>
+        <span className={styles.eyebrow}>PUBLIC FILINGS. OPEN BOOKS.</span>
         <h1>They disclose it.<br />We index it.</h1>
-        <p>Explore portfolios built from public congressional financial disclosures — mapped into simple, transparent indexes you can inspect.</p>
-        <small className={styles.heroTrust}>No rumors. No fake returns. No made-up fills.</small>
+        <p className={styles.heroDescription}>The portfolios you’re curious about, without the paperwork. Explore indexes built from public financial disclosures.</p>
+        <div className={styles.heroActions}><a href="#all-indexes-title" className={styles.heroPrimary}>Explore indexes <Icon name="arrow" size={16} /></a><Link href="/methodology" className={styles.heroSecondary}>How it works <Icon name="info" size={15} /></Link></div>
+        <div className={styles.heroProof}><span><Icon name="file" size={15} />Public sources</span><span><Icon name="eye" size={15} />Transparent holdings</span><span><Icon name="wallet" size={15} />You approve trades</span></div>
+        <span className={styles.catalogMeta}>{loading ? "Loading catalog…" : `${total} indexes · ${peopleCount} people · ${themeCount} themes`}</span>
       </div>
-      <div className={styles.heroArtwork} aria-hidden="true"><Image src="/index-assets/home/home-hero-fallback.png" alt="" fill sizes="260px" priority /></div>
-      <div className={styles.heroMeta}>
-        <strong>{total || 20}</strong><span>indexes</span><i />
-        <strong>{peopleCount || 10}</strong><span>people</span><i />
-        <strong>{themeCount || 10}</strong><span>themes</span>
-      </div>
+      <figure className={styles.editorialArt} aria-label="Editorial collage with Capitol architecture, paper textures and orange accents">
+        <Image src="/index-assets/home/editorial-collage.webp" alt="" width={577} height={364} sizes="(max-width: 560px) 94vw, (max-width: 900px) 42vw, 520px" priority />
+      </figure>
     </section>
 
     <section className={styles.tableSection} aria-labelledby="all-indexes-title">
       <div className={styles.tableHead}>
-        <div><span className={styles.eyebrow}>FEATURED INDEXES</span><h2 id="all-indexes-title">Pick the index. See the book.</h2></div>
+        <div><h2 id="all-indexes-title">Explore indexes <span className={styles.resultCount}>{rows.length}</span></h2></div>
         <div className={styles.utilityBar}>
           <div className={styles.segmented} aria-label="Index type filter">
             {([["all", "All"], ["people", "People"], ["themes", "Themes"]] as const).map(([value, label]) => <button type="button" key={value} className={filter === value ? styles.active : ""} onClick={() => setFilter(value)}>{label}</button>)}
@@ -232,7 +229,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
         </div>
       </div>
       <div className={styles.columnHead} aria-hidden="true">
-        <span>Index</span><span>Description</span><span>Holdings</span><span>Metrics</span><span />
+        <span>Index</span><span>Description</span><span>Holdings</span><span>Coverage / status</span><span />
       </div>
       <div className={styles.tableBody}>
         {rows.map((row) => <IndexRow key={row.id} row={row} />)}
@@ -241,14 +238,6 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
       </div>
     </section>
 
-    <section className={styles.themeCallout} aria-labelledby="theme-callout-title">
-      <div><span className={styles.eyebrow}>FROM PEOPLE TO PATTERNS</span><h2 id="theme-callout-title">The filing tells a story. The themes show the repeat.</h2><p>Research views ask a different question: what keeps showing up across public disclosures? They are not person portfolios and they are not open to invest.</p></div>
-      <div className={styles.themeArtwork}><Image src="/index-assets/home/thematic-grid.jpg" alt="Abstract artwork representing InsiderIndex research themes" fill sizes="(max-width: 820px) 100vw, 520px" /></div>
-    </section>
-
-    <section className={styles.solanaSection}>
-      <div className={styles.solanaCopy}><span className={styles.eyebrow}>INFRASTRUCTURE</span><h2>Built on Solana.</h2><p>Wallet, routing, tokenized-stock and native index infrastructure behind InsiderIndex.</p></div>
-      <div className={styles.infraGrid}>{infra.map(([name, note]) => <div className={styles.infraMark} key={name}><b>{name.slice(0, 1)}</b><div><strong>{name}</strong><span>{note}</span></div></div>)}</div>
-    </section>
+    <EcosystemLogos />
   </div>;
 }

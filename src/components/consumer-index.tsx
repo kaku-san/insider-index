@@ -12,18 +12,18 @@ import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, na
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
-import { indexContentFor } from "@/lib/frontend/index-content";
+import { indexContentFor, indexProofFor } from "@/lib/frontend/index-content";
 import { useUI } from "./providers/ui-provider";
 import { VaultFlow } from "./vault-flow";
 import { TradableSliceNote } from "./tradable-slice-note";
 import { usePrivySolana } from "./providers/privy-provider";
 import { ShareCard } from "./share-card";
+import { IndexAllocation } from "./index-allocation";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import styles from "./consumer-index.module.css";
 
-const palette = ["#ff5a36", "#171717", "#7e74ff", "#e5a239", "#2e8b73", "#d95d83", "#4387d7", "#8c6f57"];
-type Tab = "stocks" | "breakdown" | "moves" | "about";
+type Tab = "allocation" | "moves" | "about";
 export type IndexCoverage = {
   tickerCount?: number;
   mappedLegCount?: number;
@@ -79,51 +79,9 @@ export function IndexPerformanceLine({ performance }: { performance?: IndexPerfo
   const benchmarkReturn = returns?.[1] ?? null;
   const hasDatedVaultValue = (performance?.vault ?? []).some(point => Number.isFinite(point.value) && Number.isFinite(Date.parse(point.observedAt)));
   if (vaultReturn === null || benchmarkReturn === null) {
-    return <p className={styles.performanceLine}>Performance versus S&amp;P: {hasDatedVaultValue ? "awaiting a second dated vault value and benchmark series." : "unavailable until a dated vault value exists."}</p>;
+    return <p className={styles.performanceLine}>Performance vs S&amp;P 500: {hasDatedVaultValue ? "waiting for a comparable history." : "not available yet."}</p>;
   }
-  return <p className={styles.performanceLine}>Performance versus S&amp;P: {vaultReturn >= 0 ? "+" : ""}{vaultReturn.toFixed(1)}% vs {benchmarkReturn >= 0 ? "+" : ""}{benchmarkReturn.toFixed(1)}%.</p>;
-}
-
-function TopHoldings({ index }: { index: PublishedIndex }) {
-  const rows = sortedHoldings(index).slice(0, 5);
-  const max = Math.max(...rows.map((item) => item.weight_bps), 1);
-  return <div className={styles.topHoldings}>
-    <div className={styles.sectionTitle}><div><span>TOP HOLDINGS</span><h3>What&apos;s inside</h3></div><small>{index.constituents.length} mapped names</small></div>
-    <div>{rows.map((item, position) => <div className={styles.holdingRow} key={item.mint}>
-      <span>{String(position + 1).padStart(2, "0")}</span><StockIcon ticker={item.ticker} size="sm" />
-      <div><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.issuer)}</small></div>
-      <div className={styles.weightBar}><i style={{ width: `${Math.max(3, item.weight_bps / max * 100)}%` }} /></div>
-      <b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b>
-    </div>)}</div>
-  </div>;
-}
-
-function AllocationStrip({ index }: { index: PublishedIndex }) {
-  const rows = sortedHoldings(index).slice(0, 5);
-  const shown = rows.reduce((sum, item) => sum + item.weight_bps, 0);
-  return <div className={styles.allocationCard}>
-    <div className={styles.sectionTitle}><div><span>ALLOCATION</span><h3>Where the weight sits</h3></div><small>{index.constituents.length} holdings</small></div>
-    <div className={styles.allocationStrip}>
-      {rows.map((item, position) => <i key={item.mint} style={{ width: `${item.weight_bps / 100}%`, background: palette[position % palette.length] }} title={`${item.ticker} ${(item.weight_bps / 100).toFixed(2)}%`} />)}
-      {shown < 10_000 ? <i style={{ width: `${(10_000 - shown) / 100}%`, background: "var(--surface-alt)" }} title="Other mapped holdings" /> : null}
-    </div>
-    <div className={styles.allocationLegend}>{rows.map((item, position) => <div key={item.mint}>
-      <i style={{ background: palette[position % palette.length] }} /><StockIcon ticker={item.ticker} size="sm" />
-      <span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.issuer)}</small></span>
-      <b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b>
-    </div>)}{shown < 10_000 ? <div className={styles.otherAllocation}><i /><span><strong>Other mapped holdings</strong><small>{Math.max(0, index.constituents.length - rows.length)} remaining names</small></span><b>{((10_000 - shown) / 100).toFixed(1)}%</b></div> : null}</div>
-  </div>;
-}
-
-function HoldingsTab({ index }: { index: PublishedIndex }) {
-  return <div className={`${styles.holdingsTable} ${styles.simple}`}>
-    <div className={styles.holdingsNote}>Every stock in this index, with its published weight.</div>
-    <div className={styles.holdingsHead}><span>Stock</span><span>Weight</span></div>
-    {sortedHoldings(index).map((item) => <div className={styles.fullHolding} key={item.mint}>
-      <div><StockIcon ticker={item.ticker} size="md" /><span><strong>{item.ticker}</strong><small>{companyNameFor(item.ticker, item.issuer)}</small></span></div>
-      <b>{(item.weight_bps / 100).toFixed(item.weight_bps >= 1000 ? 1 : 2)}%</b>
-    </div>)}
-  </div>;
+  return <p className={styles.performanceLine}>Performance vs S&amp;P 500: {vaultReturn >= 0 ? "+" : ""}{vaultReturn.toFixed(1)}% vs {benchmarkReturn >= 0 ? "+" : ""}{benchmarkReturn.toFixed(1)}%.</p>;
 }
 
 export function CoverageBreakdown({ coverage, unmapped }: { coverage?: IndexCoverage; unmapped: UnmappedIndexLeg[] }) {
@@ -172,7 +130,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const resource = useResource<IndexResourceResponse>(
     id ? `/api/vault-indexes/${encodeURIComponent(id)}` : `/api/published-indexes/${encodeURIComponent(hash!)}`,
   );
-  const [tab, setTab] = useState<Tab>("stocks");
+  const [tab, setTab] = useState<Tab>("allocation");
   const [vault, setVault] = useState<VaultReadiness | null>(null);
   const [vaultLoaded, setVaultLoaded] = useState(false);
   const [vaultError, setVaultError] = useState<string | null>(null);
@@ -250,7 +208,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         <div className={styles.titleLine}><span>Person index</span><em>{index.period ? `${index.period} annual holdings` : "Annual disclosure"}</em></div>
         <h1>{index.indexName ?? "Person index"}</h1>
         <p>{content?.cardHook ?? "The stocks in this index, the mix, and how it was built — in one place."}</p>
-        <div className={styles.proof}>{content?.heroProof ?? `${index.constituents.length} stocks`} · updated {updated}</div>
+        <div className={styles.proof}>{indexProofFor({ holdingCount: holdings.length, coverageBps: resource.data?.coverage?.mappableByWeightBps ?? resource.data?.coverageBps })} · updated {updated}</div>
         <div className={styles.actions}>
           {live ? <button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button> : null}{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
@@ -269,19 +227,15 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       <div><span>Status</span><strong>{status}</strong></div>
     </section>
     <nav className={styles.tabs} aria-label="Index sections">
-      {([["stocks", "Stocks"], ["breakdown", "Breakdown"], ["moves", "Moves"], ["about", "About"]] as const).map(([id, label]) => <button type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "stocks" ? <span>{index.constituents.length}</span> : null}</button>)}
+      {([["allocation", "Allocation"], ["moves", "Moves"], ["about", "About"]] as const).map(([id, label]) => <button type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "allocation" ? <span>{index.constituents.length}</span> : null}</button>)}
     </nav>
     <section className={styles.tabContent}>
-      {tab === "stocks" ? <HoldingsTab index={index} /> : null}
-      {tab === "breakdown" ? <div className={styles.overviewGrid}>
-        <TopHoldings index={index} /><AllocationStrip index={index} />
-        <div className={styles.summaryCard}><span>WHAT THIS MIX IS</span><p>{summary}</p><small>Weights come from public filings. They are not a live brokerage account.</small></div>
-      </div> : null}
+      {tab === "allocation" ? <IndexAllocation items={holdings.map(item => ({ ticker: item.ticker, name: item.issuer, weightBps: item.weight_bps, mint: item.mint, issuer: item.issuer, network: resource.data?.index.network }))} /> : null}
       {tab === "moves" ? (/^[A-Z][0-9]{6}$/.test(activityProfileId ?? "")
         ? <ActivityTab personId={activityProfileId!} />
         : <div className={styles.activityEmpty}><div className={styles.activityIcon}><Icon name="file" size={22} /></div><h3>Person-specific activity is unavailable.</h3><p>This index does not have a verified bioguide identifier, so InsiderIndex will not guess which disclosure rows belong here.</p><Link href="/feed">Open full disclosure feed <Icon name="arrow" size={13} /></Link></div>) : null}
       {tab === "about" ? <div className={styles.aboutGrid}>
-        <section><span>HOW IT IS BUILT</span><h3>Public filings, published mix</h3><p>{index.definition?.label ?? "This index is built from a public annual disclosure."}</p>{content?.coverageCopy ? <p>{content.coverageCopy}</p> : null}{excluded.length ? <p>{excluded.length} disclosed names are not in the published mix.</p> : null}</section>
+        <section><span>HOW IT IS BUILT</span><h3>About this index</h3><p>{summary}</p><p>{index.definition?.label ?? "This index is built from a public annual disclosure."}</p>{content?.coverageCopy ? <p>{content.coverageCopy}</p> : null}{excluded.length ? <p>{excluded.length} disclosed names are not in the published mix.</p> : null}</section>
         <section><span>SOURCE</span><h3>Public annual disclosure</h3><p>{index.period ? `Holdings year ${index.period}` : "Holdings year unavailable"} · updated {updated}.</p></section>
         <section className={styles.disclaimer}><span>STATUS</span><h3>{status}</h3><p>{availability}</p></section>
       </div> : null}

@@ -29,7 +29,7 @@ function wrap(child: ReturnType<typeof createElement>) {
   return createElement(UIProvider, null, createElement(PrivySolanaProvider, null, child));
 }
 
-test("clicking Mag7 shows stocks, breakdown, and Invest on one page", () => {
+test("clicking Mag7 shows the Allocation tab and Invest on one page", () => {
   const view = getThematicView("idx-theme-mag7-caucus");
   assert.ok(view);
   const html = renderToStaticMarkup(wrap(createElement(ThematicIndexPage, {
@@ -41,8 +41,8 @@ test("clicking Mag7 shows stocks, breakdown, and Invest on one page", () => {
   assert.match(html, /Invest/);
   assert.doesNotMatch(html, /Cash out/, "cash out stays hidden until this connected wallet has Mag7 shares");
   assert.match(html, />Live</);
-  assert.match(html, />Stocks</);
-  assert.match(html, />Breakdown</);
+  assert.match(html, />Allocation<span>7<\/span></);
+  assert.doesNotMatch(html, />Breakdown</);
   assert.match(html, />About</);
   assert.doesNotMatch(html, /Research only|Deposits closed|token mapped|Pool ready|publicFundsEnabled|VAULT_RELEASE|View holdings/);
 });
@@ -58,8 +58,8 @@ test("Mag7 without public funds hides Invest without paused deposit copy", () =>
   assert.doesNotMatch(html, /Deposits are paused/);
   assert.match(html, /This index has a vault\. Investing is not open yet\./);
   assert.doesNotMatch(html, />Invest</);
-  assert.match(html, />Stocks</);
-  assert.match(html, />Breakdown</);
+  assert.match(html, />Allocation<span>7<\/span></);
+  assert.doesNotMatch(html, />Breakdown</);
 });
 
 test("a research theme without a vault does not fake Invest", () => {
