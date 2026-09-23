@@ -10,7 +10,11 @@
     "deploySignature": "rvMVLbjoizmGfJL8DZNRkCSyj4fkAjKigAqmBuX2jjccVTsF7g3tVwsTEJdNsUS4oSABw8Zb5g88MjVGJEGD8s6",
     "slot": 449704373,
     "upgradeAuthority": "5mVkJHMu2A25x45FsN5qrp5uwLJjevbPz4ziArNp1qaJ",
-    "programDataRentSol": "2.29797356"
+    "programDataRentSol": "2.29797356",
+    "branchBinaryNotDeployed": {
+      "sha256": "b30f84b16c6550319eb42181be02ea11ebb8953a33df6b04d2c83f0466e1a101",
+      "adds": "admin set_max_price_age (unused; captain: stay at 60 s, no mainnet upgrade)"
+    }
   },
   "legsSource": "insiderindex_vault_definitions idx-theme-mag7-caucus v2 (tests/fixtures/composition/definition.json.gz), cross-checked equal to live GET https://insiderindex.xyz/api/vault-indexes/idx-theme-mag7-caucus constituents on 2026-09-23",
   "init": {
@@ -144,9 +148,9 @@
     "nodeModules": "/home/deploy/insiderindex/stocklana/node_modules (read-only)",
     "key": "/home/deploy/keys/mag7-keeper.json (read-only) = GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq",
     "env": "/home/deploy/insiderindex/mag7-keeper.env (HELIUS, SUPABASE service role, JUPITER_API_KEY)",
-    "command": "npm run -s nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair /keys/mag7-keeper.json --loop 50 --priority-micro-lamports 5000",
+    "command": "npm run -s nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair /keys/mag7-keeper.json --loop 35 --priority-micro-lamports 5000 --min-trade-raw 50000",
     "startedAt": "2026-09-23T12:43:19Z",
-    "cadence": "one update_prices every ~50-60 s (max mark age 60 s)",
+    "cadence": "one update_prices about every 40 s (max mark age 60 s, unchanged by captain decision)",
     "feePerPriceUpdateSol": "0.000006015",
     "computeUnits": 22431,
     "firstPriceUpdates": [
@@ -203,5 +207,74 @@
       }
     ],
     "simulatedOkAllLegs": "v1 CPI-safe route for all 7 legs and Raydium fallback (MSFT, TSLA) simulated OK on mainnet 2026-09-23"
+  },
+  "allLegsHeld": {
+    "at": "2026-09-23T13:45Z",
+    "tslaBuy": "4YsoMoQduHVY9zEzqMQXYi1reyTmiwjPnrVD3Hjyfuhyf2E96FbKm6NArcULhn5J6rHbHdfsFvDTKSr9QN4RiYKQ",
+    "holdings": {
+      "usdc": "548485",
+      "supply": "9975000",
+      "nav": "9964877",
+      "bufferBps": 550,
+      "legs": [
+        {
+          "ticker": "MSFT",
+          "raw": "642683",
+          "valueUsdc": "3290989",
+          "targetBps": 3448,
+          "actualBps": 3302
+        },
+        {
+          "ticker": "AAPL",
+          "raw": "750371",
+          "valueUsdc": "2547725",
+          "targetBps": 2740,
+          "actualBps": 2556
+        },
+        {
+          "ticker": "AMZN",
+          "raw": "425333",
+          "valueUsdc": "1075045",
+          "targetBps": 1151,
+          "actualBps": 1078
+        },
+        {
+          "ticker": "GOOGL",
+          "raw": "381707",
+          "valueUsdc": "1331720",
+          "targetBps": 1424,
+          "actualBps": 1336
+        },
+        {
+          "ticker": "NVDA",
+          "raw": "352944",
+          "valueUsdc": "808709",
+          "targetBps": 854,
+          "actualBps": 811
+        },
+        {
+          "ticker": "META",
+          "raw": "40927",
+          "targetBps": 322,
+          "actualBps": 308
+        },
+        {
+          "ticker": "TSLA",
+          "raw": "14321",
+          "valueUsdc": "54775",
+          "targetBps": 61,
+          "actualBps": 54
+        }
+      ]
+    }
+  },
+  "production": {
+    "deployment": "https://stocklana-7uahi1k2h-kakusans-projects.vercel.app",
+    "aliases": [
+      "https://insiderindex.xyz",
+      "https://www.insiderindex.xyz"
+    ],
+    "commit": "c262251",
+    "method": "clean clone of the pushed branch + vercel deploy --prod"
   }
 }

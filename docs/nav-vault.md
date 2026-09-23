@@ -75,6 +75,7 @@ Final state: supply 0, nothing reserved. Every readback matched the prepare esti
 ## Mainnet (deployed, 2026-09-23)
 
 - Program `HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB`, built from `programs/bin/nav_vault.so` (sha256 `7e8e8d65…`) with the devnet feature off, so only Jupiter V6 exact-in routes and Raydium CLMM `swap_v2` are allowed. A dump of the deployed program matches the committed binary. Upgrade authority and vault admin: `5mVkJHMu2A25x45FsN5qrp5uwLJjevbPz4ziArNp1qaJ`. Deploy signature: `rvMVLbjoizmGfJL8DZNRkCSyj4fkAjKigAqmBuX2jjccVTsF7g3tVwsTEJdNsUS4oSABw8Zb5g88MjVGJEGD8s6`.
+- The committed `programs/bin/nav_vault.so` (sha256 `b30f84b1…`) is **newer than the deployed program**. It adds an admin `set_max_price_age`, which is not deployed: the captain decided to keep the 60 s max mark age and not upgrade mainnet. The deployed bytes are still sha256 `7e8e8d65…`, so any future upgrade must be an explicit decision.
 - New Mag7 NAV vault for `idx-theme-mag7-caucus`:
   - vault `2w5g5aXmQj6o1cZSYbpV6R6rdK9KK7zAeJJRZu9PseM6`;
   - Token-2022 share mint `BZw8SegRiJmqmKgBDt5npmPo2dvsnv2nDPXvLQM6Mv4A`;
