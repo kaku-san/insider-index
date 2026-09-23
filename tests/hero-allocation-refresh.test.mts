@@ -60,5 +60,5 @@ test('home uses the approved graphic with no repeated theme collage',()=>{
  const s=text('src/components/consumer-home.tsx');assert.match(s,/editorial-collage\.webp/);assert.doesNotMatch(s,/themeCallout|themes-banner/);assert.equal((s.match(/<EcosystemLogos\s*\//g)||[]).length,1);
 });
 test('ecosystem uses equal logo slots and a common caption grid',()=>{
- const s=text('src/components/ecosystem-logos.module.css');assert.match(s,/width:44px;height:44px/);assert.match(s,/repeat\(8,minmax\(0,1fr\)\)/);assert.doesNotMatch(s,/width:fit-content/);assert.match(text('public/brand/integrations/backpack.svg'),/viewBox="66 46 108 150"/);
+ const s=text('src/components/ecosystem-logos.module.css');assert.match(s,/width:44px;height:44px/);assert.match(s,/repeat\(7,minmax\(0,1fr\)\)/);assert.doesNotMatch(s,/width:fit-content/);assert.match(text('public/brand/integrations/backpack.svg'),/viewBox="66 46 108 150"/);
 });

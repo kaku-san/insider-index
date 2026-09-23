@@ -61,8 +61,8 @@ test('both index pages use exactly one allocation view and no second top-holding
 test('the public person profile has one Allocation surface without duplicate headings',()=>{
  const s=text('src/components/profile-view.tsx');const part=s.slice(s.indexOf('{tab==="allocation"?'),s.indexOf('{tab==="moves"?'));assert.equal((part.match(/<IndexAllocation\b/g)||[]).length,1);assert.doesNotMatch(part,/Recent moves|Top holdings|AllocationBreakdown/);
 });
-test('seven brand marks are bundled; FMP is explicitly a typographic wordmark, not an invented icon',()=>{
+test('six brand marks are bundled; FMP is explicitly a typographic wordmark, not an invented icon',()=>{
  const sources=JSON.parse(text('public/brand/integrations/SOURCES.json'));
- for(const id of ['solana','jupiter','raydium','privy','backpack','symmetry','xstocks'])assert.match(text(`public/brand/integrations/${id}.svg`),/<path/);
- assert.equal(sources.assets.length,8);assert.match(sources.assets.find((x:{id:string})=>x.id==='fmp').kind,/typographic/);
+ for(const id of ['solana','jupiter','raydium','privy','backpack','xstocks'])assert.match(text(`public/brand/integrations/${id}.svg`),/<path/);
+ assert.equal(sources.assets.length,7);assert.ok(!sources.assets.some((x:{id:string})=>x.id==='symmetry'));assert.match(sources.assets.find((x:{id:string})=>x.id==='fmp').kind,/typographic/);
 });

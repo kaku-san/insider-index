@@ -38,12 +38,6 @@ const integrations = [
     "href": "https://backpack.exchange"
   },
   {
-    "id": "symmetry",
-    "name": "Symmetry",
-    "role": "Vault infrastructure",
-    "href": "https://symmetry.fi"
-  },
-  {
     "id": "fmp",
     "name": "FMP",
     "role": "Disclosure data",

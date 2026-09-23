@@ -2,7 +2,8 @@
   "notes": [
     "SVG paths retain their source geometry. Marks belong to their respective owners.",
     "Footer is attribution, not a partnership or security endorsement.",
-    "FMP is a plain typographic brand-name label; its official proprietary icon was not available in the supplied pack. No fabricated F icon is used."
+    "FMP is a plain typographic brand-name label; its official proprietary icon was not available in the supplied pack. No fabricated F icon is used.",
+    "Symmetry was removed after the NAV vault (#87) replaced it for public invest/cash-out."
   ],
   "assets": [
     {
@@ -30,12 +31,6 @@
       "id": "backpack",
       "source": "https://github.com/derodero24/react-web3-icons/blob/develop/src/wallet/BackpackWallet.tsx",
       "license": "MIT source implementation; trademark rights remain with owner"
-    },
-    {
-      "id": "symmetry",
-      "source": "https://github.com/symmetry-protocol/baskets-ui/blob/main/public/static/icons/logo.svg",
-      "license": "MIT repository; trademark rights remain with owner",
-      "sha": "eb83127dd26d48e970a94c28177df5af80d63c92"
     },
     {
       "id": "xstocks",
@@ -86,12 +81,6 @@
       "name": "Backpack",
       "role": "Stock-token catalog",
       "sourceInRepo": "src/lib/venues/solana-catalog.ts"
-    },
-    {
-      "id": "symmetry",
-      "name": "Symmetry",
-      "role": "Vault infrastructure",
-      "sourceInRepo": "package.json: @symmetry-hq/sdk"
     },
     {
       "id": "fmp",
