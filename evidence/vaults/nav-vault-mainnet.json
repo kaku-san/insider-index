@@ -135,5 +135,48 @@
     "deployerFundedSol": "2.8",
     "deployerAfterSol": "0.459710955",
     "spentSol": "2.340290045"
+  },
+  "keeper": {
+    "host": "barelystable (deploy@46.225.64.230)",
+    "container": "nav-vault-keeper (new; existing mag7-keeper untouched)",
+    "image": "node:22-bookworm",
+    "source": "/home/deploy/insiderindex/nav-vault (git archive of this branch: src, scripts, workers, package files)",
+    "nodeModules": "/home/deploy/insiderindex/stocklana/node_modules (read-only)",
+    "key": "/home/deploy/keys/mag7-keeper.json (read-only) = GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq",
+    "env": "/home/deploy/insiderindex/mag7-keeper.env (HELIUS, SUPABASE service role, JUPITER_API_KEY)",
+    "command": "npm run -s nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair /keys/mag7-keeper.json --loop 10 --priority-micro-lamports 5000",
+    "startedAt": "2026-09-23T12:43:19Z",
+    "cadence": "one update_prices about every 18 s (max mark age 60 s)",
+    "feePerPriceUpdateSol": "0.000006015",
+    "computeUnits": 22431,
+    "firstPriceUpdates": [
+      "25VRnqoiQirjmVV96bQYkVQncaaefAPVQHagmBUzh8JgzijxeWoiMotmfnvA18G3BdAHHcNG8onCyoGzsHzkFeBL",
+      "2vA3m9LHxva6BFrtWiTqE4EeG1P1Nh1mnc2UgwixpYk8yjMUapDLNhg3KZUk7WXg2s4RR3AXD7uJrGwKRKTBBMFQ",
+      "2xbunKdE7cLkcZA3A7D6pfSCCfHDv7qCnTzCma6agFfvyzwqksfPwMeMF6f5aLQFsTfyRNntUZe1f3B7Z3dgE5Jj",
+      "5rZvyFhK38Vdbg4f5CBNogVtozhkJ4BQyZPoYNHvEBMHr1ewRnycxcdBhxfCrkBEpKj39nrMfYMSjCh5gNcjFSzc",
+      "2Urp5KnZ8DmD5XY5Q28c9Zok3vaPfTxqMLAPTqyxyKv4ZKPbNQK37PQpLnJVnq7pmNWv5MabqGwKYA4EEc42tGyH"
+    ],
+    "firstMarksUsdcPerShare": {
+      "MSFT": "506.457279",
+      "AAPL": "341.891352",
+      "AMZN": "255.765275 (jupiter)",
+      "GOOGL": "353.298140",
+      "NVDA": "228.264948",
+      "META": "740.773554",
+      "TSLA": "378.323787"
+    },
+    "cyclesAtReport": {
+      "priceUpdates": 40,
+      "tickFailures": 0,
+      "plan": "empty (vault has no deposits yet)"
+    }
+  },
+  "preview": {
+    "branch": "fm/stocklana-nav-vault-f1",
+    "branchAlias": "https://stocklana-git-fm-stocklana-nav-vault-f1-kakusans-projects.vercel.app",
+    "deployment": "https://stocklana-gqi5b6pc8-kakusans-projects.vercel.app",
+    "commit": "a833b95",
+    "protection": "Vercel SSO (captain login required)",
+    "flag": "branch-only preview flag: Mag7 → mainnet NAV vault; production never"
   }
 }
