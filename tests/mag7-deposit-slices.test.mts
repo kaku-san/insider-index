@@ -28,13 +28,14 @@ function fakeRoute(): CycleRoute {
   return { minOutRaw: "1" } as CycleRoute;
 }
 
-test("Mag7 slices at this size differ from the $1 quote-only floor", () => {
+test("Mag7 slices at this size use the deposit, not a smaller stale floor", () => {
   assert.deepEqual(WEIGHTS.reduce((sum, weight) => sum + weight, 0), 10000);
-  const one = WEIGHTS.map(weight => mag7WeightedSliceRaw(PUBLIC_DEPOSIT_MINIMUM_USDC_RAW, weight));
+  assert.equal(PUBLIC_DEPOSIT_MINIMUM_USDC_RAW, TEN_USDC);
   const ten = WEIGHTS.map(weight => mag7WeightedSliceRaw(TEN_USDC, weight));
-  assert.notDeepEqual(one, ten);
+  const twenty = WEIGHTS.map(weight => mag7WeightedSliceRaw("20000000", weight));
+  assert.notDeepEqual(ten, twenty);
   assert.equal(ten[0], "3448000");
-  assert.equal(one[0], "344800");
+  assert.equal(twenty[0], "6896000");
 });
 
 test("every Mag7 name is quoted at this size; one unroutable slice refuses the basket", async () => {
@@ -61,11 +62,11 @@ test("every Mag7 name is quoted at this size; one unroutable slice refuses the b
 
 test("a size the $1 floor would pass still refuses when this size cannot fill", async () => {
   const definition = mag7Definition();
-  const oneDollar = new Set(definition.vaultLegs.map(leg => mag7WeightedSliceRaw(PUBLIC_DEPOSIT_MINIMUM_USDC_RAW, leg.targetWeightBps)));
+  const ten = new Set(definition.vaultLegs.map(leg => mag7WeightedSliceRaw(TEN_USDC, leg.targetWeightBps)));
   await assert.rejects(assertWeightedSlicesRoutable({
-    connection: {} as never, definition, amountRaw: TEN_USDC,
+    connection: {} as never, definition, amountRaw: "20000000",
     routeBuilder: async input => {
-      if (oneDollar.has(input.amountInRaw)) return fakeRoute();
+      if (ten.has(input.amountInRaw)) return fakeRoute();
       throw new Error("CYCLE_NO_FULL_SIZE_ROUTE");
     },
   }), new Error(MAG7_UNROUTABLE_AMOUNT));

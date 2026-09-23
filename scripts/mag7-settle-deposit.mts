@@ -11,6 +11,7 @@ import { getHeliusRpcUrl } from "../src/lib/helius.ts";
 import { address } from "../src/lib/index-vaults/amounts.ts";
 import { buildCycleFillWire } from "../src/lib/index-vaults/cycle-wire.ts";
 import { buildCycleRoute } from "../src/lib/index-vaults/cycle-routes.ts";
+import { inKindMintDecision } from "../src/lib/index-vaults/in-kind-zap.ts";
 import { kakuSanBuilders, kakuSanConnection, simulateUnsigned } from "../src/lib/index-vaults/kaku-san-create.ts";
 import { assertIndexKeeper, legBindings, prepareWithdrawalKeeperStep } from "../src/lib/index-vaults/keeper-tick.ts";
 import { MAINNET_USDC, NATIVE_DEFAULT_BINDINGS, assertNativeSupportTargets } from "../src/lib/index-vaults/native-defaults.ts";
@@ -246,6 +247,18 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
   }
 
   if (action === RebalanceAction.Auction) {
+    const inKind = inKindMintDecision({
+      legs: record.vaultLegs, wsolMint: WSOL_MINT,
+      tokens: chain.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString() })),
+    });
+    if (inKind.mint) {
+      const payload = await native.sdk.mintTx({ keeper: keeperAddress, rebalance_intent: intentAddress });
+      const result = await sendTransactions({ transactions: payload.batches.flatMap(batch => batch.transactions).map(tx => ({ txBase64: tx.tx_b64 })), keeper, native, spent });
+      return { action: "mint", reason: "in-kind complete basket", intent: intentAddress, filledLegMints: inKind.bought, skippedLegMints: inKind.missing, unspentUsdcRaw: inKind.leftoverUsdcRaw, ...result };
+    }
+    if (inKind.reason === "incomplete-basket" && inKind.leftoverUsdcRaw === "0") {
+      return { action: "wait", reason: "In-kind basket is incomplete and has no user USDC to auction. Not using keeper funds.", intent: intentAddress, signatures: [], spent };
+    }
     const end = Number(chain.auctions[2]?.endTime.toString() ?? "0");
     if (now > end) {
       // No unsupported cancel/restart/empty mint to escape an expired failed deposit.

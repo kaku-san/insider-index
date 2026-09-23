@@ -36,7 +36,7 @@ export type CashOutAsset = {
   kind: "usdc" | "stock" | "other";
 };
 
-export const MAG7_FILL_CHECK = "Checking Mag7 can fill…";
+export const MAG7_FILL_CHECK = "Checking every name can be bought…";
 export const CASH_OUT_CHECK = "Checking cash out…";
 export const MAG7_CANNOT_FILL = "This amount cannot buy Mag7 right now.";
 export const MAG7_FILL_TIMEOUT = "Mag7 could not be checked in time. Try that amount again.";

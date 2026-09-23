@@ -13,7 +13,7 @@ const { SettlementListen } = await import("../src/components/settlement-listen.t
 
 const deposit = (phase: string, sharesRaw = "0") => ({
   sharesRaw,
-  pendingOperations: [{ kind: "deposit", phase, complete: false, blockers: phase === "FAILED" ? ["This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares."] : ["Deposit pending settlement"] }],
+  pendingOperations: [{ kind: "deposit", phase, complete: false, blockers: phase === "FAILED" ? ["This deposit did not finish the basket. It is not shares."] : ["Deposit pending settlement"] }],
 });
 const withdraw = (phase: string, sharesRaw = "0") => ({
   sharesRaw,
@@ -39,7 +39,7 @@ test("a deposit listen follows the position read and does not treat dust or a pr
   assert.deepEqual(settlementView({ mode: "deposit", sharesBeforeRaw: "3", position: deposit("AUCTION", "3") }), { status: "filling", listening: true, cashOutFinished: false });
   assert.deepEqual(settlementView({ mode: "deposit", sharesBeforeRaw: "3", position: { sharesRaw: "4" } }), { status: "shares received", listening: false, cashOutFinished: false });
   assert.deepEqual(settlementView({ mode: "deposit", sharesBeforeRaw: "3", position: deposit("FAILED", "3") }), { status: "failed", listening: false, cashOutFinished: false });
-  assert.equal(settlementDetail(settlementView({ mode: "deposit", sharesBeforeRaw: "3", position: deposit("FAILED", "3") }), deposit("FAILED", "3"), "deposit"), "This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares.");
+  assert.equal(settlementDetail(settlementView({ mode: "deposit", sharesBeforeRaw: "3", position: deposit("FAILED", "3") }), deposit("FAILED", "3"), "deposit"), "This deposit did not finish the basket. It is not shares.");
   assert.deepEqual(settlementView({ mode: "deposit", sharesBeforeRaw: "3", position: deposit("AUCTION", "3"), timedOut: true }), { status: "failed", listening: false, cashOutFinished: false });
   assert.equal(settlementView({ mode: "deposit", sharesBeforeRaw: "3", position: { sharesRaw: "4" }, timedOut: true }).status, "shares received");
 });

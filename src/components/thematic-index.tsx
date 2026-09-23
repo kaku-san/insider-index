@@ -105,7 +105,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
         {ownedFigures ? <p className={styles.ownedPosition}>Your position: <strong>{ownedFigures[0].text}</strong> {ownedFigures[0].label}. {ownedFigures[1].text} {ownedFigures[1].label}. <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
-        {activeOperation ? <p className={styles.ownedPosition} data-settlement-status={plainStatusForOperation(activeOperation)}>{plainStatusForOperation(activeOperation)}{activeOperation.phase === "FAILED" ? ". This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares." : "."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
+        {activeOperation ? <p className={styles.ownedPosition} data-settlement-status={plainStatusForOperation(activeOperation)}>{plainStatusForOperation(activeOperation)}{activeOperation.phase === "FAILED" ? ". This deposit did not finish the basket. It is not shares." : "."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}
       </div>
     </section>
