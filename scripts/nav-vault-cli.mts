@@ -4,6 +4,7 @@
  *   npm run nav-vault -- init   --index <id> --keeper <pubkey> --fee-owner <pubkey> [--network mainnet-beta] [--definition file.json]
  *                               [--max-price-age 300] [--max-slippage 100] [--entry-fee 25] [--buffer 500] [--max-deposit-raw N (default 0 = no cap)] [--execute --keypair <admin file>]
  *   npm run nav-vault -- keeper --index <id> [--network mainnet-beta] [--execute --keypair <keeper file>] [--loop <seconds>]
+ *   npm run nav-vault -- pause|unpause --index <id> [--execute --keypair <admin file>]
  *
  * Legs/weights come from insiderindex_vault_definitions (service-role Supabase from .env.local) unless
  * --definition points at a PersistedVaultDefinition JSON. Mainnet requires the operator to have deployed
@@ -20,7 +21,7 @@ import { createServiceSupabase } from "../src/lib/supabase.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
 import { readVaultDefinition, type PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 import {
-  NAV_VAULT_PROGRAM_ID, ata, decodeVault, initVaultIx, setLookupTableIx, vaultLookupAddresses, vaultPda, vaultTokenAccounts,
+  NAV_VAULT_PROGRAM_ID, ata, decodeVault, initVaultIx, setLookupTableIx, setPausedIx, vaultLookupAddresses, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
 import { keeperTick, mockVenue } from "../src/lib/nav-vault/keeper.ts";
 import { mainnetVenue } from "../src/lib/nav-vault/mainnet-venue.ts";
@@ -99,8 +100,10 @@ async function init() {
     maxPriceAgeSecs: Number(opt("--max-price-age") ?? 300), maxSlippageBps: Number(opt("--max-slippage") ?? 100),
     entryFeeBps: Number(opt("--entry-fee") ?? 25), bufferBps: Number(opt("--buffer") ?? 500),
     maxDepositUsdc: BigInt(opt("--max-deposit-raw") ?? "0"),
+    maxPriceMoveBps: Number(opt("--max-price-move") ?? 1500), requestTimeoutSecs: Number(opt("--request-timeout") ?? 600),
   });
   if (!execute) { log("[dry-run] init_vault needs the token accounts above to exist; not simulated in dry run."); console.log(JSON.stringify(report, null, 2)); return; }
+  if (legs.length > 7) throw new Error("More than 7 legs: create the vault LUT first and send init_vault as a v0 transaction with it (see docs/nav-vault.md).");
   sigs.push(await run("init_vault", admin, [initIx]));
   const state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
   const [createLut, lut] = AddressLookupTableProgram.createLookupTable({ authority: adminKey, payer: adminKey, recentSlot: await connection.getSlot("finalized") });
@@ -151,5 +154,19 @@ async function keeper() {
   }
 }
 
-(command === "init" ? init() : command === "keeper" ? keeper() : Promise.reject(new Error("usage: nav-vault (init|keeper) --index <id> ...")))
+async function pause(paused: boolean) {
+  const indexId = need("--index");
+  const programId = new PublicKey(opt("--program-id") ?? NAV_VAULT_PROGRAM_ID.toBase58());
+  const address = vaultPda(indexId, programId);
+  const info = await connection.getAccountInfo(address);
+  if (!info) throw new Error(`No NAV vault for ${indexId} on ${network}.`);
+  const state = decodeVault(address, info.data);
+  const admin: Keypair | PublicKey = execute ? loadKey(need("--keypair")) : state.admin;
+  const adminKey = admin instanceof Keypair ? admin.publicKey : admin;
+  if (!adminKey.equals(state.admin)) throw new Error("This key is not the vault admin.");
+  const signature = await run(paused ? "pause" : "unpause", admin, [setPausedIx(state, adminKey, paused, programId)]);
+  console.log(JSON.stringify({ indexId, paused, signature }, null, 2));
+}
+
+(command === "init" ? init() : command === "keeper" ? keeper() : command === "pause" ? pause(true) : command === "unpause" ? pause(false) : Promise.reject(new Error("usage: nav-vault (init|keeper) --index <id> ...")))
   .catch(error => { console.error(JSON.stringify({ mode: "failed-closed", error: (error as Error).message })); process.exitCode = 1; });

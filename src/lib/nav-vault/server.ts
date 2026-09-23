@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { navVaultConfig, navVaultServes, type NavVaultConfig } from "./config.ts";
-import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, ata, tokenAmount } from "./program.ts";
-import { prepareNavDeposit, prepareNavWithdraw, readNavVault, type NavConnection } from "./prepare.ts";
+import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, shareAta, tokenAmount } from "./program.ts";
+import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests, readNavVault, type NavConnection } from "./prepare.ts";
 
 const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
@@ -44,11 +44,12 @@ export async function handleNavReadiness(indexId: string, deps: NavDependencies 
     return Response.json({
       indexId,
       kind: "nav-vault",
-      phase: snapshot.pricesFresh ? "LIVE" : "PRICES_STALE",
-      depositEnabled: snapshot.pricesFresh,
-      ready: snapshot.pricesFresh,
+      phase: state.paused ? "PAUSED" : snapshot.pricesFresh ? "LIVE" : "PRICES_STALE",
+      depositEnabled: snapshot.pricesFresh && !state.paused,
+      ready: snapshot.pricesFresh && !state.paused,
       redeemEnabled: true,
-      blockers: snapshot.pricesFresh ? [] : ["Vault prices are stale. Deposits reopen when the keeper refreshes them. Cash out still works."],
+      paused: state.paused,
+      blockers: state.paused ? ["This vault is paused. Deposits are closed; cash out is in kind."] : snapshot.pricesFresh ? [] : ["Vault prices are stale. Deposits reopen when the keeper refreshes them. Cash out still works."],
       identity: { network: config.network, programId: config.programId.toBase58(), vaultAccount: state.address.toBase58(), shareMint: state.shareMint.toBase58(), shareDecimals: SHARE_DECIMALS, usdcMint: state.usdcMint.toBase58(), indexId, kind: "nav-vault" },
       shareSupplyRaw: snapshot.supply.toString(),
       sharePrice: snapshot.supply > 0n ? micro(snapshot.nav * 1_000_000n / snapshot.supply) : null,
@@ -68,13 +69,22 @@ export async function handleNavPosition(request: Request, indexId: string, deps:
     const { config, connection } = served(indexId, deps);
     const snapshot = await readNavVault(connection, indexId, config.programId, deps.now?.());
     if (!snapshot) return plain(new Error("This index does not have a NAV vault yet."), 404);
-    const shares = tokenAmount((await connection.getAccountInfo(ata(owner, snapshot.state.shareMint), "confirmed"))?.data);
+    const shares = tokenAmount((await connection.getAccountInfo(shareAta(owner, snapshot.state.shareMint), "confirmed"))?.data);
+    const now = deps.now?.() ?? Math.floor(Date.now() / 1000);
+    // Open exit requests are observed operations: VaultFlow shows "cash out settling" until they close.
+    const pendingOperations = (await readNavRequests(connection, snapshot.state.address, owner, config.programId)).map(request => ({
+      operationId: request.address.toBase58(), owner: owner.toBase58(), kind: "withdraw", complete: false,
+      phase: now >= request.claimableAt ? "CLAIMABLE_IN_KIND" : "CONVERTING",
+      confirmedSharesBurnedRaw: request.shares.toString(),
+      nextAction: now >= request.claimableAt ? "Claim your share of the vault in kind." : "The keeper is converting your share of the vault to USDC.",
+      blockers: [],
+    }));
     return Response.json({
       indexId, owner: owner.toBase58(), shareMint: snapshot.state.shareMint.toBase58(), shareDecimals: SHARE_DECIMALS,
       sharesRaw: shares.toString(), shareSupplyRaw: snapshot.supply.toString(), vaultValueUsdc: micro(snapshot.nav),
       markedAt: snapshot.state.pricesUpdatedAt > 0 ? new Date(snapshot.state.pricesUpdatedAt * 1000).toISOString() : null,
       priceBasis: "NAV vault: USDC buffer + keeper-posted stock marks (cash may be pending investment)",
-      pendingOperations: [],
+      pendingOperations,
     }, { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
 }
@@ -94,8 +104,17 @@ export async function handleNavWithdrawPrepare(request: Request, indexId: string
     const body = await readBody(request);
     if (typeof body.owner !== "string" || typeof body.shareAmountRaw !== "string") throw new Error("Wallet owner and shareAmountRaw are required.");
     const { config, connection } = served(indexId, deps);
-    const step = await prepareNavWithdraw({ connection, network: config.network, indexId, owner: body.owner, shareAmountRaw: body.shareAmountRaw, programId: config.programId, nowSeconds: deps.now?.() });
+    const step = await prepareNavWithdraw({ connection, network: config.network, indexId, owner: body.owner, shareAmountRaw: body.shareAmountRaw, inKind: body.requestedExitMode === "in-kind", programId: config.programId, nowSeconds: deps.now?.() });
     return Response.json(step, { headers: HEADERS });
+  } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
+}
+
+export async function handleNavClaimPrepare(request: Request, indexId: string, deps: NavDependencies = defaults): Promise<Response> {
+  try {
+    const body = await readBody(request);
+    if (typeof body.owner !== "string" || typeof body.request !== "string") throw new Error("Wallet owner and request are required.");
+    const { config, connection } = served(indexId, deps);
+    return Response.json(await prepareNavClaim({ connection, network: config.network, indexId, owner: body.owner, request: body.request, programId: config.programId }), { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
 }
 

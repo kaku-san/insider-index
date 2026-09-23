@@ -4,26 +4,44 @@ Unaudited hackathon program. Devnet only. Flag-gated; the live Symmetry Mag7 rai
 
 ## Shape
 
-| Action | Signer | What happens in that one transaction |
+| Action | Signer | What happens |
 | --- | --- | --- |
-| `deposit(usdc, min_shares)` | user | 0.25% entry fee → fee account; net USDC → vault; shares mint at NAV |
-| `withdraw(shares, min_usdc)` | user | burn; USDC from the buffer if it covers the NAV value, else the exact pro-rata slice of every vault account (stocks + USDC) |
-| `withdraw_in_kind(shares)` | user | price-free pro-rata exit (works with stale marks) |
-| `update_prices(prices)` | keeper | marks + timestamp/slot |
-| `keeper_swap(in, out, amount_in, min_out, data)` | keeper | vault PDA signs one venue swap via CPI |
+| `deposit(usdc, min_shares)` | user (1 sig) | 0.25% entry fee → fee account; net USDC → vault; Token-2022 shares mint at NAV |
+| `withdraw(shares, min_usdc)` | user (1 sig) | instant USDC from the **free** buffer when it covers the value (else `UsdcBufferShort`) |
+| `request_withdraw(shares, min_usdc, nonce, in_kind_now)` | user (1 sig) | burns the shares and carves the exact pro-rata slice of free USDC and every free leg into a request PDA. The carved amounts are **reserved**: excluded from NAV and from keeper trading, so other holders are unaffected |
+| `cross_request_leg(leg)` | keeper | nets a request's leg slice against free vault USDC at the posted mark: the slice returns to the free pool and the request is credited the value. No venue involved |
+| `fulfill_swap(...)` | keeper | sells a request's leg slice via Jupiter/Raydium; proceeds are credited to the request (reserved USDC) |
+| `settle_request` | keeper or owner | all legs converted and total ≥ `min_usdc` → pays USDC to the owner and closes the request |
+| `claim_in_kind(legs)` | owner (after the 10 min timeout, or at once for in-kind/paused/stale requests); keeper/admin anytime | delivers the listed leg slices plus any USDC owed, **only to the owner**. At most 13 legs per transaction; closes the request when it is empty |
+| `admin_redeem_in_kind(shares, nonce)` | admin | burns a holder's shares through the Token-2022 permanent delegate (the mint-authority PDA) into an in-kind request payable only to that holder |
+| `update_prices(prices)` / `admin_set_prices` | keeper / admin | marks plus a balance-cache refresh. The keeper's marks may not move more than 15% per update; the admin can override |
+| `keeper_swap(...)` | keeper | rebalances free inventory with one allowlisted venue swap |
+| `set_paused` | admin | stops deposits, instant withdraw, keeper swaps and crosses. Requests, claims and settles stay open |
 
-- NAV = USDC buffer + Σ(leg balance × keeper mark). Never the tutorial's `total_assets = USDC balance`.
-- Shares: `net × (supply + 1e6) / (NAV + 1e6)` (virtual offset; first deposit is 1:1). Exit value uses the same offset.
-- Marks: posted by the keeper (Raydium pool quote first, Jupiter if no pool — `src/lib/nav-vault/mainnet-venue.ts`; devnet reads the mock venue pool). Deposits/priced exits refuse marks older than `max_price_age_secs`; deposits also refuse marks from the current slot and refuse the keeper as depositor.
-- `keeper_swap` venue allowlist is compile-time: Jupiter V6 exact-in routes (`route`, `shared_accounts_route`, `route_v2`, `shared_accounts_route_v2`), Raydium CLMM `swap_v2`; the mock venue only in `--features devnet`. After the CPI the program re-reads every vault token account: only the declared input may decrease (≤ `amount_in`), output must rise ≥ `min_out`, value out ≥ value in × (1 − `max_slippage_bps`) at posted marks, share supply unchanged, no delegate/close authority/owner change, and a USDC→leg buy may not leave USDC below `buffer_bps` of NAV (captain: 5%).
-- Share mint authority is a separate PDA that never signs a swap CPI.
-- Keeper (`src/lib/nav-vault/keeper.ts`): buys toward DB weights down to the buffer (+0.5% margin), sells the most overweight leg when the buffer is short, one swap per transaction, dry run unless `execute` is supplied. The keeper wallet never pays for fills.
-- Limits: 16 legs (in-kind exit needs 3 accounts per leg; the vault LUT keeps a 7-leg exit in one v0 packet).
+- NAV = free USDC + Σ(free leg balance × keeper mark). Free means balance minus the reserved request amounts. It is never the tutorial's `total_assets = USDC balance`.
+- Shares: `net × (supply + 1e6) / (NAV + 1e6)`. The virtual offset makes the first deposit 1:1.
+- Marks: posted by the keeper from a Raydium pool quote first, Jupiter otherwise (`mainnet-venue.ts`). Deposits and instant withdraws refuse marks older than `max_price_age_secs`. Deposits also refuse marks posted in the current slot and refuse the keeper as depositor.
+- Keeper swap allowlist: Jupiter V6 exact-in routes (`route`, `shared_accounts_route`, `route_v2`, `shared_accounts_route_v2`) and Raydium CLMM `swap_v2`. The mock venue exists only in `--features devnet` builds.
+- After each swap CPI, every vault token account the venue was given is re-read:
+  - only the declared input may decrease, by at most `amount_in`, and never below its reserved amount;
+  - the output must rise by at least `min_out`;
+  - value out ≥ value in × (1 − `max_slippage_bps`) at the posted marks;
+  - no delegate, close authority or owner may change.
+  Accounts not passed to the venue cannot be touched.
+- A USDC→leg buy may not leave free USDC below `buffer_bps` of the estimated NAV. The estimate uses a balance cache refreshed by `update_prices`, so `keeper_swap` stays within 64 accounts at 25 legs.
+- Keeper cycle (`keeper.ts` `planCycle`/`keeperTick`):
+  1. post marks;
+  2. cross request slices against free USDC, which nets deposits against withdrawals;
+  3. exits: one `fulfill_swap` per leg, oldest request first;
+  4. rebalance the other legs, one swap per leg per cycle, buying down to the buffer and selling to refill it;
+  5. settle converted requests, and deliver unsellable legs in kind to existing owner accounts.
+  The keeper wallet never pays for fills.
+- Limits: up to **25 legs**. Deposit, instant withdraw, request, marks and swaps all fit in one v0 transaction with the vault LUT. An in-kind claim is chunked at 13 legs per transaction.
 
 ## Code
 
 - Program: `programs/nav-vault` (Anchor 0.31), test/devnet venue `programs/mock-swap`. Committed binaries + hashes: `programs/bin/` (rebuild: `scripts/nav-vault-build.sh`, agave 3.0 `cargo-build-sbf --tools-version v1.52`).
-- Client: `src/lib/nav-vault/{program,prepare,keeper,config,server}.ts`; routes `/api/nav-vault/[id]` (readiness), `/position`, `/deposit/prepare`, `/withdraw/prepare` — each prepare returns exactly one transaction.
+- Client: `src/lib/nav-vault/{program,prepare,keeper,config,server}.ts`. Routes: `/api/nav-vault/[id]` (readiness), `/position` (open requests appear as pending withdraw operations), `/deposit/prepare`, `/withdraw/prepare` (exactly one transaction: instant USDC, a keeper request, or request + claim in kind for ≤ 13 legs), and `/claim/prepare` (in-kind claim after the timeout, chunked).
 - Flag: server `STOCKLANA_NAV_VAULT_INDEXES` (+ `STOCKLANA_NAV_VAULT_RPC_URL`, `STOCKLANA_NAV_VAULT_PROGRAM_ID`; network must be devnet); client `NEXT_PUBLIC_NAV_VAULT_INDEXES` routes `VaultFlow` to the NAV endpoints. Off = unchanged Symmetry path.
 - Tests: `tests/nav-vault.test.mts` (LiteSVM), `tests/nav-vault-api.test.mts`, `tests/nav-vault-jupiter.test.mts` (mainnet build → captured deployed Jupiter V6 + Raydium CLMM TSLA route with the vault PDA as taker).
 

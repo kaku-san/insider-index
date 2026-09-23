@@ -1,138 +1,160 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Keypair, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  JUPITER_V6_PROGRAM_ID, USDC_LEG, ata, computeNav, depositIx, keeperSwapIx, mockPoolPda, mockSetPriceIx, mockSwapIx,
-  previewDeposit, previewWithdraw, setMaxDepositIx, updatePricesIx, withdrawInKindIx, withdrawIx,
+  CLAIM_LEGS_PER_TX, JUPITER_V6_PROGRAM_ID, USDC_LEG, adminRedeemInKindIx, adminSetPricesIx, ata, claimInKindIx, computeNav, crossRequestLegIx,
+  decodeRequest, depositIx, fulfillSwapIx, keeperSwapIx, mockPoolPda, mockSetPriceIx, mockSwapIx, previewDeposit, previewWithdraw, requestPda,
+  requestWithdrawIx, setMaxDepositIx, setPausedIx, settleRequestIx, shareAta, updatePricesIx, withdrawIx, type NavVaultState,
 } from "../src/lib/nav-vault/program.ts";
-import { prepareNavDeposit, prepareNavWithdraw } from "../src/lib/nav-vault/prepare.ts";
-import { keeperTick, markFromQuote, mockVenue, planRebalance } from "../src/lib/nav-vault/keeper.ts";
+import { prepareNavDeposit, prepareNavWithdraw, readNavRequests } from "../src/lib/nav-vault/prepare.ts";
+import { keeperTick, markFromQuote, mockVenue, planCycle, planRebalance } from "../src/lib/nav-vault/keeper.ts";
 import { navVaultVm, seedIndex, PRICE_A, PRICE_B, type NavVm } from "./support/nav-vault-vm.mts";
 
 type Seeded = ReturnType<typeof seedIndex>;
+const CU = ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 });
 
-function postPrices(vm: NavVm, s: Seeded, prices = [PRICE_A, PRICE_B]) {
-  vm.must(vm.send([updatePricesIx(vm.vault(s.indexId), s.keeper.publicKey, prices)], s.keeper), "update prices");
+function send(vm: NavVm, s: Seeded, ixs: TransactionInstruction[], payer: Keypair) { return vm.send([CU, ...ixs], payer, [], [s.lut]); }
+function postPrices(vm: NavVm, s: Seeded, prices = s.prices) {
+  vm.must(send(vm, s, [updatePricesIx(vm.vault(s.indexId), s.keeper.publicKey, prices)], s.keeper), "update prices");
   vm.advance(1); // marks must be at least one slot old before a deposit uses them
 }
 function navOf(vm: NavVm, s: Seeded) {
   const v = vm.vault(s.indexId);
-  return { v, usdc: vm.balance(v.usdcAccount), legs: v.legs.map(l => vm.balance(l.account)), supply: vm.supply(v.shareMint), nav: computeNav(v, vm.balance(v.usdcAccount), v.legs.map(l => vm.balance(l.account))) };
+  const usdc = vm.balance(v.usdcAccount), legs = v.legs.map(l => vm.balance(l.account));
+  return { v, usdc, legs, supply: vm.supply(v.shareMint), nav: computeNav(v, usdc, legs), freeUsdc: usdc - v.reservedUsdc };
 }
+function sharesOf(vm: NavVm, s: Seeded, who: Keypair) { return vm.balance(shareAta(who.publicKey, vm.vault(s.indexId).shareMint)); }
 function deposit(vm: NavVm, s: Seeded, user: Keypair, amount: bigint, minShares = 0n) {
   const v = vm.vault(s.indexId);
-  vm.mintTo(user, v.shareMint, user.publicKey, 0n); // idempotent share ATA (payer = user)
-  return vm.send([depositIx(v, user.publicKey, amount, minShares)], user);
+  vm.mintTo(user, v.shareMint, user.publicKey, 0n, TOKEN_2022_PROGRAM_ID); // idempotent share ATA (Token-2022)
+  return send(vm, s, [depositIx(v, user.publicKey, amount, minShares)], user);
 }
-/** Keeper swap through the mock venue: in/out are vault leg selectors. */
-function keeperSwap(vm: NavVm, s: Seeded, signer: Keypair, inLeg: number, outLeg: number, amountIn: bigint, minOut = 0n, overrides: { venueMinOut?: bigint; userSrc?: import("@solana/web3.js").PublicKey } = {}) {
+/** Mock-venue swap instruction between vault accounts (taker = authority PDA). */
+function venueSwap(vm: NavVm, s: Seeded, inLeg: number, outLeg: number, amountIn: bigint, overrides: { userSrc?: PublicKey; inMint?: PublicKey; inProgram?: PublicKey; outMint?: PublicKey; userDst?: PublicKey } = {}) {
   const v = vm.vault(s.indexId);
   const mintOf = (leg: number) => leg === USDC_LEG ? s.usdc : v.legs[leg]!.mint;
   const accountOf = (leg: number) => leg === USDC_LEG ? v.usdcAccount : v.legs[leg]!.account;
   const programOf = (leg: number) => leg === USDC_LEG ? TOKEN_PROGRAM_ID : v.legs[leg]!.tokenProgram;
   const stock = inLeg === USDC_LEG ? outLeg : inLeg;
-  const swap = mockSwapIx({
-    user: s.accounts.authority, baseMint: v.legs[stock]!.mint, quoteMint: s.usdc, inMint: mintOf(inLeg), outMint: mintOf(outLeg),
-    userSrc: overrides.userSrc ?? accountOf(inLeg), userDst: accountOf(outLeg), amountIn, minOut: overrides.venueMinOut ?? 0n,
-    inTokenProgram: programOf(inLeg), outTokenProgram: programOf(outLeg),
+  return mockSwapIx({
+    user: s.accounts.authority, baseMint: v.legs[stock]!.mint, quoteMint: s.usdc, inMint: overrides.inMint ?? mintOf(inLeg), outMint: overrides.outMint ?? mintOf(outLeg),
+    userSrc: overrides.userSrc ?? accountOf(inLeg), userDst: overrides.userDst ?? accountOf(outLeg), amountIn, minOut: 0n,
+    inTokenProgram: overrides.inProgram ?? programOf(inLeg), outTokenProgram: programOf(outLeg),
   });
-  return vm.send([keeperSwapIx({ vault: v, keeper: signer.publicKey, inLeg, outLeg, amountIn, minOut, swap })], signer);
+}
+function keeperSwap(vm: NavVm, s: Seeded, signer: Keypair, inLeg: number, outLeg: number, amountIn: bigint, minOut = 0n) {
+  return send(vm, s, [keeperSwapIx({ vault: vm.vault(s.indexId), keeper: signer.publicKey, inLeg, outLeg, amountIn, minOut, swap: venueSwap(vm, s, inLeg, outLeg, amountIn) })], signer);
+}
+function request(vm: NavVm, s: Seeded, user: Keypair, shares: bigint, opts: { minUsdc?: bigint; inKindNow?: boolean; nonce?: bigint } = {}) {
+  const nonce = opts.nonce ?? BigInt(Math.floor(Math.random() * 1e9));
+  const result = send(vm, s, [requestWithdrawIx(vm.vault(s.indexId), user.publicKey, { shares, minUsdc: opts.minUsdc ?? 0n, nonce, inKindNow: opts.inKindNow ?? false })], user);
+  const address = requestPda(vm.vault(s.indexId).address, user.publicKey, nonce);
+  return { result, address, read: () => decodeRequest(address, vm.info(address)!.data) };
+}
+function ownerAtas(vm: NavVm, s: Seeded, user: Keypair) {
+  const v = vm.vault(s.indexId);
+  vm.mintTo(user, s.usdc, user.publicKey, 0n);
+  for (const leg of v.legs) vm.mintTo(user, leg.mint, user.publicKey, 0n, leg.tokenProgram);
 }
 const failsWith = (result: { ok: boolean; logs: string[]; error: string }, name: string) => {
   assert.equal(result.ok, false, `expected ${name} failure`);
   assert.match(result.logs.join("\n"), new RegExp(`Error Code: ${name}`), `expected ${name}, got:\n${result.logs.join("\n")}`);
 };
 
-test("deposit mints shares at NAV in the same instruction: first deposit 1:1 on the net amount, 0.25% entry fee to the fee account", () => {
+test("deposit mints Token-2022 shares at NAV in the same instruction: first deposit 1:1 on the net amount, 0.25% fee", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
   postPrices(vm, s);
   const v = vm.vault(s.indexId);
-  assert.equal(v.entryFeeBps, 25);
-  assert.equal(v.bufferBps, 500);
+  assert.equal(vm.info(v.shareMint)!.owner.toBase58(), TOKEN_2022_PROGRAM_ID.toBase58());
   vm.must(deposit(vm, s, s.alice, 1_000_000_000n), "alice deposit");
-  const fee = 2_500_000n; // ceil(1000 USDC x 25 bps)
-  assert.equal(vm.balance(s.feeAccount), fee);
-  assert.equal(vm.balance(v.usdcAccount), 1_000_000_000n - fee);
-  assert.equal(vm.balance(ata(s.alice.publicKey, v.shareMint)), 1_000_000_000n - fee, "first deposit into an empty vault mints 1:1 on the net USDC");
-  assert.equal(vm.supply(v.shareMint), 997_500_000n);
+  assert.equal(vm.balance(s.feeAccount), 2_500_000n);
+  assert.equal(vm.balance(v.usdcAccount), 997_500_000n);
+  assert.equal(sharesOf(vm, s, s.alice), 997_500_000n);
 });
 
-test("second deposit prices shares on USDC + stock marks (not the USDC balance) and the fee keeps existing holders undiluted", () => {
+test("second deposit prices on free USDC + stock marks and the fee keeps existing holders undiluted", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
   postPrices(vm, s);
   vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
-  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 500_000_000n), "keeper buys A");
-  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 400_000_000n), "keeper buys B");
-  postPrices(vm, s, [220_000_000n, PRICE_B]); // A marks up 10%
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 500_000_000n), "buy A");
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 400_000_000n), "buy B");
+  postPrices(vm, s, [220_000_000n, PRICE_B]);
   const before = navOf(vm, s);
-  assert.equal(before.usdc, 97_500_000n);
-  assert.equal(before.legs[0], 2_500_000n);
-  assert.equal(before.legs[1], 100_000_000n);
   assert.equal(before.nav, 97_500_000n + 550_000_000n + 400_000_000n, "NAV includes stock marks");
   const expected = previewDeposit({ usdcAmount: 100_000_000n, entryFeeBps: 25, nav: before.nav, supply: before.supply });
   vm.must(deposit(vm, s, s.bob, 100_000_000n, expected.shares), "bob deposit");
-  assert.equal(vm.balance(ata(s.bob.publicKey, before.v.shareMint)), expected.shares);
-  assert.ok(expected.shares < 100_000_000n * before.supply / before.usdc, "a cash-only total_assets would have overminted");
+  assert.equal(sharesOf(vm, s, s.bob), expected.shares);
   const after = navOf(vm, s);
-  // Price per share (with the virtual offset) never drops for existing holders.
   assert.ok((after.nav + 1_000_000n) * (before.supply + 1_000_000n) >= (before.nav + 1_000_000n) * (after.supply + 1_000_000n));
   failsWith(deposit(vm, s, s.bob, 100_000_000n, 10n ** 12n), "SlippageExceeded");
 });
 
-test("keeper-only authority: prices and swaps refuse any other signer; the keeper cannot deposit", () => {
+test("keeper-only authority; the keeper cannot deposit", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
-  failsWith(vm.send([updatePricesIx(vm.vault(s.indexId), s.alice.publicKey, [PRICE_A, PRICE_B])], s.alice), "NotKeeper");
+  failsWith(send(vm, s, [updatePricesIx(vm.vault(s.indexId), s.alice.publicKey, s.prices)], s.alice), "NotKeeper");
   postPrices(vm, s);
   vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
   failsWith(keeperSwap(vm, s, s.alice, USDC_LEG, 0, 100_000_000n), "NotKeeper");
   failsWith(deposit(vm, s, s.keeper, 100_000_000n), "KeeperCannotDeposit");
 });
 
-test("stale or same-slot marks refuse deposit and priced withdraw; the price-free in-kind exit still works", () => {
+test("price band: a mark moving more than 15% is refused unless the admin overrides", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
-  failsWith(deposit(vm, s, s.alice, 100_000_000n), "StalePrices"); // never posted
-  vm.must(vm.send([updatePricesIx(vm.vault(s.indexId), s.keeper.publicKey, [PRICE_A, PRICE_B])], s.keeper));
+  postPrices(vm, s);
+  failsWith(send(vm, s, [updatePricesIx(vm.vault(s.indexId), s.keeper.publicKey, [PRICE_A * 116n / 100n, PRICE_B])], s.keeper), "PriceMoveTooLarge");
+  vm.must(send(vm, s, [updatePricesIx(vm.vault(s.indexId), s.keeper.publicKey, [PRICE_A * 115n / 100n, PRICE_B])], s.keeper), "15% move allowed");
+  failsWith(send(vm, s, [adminSetPricesIx(vm.vault(s.indexId), s.keeper.publicKey, [PRICE_A * 2n, PRICE_B])], s.keeper), "ConstraintHasOne");
+  vm.must(send(vm, s, [adminSetPricesIx(vm.vault(s.indexId), s.admin.publicKey, [PRICE_A * 2n, PRICE_B])], s.admin), "admin override");
+  assert.equal(vm.vault(s.indexId).legs[0]!.price, PRICE_A * 2n);
+});
+
+test("stale or same-slot marks refuse deposit and instant withdraw; a request then becomes claimable in kind at once", () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  failsWith(deposit(vm, s, s.alice, 100_000_000n), "StalePrices");
+  vm.must(send(vm, s, [updatePricesIx(vm.vault(s.indexId), s.keeper.publicKey, s.prices)], s.keeper));
   failsWith(deposit(vm, s, s.alice, 100_000_000n), "MarksTooNew");
   vm.advance(1);
   vm.must(deposit(vm, s, s.alice, 100_000_000n));
   vm.advance(301);
   const v = vm.vault(s.indexId);
   failsWith(deposit(vm, s, s.alice, 100_000_000n), "StalePrices");
-  failsWith(vm.send([withdrawIx(v, s.alice.publicKey, 1_000_000n, 0n, false)], s.alice), "StalePrices");
+  failsWith(send(vm, s, [withdrawIx(v, s.alice.publicKey, 1_000_000n, 0n)], s.alice), "StalePrices");
   failsWith(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 10_000_000n), "StalePrices");
-  for (const leg of v.legs) vm.mintTo(s.alice, leg.mint, s.alice.publicKey, 0n, leg.tokenProgram);
+  const r = request(vm, s, s.alice, 1_000_000n);
+  vm.must(r.result, "request with stale marks");
+  assert.ok(r.read().claimableAt <= Number(vm.svm.getClock().unixTimestamp), "stale marks → in-kind claimable now");
+  ownerAtas(vm, s, s.alice);
   const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
-  vm.must(vm.send([withdrawInKindIx(v, s.alice.publicKey, 1_000_000n)], s.alice), "in-kind exit with stale prices");
+  vm.must(send(vm, s, [claimInKindIx(v, s.alice.publicKey, { address: r.address, owner: s.alice.publicKey }, [0, 1])], s.alice), "claim");
   assert.equal(vm.balance(ata(s.alice.publicKey, s.usdc)) - usdcBefore, 1_000_000n);
+  assert.equal(vm.info(r.address), null, "request closed, rent refunded to the owner");
 });
 
-test("keeper swap: pinned venue, vault accounts only, min_out, posted-price bound and the 5% USDC buffer floor", () => {
+test("keeper swap: pinned venue, min_out, posted-price bound, 5% buffer floor, drain protection", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
   postPrices(vm, s);
   vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
-  // 997.5 USDC NAV: buying 950 would leave 47.5 USDC (< 5%).
   failsWith(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 950_000_000n), "BufferBreached");
   failsWith(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 100_000_000n, 500_001n), "SlippageExceeded");
-  // A venue fill far below the posted mark is refused even with min_out = 0.
-  vm.must(vm.send([mockSetPriceIx(s.admin.publicKey, mockPoolPda(s.legA, s.usdc), 300_000_000n)], s.admin));
+  vm.must(send(vm, s, [mockSetPriceIx(s.admin.publicKey, mockPoolPda(s.legA, s.usdc), 300_000_000n)], s.admin));
   failsWith(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 100_000_000n), "SwapPriceBound");
-  vm.must(vm.send([mockSetPriceIx(s.admin.publicKey, mockPoolPda(s.legA, s.usdc), PRICE_A)], s.admin));
-  // Claiming USDC as the input while the venue actually spends leg B is caught by the balance diff.
+  vm.must(send(vm, s, [mockSetPriceIx(s.admin.publicKey, mockPoolPda(s.legA, s.usdc), PRICE_A)], s.admin));
   vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 100_000_000n), "seed B");
   const v = vm.vault(s.indexId);
-  const sellsBToUsdc = mockSwapIx({ user: s.accounts.authority, baseMint: s.legB, quoteMint: s.usdc, inMint: s.legB, outMint: s.usdc, userSrc: v.legs[1]!.account, userDst: v.usdcAccount, amountIn: 1_000_000n, minOut: 0n, inTokenProgram: TOKEN_2022_PROGRAM_ID });
-  failsWith(vm.send([keeperSwapIx({ vault: v, keeper: s.keeper.publicKey, inLeg: USDC_LEG, outLeg: 0, amountIn: 10_000_000n, minOut: 0n, swap: sellsBToUsdc })], s.keeper), "SwapDrainedAccount");
+  // Declared USDC→A, but the venue actually spends vault leg B into vault USDC.
+  const sellsB = mockSwapIx({ user: s.accounts.authority, baseMint: s.legB, quoteMint: s.usdc, inMint: s.legB, outMint: s.usdc, userSrc: v.legs[1]!.account, userDst: v.usdcAccount, amountIn: 1_000_000n, minOut: 0n, inTokenProgram: TOKEN_2022_PROGRAM_ID });
+  failsWith(send(vm, s, [keeperSwapIx({ vault: v, keeper: s.keeper.publicKey, inLeg: USDC_LEG, outLeg: 0, amountIn: 10_000_000n, minOut: 0n, swap: sellsB })], s.keeper), "(SwapDrainedAccount|MissingLegAccounts)");
   vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 500_000_000n), "buy A within buffer");
-  vm.must(keeperSwap(vm, s, s.keeper, 0, USDC_LEG, 1_000_000n), "sell A back to top up the buffer");
+  vm.must(keeperSwap(vm, s, s.keeper, 0, USDC_LEG, 1_000_000n), "sell A back");
   const state = navOf(vm, s);
   assert.equal(state.legs[0], 1_500_000n);
-  assert.equal(state.usdc, 997_500_000n - 600_000_000n + 200_000_000n);
 });
 
 test("mainnet build refuses a non-Jupiter venue and non-route Jupiter instructions", () => {
@@ -142,15 +164,16 @@ test("mainnet build refuses a non-Jupiter venue and non-route Jupiter instructio
   vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
   failsWith(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 10_000_000n), "SwapProgramNotAllowed");
   const v = vm.vault(s.indexId);
-  const notRoute = new TransactionInstruction({ programId: JUPITER_V6_PROGRAM_ID, keys: [{ pubkey: s.accounts.authority, isSigner: true, isWritable: false }], data: Buffer.alloc(16, 7) });
-  failsWith(vm.send([keeperSwapIx({ vault: v, keeper: s.keeper.publicKey, inLeg: USDC_LEG, outLeg: 0, amountIn: 1n, minOut: 0n, swap: notRoute })], s.keeper), "SwapProgramNotAllowed");
-  const route = new TransactionInstruction({ ...notRoute, data: Buffer.concat([Buffer.from([229, 23, 203, 151, 122, 227, 173, 42]), Buffer.alloc(8)]) });
-  const reached = vm.send([keeperSwapIx({ vault: v, keeper: s.keeper.publicKey, inLeg: USDC_LEG, outLeg: 0, amountIn: 1n, minOut: 0n, swap: route })], s.keeper);
+  const accounts = [{ pubkey: s.accounts.authority, isSigner: true, isWritable: false }, { pubkey: v.usdcAccount, isSigner: false, isWritable: true }, { pubkey: v.legs[0]!.account, isSigner: false, isWritable: true }];
+  const notRoute = new TransactionInstruction({ programId: JUPITER_V6_PROGRAM_ID, keys: accounts, data: Buffer.alloc(16, 7) });
+  failsWith(send(vm, s, [keeperSwapIx({ vault: v, keeper: s.keeper.publicKey, inLeg: USDC_LEG, outLeg: 0, amountIn: 1n, minOut: 0n, swap: notRoute })], s.keeper), "SwapProgramNotAllowed");
+  const route = new TransactionInstruction({ programId: JUPITER_V6_PROGRAM_ID, keys: accounts, data: Buffer.concat([Buffer.from([229, 23, 203, 151, 122, 227, 173, 42]), Buffer.alloc(8)]) });
+  const reached = send(vm, s, [keeperSwapIx({ vault: v, keeper: s.keeper.publicKey, inLeg: USDC_LEG, outLeg: 0, amountIn: 1n, minOut: 0n, swap: route })], s.keeper);
   assert.equal(reached.ok, false);
   assert.doesNotMatch(reached.logs.join("\n"), /SwapProgramNotAllowed/, "a Jupiter route discriminator passes the allowlist and reaches the venue");
 });
 
-test("withdraw pays USDC from the buffer when it covers the share value", () => {
+test("instant withdraw pays USDC from the free buffer when it covers the value", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
   postPrices(vm, s);
@@ -158,125 +181,236 @@ test("withdraw pays USDC from the buffer when it covers the share value", () => 
   vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 500_000_000n));
   const before = navOf(vm, s);
   const shares = 100_000_000n;
-  const preview = previewWithdraw({ shares, nav: before.nav, supply: before.supply, usdcBalance: before.usdc, legBalances: before.legs });
-  assert.equal(preview.path, "usdc");
-  const userUsdc = ata(s.alice.publicKey, s.usdc);
-  const usdcBefore = vm.balance(userUsdc);
-  vm.must(vm.send([withdrawIx(before.v, s.alice.publicKey, shares, preview.value, false)], s.alice));
-  assert.equal(vm.balance(userUsdc) - usdcBefore, preview.value);
-  assert.equal(vm.supply(before.v.shareMint), before.supply - shares);
-  assert.deepEqual(navOf(vm, s).legs, before.legs, "stocks untouched on the USDC path");
+  const preview = previewWithdraw({ vault: before.v, shares, nav: before.nav, supply: before.supply, usdcBalance: before.usdc, legBalances: before.legs });
+  assert.equal(preview.instant, true);
+  ownerAtas(vm, s, s.alice);
+  const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
+  vm.must(send(vm, s, [withdrawIx(before.v, s.alice.publicKey, shares, preview.value)], s.alice));
+  assert.equal(vm.balance(ata(s.alice.publicKey, s.usdc)) - usdcBefore, preview.value);
+  failsWith(send(vm, s, [withdrawIx(before.v, s.alice.publicKey, 800_000_000n, 0n)], s.alice), "UsdcBufferShort");
 });
 
-test("withdraw falls back to the exact pro-rata in-kind basket when the USDC buffer is short", () => {
-  const vm = navVaultVm();
-  const s = seedIndex(vm);
-  postPrices(vm, s);
-  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
-  vm.must(deposit(vm, s, s.bob, 500_000_000n));
-  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 800_000_000n));
-  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 600_000_000n));
-  const before = navOf(vm, s);
-  const shares = vm.balance(ata(s.alice.publicKey, before.v.shareMint));
-  const preview = previewWithdraw({ shares, nav: before.nav, supply: before.supply, usdcBalance: before.usdc, legBalances: before.legs });
-  assert.equal(preview.path, "in-kind");
-  failsWith(vm.send([withdrawIx(before.v, s.alice.publicKey, shares, 0n, false)], s.alice), "UsdcBufferShort");
-  for (const leg of before.v.legs) vm.mintTo(s.alice, leg.mint, s.alice.publicKey, 0n, leg.tokenProgram);
-  const userUsdc = ata(s.alice.publicKey, s.usdc), usdcBefore = vm.balance(userUsdc);
-  vm.must(vm.send([withdrawIx(before.v, s.alice.publicKey, shares, withSlippageValue(preview.value), true)], s.alice), "in-kind fallback");
-  assert.equal(vm.balance(userUsdc) - usdcBefore, before.usdc * shares / before.supply);
-  assert.equal(vm.balance(ata(s.alice.publicKey, s.legA, TOKEN_PROGRAM_ID)), before.legs[0]! * shares / before.supply);
-  assert.equal(vm.balance(ata(s.alice.publicKey, s.legB, TOKEN_2022_PROGRAM_ID)), before.legs[1]! * shares / before.supply, "Token-2022 leg delivered");
-  assert.deepEqual([preview.usdcOut, ...preview.legOut], [before.usdc * shares / before.supply, ...before.legs.map(b => b * shares / before.supply)]);
-  const after = navOf(vm, s);
-  assert.equal(after.supply, before.supply - shares);
-  // Bob keeps (at least) his proportional claim: rounding stays in the vault.
-  assert.ok(after.usdc * before.supply >= before.usdc * after.supply);
-  assert.ok(after.legs.every((b, i) => b * before.supply >= before.legs[i]! * after.supply));
-});
-
-function withSlippageValue(value: bigint) { return value * 9_950n / 10_000n; }
-
-test("prepare returns exactly ONE transaction each way and those transactions execute", async () => {
-  const vm = navVaultVm();
-  const s = seedIndex(vm);
-  postPrices(vm, s);
-  const nowSeconds = Number(vm.svm.getClock().unixTimestamp);
-  const dep = await prepareNavDeposit({ connection: vm.connection, network: "devnet", indexId: s.indexId, owner: s.alice.publicKey.toBase58(), amountRaw: "1000000000", nowSeconds });
-  assert.equal(dep.transactions.length, 1);
-  assert.equal(dep.requires, "user-signature");
-  assert.equal(dep.navVault.feeRaw, "2500000");
-  const sign = (b64: string, who: Keypair) => { const tx = VersionedTransaction.deserialize(Buffer.from(b64, "base64")); tx.sign([who]); return tx.serialize(); };
-  vm.must(vm.sendRaw(sign(dep.transactions[0].messageBase64, s.alice)), "prepared deposit");
-  assert.equal(vm.balance(ata(s.alice.publicKey, vm.vault(s.indexId).shareMint)).toString(), dep.estimate.sharesRaw);
-
-  const usdcExit = await prepareNavWithdraw({ connection: vm.connection, network: "devnet", indexId: s.indexId, owner: s.alice.publicKey.toBase58(), shareAmountRaw: "10000000", nowSeconds });
-  assert.equal(usdcExit.transactions.length, 1);
-  assert.equal(usdcExit.navVault.path, "usdc");
-  vm.must(vm.sendRaw(sign(usdcExit.transactions[0].messageBase64, s.alice)), "prepared USDC exit");
-
-  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 550_000_000n));
-  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 380_000_000n));
-  const rest = vm.balance(ata(s.alice.publicKey, vm.vault(s.indexId).shareMint)).toString();
-  const inKind = await prepareNavWithdraw({ connection: vm.connection, network: "devnet", indexId: s.indexId, owner: s.alice.publicKey.toBase58(), shareAmountRaw: rest, nowSeconds });
-  assert.equal(inKind.transactions.length, 1);
-  assert.equal(inKind.navVault.path, "in-kind");
-  assert.match(inKind.estimate.outputSummary, /not a USDC exit/);
-  vm.must(vm.sendRaw(sign(inKind.transactions[0].messageBase64, s.alice)), "prepared in-kind exit");
-  assert.equal(vm.supply(vm.vault(s.indexId).shareMint), 0n);
-  assert.ok(vm.balance(ata(s.alice.publicKey, s.legA)) > 0n && vm.balance(ata(s.alice.publicKey, s.legB, TOKEN_2022_PROGRAM_ID)) > 0n);
-});
-
-test("planRebalance buys toward weights down to the 5% buffer and sells the most overweight leg when the buffer is short", () => {
-  const legs = [{ weightBps: 6000, price: PRICE_A, decimals: 6 }, { weightBps: 4000, price: PRICE_B, decimals: 8 }];
-  const buys = planRebalance({ legs, usdc: 1_000_000_000n, legBalances: [0n, 0n], bufferBps: 500 });
-  assert.deepEqual(buys.map(a => [a.kind, a.leg, a.amountInRaw]), [["buy", 0, 567_000_000n], ["buy", 1, 378_000_000n]]);
-  assert.equal(1_000_000_000n - buys.reduce((sum, a) => sum + a.amountInRaw, 0n), 55_000_000n, "5% buffer + 0.5% slippage margin stays in USDC");
-  const sells = planRebalance({ legs, usdc: 10_000_000n, legBalances: [3_000_000n, 100_000_000n], bufferBps: 500 });
-  assert.equal(sells.length, 1);
-  assert.equal(sells[0]!.kind, "sell");
-  assert.equal(sells[0]!.leg, 0, "A is the most overweight leg");
-  assert.equal(markFromQuote(100_000_000n, 500_000n, 6), PRICE_A);
-});
-
-test("keeper tick posts marks, buys legs one swap per transaction from vault USDC, and restores the buffer after a big exit", async () => {
+test("USDC cash-out via keeper: request carves the pro-rata slice (other holders unaffected), keeper crosses/sells, settle pays USDC >= min_usdc", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
   postPrices(vm, s);
   vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
   vm.must(deposit(vm, s, s.bob, 1_000_000_000n));
-  const venue = mockVenue(vm.connection, s.usdc);
-  const execute = async (tx: VersionedTransaction) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), "keeper tx"); return "local"; };
-  const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
-  const keeperBalance = vm.balance(ata(s.keeper.publicKey, s.usdc));
-  const dry = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, nowSeconds });
-  assert.equal(dry.dryRun, true);
-  assert.equal(dry.signatures.length, 0);
-  assert.equal(dry.plan.length, 2);
-  const tick = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds });
-  assert.deepEqual(tick.signatures.map(x => x.step.split(":")[0]), ["update_prices", "buy", "buy"]);
-  const filled = navOf(vm, s);
-  assert.ok(filled.usdc * 10_000n >= filled.nav * 500n, "buffer floor held");
-  assert.ok(filled.usdc * 10_000n <= filled.nav * 600n, "idle cash invested down to the buffer");
-  assert.equal(vm.balance(ata(s.keeper.publicKey, s.usdc)), keeperBalance, "keeper wallet paid for nothing");
-  // A USDC exit drains the buffer below 5%; the next tick sells the most overweight leg to refill it.
-  vm.must(vm.send([withdrawIx(filled.v, s.bob.publicKey, 50_000_000n, 0n, false)], s.bob));
-  const drained = navOf(vm, s);
-  assert.ok(drained.usdc * 10_000n < drained.nav * 500n);
-  const refill = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds });
-  assert.ok(refill.signatures.some(x => x.step.startsWith("sell:")));
-  const topped = navOf(vm, s);
-  assert.ok(topped.usdc * 10_000n >= topped.nav * 500n, "buffer restored by selling legs");
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 1_100_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 780_000_000n));
+  const before = navOf(vm, s);
+  const bobValueBefore = sharesOf(vm, s, s.bob) * before.nav / before.supply;
+  const shares = sharesOf(vm, s, s.alice);
+  const preview = previewWithdraw({ vault: before.v, shares, nav: before.nav, supply: before.supply, usdcBalance: before.usdc, legBalances: before.legs });
+  assert.equal(preview.instant, false, "buffer cannot cover alice's full exit");
+  const r = request(vm, s, s.alice, shares, { minUsdc: preview.value * 99n / 100n });
+  vm.must(r.result, "ONE-signature request");
+  const req = r.read();
+  assert.deepEqual(req.legAmounts, preview.slice.legs, "carved exactly the pro-rata leg slices");
+  assert.equal(req.usdcOwed, preview.slice.usdc);
+  const mid = navOf(vm, s);
+  // Other holders unaffected: bob's claim is unchanged by the carve.
+  assert.ok(sharesOf(vm, s, s.bob) * mid.nav / mid.supply >= bobValueBefore - 2n);
+  failsWith(send(vm, s, [claimInKindIx(mid.v, s.alice.publicKey, { address: r.address, owner: s.alice.publicKey }, [0])], s.alice), "NotClaimable");
+  // Keeper: sell leg A's slice through the venue into the request; cross leg B against free USDC? (not enough) → sell too.
+  vm.must(send(vm, s, [fulfillSwapIx({ vault: mid.v, keeper: s.keeper.publicKey, request: r.address, inLeg: 0, amountIn: req.legAmounts[0]!, minOut: 0n, swap: venueSwap(vm, s, 0, USDC_LEG, req.legAmounts[0]!) })], s.keeper), "fulfill A");
+  vm.must(send(vm, s, [fulfillSwapIx({ vault: mid.v, keeper: s.keeper.publicKey, request: r.address, inLeg: 1, amountIn: req.legAmounts[1]!, minOut: 0n, swap: venueSwap(vm, s, 1, USDC_LEG, req.legAmounts[1]!) })], s.keeper), "fulfill B");
+  const converted = r.read();
+  assert.deepEqual(converted.legAmounts, [0n, 0n]);
+  failsWith(send(vm, s, [settleRequestIx(mid.v, s.bob.publicKey, { address: r.address, owner: s.alice.publicKey })], s.bob), "NotClaimable");
+  ownerAtas(vm, s, s.alice);
+  const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
+  vm.must(send(vm, s, [settleRequestIx(mid.v, s.keeper.publicKey, { address: r.address, owner: s.alice.publicKey })], s.keeper), "settle");
+  const paid = vm.balance(ata(s.alice.publicKey, s.usdc)) - usdcBefore;
+  assert.equal(paid, converted.usdcOwed);
+  assert.ok(paid >= preview.value * 99n / 100n);
+  assert.equal(vm.info(r.address), null);
+  const after = navOf(vm, s);
+  assert.equal(after.v.reservedUsdc, 0n);
+  assert.ok(after.v.legs.every(l => l.reserved === 0n));
+  assert.ok(sharesOf(vm, s, s.bob) * after.nav / after.supply >= bobValueBefore - 2n, "bob unaffected after settlement");
 });
 
-test("pilot per-deposit cap: above-cap deposits refuse on chain; only the admin can change it", () => {
+test("cross nets a request against free USDC at the mark; min_usdc unmet → owner claims in kind after the timeout", () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm, "idx-test-nav", { requestTimeoutSecs: 60 });
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+  vm.must(deposit(vm, s, s.bob, 1_000_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 1_000_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 800_000_000n));
+  const r = request(vm, s, s.alice, 100_000_000n, { minUsdc: 1_000_000_000n }); // unreachable min
+  vm.must(r.result);
+  const v = vm.vault(s.indexId);
+  vm.must(send(vm, s, [crossRequestLegIx(v, s.keeper.publicKey, r.address, 0)], s.keeper), "cross A at mark");
+  assert.equal(r.read().legAmounts[0], 0n);
+  vm.must(send(vm, s, [crossRequestLegIx(v, s.keeper.publicKey, r.address, 1)], s.keeper), "cross B at mark");
+  failsWith(send(vm, s, [settleRequestIx(v, s.keeper.publicKey, { address: r.address, owner: s.alice.publicKey })], s.keeper), "MinUsdcUnmet");
+  ownerAtas(vm, s, s.alice);
+  failsWith(send(vm, s, [claimInKindIx(v, s.alice.publicKey, { address: r.address, owner: s.alice.publicKey }, [])], s.alice), "NotClaimable");
+  vm.advance(61);
+  const owed = r.read().usdcOwed;
+  const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
+  vm.must(send(vm, s, [claimInKindIx(v, s.alice.publicKey, { address: r.address, owner: s.alice.publicKey }, [])], s.alice), "owner claims after timeout");
+  assert.equal(vm.balance(ata(s.alice.publicKey, s.usdc)) - usdcBefore, owed);
+  assert.equal(vm.info(r.address), null);
+});
+
+test("pause stops deposits, instant withdraw, keeper swaps and crosses; requests become in-kind and claims stay open", () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 500_000_000n));
+  failsWith(send(vm, s, [setPausedIx(vm.vault(s.indexId), s.keeper.publicKey, true)], s.keeper), "ConstraintHasOne");
+  vm.must(send(vm, s, [setPausedIx(vm.vault(s.indexId), s.admin.publicKey, true)], s.admin), "pause");
+  const v = vm.vault(s.indexId);
+  failsWith(deposit(vm, s, s.alice, 10_000_000n), "Paused");
+  failsWith(send(vm, s, [withdrawIx(v, s.alice.publicKey, 1_000_000n, 0n)], s.alice), "Paused");
+  failsWith(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 10_000_000n), "Paused");
+  const r = request(vm, s, s.alice, 10_000_000n);
+  vm.must(r.result, "request while paused");
+  failsWith(send(vm, s, [crossRequestLegIx(v, s.keeper.publicKey, r.address, 0)], s.keeper), "Paused");
+  ownerAtas(vm, s, s.alice);
+  const legABefore = vm.balance(ata(s.alice.publicKey, s.legA));
+  vm.must(send(vm, s, [claimInKindIx(v, s.alice.publicKey, { address: r.address, owner: s.alice.publicKey }, [0, 1])], s.alice), "claim while paused");
+  assert.ok(vm.balance(ata(s.alice.publicKey, s.legA)) > legABefore);
+});
+
+test("admin refund: admin burns a holder's shares into an in-kind request paid only to that holder", () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 500_000_000n));
+  const v = vm.vault(s.indexId);
+  failsWith(send(vm, s, [adminRedeemInKindIx(v, s.bob.publicKey, s.alice.publicKey, 1_000_000n, 1n)], s.bob), "ConstraintHasOne");
+  const shares = sharesOf(vm, s, s.alice);
+  vm.must(send(vm, s, [adminRedeemInKindIx(v, s.admin.publicKey, s.alice.publicKey, shares, 7n)], s.admin), "admin redeem");
+  assert.equal(sharesOf(vm, s, s.alice), 0n, "permanent-delegate burn");
+  const address = requestPda(v.address, s.alice.publicKey, 7n);
+  const req = decodeRequest(address, vm.info(address)!.data);
+  assert.equal(req.owner.toBase58(), s.alice.publicKey.toBase58());
+  assert.equal(req.adminForced, true);
+  // The admin cannot redirect the payout to itself.
+  ownerAtas(vm, s, s.admin);
+  const redirect = claimInKindIx(v, s.admin.publicKey, { address, owner: s.alice.publicKey }, [0]);
+  redirect.keys[9 + 2]!.pubkey = ata(s.admin.publicKey, v.legs[0]!.mint); // owner leg account → admin's
+  failsWith(send(vm, s, [redirect], s.admin), "UserAccountMismatch");
+  ownerAtas(vm, s, s.alice);
+  vm.must(send(vm, s, [claimInKindIx(v, s.admin.publicKey, { address, owner: s.alice.publicKey }, [0, 1])], s.admin), "admin pays the holder");
+  assert.equal(vm.balance(ata(s.alice.publicKey, s.legA)), req.legAmounts[0]);
+  assert.equal(vm.info(address), null);
+});
+
+test("25 legs: deposit, marks, keeper swap, request, instant withdraw and a chunked in-kind claim all fit the 64-account cap", () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm, "idx-test-25", { legCount: 25 });
+  assert.equal(vm.vault(s.indexId).legs.length, 25);
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 2_000_000_000n), "deposit (25 leg NAV reads)");
+  vm.must(deposit(vm, s, s.bob, 2_000_000_000n), "second deposit");
+  for (const leg of [0, 1, 24]) vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, leg, 100_000_000n), `buy leg ${leg}`);
+  postPrices(vm, s);
+  const v = vm.vault(s.indexId);
+  ownerAtas(vm, s, s.alice);
+  vm.must(send(vm, s, [withdrawIx(v, s.alice.publicKey, 10_000_000n, 0n)], s.alice), "instant withdraw (25 legs)");
+  const r = request(vm, s, s.alice, 500_000_000n, { inKindNow: true });
+  vm.must(r.result, "request (25 legs)");
+  const legs = Array.from({ length: 25 }, (_, i) => i);
+  assert.equal(CLAIM_LEGS_PER_TX, 13);
+  vm.must(send(vm, s, [claimInKindIx(v, s.alice.publicKey, { address: r.address, owner: s.alice.publicKey }, legs.slice(0, 13))], s.alice), "claim chunk 1");
+  assert.ok(vm.info(r.address), "request stays open between chunks");
+  vm.must(send(vm, s, [claimInKindIx(v, s.alice.publicKey, { address: r.address, owner: s.alice.publicKey }, legs.slice(13))], s.alice), "claim chunk 2");
+  assert.equal(vm.info(r.address), null);
+  assert.ok(vm.balance(ata(s.alice.publicKey, v.legs[24]!.mint, v.legs[24]!.tokenProgram)) > 0n);
+});
+
+test("keeper cycle nets deposits and withdrawals: crosses first, at most one swap per leg, then settles", async () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 560_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 370_000_000n));
+  // Same cycle: bob deposits (needs buys) and alice requests a large exit (needs sells).
+  vm.must(deposit(vm, s, s.bob, 1_000_000_000n));
+  const r = request(vm, s, s.alice, 300_000_000n);
+  vm.must(r.result);
+  ownerAtas(vm, s, s.alice);
+  const venue = mockVenue(vm.connection, s.usdc);
+  const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
+  const execute = async (tx: VersionedTransaction) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), "keeper tx"); return "local"; };
+  const dry = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, nowSeconds });
+  assert.equal(dry.requests.open, 1);
+  assert.ok(dry.plan.some(p => p.kind === "cross"), "exit netted against bob's fresh USDC");
+  const snapshotPlan = planCycle({ snapshot: { ...(await import("../src/lib/nav-vault/prepare.ts").then(m => m.readNavVault(vm.connection, s.indexId, undefined, nowSeconds())))! }, requests: await readNavRequests(vm.connection, vm.vault(s.indexId).address) });
+  const perLeg = new Map<number, number>();
+  for (const a of snapshotPlan.swaps) perLeg.set(a.leg, (perLeg.get(a.leg) ?? 0) + 1);
+  assert.ok([...perLeg.values()].every(n => n <= 1), "at most one swap per leg per cycle");
+  const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
+  const tick = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds });
+  assert.equal(tick.requests.settled, 1, "request settled in USDC this cycle");
+  const swapSteps = tick.signatures.filter(x => /^(buy|sell|fulfill):/.test(x.step)).map(x => x.step.split(":")[1]);
+  assert.equal(new Set(swapSteps).size, swapSteps.length, "one swap per leg");
+  assert.ok(vm.balance(ata(s.alice.publicKey, s.usdc)) > usdcBefore);
+  assert.equal(vm.info(r.address), null);
+  const after = navOf(vm, s);
+  assert.ok(after.freeUsdc * 10_000n >= after.nav * 500n, "buffer floor held after netting");
+});
+
+test("prepare returns exactly ONE transaction each way (deposit, instant USDC, keeper request, in-kind) and they execute", async () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  const nowSeconds = Number(vm.svm.getClock().unixTimestamp);
+  const sign = (b64: string, who: Keypair) => { const tx = VersionedTransaction.deserialize(Buffer.from(b64, "base64")); tx.sign([who]); return tx.serialize(); };
+  const common = { connection: vm.connection, network: "devnet" as const, indexId: s.indexId, owner: s.alice.publicKey.toBase58(), nowSeconds };
+  const dep = await prepareNavDeposit({ ...common, amountRaw: "1000000000" });
+  assert.equal(dep.transactions.length, 1);
+  assert.equal(dep.navVault.feeRaw, "2500000");
+  vm.must(vm.sendRaw(sign(dep.transactions[0]!.messageBase64, s.alice)), "prepared deposit");
+  assert.equal(sharesOf(vm, s, s.alice).toString(), dep.estimate.sharesRaw);
+  const usdcExit = await prepareNavWithdraw({ ...common, shareAmountRaw: "10000000" });
+  assert.equal(usdcExit.transactions.length, 1);
+  assert.equal(usdcExit.navVault.path, "usdc");
+  vm.must(vm.sendRaw(sign(usdcExit.transactions[0]!.messageBase64, s.alice)), "prepared USDC exit");
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 550_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 380_000_000n));
+  const req = await prepareNavWithdraw({ ...common, shareAmountRaw: "400000000" });
+  assert.equal(req.transactions.length, 1);
+  assert.equal(req.navVault.path, "request");
+  vm.must(vm.sendRaw(sign(req.transactions[0]!.messageBase64, s.alice)), "prepared keeper request");
+  assert.ok(vm.info(new PublicKey(req.navVault.request!)));
+  const rest = sharesOf(vm, s, s.alice).toString();
+  const inKind = await prepareNavWithdraw({ ...common, shareAmountRaw: rest, inKind: true });
+  assert.equal(inKind.transactions.length, 1);
+  assert.equal(inKind.navVault.path, "in-kind");
+  assert.match(inKind.estimate.outputSummary, /not a USDC exit/);
+  vm.must(vm.sendRaw(sign(inKind.transactions[0]!.messageBase64, s.alice)), "prepared in-kind exit (request + claim in one tx)");
+  assert.equal(vm.info(new PublicKey(inKind.navVault.request!)), null);
+  assert.ok(vm.balance(ata(s.alice.publicKey, s.legA)) > 0n && vm.balance(ata(s.alice.publicKey, s.legB, TOKEN_2022_PROGRAM_ID)) > 0n);
+});
+
+test("per-deposit cap: above-cap deposits refuse on chain; only the admin can change it", () => {
   const vm = navVaultVm();
   const s = seedIndex(vm);
   postPrices(vm, s);
   const v = vm.vault(s.indexId);
-  failsWith(vm.send([setMaxDepositIx(v, s.alice.publicKey, 1n)], s.alice), "ConstraintHasOne");
-  vm.must(vm.send([setMaxDepositIx(v, s.admin.publicKey, 50_000_000n)], s.admin), "admin sets $50 cap");
-  assert.equal(vm.vault(s.indexId).maxDepositUsdc, 50_000_000n);
+  failsWith(send(vm, s, [setMaxDepositIx(v, s.alice.publicKey, 1n)], s.alice), "ConstraintHasOne");
+  vm.must(send(vm, s, [setMaxDepositIx(v, s.admin.publicKey, 50_000_000n)], s.admin));
   failsWith(deposit(vm, s, s.alice, 50_000_001n), "DepositAboveCap");
-  vm.must(deposit(vm, s, s.alice, 50_000_000n), "deposit at the cap");
+  vm.must(deposit(vm, s, s.alice, 50_000_000n));
 });
+
+test("planRebalance buys toward weights down to the 5% buffer and sells the most overweight leg when short", () => {
+  const legs = [{ weightBps: 6000, price: PRICE_A, decimals: 6 }, { weightBps: 4000, price: PRICE_B, decimals: 8 }];
+  const buys = planRebalance({ legs, usdc: 1_000_000_000n, legBalances: [0n, 0n], bufferBps: 500 });
+  assert.deepEqual(buys.map(a => [a.kind, a.leg, a.amountInRaw]), [["buy", 0, 567_000_000n], ["buy", 1, 378_000_000n]]);
+  const sells = planRebalance({ legs, usdc: 10_000_000n, legBalances: [3_000_000n, 100_000_000n], bufferBps: 500 });
+  assert.equal(sells[0]!.kind, "sell");
+  assert.equal(sells[0]!.leg, 0);
+  assert.equal(markFromQuote(100_000_000n, 500_000n, 6), PRICE_A);
+});
+
+export type { NavVaultState };

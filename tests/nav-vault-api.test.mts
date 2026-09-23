@@ -53,6 +53,8 @@ test("readiness, position and both prepare routes return one-transaction steps f
   const withdraw = await (await handleNavWithdrawPrepare(post({ owner: s.alice.publicKey.toBase58(), shareAmountRaw: "1000000" }), s.indexId, deps)).json();
   assert.equal(withdraw.transactions.length, 1);
   assert.equal(withdraw.navVault.path, "usdc");
+  const claimFor = await handleNavPosition(new Request(`http://local/api?wallet=${s.bob.publicKey.toBase58()}`), s.indexId, deps);
+  assert.equal((await claimFor.json()).sharesRaw, "0");
 });
 
 test("unflagged index 404s; stale marks close deposits but keep cash out open", async () => {
@@ -96,25 +98,50 @@ test("FE: the flag routes VaultFlow to NAV endpoints and the wallet-side validat
   }
 });
 
-test("Mag7-size (7 Token-2022 legs) in-kind exit fits ONE v0 transaction with the vault lookup table", async () => {
+test("Mag7-size (7 Token-2022 legs) in-kind exit (request + claim) fits ONE v0 transaction with the vault lookup table", async () => {
   const web3 = await import("@solana/web3.js");
   const spl = await import("@solana/spl-token");
   const program = await import("../src/lib/nav-vault/program.ts");
   const key = () => web3.Keypair.generate().publicKey;
   const vault = program.vaultPda("idx-theme-mag7-caucus");
   const authority = program.authorityPda(vault);
-  const legs = Array.from({ length: 7 }, () => { const mint = key(); return { mint, account: program.ata(authority, mint, spl.TOKEN_2022_PROGRAM_ID), tokenProgram: spl.TOKEN_2022_PROGRAM_ID, decimals: 8, weightBps: 1428, price: 1n }; });
+  const legs = Array.from({ length: 7 }, () => { const mint = key(); return { mint, account: program.ata(authority, mint, spl.TOKEN_2022_PROGRAM_ID), tokenProgram: spl.TOKEN_2022_PROGRAM_ID, decimals: 8, weightBps: 1428, price: 1n, reserved: 0n, cachedBalance: 0n }; });
   const usdcMint = key();
-  const state = { address: vault, admin: key(), keeper: key(), indexSeed: Buffer.alloc(32), indexId: "idx-theme-mag7-caucus", shareMint: program.shareMintPda(vault), usdcMint, usdcAccount: program.ata(authority, usdcMint), maxPriceAgeSecs: 300, maxSlippageBps: 100, pricesUpdatedAt: 1, pricesUpdatedSlot: 1n, entryFeeBps: 25, bufferBps: 500, feeAccount: key(), lookupTable: null, maxDepositUsdc: 0n, bump: 255, authorityBump: 255, mintAuthorityBump: 255, legs };
+  const state: import("../src/lib/nav-vault/program.ts").NavVaultState = { address: vault, admin: key(), keeper: key(), indexSeed: Buffer.alloc(32), indexId: "idx-theme-mag7-caucus", shareMint: program.shareMintPda(vault), usdcMint, usdcAccount: program.ata(authority, usdcMint), feeAccount: key(), lookupTable: null, maxPriceAgeSecs: 60, maxSlippageBps: 100, maxPriceMoveBps: 1500, entryFeeBps: 25, bufferBps: 500, maxDepositUsdc: 0n, requestTimeoutSecs: 600, paused: false, pricesUpdatedAt: 1, pricesUpdatedSlot: 1n, reservedUsdc: 0n, bump: 255, authorityBump: 255, mintAuthorityBump: 255, legs };
   const user = key();
+  const request = program.requestPda(vault, user, 1n);
   const ixs = [
-    web3.ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+    web3.ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
     spl.createAssociatedTokenAccountIdempotentInstruction(user, program.ata(user, usdcMint), user, usdcMint),
+    program.requestWithdrawIx(state, user, { shares: 1n, minUsdc: 0n, nonce: 1n, inKindNow: true }),
     ...legs.map(leg => spl.createAssociatedTokenAccountIdempotentInstruction(user, program.ata(user, leg.mint, leg.tokenProgram), user, leg.mint, leg.tokenProgram)),
-    program.withdrawIx(state, user, 1n, 0n, true),
+    program.claimInKindIx(state, user, { address: request, owner: user }, legs.map((_, i) => i)),
   ];
   const table = new web3.AddressLookupTableAccount({ key: key(), state: { deactivationSlot: 0xffffffffffffffffn, lastExtendedSlot: 0, lastExtendedSlotStartIndex: 0, addresses: program.vaultLookupAddresses(state) } });
   const compile = (tables: InstanceType<typeof web3.AddressLookupTableAccount>[]) => new web3.VersionedTransaction(new web3.TransactionMessage({ payerKey: user, recentBlockhash: user.toBase58(), instructions: ixs }).compileToV0Message(tables));
-  assert.throws(() => { const bytes = compile([]).serialize(); if (bytes.length > 1232) throw new Error("too large"); }, "without the LUT a 7-leg in-kind exit does not fit");
-  assert.ok(compile([table]).serialize().length <= 1232);
+  assert.throws(() => { const bytes = compile([]).serialize(); if (bytes.length > 1232) throw new Error("too large"); }, "without the LUT it does not fit");
+  const tx = compile([table]);
+  assert.ok(tx.serialize().length <= 1232);
+  const loaded = tx.message.staticAccountKeys.length + tx.message.addressTableLookups.reduce((n, l) => n + l.writableIndexes.length + l.readonlyIndexes.length, 0);
+  assert.ok(loaded <= 64);
+});
+
+test("an open keeper request shows as a pending withdraw operation on the position until it settles", async () => {
+  const { vm, s, deps } = setup();
+  const { VersionedTransaction } = await import("@solana/web3.js");
+  const { keeperTick, mockVenue } = await import("../src/lib/nav-vault/keeper.ts");
+  const sign = async (response: Response) => { const step = await response.json(); const tx = VersionedTransaction.deserialize(Buffer.from(step.transactions[0].messageBase64, "base64")); tx.sign([s.alice]); vm.must(vm.sendRaw(tx.serialize())); return step; };
+  await sign(await handleNavDepositPrepare(post({ owner: s.alice.publicKey.toBase58(), amountRaw: "1000000000" }), s.indexId, deps));
+  const venue = mockVenue(vm.connection, s.usdc);
+  const execute = async (tx: InstanceType<typeof VersionedTransaction>) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize())); return "local"; };
+  await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds: deps.now });
+  const positionOf = async () => (await handleNavPosition(new Request(`http://local/api?wallet=${s.alice.publicKey.toBase58()}`), s.indexId, deps)).json();
+  const step = await sign(await handleNavWithdrawPrepare(post({ owner: s.alice.publicKey.toBase58(), shareAmountRaw: (await positionOf()).sharesRaw }), s.indexId, deps));
+  assert.equal(step.navVault.path, "request");
+  const pending = await positionOf();
+  assert.equal(pending.pendingOperations.length, 1);
+  assert.equal(pending.pendingOperations[0].kind, "withdraw");
+  assert.equal(pending.pendingOperations[0].phase, "CONVERTING");
+  await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds: deps.now });
+  assert.equal((await positionOf()).pendingOperations.length, 0, "settled in USDC by the keeper");
 });

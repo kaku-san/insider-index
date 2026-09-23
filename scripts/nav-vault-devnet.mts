@@ -12,14 +12,14 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import {
-  AddressLookupTableProgram, Connection, Keypair, PublicKey, SystemProgram, Transaction, TransactionMessage, VersionedTransaction,
+  AddressLookupTableProgram, ComputeBudgetProgram, Connection, Keypair, PublicKey, SystemProgram, Transaction, TransactionMessage, VersionedTransaction,
   sendAndConfirmTransaction, type TransactionInstruction,
 } from "@solana/web3.js";
 import {
   MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createInitializeMint2Instruction, createMintToInstruction,
 } from "@solana/spl-token";
 import {
-  MOCK_SWAP_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, decodeVault, depositIx, initVaultIx, mockInitPoolIx, mockPoolPda, setLookupTableIx, tokenAmount,
+  MOCK_SWAP_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, decodeRequest, decodeVault, depositIx, initVaultIx, mockInitPoolIx, mockPoolPda, setLookupTableIx, setPausedIx, shareAta, tokenAmount, updatePricesIx,
   vaultLookupAddresses, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
 import { prepareNavDeposit, prepareNavWithdraw, readNavVault } from "../src/lib/nav-vault/prepare.ts";
@@ -108,8 +108,9 @@ async function main() {
     createAssociatedTokenAccountIdempotentInstruction(payer.publicKey, accounts.usdc, accounts.authority, usdc),
     ...legs.map((leg, i) => createAssociatedTokenAccountIdempotentInstruction(payer.publicKey, accounts.legs[i]!, accounts.authority, leg.mint, leg.tokenProgram)),
   ], payer);
-  await send("init_vault (60/40, 25 bps entry fee, 5% buffer, 60 s max mark age, $50 per-deposit cap — mainnet pilot params)", [
-    initVaultIx({ admin: payer.publicKey, indexId, keeper: keeper.publicKey, usdcMint: usdc, feeAccount, maxPriceAgeSecs: 60, maxSlippageBps: 100, entryFeeBps: 25, bufferBps: 500, maxDepositUsdc: 50_000_000n, legs }),
+  await send("init_vault (mainnet params: 60/40, 25 bps entry fee, 5% buffer, 60 s marks, 15% band, no deposit cap, 600 s request timeout)", [
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+    initVaultIx({ admin: payer.publicKey, indexId, keeper: keeper.publicKey, usdcMint: usdc, feeAccount, maxPriceAgeSecs: 60, maxSlippageBps: 100, entryFeeBps: 25, bufferBps: 500, maxDepositUsdc: 0n, requestTimeoutSecs: 600, legs }),
   ], payer);
   const vault = vaultPda(indexId);
   let state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
@@ -144,57 +145,84 @@ async function main() {
   console.log("marks", marks.marks);
 
   const refreshMarks = async () => { await keeperTick({ connection, indexId, keeper: keeper.publicKey, ...venue, execute, maxSwaps: 0, afterPrices: async () => waitSlot(await connection.getSlot("confirmed")) }); };
-  // The $50 pilot cap is enforced on chain: simulate a 50.000001 deposit (not sent).
-  {
-    state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
+  const tables = [(await connection.getAddressLookupTable(lut)).value!];
+  const simulate = async (label: string, payerKey: PublicKey, ixs: TransactionInstruction[], expect: RegExp) => {
     const latest = await connection.getLatestBlockhash("confirmed");
-    const over = new VersionedTransaction(new TransactionMessage({ payerKey: user.publicKey, recentBlockhash: latest.blockhash, instructions: [
-      createAssociatedTokenAccountIdempotentInstruction(user.publicKey, ata(user.publicKey, state.shareMint), user.publicKey, state.shareMint),
-      depositIx(state, user.publicKey, 50_000_001n, 0n),
-    ] }).compileToV0Message());
-    const sim = await connection.simulateTransaction(over, { sigVerify: false });
-    const refused = (sim.value.logs ?? []).some(line => /DepositAboveCap/.test(line));
-    if (!refused) throw new Error("expected the on-chain cap to refuse 50.000001 USDC");
-    record.steps.push({ step: "simulate deposit 50.000001 tUSDC (above $50 cap) — refused on chain, not sent", signature: "", explorer: "", readback: { error: "DepositAboveCap", slot: sim.context.slot } });
+    const tx = new VersionedTransaction(new TransactionMessage({ payerKey, recentBlockhash: latest.blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), ...ixs] }).compileToV0Message(tables));
+    const sim = await connection.simulateTransaction(tx, { sigVerify: false });
+    const hit = (sim.value.logs ?? []).find(line => expect.test(line));
+    if (!hit) throw new Error(`${label}: expected ${expect}, got ${JSON.stringify(sim.value.err)}`);
+    record.steps.push({ step: `${label} — refused on chain (simulated, not sent)`, signature: "", explorer: "", readback: { error: expect.source, slot: sim.context.slot } });
     save();
-  }
-  // ONE-signature deposit at the cap.
+  };
+  state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
+  // Price band: a 20% jump is refused for the keeper.
+  await simulate("keeper posts a +20% mark", keeper.publicKey, [updatePricesIx(state, keeper.publicKey, state.legs.map(l => l.price * 120n / 100n))], /PriceMoveTooLarge/);
+
+  // ONE-signature deposit.
   const dep = await prepareNavDeposit({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), amountRaw: "50000000" });
   if (dep.transactions.length !== 1) throw new Error("deposit prepare must return one transaction");
-  await sendVersioned("user deposit 50 tUSDC (ONE signature, at the cap)", VersionedTransaction.deserialize(Buffer.from(dep.transactions[0].messageBase64, "base64")), user,
+  await sendVersioned("user deposit 50 tUSDC (ONE signature)", VersionedTransaction.deserialize(Buffer.from(dep.transactions[0]!.messageBase64, "base64")), user,
     `expected shares ${dep.estimate.sharesRaw}, fee ${dep.navVault.feeRaw}`,
-    async () => ({ userShares: (await balance(ata(user.publicKey, state.shareMint))).toString(), vaultUsdc: (await balance(accounts.usdc)).toString(), fee: (await balance(feeAccount)).toString() }));
+    async () => ({ userShares: (await balance(shareAta(user.publicKey, state.shareMint))).toString(), vaultUsdc: (await balance(accounts.usdc)).toString(), fee: (await balance(feeAccount)).toString() }));
 
-  // Keeper buys toward 60/40 down to the 5% buffer, one swap per tx, from vault USDC only.
+  // Keeper buys toward 60/40 down to the 5% buffer, one swap per leg, from vault USDC only.
   const keeperUsdcBefore = await balance(ata(keeper.publicKey, usdc));
   const buys = await keeperTick({ connection, indexId, keeper: keeper.publicKey, ...venue, execute, afterPrices: async () => waitSlot(await connection.getSlot("confirmed")) });
-  const snap = (await readNavVault(connection, indexId))!;
+  let snap = (await readNavVault(connection, indexId))!;
   record.steps.push({ step: "keeper readback", signature: "", explorer: "", readback: { plan: buys.plan, usdc: snap.usdcBalance, legs: snap.legBalances, nav: snap.nav, bufferBpsNow: Number(snap.usdcBalance * 10_000n / snap.nav), keeperUsdcUnchanged: (await balance(ata(keeper.publicKey, usdc))) === keeperUsdcBefore } });
   save();
 
-  // ONE-signature USDC exit (small, buffer covers it). Marks are refreshed first (60 s max age).
+  // ONE-signature instant USDC exit (small, the buffer covers it).
   await refreshMarks();
   const small = await prepareNavWithdraw({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), shareAmountRaw: "2000000" });
   if (small.transactions.length !== 1 || small.navVault.path !== "usdc") throw new Error(`expected one-tx USDC exit, got ${small.navVault.path}`);
-  const usdcBefore = await balance(ata(user.publicKey, usdc));
-  await sendVersioned("user cash out 2 shares → USDC buffer (ONE signature)", VersionedTransaction.deserialize(Buffer.from(small.transactions[0].messageBase64, "base64")), user, small.estimate.outputSummary,
+  let usdcBefore = await balance(ata(user.publicKey, usdc));
+  await sendVersioned("user cash out 2 shares → instant USDC from the buffer (ONE signature)", VersionedTransaction.deserialize(Buffer.from(small.transactions[0]!.messageBase64, "base64")), user, small.estimate.outputSummary,
     async () => ({ usdcReceived: ((await balance(ata(user.publicKey, usdc))) - usdcBefore).toString(), expected: small.estimate.returnedUsdcRaw }));
 
-  // ONE-signature exit of everything else: buffer is short → pro-rata in-kind basket.
+  // ONE-signature USDC cash-out via keeper: buffer short → request carves the slice; keeper sells and pays USDC.
   await refreshMarks();
+  const medium = await prepareNavWithdraw({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), shareAmountRaw: "20000000" });
+  if (medium.transactions.length !== 1 || medium.navVault.path !== "request") throw new Error(`expected one-tx keeper request, got ${medium.navVault.path}`);
+  usdcBefore = await balance(ata(user.publicKey, usdc));
+  await sendVersioned("user cash out 20 shares → buffer short → keeper request (ONE signature)", VersionedTransaction.deserialize(Buffer.from(medium.transactions[0]!.messageBase64, "base64")), user, medium.estimate.outputSummary,
+    async () => { const r = decodeRequest(new PublicKey(medium.navVault.request!), (await connection.getAccountInfo(new PublicKey(medium.navVault.request!)))!.data); return { request: medium.navVault.request, carvedLegs: r.legAmounts, carvedUsdc: r.usdcOwed, minUsdc: r.minUsdc }; });
+  const cycles: unknown[] = [];
+  for (let n = 0; n < 3; n++) {
+    const cycle = await keeperTick({ connection, indexId, keeper: keeper.publicKey, ...venue, execute, afterPrices: async () => waitSlot(await connection.getSlot("confirmed")) });
+    cycles.push({ requests: cycle.requests, plan: cycle.plan });
+    if ((await connection.getAccountInfo(new PublicKey(medium.navVault.request!))) === null) break;
+  }
+  record.steps.push({ step: "keeper cycle readback (request converted + settled)", signature: "", explorer: "", readback: {
+    cycles, usdcReceived: ((await balance(ata(user.publicKey, usdc))) - usdcBefore).toString(),
+    requestClosed: (await connection.getAccountInfo(new PublicKey(medium.navVault.request!))) === null, estimate: medium.estimate.returnedUsdcRaw,
+  } });
+  save();
+
+  // Admin pause: deposits refused (simulated) while the in-kind exit stays open; then unpause.
+  await send("admin pause", [setPausedIx(state, payer.publicKey, true)], payer);
   state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
-  const rest = (await balance(ata(user.publicKey, state.shareMint))).toString();
+  await simulate("deposit while paused", user.publicKey, [depositIx(state, user.publicKey, 1_000_000n, 0n)], /Error Code: Paused/);
+
+  // ONE-signature in-kind exit of everything else (request + claim in the same tx; works while paused).
+  const rest = (await balance(shareAta(user.publicKey, state.shareMint))).toString();
   const big = await prepareNavWithdraw({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), shareAmountRaw: rest });
   if (big.transactions.length !== 1 || big.navVault.path !== "in-kind") throw new Error(`expected one-tx in-kind exit, got ${big.navVault.path}`);
-  const before = { usdc: await balance(ata(user.publicKey, usdc)) };
-  await sendVersioned("user cash out all remaining shares → buffer short → pro-rata in-kind (ONE signature)", VersionedTransaction.deserialize(Buffer.from(big.transactions[0].messageBase64, "base64")), user, big.estimate.outputSummary,
+  const before = { usdc: await balance(ata(user.publicKey, usdc)), a: await balance(ata(user.publicKey, legs[0]!.mint)), b: await balance(ata(user.publicKey, legs[1]!.mint, TOKEN_2022_PROGRAM_ID)) };
+  await sendVersioned("user cash out all remaining shares while paused → pro-rata in kind (ONE signature: request + claim)", VersionedTransaction.deserialize(Buffer.from(big.transactions[0]!.messageBase64, "base64")), user, big.estimate.outputSummary,
     async () => ({
       expectedInKind: big.navVault.inKind, expectedUsdc: big.estimate.returnedUsdcRaw,
       usdcReceived: ((await balance(ata(user.publicKey, usdc))) - before.usdc).toString(),
-      stockA: (await balance(ata(user.publicKey, legs[0]!.mint))).toString(),
-      stockB: (await balance(ata(user.publicKey, legs[1]!.mint, TOKEN_2022_PROGRAM_ID))).toString(),
-      userSharesAfter: (await balance(ata(user.publicKey, state.shareMint))).toString(),
+      stockA: ((await balance(ata(user.publicKey, legs[0]!.mint))) - before.a).toString(),
+      stockB: ((await balance(ata(user.publicKey, legs[1]!.mint, TOKEN_2022_PROGRAM_ID))) - before.b).toString(),
+      userSharesAfter: (await balance(shareAta(user.publicKey, state.shareMint))).toString(),
+      requestClosed: (await connection.getAccountInfo(new PublicKey(big.navVault.request!))) === null,
     }));
+  await send("admin unpause", [setPausedIx(state, payer.publicKey, false)], payer);
+  snap = (await readNavVault(connection, indexId))!;
+  record.steps.push({ step: "final readback", signature: "", explorer: "", readback: { supply: snap.supply, reservedUsdc: snap.state.reservedUsdc, reservedLegs: snap.state.legs.map(l => l.reserved), paused: snap.state.paused } });
+  save();
   console.log(`wrote ${outPath}`);
 }
 

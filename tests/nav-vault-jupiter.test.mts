@@ -5,8 +5,10 @@ import { ComputeBudgetProgram, Keypair, PublicKey, TransactionMessage, Versioned
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import { getAta } from "@symmetry-hq/sdk/dist/instructions/pda.js";
 import {
-  NAV_VAULT_PROGRAM_ID, USDC_LEG, decodeVault, initVaultIx, keeperSwapIx, legIndex, updatePricesIx, vaultPda, vaultTokenAccounts,
+  NAV_VAULT_PROGRAM_ID, USDC_LEG, decodeRequest, decodeVault, depositIx, fulfillSwapIx, initVaultIx, keeperSwapIx, legIndex, requestPda,
+  requestWithdrawIx, settleRequestIx, shareAta, updatePricesIx, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
+import { Clock } from "litesvm";
 import { mag7CycleVm, withVmTime, owner, definition, MAINNET_USDC, exitBuild, exitQuote, decodeInstruction, pk } from "./support/mag7-cycle-vm.mts";
 import { programBinary } from "./support/nav-vault-vm.mts";
 
@@ -16,7 +18,7 @@ import { programBinary } from "./support/nav-vault-vm.mts";
  * the Jupiter taker via `keeper_swap` CPI. Vault TSLA inventory is a SYNTHETIC local input (not
  * DEX evidence); the sale itself runs through the real deployed programs. Offline, no keys.
  */
-test("keeper_swap CPIs the real deployed Jupiter V6 route with the vault PDA as taker (Mag7 legs, Token-2022)", async () => {
+test("keeper_swap and a keeper USDC cash-out (fulfill_swap → settle) CPI the real deployed Jupiter V6 route with the vault PDA as taker (Mag7 legs)", async () => {
   const vm = mag7CycleVm();
   await withVmTime(vm, async () => {
     vm.loadDex("exit");
@@ -73,5 +75,35 @@ test("keeper_swap CPIs the real deployed Jupiter V6 route with the vault PDA as 
     assert.equal(received, 609167n, "real Raydium CLMM fill through Jupiter");
     assert.ok(received >= minOut);
     for (const [i, leg] of vault.legs.entries()) if (i !== tsla) assert.equal(await vm.balance(accounts.authority.toBase58(), leg.mint.toBase58(), TOKEN_2022_PROGRAM_ID), 0n);
+
+    // USDC cash-out via keeper through the SAME real Jupiter route: a user deposits, requests all its
+    // shares (carving the vault's TSLA slice), the keeper sells that slice with fulfill_swap into the
+    // request, and settle pays USDC. SYNTHETIC local inputs: user USDC balance and vault TSLA credit.
+    const user = Keypair.generate();
+    vm.svm.airdrop(address(user.publicKey.toBase58()), 5_000_000_000n as never);
+    const userUsdc = getAta(user.publicKey, pk(MAINNET_USDC), TOKEN_PROGRAM_ID);
+    send([
+      createAssociatedTokenAccountIdempotentInstruction(user.publicKey, userUsdc, user.publicKey, pk(MAINNET_USDC)),
+      createAssociatedTokenAccountIdempotentInstruction(user.publicKey, shareAta(user.publicKey, vault.shareMint), user.publicKey, vault.shareMint, TOKEN_2022_PROGRAM_ID),
+    ], user);
+    setAmount(userUsdc, 10_000_000n);
+    const c = vm.svm.getClock();
+    vm.svm.setClock(new Clock(c.slot + 2n, c.epochStartTimestamp, c.epoch, c.leaderScheduleEpoch, c.unixTimestamp));
+    send([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), depositIx(vault, user.publicKey, 10_000_000n, 0n)], user, tables);
+    const shares = await vm.balance(user.publicKey.toBase58(), vault.shareMint.toBase58(), TOKEN_2022_PROGRAM_ID);
+    assert.ok(shares > 0n);
+    setAmount(vault.legs[tsla]!.account, credit);
+    send([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), requestWithdrawIx(vault, user.publicKey, { shares, minUsdc: 1n, nonce: 1n, inKindNow: false })], user, tables);
+    const requestAddress = requestPda(vault.address, user.publicKey, 1n);
+    const carved = decodeRequest(requestAddress, (await vm.connection.getAccountInfo(requestAddress))!.data);
+    assert.equal(carved.legAmounts[tsla], credit, "the request carved the whole TSLA credit (sole holder)");
+    const fulfill = fulfillSwapIx({ vault, keeper: keeper.publicKey, request: requestAddress, inLeg: tsla, amountIn: credit, minOut: minOut, swap });
+    send([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }), fulfill], keeper, tables);
+    const converted = decodeRequest(requestAddress, (await vm.connection.getAccountInfo(requestAddress))!.data);
+    assert.equal(converted.legAmounts[tsla], 0n);
+    assert.equal(converted.usdcOwed - carved.usdcOwed, 609167n, "real Jupiter proceeds credited to the request");
+    send([settleRequestIx(vault, keeper.publicKey, converted)], keeper, tables);
+    assert.equal(await vm.balance(user.publicKey.toBase58(), MAINNET_USDC), converted.usdcOwed, "USDC paid to the owner");
+    assert.equal(await vm.connection.getAccountInfo(requestAddress), null);
   });
 });

@@ -8,10 +8,11 @@
  */
 import { AddressLookupTableAccount, ComputeBudgetProgram, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import {
-  BPS, JUPITER_V6_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, USDC_LEG, authorityPda, keeperSwapIx, legAccount, legMint, legTokenProgram, legValue,
-  mockPoolPda, mockSwapIx, updatePricesIx, withSlippage, type NavVaultState,
+  BPS, CLAIM_LEGS_PER_TX, JUPITER_V6_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, USDC_LEG, ata, authorityPda, claimInKindIx, crossRequestLegIx, fulfillSwapIx,
+  keeperSwapIx, legAccount, legMint, legTokenProgram, legValue, mockPoolPda, mockSwapIx, settleRequestIx, updatePricesIx, withSlippage,
+  type NavRequest, type NavVaultState,
 } from "./program.ts";
-import { readNavVault, type NavConnection, type NavVaultSnapshot } from "./prepare.ts";
+import { readNavRequests, readNavVault, type NavConnection, type NavVaultSnapshot } from "./prepare.ts";
 import { fetchJupiterBuild } from "../index-vaults/jupiter-build.ts";
 
 export const KEEPER_MIN_TRADE_USDC_RAW = 1_000_000n;
@@ -193,13 +194,55 @@ export function fitsOnePacket(tx: VersionedTransaction): boolean {
   return bytes <= 1232 && loaded <= 64;
 }
 
+// ---------- cycle plan ----------
+
+export type CyclePlan = {
+  crosses: { request: PublicKey; leg: number; amount: bigint; usdc: bigint }[];
+  swaps: KeeperAction[];
+  fulfills: { request: PublicKey; leg: number; amount: bigint }[];
+};
+
+/**
+ * One keeper cycle, netted: open request slices are first crossed against free vault USDC at the
+ * posted marks (exits settled from the buffer, no venue); the rebalance then runs on the resulting
+ * FREE balances, so deposits and withdrawals net out before any trade; at most ONE swap per leg per
+ * cycle. Exits have priority: a request slice that could not be crossed is sold with `fulfill_swap`
+ * (one per leg, oldest request first) and that leg gets no rebalance swap this cycle.
+ */
+export function planCycle(input: { snapshot: NavVaultSnapshot; requests: readonly NavRequest[]; minTradeUsdcRaw?: bigint }): CyclePlan {
+  const { state } = input.snapshot;
+  let freeUsdc = input.snapshot.usdcBalance > state.reservedUsdc ? input.snapshot.usdcBalance - state.reservedUsdc : 0n;
+  const reserved = state.legs.map(leg => leg.reserved);
+  const crosses: CyclePlan["crosses"] = [];
+  const leftover: { request: PublicKey; leg: number; amount: bigint }[] = [];
+  for (const request of input.requests) {
+    for (const [leg, amount] of request.legAmounts.entries()) {
+      if (amount === 0n) continue;
+      const usdc = legValue(state.legs[leg]!, amount);
+      if (usdc <= freeUsdc) {
+        crosses.push({ request: request.address, leg, amount, usdc });
+        freeUsdc -= usdc;
+        reserved[leg] = reserved[leg]! > amount ? reserved[leg]! - amount : 0n;
+      } else leftover.push({ request: request.address, leg, amount });
+    }
+  }
+  // Exits first: one fulfill per leg (oldest request first); rebalance swaps only on the other legs.
+  const fulfilled = new Set<number>();
+  const fulfills = leftover.filter(item => !fulfilled.has(item.leg) && fulfilled.add(item.leg));
+  const freeLegs = state.legs.map((_, i) => { const b = input.snapshot.legBalances[i] ?? 0n; return b > reserved[i]! ? b - reserved[i]! : 0n; });
+  const swaps = planRebalance({ legs: state.legs, usdc: freeUsdc, legBalances: freeLegs, bufferBps: state.bufferBps, minTradeUsdcRaw: input.minTradeUsdcRaw }).filter(a => !fulfilled.has(a.leg));
+  return { crosses, swaps, fulfills };
+}
+
 // ---------- tick ----------
+
 
 export type KeeperTickResult = {
   indexId: string;
   dryRun: boolean;
   marks: { mint: string; price: string; venue: string }[];
   plan: { kind: string; mint: string; amountInRaw: string; valueUsdcRaw: string; reason: string }[];
+  requests: { open: number; crosses: number; fulfills: number; settled: number; deliveredInKind: number };
   signatures: { step: string; signature: string }[];
   skipped: { mint: string; reason: string }[];
   after?: { usdcRaw: string; navRaw: string; bufferBps: number };
@@ -217,6 +260,7 @@ export async function keeperTick(input: {
   afterPrices?: () => Promise<void>;
   programId?: PublicKey;
   nowSeconds?: () => number;
+  /** 0 = marks only (no crosses, swaps, fulfills or settles). */
   maxSwaps?: number;
 }): Promise<KeeperTickResult> {
   const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
@@ -225,40 +269,95 @@ export async function keeperTick(input: {
   if (!snapshot) throw new Error(`No NAV vault for ${input.indexId}.`);
   if (!snapshot.state.keeper.equals(input.keeper)) throw new Error("This wallet is not the vault keeper.");
   const { state } = snapshot;
+  if (state.paused) throw new Error("The vault is paused; the keeper does nothing.");
   const marks = await Promise.all(state.legs.map((leg, index) => input.marks({ index, mint: leg.mint, decimals: leg.decimals, tokenProgram: leg.tokenProgram })));
   if (marks.some(mark => mark.price <= 0n)) throw new Error("A mark is missing; refusing to post prices.");
+  // The program rejects a >band move per update; say so plainly instead of sending a failing tx.
+  for (const [i, leg] of state.legs.entries()) {
+    const old = leg.price, next = marks[i]!.price;
+    if (old > 0n && (next > old ? next - old : old - next) * BPS > old * BigInt(state.maxPriceMoveBps)) throw new Error(`Mark for ${leg.mint.toBase58()} moved more than ${state.maxPriceMoveBps} bps; admin override (admin_set_prices) required.`);
+  }
+  const requests = await readNavRequests(input.connection, state.address, undefined, programId);
   const result: KeeperTickResult = {
     indexId: input.indexId, dryRun: !input.execute,
     marks: marks.map((mark, i) => ({ mint: state.legs[i]!.mint.toBase58(), price: mark.price.toString(), venue: mark.venue })),
-    plan: [], signatures: [], skipped: [],
+    plan: [], requests: { open: requests.length, crosses: 0, fulfills: 0, settled: 0, deliveredInKind: 0 }, signatures: [], skipped: [],
   };
   const compile = async (instructions: TransactionInstruction[], tables: AddressLookupTableAccount[] = []) => {
     const latest = await input.connection.getLatestBlockhash("confirmed");
     return new VersionedTransaction(new TransactionMessage({ payerKey: input.keeper, recentBlockhash: latest.blockhash, instructions }).compileToV0Message(tables));
   };
+  const vaultTables = state.lookupTable ? [(await input.connection.getAddressLookupTable(state.lookupTable)).value].filter((t): t is AddressLookupTableAccount => Boolean(t)) : [];
   const priced: NavVaultSnapshot = { ...snapshot, state: { ...state, legs: state.legs.map((leg, i) => ({ ...leg, price: marks[i]!.price })) } };
-  const planFor = (s: NavVaultSnapshot) => planRebalance({ legs: s.state.legs, usdc: s.usdcBalance, legBalances: s.legBalances, bufferBps: s.state.bufferBps });
-  const initial = planFor(priced);
-  result.plan = initial.map(a => ({ kind: a.kind, mint: state.legs[a.leg]!.mint.toBase58(), amountInRaw: a.amountInRaw.toString(), valueUsdcRaw: a.valueUsdcRaw.toString(), reason: a.reason }));
+  const plan = planCycle({ snapshot: priced, requests });
+  result.plan = [
+    ...plan.crosses.map(c => ({ kind: "cross", mint: state.legs[c.leg]!.mint.toBase58(), amountInRaw: c.amount.toString(), valueUsdcRaw: c.usdc.toString(), reason: "exit settled from free USDC at mark" })),
+    ...plan.swaps.map(a => ({ kind: a.kind, mint: state.legs[a.leg]!.mint.toBase58(), amountInRaw: a.amountInRaw.toString(), valueUsdcRaw: a.valueUsdcRaw.toString(), reason: a.reason })),
+    ...plan.fulfills.map(f => ({ kind: "fulfill", mint: state.legs[f.leg]!.mint.toBase58(), amountInRaw: f.amount.toString(), valueUsdcRaw: legValue(priced.state.legs[f.leg]!, f.amount).toString(), reason: "sell a request slice to USDC" })),
+  ];
   if (!input.execute) return result;
 
-  result.signatures.push({ step: "update_prices", signature: await input.execute(await compile([updatePricesIx(state, input.keeper, marks.map(m => m.price), programId)]), "update_prices") });
+  result.signatures.push({ step: "update_prices", signature: await input.execute(await compile([updatePricesIx(state, input.keeper, marks.map(m => m.price), programId)], vaultTables), "update_prices") });
+  if (input.maxSwaps === 0) return result;
   await input.afterPrices?.();
   const authority = authorityPda(state.address, programId);
-  for (let n = 0; n < (input.maxSwaps ?? state.legs.length * 2); n++) {
+
+  // 1. Crosses (batched, no venue).
+  for (let k = 0; k < plan.crosses.length; k += 8) {
+    const batch = plan.crosses.slice(k, k + 8);
+    const sig = await input.execute(await compile(batch.map(c => crossRequestLegIx(state, input.keeper, c.request, c.leg, programId)), vaultTables), "cross");
+    result.signatures.push({ step: `cross x${batch.length}`, signature: sig });
+    result.requests.crosses += batch.length;
+  }
+  // At most one swap per leg this cycle.
+  let swapCount = 0;
+  const swappedLegs = new Set<number>();
+  const trySwap = async (kind: string, leg: number, inLeg: number, outLeg: number, amountIn: bigint, request?: PublicKey) => {
+    if (swappedLegs.has(leg) || swapCount >= (input.maxSwaps ?? state.legs.length * 2)) return false;
     snapshot = (await readNavVault(input.connection, input.indexId, programId, now()))!;
-    const next = planFor(snapshot).find(action => !result.skipped.some(s => s.mint === state.legs[action.leg]!.mint.toBase58()));
-    if (!next) break;
-    const inMint = legMint(snapshot.state, next.inLeg), outMint = legMint(snapshot.state, next.outLeg);
-    const built = await input.swaps({ vault: snapshot.state, authority, inMint, outMint, amountIn: next.amountInRaw, inTokenProgram: legTokenProgram(snapshot.state, next.inLeg), outTokenProgram: legTokenProgram(snapshot.state, next.outLeg) });
-    if (!built) { result.skipped.push({ mint: state.legs[next.leg]!.mint.toBase58(), reason: "no route" }); continue; }
-    const ix = keeperSwapIx({ vault: snapshot.state, keeper: input.keeper, inLeg: next.inLeg, outLeg: next.outLeg, amountIn: next.amountInRaw, minOut: built.minOut, swap: built.swap, programId });
-    const tx = await compile([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }), ix], built.lookupTables);
-    if (!fitsOnePacket(tx)) { result.skipped.push({ mint: state.legs[next.leg]!.mint.toBase58(), reason: "route too large for one transaction" }); continue; }
-    const step = `${next.kind}:${state.legs[next.leg]!.mint.toBase58()}`;
-    result.signatures.push({ step, signature: await input.execute(tx, step) });
+    const inMint = legMint(snapshot.state, inLeg), outMint = legMint(snapshot.state, outLeg);
+    const built = await input.swaps({ vault: snapshot.state, authority, inMint, outMint, amountIn, inTokenProgram: legTokenProgram(snapshot.state, inLeg), outTokenProgram: legTokenProgram(snapshot.state, outLeg) });
+    const mint = state.legs[leg]!.mint.toBase58();
+    if (!built) { result.skipped.push({ mint, reason: "no route" }); return false; }
+    const ix = request
+      ? fulfillSwapIx({ vault: snapshot.state, keeper: input.keeper, request, inLeg, amountIn, minOut: built.minOut, swap: built.swap, programId })
+      : keeperSwapIx({ vault: snapshot.state, keeper: input.keeper, inLeg, outLeg, amountIn, minOut: built.minOut, swap: built.swap, programId });
+    const tx = await compile([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }), ix], [...vaultTables, ...built.lookupTables]);
+    if (!fitsOnePacket(tx)) { result.skipped.push({ mint, reason: "route too large for one transaction" }); return false; }
+    result.signatures.push({ step: `${kind}:${mint}`, signature: await input.execute!(tx, `${kind}:${mint}`) });
+    swappedLegs.add(leg);
+    swapCount += 1;
+    return true;
+  };
+  // 2. Exits: request slices that could not be crossed are sold into their request (one per leg).
+  const noRoute = new Set<string>();
+  for (const f of plan.fulfills) {
+    if (await trySwap("fulfill", f.leg, f.leg, USDC_LEG, f.amount, f.request)) result.requests.fulfills += 1;
+    else if (result.skipped.some(s => s.mint === state.legs[f.leg]!.mint.toBase58() && s.reason === "no route")) noRoute.add(`${f.request.toBase58()}:${f.leg}`);
+  }
+  // 3. Rebalance on free balances for the remaining legs.
+  for (const action of plan.swaps) await trySwap(action.kind, action.leg, action.inLeg, action.outLeg, action.amountInRaw);
+  // 4. Settle converted requests; deliver unsellable legs in kind (only to existing owner accounts).
+  const fresh = await readNavRequests(input.connection, state.address, undefined, programId);
+  snapshot = (await readNavVault(input.connection, input.indexId, programId, now()))!;
+  for (const request of fresh) {
+    const stuck = request.legAmounts.map((a, leg) => ({ a, leg })).filter(x => x.a > 0n && noRoute.has(`${request.address.toBase58()}:${x.leg}`)).map(x => x.leg);
+    if (stuck.length) {
+      const infos = await input.connection.getMultipleAccountsInfo(stuck.map(leg => ata(request.owner, state.legs[leg]!.mint, state.legs[leg]!.tokenProgram)), "confirmed");
+      const deliverable = stuck.filter((_, k) => Boolean(infos[k]));
+      if (deliverable.length) {
+        result.signatures.push({ step: "deliver in kind", signature: await input.execute(await compile([claimInKindIx(snapshot.state, input.keeper, request, deliverable.slice(0, CLAIM_LEGS_PER_TX), programId)], vaultTables), "deliver in kind") });
+        result.requests.deliveredInKind += deliverable.length;
+      }
+      continue;
+    }
+    if (request.legAmounts.every(a => a === 0n) && request.usdcOwed >= request.minUsdc) {
+      result.signatures.push({ step: "settle", signature: await input.execute(await compile([settleRequestIx(snapshot.state, input.keeper, request, programId)], vaultTables), "settle") });
+      result.requests.settled += 1;
+    }
   }
   const final = (await readNavVault(input.connection, input.indexId, programId, now()))!;
-  result.after = { usdcRaw: final.usdcBalance.toString(), navRaw: final.nav.toString(), bufferBps: final.nav > 0n ? Number((final.usdcBalance * BPS) / final.nav) : 0 };
+  const freeUsdcAfter = final.usdcBalance > final.state.reservedUsdc ? final.usdcBalance - final.state.reservedUsdc : 0n;
+  result.after = { usdcRaw: freeUsdcAfter.toString(), navRaw: final.nav.toString(), bufferBps: final.nav > 0n ? Number((freeUsdcAfter * BPS) / final.nav) : 0 };
   return result;
 }

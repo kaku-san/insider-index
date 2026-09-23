@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { LiteSVM, FailedTransactionMetadata, Clock } from "litesvm";
 import { address, getTransactionDecoder, lamports } from "@solana/kit";
 import {
-  AddressLookupTableAccount, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction,
+  AddressLookupTableAccount, ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction,
   type TransactionInstruction,
 } from "@solana/web3.js";
 import {
@@ -13,9 +13,10 @@ import {
 } from "@solana/spl-token";
 import {
   JUPITER_V6_PROGRAM_ID, MOCK_SWAP_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, decodeVault, initVaultIx, mockInitPoolIx,
-  mockPoolPda, tokenAmount, vaultPda, vaultTokenAccounts, type NavVaultState,
+  mockPoolPda, setLookupTableIx, tokenAmount, vaultLookupAddresses, vaultPda, vaultTokenAccounts, type NavVaultState,
 } from "../../src/lib/nav-vault/program.ts";
 import type { NavConnection } from "../../src/lib/nav-vault/prepare.ts";
+import bs58 from "bs58";
 
 globalThis.fetch = async () => { throw new Error("OFFLINE NAV VAULT VM: network forbidden"); };
 
@@ -84,11 +85,32 @@ export function navVaultVm(build: "devnet" | "mainnet" = "devnet", options: { mo
     svm.setClock(new Clock(c.slot + slots, c.epochStartTimestamp, c.epoch, c.leaderScheduleEpoch, c.unixTimestamp + BigInt(seconds)));
   }
   function vault(indexId: string): NavVaultState { return decodeVault(vaultPda(indexId), info(vaultPda(indexId))!.data); }
+  /** Install an ACTIVE address lookup table directly (no warm-up slots needed in the VM). */
+  function installLut(addresses: PublicKey[]): AddressLookupTableAccount {
+    const key = Keypair.generate().publicKey;
+    const header = Buffer.alloc(56);
+    header.writeUInt32LE(1, 0);
+    header.writeBigUInt64LE(0xffffffffffffffffn, 4);
+    header.writeBigUInt64LE(0n, 12);
+    const data = Buffer.concat([header, ...addresses.map(a => a.toBuffer())]);
+    svm.setAccount({ address: address(key.toBase58()), lamports: lamports(svm.minimumBalanceForRentExemption(BigInt(data.length))), data, programAddress: address("AddressLookupTab1e1111111111111111111111111"), executable: false, space: BigInt(data.length) });
+    return new AddressLookupTableAccount({ key, state: { deactivationSlot: 0xffffffffffffffffn, lastExtendedSlot: 0, lastExtendedSlotStartIndex: 0, addresses } });
+  }
   const connection: NavConnection = {
     getAccountInfo: (async (key: PublicKey) => info(key)) as NavConnection["getAccountInfo"],
     getMultipleAccountsInfo: (async (keys: PublicKey[]) => keys.map(info)) as NavConnection["getMultipleAccountsInfo"],
     getLatestBlockhash: (async () => ({ blockhash: svm.latestBlockhash(), lastValidBlockHeight: Number(svm.getClock().slot) + 150 })) as NavConnection["getLatestBlockhash"],
-    getAddressLookupTable: (async () => ({ context: { slot: Number(svm.getClock().slot) }, value: null })) as unknown as NavConnection["getAddressLookupTable"],
+    getAddressLookupTable: (async (key: PublicKey) => {
+      const a = info(key);
+      return { context: { slot: Number(svm.getClock().slot) }, value: a ? new AddressLookupTableAccount({ key, state: AddressLookupTableAccount.deserialize(a.data) }) : null };
+    }) as unknown as NavConnection["getAddressLookupTable"],
+    getProgramAccounts: (async (programId: PublicKey, config: { filters?: { memcmp: { offset: number; bytes: string } }[] }) => {
+      return svm.getProgramAccounts(address(programId.toBase58())).flatMap(a => {
+        const data = Buffer.from(a.data);
+        const ok = (config.filters ?? []).every(f => { const want = Buffer.from(bs58.decode(f.memcmp.bytes)); return data.subarray(f.memcmp.offset, f.memcmp.offset + want.length).equals(want); });
+        return ok ? [{ pubkey: new PublicKey(a.address), account: { data, owner: new PublicKey(a.programAddress), lamports: Number(a.lamports), executable: a.executable, rentEpoch: 0 } }] : [];
+      });
+    }) as unknown as NavConnection["getProgramAccounts"],
     simulateTransaction: (async (tx: VersionedTransaction) => {
       const copy = VersionedTransaction.deserialize(tx.serialize());
       copy.signatures = copy.signatures.map(() => new Uint8Array(64).fill(1));
@@ -97,7 +119,7 @@ export function navVaultVm(build: "devnet" | "mainnet" = "devnet", options: { mo
       return { context: { slot: Number(svm.getClock().slot) }, value: { err: failed ? result.err().toString() : null, logs: failed ? result.meta().logs() : result.meta().logs() } };
     }) as unknown as NavConnection["simulateTransaction"],
   };
-  return { svm, fund, send, sendRaw, must, info, balance, supply, createMint, mintTo, advance, vault, connection };
+  return { svm, fund, send, sendRaw, must, info, balance, supply, createMint, mintTo, advance, vault, installLut, connection };
 }
 export type NavVm = ReturnType<typeof navVaultVm>;
 
@@ -106,33 +128,43 @@ export const USDC_DECIMALS = 6;
 export const PRICE_A = 200_000_000n;
 export const PRICE_B = 400_000_000n;
 
-/** Two-leg test index (60/40), 25 bps entry fee, 5% buffer, 300 s max mark age, 100 bps keeper slippage. */
-export function seedIndex(vm: NavVm, indexId = "idx-test-nav") {
+/** Test index: default two legs (60/40: A classic 6dp @ $200, B Token-2022 8dp @ $400), or `legCount`
+ * legs for cap tests. 25 bps entry fee, 5% buffer, 300 s max mark age, 100 bps keeper slippage,
+ * 15% mark band, 600 s request timeout. A vault LUT is installed so every path fits one packet. */
+export function seedIndex(vm: NavVm, indexId = "idx-test-nav", options: { legCount?: number; requestTimeoutSecs?: number } = {}) {
   const admin = Keypair.generate(), keeper = Keypair.generate(), alice = Keypair.generate(), bob = Keypair.generate();
-  for (const k of [admin, keeper, alice, bob]) vm.fund(k.publicKey);
+  for (const k of [admin, keeper, alice, bob]) vm.fund(k.publicKey, 50n);
   const usdc = vm.createMint(admin, USDC_DECIMALS);
-  const legA = vm.createMint(admin, 6);
-  const legB = vm.createMint(admin, 8, TOKEN_2022_PROGRAM_ID);
-  const legs = [
-    { mint: legA, tokenProgram: TOKEN_PROGRAM_ID, weightBps: 6000 },
-    { mint: legB, tokenProgram: TOKEN_2022_PROGRAM_ID, weightBps: 4000 },
-  ];
+  const legCount = options.legCount ?? 2;
+  const legs = Array.from({ length: legCount }, (_, i) => {
+    const token2022 = i % 2 === 1;
+    const mint = vm.createMint(admin, token2022 ? 8 : 6, token2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID);
+    const weightBps = legCount === 2 ? [6000, 4000][i]! : Math.floor(10_000 / legCount) + (i === 0 ? 10_000 - Math.floor(10_000 / legCount) * legCount : 0);
+    return { mint, tokenProgram: token2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID, weightBps, price: token2022 ? PRICE_B : PRICE_A };
+  });
+  const [legA, legB] = [legs[0]!.mint, legs[1]?.mint ?? legs[0]!.mint];
   const accounts = vaultTokenAccounts(indexId, usdc, legs);
   const feeAccount = vm.mintTo(admin, usdc, admin.publicKey, 0n);
-  vm.must(vm.send([
+  const ataIxs = [
     createAssociatedTokenAccountIdempotentInstruction(admin.publicKey, accounts.usdc, accounts.authority, usdc),
     ...legs.map((leg, i) => createAssociatedTokenAccountIdempotentInstruction(admin.publicKey, accounts.legs[i]!, accounts.authority, leg.mint, leg.tokenProgram)),
-    initVaultIx({ admin: admin.publicKey, indexId, keeper: keeper.publicKey, usdcMint: usdc, feeAccount, maxPriceAgeSecs: 300, maxSlippageBps: 100, entryFeeBps: 25, bufferBps: 500, legs }),
-  ], admin), "init vault");
+  ];
+  for (let i = 0; i < ataIxs.length; i += 6) vm.must(vm.send(ataIxs.slice(i, i + 6), admin), "vault atas");
+  const init = initVaultIx({ admin: admin.publicKey, indexId, keeper: keeper.publicKey, usdcMint: usdc, feeAccount, maxPriceAgeSecs: 300, maxSlippageBps: 100, entryFeeBps: 25, bufferBps: 500, requestTimeoutSecs: options.requestTimeoutSecs ?? 600, legs });
+  const initLut = vm.installLut([...new Set(init.keys.map(k => k.pubkey.toBase58()))].map(k => new PublicKey(k)).filter(k => !k.equals(admin.publicKey)));
+  vm.must(vm.send([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }), init], admin, [], [initLut]), "init vault");
+  const state = vm.vault(indexId);
+  const lut = vm.installLut(vaultLookupAddresses(state));
+  vm.must(vm.send([setLookupTableIx(state, admin.publicKey, lut.key)], admin), "set lut");
   // Mock venue pools (base = leg, quote = USDC) with deep synthetic reserves.
-  for (const [mint, program, price] of [[legA, TOKEN_PROGRAM_ID, PRICE_A], [legB, TOKEN_2022_PROGRAM_ID, PRICE_B]] as const) {
-    vm.must(vm.send([mockInitPoolIx(admin.publicKey, mint, usdc, price)], admin), "mock pool");
-    const pool = mockPoolPda(mint, usdc);
-    vm.mintTo(admin, mint, pool, 1_000_000_000_000_000n, program);
+  for (const leg of legs) {
+    vm.must(vm.send([mockInitPoolIx(admin.publicKey, leg.mint, usdc, leg.price)], admin), "mock pool");
+    const pool = mockPoolPda(leg.mint, usdc);
+    vm.mintTo(admin, leg.mint, pool, 1_000_000_000_000_000n, leg.tokenProgram);
     vm.mintTo(admin, usdc, pool, 1_000_000_000_000n);
   }
   vm.mintTo(admin, usdc, alice.publicKey, 10_000_000_000n);
   vm.mintTo(admin, usdc, bob.publicKey, 10_000_000_000n);
   vm.mintTo(admin, usdc, keeper.publicKey, 10_000_000_000n);
-  return { indexId, admin, keeper, alice, bob, usdc, legA, legB, legs, accounts, feeAccount };
+  return { indexId, admin, keeper, alice, bob, usdc, legA, legB, legs, accounts, feeAccount, lut, prices: legs.map(l => l.price) };
 }
