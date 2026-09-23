@@ -4,6 +4,7 @@ import { register } from "node:module";
 import { createElement, type ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { baseIndexName, indexNames } from "../src/lib/fmp/index-name.ts";
+import { linkedToken } from "../src/lib/frontend/linked-token.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { FmpPerson } = await import("../src/components/fmp-portfolio.tsx");
@@ -81,20 +82,25 @@ test("empty performance has no fabricated curve; real points remain labelled his
 });
 
 test("consumer person portfolios merge published evidence into the complete annual book", () => {
+  const appleMint = "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp";
+  const microsoftMint = "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX";
   const initialData = {
     person: { id: "insider-test", name: "Example Insider", office: "Officer", image: null },
     snapshots: [{ id: "s1", year: 2025, items: [{ id: "h1", ticker: "AAPL", name: "Apple Inc.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h2", ticker: "AAPL", name: "Apple Inc. (spouse)", kind: "stock", valueRange: { low: 15000, high: 50000 } }, { id: "h3", ticker: "MSFT", name: "Microsoft Corp.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h4", ticker: null, name: "Unmapped mutual fund", kind: "mutual-fund", valueRange: { low: null, high: 5000 } }, { id: "h5", ticker: "MSFT", name: "Ticker-only Microsoft row", kind: "stock", valueRange: { low: 1000, high: 5000 } }] }],
     activity: [],
-    publishedIndex: { hash: "a".repeat(64), person_id: "insider-test", constituents: [{ ticker: "AAPL", mint: "mint-aapl", issuer: "xstock", weight_bps: 6000 }, { ticker: "MSFT", mint: "mint-msft", issuer: "xstock", weight_bps: 4000 }], definition: { evidence: [{ holding: { id: "h1" }, token: { mint: "mint-aapl", issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h2" }, token: { mint: "mint-aapl", issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h3" }, token: { mint: "mint-msft", issuer: "xstock", symbol: "MSFTx" } }] } },
+    publishedIndex: { hash: "a".repeat(64), person_id: "insider-test", constituents: [{ ticker: "AAPL", mint: appleMint, issuer: "xstock", weight_bps: 6000 }, { ticker: "MSFT", mint: microsoftMint, issuer: "xstock", weight_bps: 4000 }], definition: { evidence: [{ holding: { id: "h1" }, token: { mint: appleMint, issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h2" }, token: { mint: appleMint, issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h3" }, token: { mint: microsoftMint, issuer: "xstock", symbol: "MSFTx" } }] } },
   } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
   const rows = researchHoldings(initialData);
   assert.equal(rows.length, 4);
   assert.deepEqual(rows.map(row => row.weightPct), [.6, .4, null, null]);
   assert.deepEqual(rows.map(row => row.tokenSymbol), ["AAPLx", "MSFTx", null, null]);
+  assert.deepEqual(rows.map(row => row.network), ["mainnet-beta", "mainnet-beta", null, null]);
+  assert.equal(linkedToken(rows[0]).solscan, `https://solscan.io/token/${appleMint}`);
+  assert.equal(linkedToken(rows[0]).explorer, `https://explorer.solana.com/address/${appleMint}`);
   assert.match(rows[0].name, /2 filings/);
   assert.equal(rows.at(-1)?.name, "Ticker-only Microsoft row");
   assert.equal(rows.at(-1)?.mint, null);
-  assert.equal(preferredProfileHoldings(rows, [{ key: "tracker", ticker: "NVDA", name: "Tracker", weightPct: 1, venue: null, mint: null, tokenSymbol: null }], []), rows);
+  assert.equal(preferredProfileHoldings(rows, [{ key: "tracker", ticker: "NVDA", name: "Tracker", weightPct: 1, venue: null, mint: null, tokenSymbol: null, network: null }], []), rows);
   const html = renderToStaticMarkup(withProviders(createElement(ProfileView, { id: "insider-test", initialData })));
   assert.match(html, /Allocation 4/);
   assert.match(html, /2 filings/);
@@ -106,6 +112,14 @@ test("consumer person portfolios merge published evidence into the complete annu
   assert.match(html, /Ticker-only Microsoft row/);
   assert.doesNotMatch(html, /AAPL 75\.0%|MSFT 25\.0%|\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:|publicFundsEnabled|VAULT_RELEASE/);
   assert.doesNotMatch(html, />Invest</);
+});
+
+test("consumer person portfolios fall back when the annual book is empty", () => {
+  const emptyAnnualBook = book({ publishedIndex: { hash: "a".repeat(64), person_id: person.id, constituents: [{ ticker: "AAPL", mint: "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp", issuer: "xstock", weight_bps: 10000 }] } });
+  const rows = researchHoldings(emptyAnnualBook);
+  const trackerRows = [{ key: "tracker", ticker: "NVDA", name: "Tracker holding", weightPct: 1, venue: null, mint: null, tokenSymbol: null, network: null }];
+  assert.deepEqual(rows, []);
+  assert.equal(preferredProfileHoldings(rows, trackerRows, []), trackerRows);
 });
 
 test("automated names use first name and last initial; only actual name collisions append IDs", () => {

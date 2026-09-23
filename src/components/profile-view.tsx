@@ -25,7 +25,7 @@ import { formatUsd } from "@/lib/format";
 import styles from "./consumer-person.module.css";
 
 type LegacyProfileData = { profile: FomoProfile; trades: CopySignal[] };
-export type HoldingView = { key:string; ticker:string; name:string; weightPct:number|null; venue:string|null; mint:string|null; tokenSymbol:string|null; disclosedValue?:string|null };
+export type HoldingView = { key:string; ticker:string; name:string; weightPct:number|null; venue:string|null; mint:string|null; tokenSymbol:string|null; network:"mainnet-beta"|null; disclosedValue?:string|null };
 type ActivityView = { id:string; ticker:string; name:string; side:"buy"|"sell"|"other"; tradeDate:string|null; filedDate:string|null; amount:string; sourceUrl?:string|null; copyHref?:string|null };
 
 
@@ -43,24 +43,25 @@ export function researchHoldings(book:PersonPortfolioResponse):HoldingView[]{
    const exact=(evidence?.mint&&evidence.mint===constituent.mint)||constituent.payload?.holdingIds?.includes(item.id);
    return Boolean(exact);
   });
+  if(!matches.length)return [];
   for(const item of matches)assigned.add(item.id);
   const first=matches[0];
   const evidence=matches.map(item=>evidenceByHolding.get(item.id)).find(Boolean);
   const tokenSymbol=evidence?.symbol??matches.map(item=>item.token?.symbol).find(Boolean)??constituent.symbol??constituent.payload?.token?.symbol??null;
   const baseName=first?.name??companyNameFor(constituent.ticker,constituent.issuer);
-  return [{key:`published-${constituent.mint}`,ticker:constituent.ticker,name:matches.length>1?`${baseName} · ${matches.length} filings`:baseName,weightPct:constituent.weight_bps/10000,venue:evidence?.issuer??first?.token?.issuer??constituent.issuer??null,mint:constituent.mint,tokenSymbol,disclosedValue:first&&matches.length===1?moneyBand(first.valueRange):null}];
+  return [{key:`published-${constituent.mint}`,ticker:constituent.ticker,name:matches.length>1?`${baseName} · ${matches.length} filings`:baseName,weightPct:constituent.weight_bps/10000,venue:evidence?.issuer??first?.token?.issuer??constituent.issuer??null,mint:constituent.mint,tokenSymbol,network:"mainnet-beta" as const,disclosedValue:matches.length===1?moneyBand(first.valueRange):null}];
  });
  const sourceOnly=items.filter(item=>!assigned.has(item.id)).map(item=>{
   const evidence=evidenceByHolding.get(item.id);
   const sourceMint=evidence?.mint??item.token?.mint;
-  return {key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:null,venue:evidence?.issuer??item.token?.issuer??null,mint:sourceMint??null,tokenSymbol:evidence?.symbol??item.token?.symbol??null,disclosedValue:moneyBand(item.valueRange)};
+  return {key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:null,venue:evidence?.issuer??item.token?.issuer??null,mint:sourceMint??null,tokenSymbol:evidence?.symbol??item.token?.symbol??null,network:sourceMint?"mainnet-beta" as const:null,disclosedValue:moneyBand(item.valueRange)};
  });
  return [...weighted,...sourceOnly];
 }
-function trackerHoldings(person:TrackerPerson):HoldingView[]{return person.holdings.map((item,index)=>({key:`${item.ticker??item.name??index}`,ticker:item.ticker??"—",name:item.name??"Tracked holding",weightPct:typeof item.percentage==="number"&&item.percentage>0?item.percentage/100:null,venue:"PelosiTracker estimate",mint:null,tokenSymbol:null,disclosedValue:typeof item.value==="number"&&item.value>0?formatUsd(item.value):null}))}
+function trackerHoldings(person:TrackerPerson):HoldingView[]{return person.holdings.map((item,index)=>({key:`${item.ticker??item.name??index}`,ticker:item.ticker??"—",name:item.name??"Tracked holding",weightPct:typeof item.percentage==="number"&&item.percentage>0?item.percentage/100:null,venue:"PelosiTracker estimate",mint:null,tokenSymbol:null,network:null,disclosedValue:typeof item.value==="number"&&item.value>0?formatUsd(item.value):null}))}
 export function preferredProfileHoldings(researchRows:HoldingView[],trackerRows:HoldingView[],legacyRows:HoldingView[]):HoldingView[]{return researchRows.length?researchRows:(trackerRows.length?trackerRows:legacyRows)}
 function trackerActivity(person:TrackerPerson):ActivityView[]{return person.trades.map((item,index)=>({id:`tracker-${person.id}-${index}`,ticker:item.ticker??"—",name:item.ticker??"Tracked trade",side:eventSide(item.type),tradeDate:item.date,filedDate:item.notificationDate??item.date,amount:moneyBand(stockActBandFromMidpoint(item.amount))}))}
-function legacyHoldings(profile:FomoProfile):HoldingView[]{return [...profile.portfolio].sort((a,b)=>b.weightPct-a.weightPct).map(item=>({key:item.mint??item.ticker,ticker:item.ticker,name:companyNameFor(item.ticker,item.issuerName),weightPct:Number.isFinite(item.weightPct)&&item.weightPct>0?item.weightPct:null,venue:item.venue==="none"?null:item.venue,mint:item.mint,tokenSymbol:item.venueSymbol,disclosedValue:moneyBand({low:item.valueLow,high:item.valueHigh})}))}
+function legacyHoldings(profile:FomoProfile):HoldingView[]{return [...profile.portfolio].sort((a,b)=>b.weightPct-a.weightPct).map(item=>({key:item.mint??item.ticker,ticker:item.ticker,name:companyNameFor(item.ticker,item.issuerName),weightPct:Number.isFinite(item.weightPct)&&item.weightPct>0?item.weightPct:null,venue:item.venue==="none"?null:item.venue,mint:item.mint,tokenSymbol:item.venueSymbol,network:item.mint?"mainnet-beta" as const:null,disclosedValue:moneyBand({low:item.valueLow,high:item.valueHigh})}))}
 function researchActivity(book:PersonPortfolioResponse):ActivityView[]{return [...(book.activity??[])].sort((a,b)=>(b.transactionDate??b.disclosureDate??"").localeCompare(a.transactionDate??a.disclosureDate??"")).map((item:ResearchActivity)=>({id:item.id,ticker:item.ticker??item.name??"Asset",name:item.name??"Public disclosure",side:eventSide(item.event),tradeDate:item.transactionDate??null,filedDate:item.disclosureDate??null,amount:moneyBand(item.amount),sourceUrl:item.sourceUrl}))}
 function legacyActivity(trades:CopySignal[]):ActivityView[]{return [...trades].sort((a,b)=>b.transactionDate.localeCompare(a.transactionDate)).map(item=>({id:item.id,ticker:item.ticker,name:item.issuerName,side:item.side,tradeDate:item.transactionDate,filedDate:item.filedAt,amount:moneyBand({low:item.amountLow,high:item.amountHigh}),copyHref:item.tradeEligible?`/trade/${encodeURIComponent(item.id)}?copy=1`:null}))}
 
@@ -160,7 +161,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
    <div className={styles.tabs} role="tablist">{([['allocation',`Allocation ${holdings.length}`],['moves',`Moves ${activity.length}`],['about','About']] as const).map(([key,label])=><button key={key} className={tab===key?styles.activeTab:""} onClick={()=>setTab(key)}>{label}</button>)}</div>
 
    {tab==="allocation"?<section className={styles.tabSection}>
-     <IndexAllocation basis={researchRows.length ? "Published target weights; unweighted source holdings remain listed" : trackerPerson ? "Weights in the shown source book" : "Published target weights; unweighted source holdings remain listed"} items={holdings.map(item=>({ticker:item.ticker,name:item.name,weightBps:item.weightPct==null?Number.NaN:item.weightPct*10000,mint:item.mint,issuer:item.venue,tokenSymbol:item.tokenSymbol,network:item.mint?vaultIndex?.network:null}))}/>
+     <IndexAllocation basis={researchRows.length ? "Published target weights; unweighted source holdings remain listed" : trackerPerson ? "Weights in the shown source book" : "Published target weights; unweighted source holdings remain listed"} items={holdings.map(item=>({ticker:item.ticker,name:item.name,weightBps:item.weightPct==null?Number.NaN:item.weightPct*10000,mint:item.mint,issuer:item.venue,tokenSymbol:item.tokenSymbol,network:item.network}))}/>
    </section>:null}
 
    {tab==="moves"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Public moves</h2><p>Information only. These prints do not change the published mix.</p></div><Link href="/feed">Open Feed</Link></div>{!activity.length?<div className={styles.emptyBlock}><strong>No activity is saved.</strong></div>:<div className={styles.movesList}>{activity.map((item,index)=><article className={styles.moveRow} key={item.id}><span className={styles.moveIndex}>{String(index+1).padStart(2,"0")}</span><StockIcon ticker={item.ticker} size="sm"/><span className={`${styles.moveSide} ${styles[item.side]}`}>{item.side==="buy"?"BOUGHT":item.side==="sell"?"SOLD":"FILED"}</span><div className={styles.moveAsset}><strong>{item.ticker}</strong><span>{item.name}</span></div><div className={styles.moveDates}><span><b>Trade</b>{shortDate(item.tradeDate)}</span><span><b>Filed</b>{shortDate(item.filedDate)}</span></div><div className={styles.moveAmount}><strong>{item.amount}</strong>{item.copyHref?<Link href={item.copyHref}>Copy this print</Link>:item.sourceUrl?<FilingLink url={item.sourceUrl}/>:null}</div></article>)}</div>}</section>:null}
