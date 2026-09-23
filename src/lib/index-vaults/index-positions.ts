@@ -266,7 +266,7 @@ export function pendingNativeOperation(intent: UIRebalanceIntent, vaultAddress: 
         : intent.mint_data ? "CLEANUP" : "AUCTION";
   const kind = deposit ? "deposit" : "withdraw";
   const blocker = auctionState === "FAILED"
-    ? "This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares."
+    ? "This deposit did not finish the basket. It is not shares."
     : deposit ? "Deposit pending settlement" : "Cash out pending settlement";
   const operation: ObservedOperation = { operationId: `native-${kind}-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind, phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: [blocker] };
   const rows = intentTokenRows(intent);

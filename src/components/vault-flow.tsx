@@ -25,7 +25,7 @@ export { sharesIncreasedAfterSignature };
 
 type Mode = "deposit" | "withdraw";
 type Screen = "amount" | "prepare" | "approval" | "submitted";
-const DEPOSIT_PRESETS = [1, 5, 10, 25, 50] as const;
+const DEPOSIT_PRESETS = [10, 25, 50, 100] as const;
 type PreparedQuote = { step: PreparedStep; requestKey: string };
 
 function decimalToRaw(text: string, decimals: number, label: string) {
@@ -85,7 +85,7 @@ async function confirmSignature(signature: string, network: "mainnet-beta" | "de
 export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode = "deposit", position, onPosition }: { open: boolean; onClose: () => void; indexId: string; indexName: string; readiness?: VaultReadiness | null; mode?: Mode; position?: IndexSharePosition | null; indexKind?: "person" | "theme"; onPosition?: (position: IndexSharePosition | null) => void }) {
   const wallet = usePrivySolana();
   const [screen, setScreen] = useState<Screen>("amount");
-  const [amount, setAmount] = useState(() => mode === "deposit" ? "1" : positionSharesText(position) ?? "0");
+  const [amount, setAmount] = useState(() => mode === "deposit" ? "10" : positionSharesText(position) ?? "0");
   const [prepared, setPrepared] = useState<PreparedQuote | null>(null);
   const [settlementPosition, setSettlementPosition] = useState<IndexSharePosition | null>(null);
   const [sharesBeforeSignature, setSharesBeforeSignature] = useState(position?.sharesRaw ?? "0");
@@ -125,7 +125,7 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     setTimedOut(false);
     setError(null);
     setAvailableUsdcRaw(null);
-    setAmount(mode === "deposit" ? "1" : positionSharesText(position) ?? "0");
+    setAmount(mode === "deposit" ? "10" : positionSharesText(position) ?? "0");
     setQuoteStatus("idle");
     quoteGeneration.current += 1;
   }, [open, mode, indexId]);
@@ -246,9 +246,23 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
       setSharesBeforeSignature(position?.sharesRaw ?? "0");
       sawWithdrawRef.current = false;
       setSawWithdrawPending(false);
+      const signatures: string[] = [];
       for (const transaction of prepared.step.transactions) {
         const signature = await wallet.signAndSendTransaction(transaction.messageBase64, prepared.step.network);
         await confirmSignature(signature, prepared.step.network);
+        signatures.push(signature);
+      }
+      if (mode === "deposit" && prepared.step.basket?.stage === "acquire") {
+        const next = await prepareDeposit(indexId, { owner: wallet.solanaAddress, amountRaw: usdcRaw(amount), idempotencyKey: crypto.randomUUID(), stage: "contribute", signatures }, prepared.step.network);
+        if (next.requires !== "user-signature" || !next.transactions.length) {
+          setError(next.blockers?.[0] || next.basket?.statusLine || "Some names did not buy. Shares were not minted.");
+          setPrepared(null); setSettlementPosition(null); setTimedOut(false); setScreen("submitted");
+          return;
+        }
+        for (const transaction of next.transactions) {
+          const signature = await wallet.signAndSendTransaction(transaction.messageBase64, next.network);
+          await confirmSignature(signature, next.network);
+        }
       }
       setPrepared(null); setSettlementPosition(null); setTimedOut(false); setScreen("submitted");
     } catch (nextError) { setError(humanPrepareMessage(nextError, mode)); } finally { setBusy(false); }
@@ -261,13 +275,13 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     <header className={styles.top}><div><small>{mode === "deposit" ? "INVEST" : "CASH OUT"}</small><h2>{indexName}</h2></div><button onClick={onClose} aria-label="Close"><Icon name="close" size={20} /></button></header>
     <div className={styles.body}>
       {mode === "deposit" ? <div className={styles.notice}><Icon name="shield" size={18} /><p><strong>Alpha software — experimental; you can lose funds.</strong>Review every wallet approval before signing.</p></div> : null}
-      {displayed === "amount" ? <><div className={styles.intro}><h3>{mode === "deposit" ? "Invest in USDC." : "Cash out."}</h3><p>{mode === "deposit" ? "Choose USDC to start a Mag7 auction. Small amounts may buy only some names or none." : CASH_OUT_BEFORE_SIGN}</p></div>
+      {displayed === "amount" ? <><div className={styles.intro}><h3>{mode === "deposit" ? "Invest in USDC." : "Cash out."}</h3><p>{mode === "deposit" ? "Your USDC buys each name at its weight. Those tokens become index shares. Unspent USDC stays in your wallet. A name that does not buy is not counted." : CASH_OUT_BEFORE_SIGN}</p></div>
         {mode === "deposit" ? <div className={styles.amountWrap}><label>Amount</label><div className={styles.amount}><span>$</span><input value={amount} inputMode="decimal" onChange={event => changeAmount(event.target.value.replace(/[^0-9.]/g, ""))} /></div><div className={styles.quick}>{DEPOSIT_PRESETS.map(value => <button key={value} onClick={() => changeAmount(String(value))}>${value}</button>)}</div><p className={styles.minimum}>{publicDepositMinimumMessage()}</p></div> : <div className={styles.amountWrap}><label>Shares</label><div className={styles.amount}><input value={amount} inputMode="decimal" onChange={event => changeAmount(event.target.value.replace(/[^0-9.]/g, ""))} /><span>shares</span></div></div>}
         <div className={styles.summary}><div className={styles.row}><span>{mode === "deposit" ? "You invest" : "You cash out"}</span><strong>{mode === "deposit" ? `${amount || "0"} USDC` : `${amount} shares`}</strong></div>{mode === "deposit" && wallet.solanaAddress ? <div className={styles.row}><span>Investing as</span><strong>{wallet.solanaAddress.slice(0, 8)}…{wallet.solanaAddress.slice(-8)}</strong></div> : null}{mode === "deposit" ? <div className={styles.row}><span>USDC in this wallet</span><strong>{wallet.solanaAddress ? <>{availableUsdcText()} USDC <button type="button" className={styles.max} disabled={availableUsdcRaw === null} onClick={useMaxUsdc}>Max</button></> : "Connect wallet to read"}</strong></div> : null}{mode === "deposit" && holdingsLabel ? <div className={styles.row}><span>Your position</span><strong>{holdingsLabel}</strong></div> : null}{mode === "withdraw" ? <div className={styles.row}><span>Wallet approvals</span><strong>1 approval now</strong></div> : null}</div>
         {quoteStatus === "checking" ? <p role="status">{mode === "deposit" ? MAG7_FILL_CHECK : CASH_OUT_CHECK}</p> : null}{wallet.authenticated && !canPrepare ? <p role="status">This action is not available right now.</p> : null}{activeIntent ? <div className={styles.blockers}>{activeIntentCopy}</div> : null}{error ? <div className={styles.blockers} role="alert">{error}</div> : null}<div className={styles.notice}><Icon name="shield" size={18} /><p><strong>Nothing moves until you approve.</strong>Connecting a wallet does not invest or cash out.</p></div><div className={styles.cta}><button className={styles.primary} disabled={!check.enabled || busy || insufficientUsdc || Boolean(activeIntent)} onClick={start}>{busy ? "Waiting for wallet…" : check.label}</button></div></>
         : displayed === "prepare" ? <><div className={styles.intro}><h3>Not ready to sign yet.</h3><p>Nothing was sent. Cash out stays unavailable until the share burn can be prepared.</p></div>{error ? <div className={styles.blockers}>{error}</div> : <div className={styles.blockers}>{activeIntentCopy || "This action is not available right now."}</div>}<div className={styles.cta}><button className={styles.secondary} onClick={() => setScreen("amount")}>Back</button></div></>
-        : displayed === "approval" ? <><div className={styles.intro}><h3>Approve in your wallet.</h3><p>{mode === "withdraw" ? `Check the amount before you sign. ${CASH_OUT_BEFORE_SIGN}` : "Check the amount before you sign."}</p></div>{error ? <div className={styles.blockers}>{error}</div> : null}<div className={styles.cta}><button className={styles.secondary} onClick={() => setScreen("amount")}>Back</button><button className={styles.primary} disabled={busy || !prepared?.step.transactions.length} onClick={() => void approve()}>{busy ? "Waiting for wallet…" : "Approve in wallet"}</button></div></>
+        : displayed === "approval" ? <><div className={styles.intro}><h3>Approve in your wallet.</h3><p>{mode === "withdraw" ? `Check the amount before you sign. ${CASH_OUT_BEFORE_SIGN}` : prepared?.step.basket?.statusLine ?? "Check the amount before you sign. Shares are not claimed until every quoted name is bought."}</p></div>{busy ? <p role="status">Waiting for wallet…</p> : null}{error ? <div className={styles.blockers}>{error}</div> : null}<div className={styles.cta}><button className={styles.secondary} onClick={() => setScreen("amount")}>Back</button><button className={styles.primary} disabled={busy || !prepared?.step.transactions.length} onClick={() => void approve()}>{busy ? "Waiting for wallet…" : "Approve in wallet"}</button></div></>
         : <>{view.cashOutFinished ? <div className={styles.phaseCard} role="status" aria-live="polite" data-settlement-status="cash-out-finished"><small>CASH OUT</small><h3>Your shares updated.</h3><p>{settlementDetail(view, settlementPosition, mode)}{remainingHoldings ? ` ${remainingHoldings} remain.` : ""}</p></div> : <SettlementListen status={view.status} listening={view.listening} detail={settlementDetail(view, settlementPosition, mode)} />}{mode === "withdraw" ? <CashOutDeliveryStatus assets={cashOutDeliveryOf(observedPosition)} finished={view.cashOutFinished} pendingNote={CASH_OUT_STILL_NOTE} /> : null}{error ? <div className={styles.blockers}>{error}</div> : null}<div className={styles.cta}><button className={styles.primary} onClick={onClose}>Close</button></div></>}
-    </div><footer className={styles.footer}>Target mix and share balances are separate from a completed auction. Fees and share amounts are shown only when preparation supplies them.</footer>
+    </div><footer className={styles.footer}>Target mix and share balances are separate from a completed buy. Fees and share amounts are shown only when preparation supplies them.</footer>
   </aside></div><WalletConnectSheet open={connectOpen} onClose={() => setConnectOpen(false)} /></>;
 }

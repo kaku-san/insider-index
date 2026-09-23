@@ -58,6 +58,15 @@ export type PreparedStep = {
     returnedUsdcRaw?: RawAmount;
     outputSummary?: string;
   };
+  basket?: {
+    stage?: "acquire" | "contribute" | "incomplete";
+    targetCount?: number;
+    statusLine?: string;
+    bought?: { ticker: string; mint: string; amountRaw: string }[];
+    missing?: { ticker: string; mint: string }[];
+    claimCount?: number | null;
+    leftoverUsdcRaw?: string;
+  };
 };
 
 export type NativeClaim = {
@@ -404,7 +413,7 @@ export async function validatePreparedStep(payload: unknown, context: { owner: s
   return { ...(payload as Omit<PreparedStep, "network" | "transactions">), network: context.network, transactions: transactions.map(transaction => validatedTransaction(transaction, owner)) };
 }
 
-export async function prepareDeposit(indexId: string, input: { owner: string; amountRaw: RawAmount; idempotencyKey: string; walletProof?: string }, network: Network): Promise<PreparedStep> {
+export async function prepareDeposit(indexId: string, input: { owner: string; amountRaw: RawAmount; idempotencyKey: string; walletProof?: string; stage?: "acquire" | "contribute"; signatures?: string[] }, network: Network): Promise<PreparedStep> {
   return validatePreparedStep(await writeApi<unknown>(`/api/indexes/${encodeURIComponent(indexId)}/deposit/prepare`, input), { owner: input.owner, network });
 }
 

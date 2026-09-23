@@ -91,12 +91,15 @@ test("invest sheet uses plain language and skips a separate review step", () => 
       },
     },
   })));
-  assert.match(html, /Choose USDC to start a Mag7 auction\. Small amounts may buy only some names or none\./);
+  assert.match(html, /Your USDC buys each name at its weight/);
+  assert.match(html, /A name that does not buy is not counted/);
+  assert.doesNotMatch(html, /Mag7 auction/);
   assert.match(html, /Alpha software — experimental; you can lose funds\./);
-  assert.match(html, /value="1"/);
+  assert.match(html, /value="10"/);
   assert.match(html, /USDC in this wallet/);
-  assert.match(html, /Minimum is \$1\./);
-  for (const preset of [1, 5, 10, 25, 50]) assert.match(html, new RegExp(`>\\$${preset}<`));
+  assert.match(html, /Minimum is \$10\./);
+  for (const preset of [10, 25, 50, 100]) assert.match(html, new RegExp(`>\\$${preset}<`));
+  assert.doesNotMatch(html, />\$1</);
   assert.doesNotMatch(html, />\$250</);
   assert.match(html, /INVEST/);
   assert.doesNotMatch(html, /ENTRY|EXIT|Review investment|Prepare on-chain action|publicFundsEnabled|VAULT_RELEASE|AWAITING_SIGNATURE|raw/);

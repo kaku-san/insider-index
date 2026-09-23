@@ -1,14 +1,17 @@
 # Mag7 deposit minimum
 
-**Measured 2026-09-22T10:33:43.969Z UTC: Minimum is $1.** Deposits remain
-paused; this route measurement does not change any release gate.
+**Product minimum is $10** for every deposits-enabled index, not only Mag7.
+The older $1 route measurement is not the floor. Deposits remain gated by the
+persisted deposit flag and `VAULT_RELEASE`; this document does not open them.
 
-This is the public Mag7 **route-coverage** floor. It replaces the prior
-unverified $1 value with a live, weighted-slice check against the installed
-Mag7 definition. It is **not** proof that a later contribution can fill: deposit
-prepare quotes all seven weighted Raydium slices at the requested size before
-`buyVaultTx`/lock (`mag7-deposit-slices.ts`) and refuses with "This amount cannot
-buy Mag7 right now" if any name cannot fill.
+The public zap reads the index's vault legs and weights from the database, splits
+the user's USDC by those weights, and market-buys each slice with Jupiter
+`/swap/v2/build` (Raydium direct pool only if Jupiter has no route). A missing
+`JUPITER_API_KEY` fails before any spend. It is **not** proof a later route still
+fills: prepare refuses with "This amount cannot buy Mag7 right now" if any Mag7
+name cannot be quoted, and names the ticker for any other index. Bought tokens
+are contributed in-kind. Unspent USDC stays in the wallet. A missed name is not
+counted as bought.
 
 ## Live route check
 

@@ -15,7 +15,7 @@ const { MAG7_UNROUTABLE_AMOUNT } = await import("../src/lib/index-vaults/mag7-de
 const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const shareMint = "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4";
-const DEPOSIT_RAW = "1000000";
+const DEPOSIT_RAW = "10000000";
 const investmentMints = Array.from({ length: 7 }, () => PublicKey.unique());
 
 function transaction(instructions: TransactionInstruction[]) {
@@ -72,7 +72,7 @@ function firstDepositPayloadWithAncillaryCreates() {
 const definition = {
   indexId: "idx-theme-mag7-caucus", network: "mainnet-beta", name: "Mag7 Caucus", symbol: "IIMAG7", status: "CREATABLE",
   depositsEnabled: true, depositReason: null, bookSource: null, provenance: {}, vaultAddress: vault, shareMint,
-  vaultLegs: investmentMints.map((mint, i) => ({ mint: mint.toBase58(), ticker: `LEG${i}`, targetWeightBps: 1428, decimals: 6, pool: PublicKey.unique().toBase58(), kind: "raydium_clmm" })), keeper: { pubkey: null, automationEnabled: false }, hostEntryFeeBps: 25, hostExitFeeBps: 0,
+  vaultLegs: investmentMints.map((mint, i) => ({ mint: mint.toBase58(), ticker: `LEG${i}`, targetWeightBps: i === 6 ? 1432 : 1428, decimals: 6, pool: PublicKey.unique().toBase58(), kind: "raydium_clmm" })), keeper: { pubkey: null, automationEnabled: false }, hostEntryFeeBps: 25, hostExitFeeBps: 0,
 };
 function dependencies(overrides: Record<string, unknown> = {}, buy = firstDepositPayloadWithAncillaryCreates(), bountyMint = NATIVE_MINT) {
   return {
@@ -93,11 +93,32 @@ function dependencies(overrides: Record<string, unknown> = {}, buy = firstDeposi
     }),
     release: { publicFundsEnabled: true, publicInvestSign: true },
     assertSlicesRoutable: async () => {},
+    quoteZap: undefined as undefined | (() => Promise<ReturnType<typeof quotedZap>>),
+    readSwapDeltas: undefined as undefined | (() => Promise<{ acquiredRawByMint: Record<string, string>; usdcSpentRaw: string }>),
     ...overrides,
   };
 }
 function request(body: unknown) {
   return new Request(`http://localhost/api/indexes/${definition.indexId}/deposit/prepare`, { method: "POST", body: JSON.stringify(body) });
+}
+function quotedZap() {
+  const swapProgram = PublicKey.unique();
+  const slices = definition.vaultLegs.map((leg, index) => {
+    const message = new TransactionMessage({ payerKey: new PublicKey(owner), recentBlockhash: owner, instructions: [new TransactionInstruction({ programId: swapProgram, keys: [], data: Buffer.from([index + 1]) })] }).compileToV0Message();
+    const tx = new VersionedTransaction(message);
+    return {
+      mint: leg.mint, ticker: leg.ticker, venue: "jupiter" as const, usdcInRaw: "1428000", expectedOutRaw: "5", minOutRaw: "4",
+      swapProgramId: swapProgram.toBase58(), txBase64: Buffer.from(tx.serialize()).toString("base64"), recentBlockhash: owner, lastValidBlockHeight: 99,
+    };
+  });
+  return {
+    plan: {
+      legCount: 7, packaging: "resumable" as const, leftoverUsdcRaw: "4000", keeperUsdcRaw: "0" as const, usesAuctionPairs: false as const,
+      slices: slices.map(slice => ({ mint: slice.mint, ticker: slice.ticker, targetWeightBps: 1428, usdcInRaw: slice.usdcInRaw })),
+      quotes: slices.map(slice => ({ mint: slice.mint, ticker: slice.ticker, venue: slice.venue, usdcInRaw: slice.usdcInRaw, expectedOutRaw: slice.expectedOutRaw, minOutRaw: slice.minOutRaw })),
+    },
+    slices,
+  };
 }
 
 test("cash-only, partial, and zero-supply residual backing refuse before preparing another contribution", async () => {
@@ -120,52 +141,54 @@ test("a fully backed seven-leg positive-supply vault passes the backing gate", a
   native.sdk.fetchVault = async () => ({ ...before, supplyOutstanding: new BN(99), numTokens: 7,
     composition: investmentMints.map(mint => ({ mint, amount: new BN(100) })) } as never);
   deps.nativeBuilder = () => native;
+  deps.quoteZap = async () => quotedZap();
   const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, deps as never);
   assert.equal(response.status, 200);
 });
 
-test("deposit prepare accepts the measured minimum and atomically simulates first-depositor setup, contribution, and lock", async () => {
-  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW, idempotencyKey: "demo-1" }), definition.indexId, dependencies() as never);
+test("deposit prepare quotes an in-kind Jupiter buy for every leg and does not lock USDC", async () => {
+  let contributions = 0;
+  const deps = dependencies({ quoteZap: async () => quotedZap() });
+  const native = deps.nativeBuilder();
+  native.sdk.buyVaultTx = async () => { contributions += 1; throw new Error("must not lock USDC before the basket is bought"); };
+  deps.nativeBuilder = () => native;
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW, idempotencyKey: "demo-1" }), definition.indexId, deps as never);
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.requires, "user-signature");
-  assert.equal(body.network, "mainnet-beta");
-  assert.equal(body.transactions.length, 1);
-  assert.deepEqual(body.transactions.map((transaction: { stepId: string }) => transaction.stepId), ["deposit-1"]);
+  assert.equal(body.basket.stage, "acquire");
+  assert.equal(body.basket.claimCount, null);
+  assert.equal(body.basket.keeperUsdcRaw, "0");
+  assert.equal(body.basket.usesAuctionPairs, false);
+  assert.equal(body.transactions.length, 7);
   assert.equal(body.transactions[0].maxDebits[0].owner, owner);
-  assert.equal(body.transactions[0].maxDebits[0].amountRaw, DEPOSIT_RAW);
-  assert.equal(body.transactions[0].expectedRecipients[0].owner, vault);
+  assert.equal(body.transactions[0].maxDebits[0].mint, networkUsdc("mainnet-beta"));
+  assert.notEqual(body.transactions[0].maxDebits[0].amountRaw, DEPOSIT_RAW);
+  assert.equal(body.transactions[0].expectedRecipients[0].owner, owner);
   const preparedTransaction = VersionedTransaction.deserialize(Buffer.from(body.transactions[0].messageBase64, "base64"));
   assert.ok(preparedTransaction.signatures.every(signature => signature.every(byte => byte === 0)));
-  const merged = TransactionMessage.decompile(preparedTransaction.message).instructions;
-  assert.equal(merged.filter(instruction => instruction.programId.toBase58() === SYMMETRY_PROGRAM_ID).length, 5);
-  assert.doesNotMatch(JSON.stringify(body), /cycle|policy|recovery/i);
+  assert.equal(contributions, 0);
+  assert.doesNotMatch(JSON.stringify(body), /getSwapPairs|keeper subsidy/i);
 });
 
-test("first-depositor SDK setup accepts only the buyer's expected share and WSOL bounty ATAs", async () => {
-  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({}, firstDepositPayloadWithAncillaryCreates(), NATIVE_MINT) as never);
-  assert.equal(response.status, 200);
-  const body = await response.json();
-  assert.equal(body.transactions.length, 1);
-  assert.deepEqual(body.transactions[0].allowedProgramIds.sort(), [ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(), SystemProgram.programId.toBase58(), TOKEN_PROGRAM_ID.toBase58(), SYMMETRY_PROGRAM_ID].sort());
-});
-
-test("deposit prepare still rejects an unknown ancillary program", async () => {
+test("in-kind contribution still rejects an unknown ancillary program before spending", async () => {
   const randomProgram = PublicKey.unique();
   const invalid = firstDepositPayloadWithAncillaryCreates();
   invalid.batches[0]!.transactions[0]!.instructions.push({ program_id: randomProgram.toBase58(), accounts: [], data: "" });
-  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({}, invalid) as never);
+  const deps = dependencies({}, invalid);
+  deps.readSwapDeltas = async () => ({ acquiredRawByMint: Object.fromEntries(investmentMints.map(mint => [mint.toBase58(), "10"])), usdcSpentRaw: "9996000" });
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW, stage: "contribute", signatures: ["1".repeat(88)] }), definition.indexId, deps as never);
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { error: "Unsupported ancillary instruction." });
 });
 
 test("deposit prepare rejects malformed amounts and every closed gate", async () => {
   assert.throws(() => parseIndexDepositRequest({ owner, amountRaw: "1", amountUsdc: "1" }), /either amountRaw/);
-  assert.equal(parseIndexDepositRequest({ owner, amountUsdc: "1" }).amountRaw, DEPOSIT_RAW);
-  assert.throws(() => parseIndexDepositRequest({ owner, amountUsdc: "0.999999" }), /Minimum is \$1/);
-  const belowMinimum = await handleIndexDepositPrepare(request({ owner, amountRaw: "999999" }), definition.indexId, dependencies() as never);
+  assert.equal(parseIndexDepositRequest({ owner, amountUsdc: "10" }).amountRaw, DEPOSIT_RAW);
+  assert.throws(() => parseIndexDepositRequest({ owner, amountUsdc: "9.999999" }), /Minimum is \$10/);
+  const belowMinimum = await handleIndexDepositPrepare(request({ owner, amountRaw: "9999999" }), definition.indexId, dependencies() as never);
   assert.equal(belowMinimum.status, 400);
-  assert.deepEqual(await belowMinimum.json(), { error: "Minimum is $1." });
+  assert.deepEqual(await belowMinimum.json(), { error: "Minimum is $10." });
   const closed = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, dependencies({ release: { publicFundsEnabled: false, publicInvestSign: true } }) as never);
   assert.equal(closed.status, 503);
   assert.deepEqual(await closed.json(), { error: "Investing is not open for signatures." });
@@ -182,11 +205,12 @@ test("deposit prepare rejects malformed amounts and every closed gate", async ()
   assert.deepEqual(await absent.json(), { error: "Index not found." });
 });
 
-test("default Mag7 prepare quotes Raydium slices and refuses before buyVaultTx when they cannot fill", async () => {
+test("default Mag7 prepare refuses before buyVaultTx when Jupiter has no key", async () => {
   const MAG7_WEIGHTS = [3448, 2740, 1424, 1151, 854, 322, 61];
   let contributions = 0;
   const deps = dependencies({
     assertSlicesRoutable: undefined,
+    env: {},
     loadDefinition: async () => ({ ...definition, vaultLegs: definition.vaultLegs.map((leg, i) => ({ ...leg, targetWeightBps: MAG7_WEIGHTS[i]! })) }),
   });
   const native = deps.nativeBuilder();
@@ -194,7 +218,7 @@ test("default Mag7 prepare quotes Raydium slices and refuses before buyVaultTx w
   deps.nativeBuilder = () => native;
   const response = await handleIndexDepositPrepare(request({ owner, amountRaw: DEPOSIT_RAW }), definition.indexId, deps as never);
   assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), { error: MAG7_UNROUTABLE_AMOUNT });
+  assert.deepEqual(await response.json(), { error: "Jupiter API key is required for index buys." });
   assert.equal(contributions, 0);
 });
 
@@ -212,9 +236,9 @@ test("an unroutable Mag7 slice refuses before buyVaultTx and does not take USDC"
   assert.equal(contributions, 0);
 });
 
-test("Mag7 prepare quotes the requested size, not the $1 floor, before lock", async () => {
+test("Mag7 prepare quotes the requested size, not the $10 floor, before any buy", async () => {
   const quoted: string[] = [];
-  const TEN_USDC = "10000000";
+  const TWENTY_USDC = "20000000";
   let contributions = 0;
   const deps = dependencies({
     assertSlicesRoutable: async (_native: unknown, _definition: unknown, amountRaw: string) => {
@@ -225,10 +249,10 @@ test("Mag7 prepare quotes the requested size, not the $1 floor, before lock", as
   const native = deps.nativeBuilder();
   native.sdk.buyVaultTx = async () => { contributions++; throw new Error("must refuse before funding"); };
   deps.nativeBuilder = () => native;
-  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: TEN_USDC }), definition.indexId, deps as never);
+  const response = await handleIndexDepositPrepare(request({ owner, amountRaw: TWENTY_USDC }), definition.indexId, deps as never);
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { error: MAG7_UNROUTABLE_AMOUNT });
-  assert.deepEqual(quoted, [TEN_USDC]);
+  assert.deepEqual(quoted, [TWENTY_USDC]);
   assert.notEqual(quoted[0], DEPOSIT_RAW);
   assert.equal(contributions, 0);
 });

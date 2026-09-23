@@ -111,7 +111,7 @@ test("a closed Mag7 deposit auction without basket fills is failed, while an ope
   assert.equal(nativeDepositAuctionState(intent as never, 101_000), "FAILED");
   const operation = pendingNativeOperation(intent as never, vault, mint, owner, 101_000)!;
   assert.equal(operation.phase, "FAILED");
-  assert.deepEqual(operation.blockers, ["This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares."]);
+  assert.deepEqual(operation.blockers, ["This deposit did not finish the basket. It is not shares."]);
 });
 
 test("position endpoints accept only the connected wallet and return chain-backed positions", async () => {
