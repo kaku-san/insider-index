@@ -198,8 +198,8 @@ export function fitsOnePacket(tx: VersionedTransaction): boolean {
   let bytes: number;
   try { bytes = tx.serialize().length; } catch { return false; }
   const loaded = tx.message.staticAccountKeys.length + tx.message.addressTableLookups.reduce((n, l) => n + l.writableIndexes.length + l.readonlyIndexes.length, 0);
-  // 1232-byte packet; mainnet's account-lock limit (verified by simulation of 66-account Jupiter routes) is 128.
-  return bytes <= 1232 && loaded <= 128;
+  // 1232-byte packet and the 64-account lock limit ("Transaction locked too many accounts" on mainnet).
+  return bytes <= 1232 && loaded <= 64;
 }
 
 // ---------- cycle plan ----------

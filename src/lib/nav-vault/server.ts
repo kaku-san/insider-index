@@ -1,6 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { navVaultConfig, navVaultServes, type NavVaultConfig } from "./config.ts";
 import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, decodeVault, shareAta, tokenAmount, vaultPda } from "./program.ts";
+import { tradableSliceFor } from "./slices.ts";
 import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests, readNavVault, type NavConnection } from "./prepare.ts";
 
 const HEADERS = { "Cache-Control": "no-store" };
@@ -59,6 +60,15 @@ export async function handleNavReadiness(indexId: string, deps: NavDependencies 
       hostEntryFeeBps: state.entryFeeBps,
       hostExitFeeBps: 0,
       targetWeights: state.legs.map(leg => ({ mint: leg.mint.toBase58(), weightBps: leg.weightBps })),
+      // The vault holds the TRADABLE slice of the disclosed book (on-chain legs are authoritative).
+      slice: (() => {
+        const slice = tradableSliceFor(indexId);
+        const tradableLegs = state.legs.length;
+        // Only describe the slice when it IS the on-chain leg set (same mints); never invent totals.
+        const matches = slice && slice.vaultLegs.length === tradableLegs && slice.vaultLegs.every(leg => state.legs.some(onChain => onChain.mint.toBase58() === leg.mint));
+        if (!slice || !matches) return { tradableLegs, totalLegs: null, disclosedWeightBps: null, excluded: [] };
+        return { tradableLegs, totalLegs: slice.totalLegs, disclosedWeightBps: slice.disclosedWeightBps, excluded: slice.excluded.map(item => ({ ticker: item.ticker, reason: item.reason })) };
+      })(),
       navVault: { navUsdc: micro(snapshot.nav), usdcBufferUsdc: micro(snapshot.usdcBalance), bufferBps: state.bufferBps, priceAgeSecs: snapshot.priceAgeSecs },
     }, { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 503); }

@@ -1,0 +1,226 @@
+{
+  "what": "Mainnet NAV vaults built from each index TRADABLE slice (captain decision B, 2026-09-23). Disclosed books untouched.",
+  "params": {
+    "entryFeeBps": 25,
+    "bufferBps": 500,
+    "maxPriceAgeSecs": 60,
+    "maxPriceMoveBps": 1500,
+    "maxDepositUsdc": 0,
+    "requestTimeoutSecs": 600,
+    "keeper": "GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq",
+    "minTradeUsdc": 0.05
+  },
+  "solSpent": "0.26325 (deployer 0.459711 → 0.196599)",
+  "skippedInScope": [
+    {
+      "indexId": "insiderindex-julia-letlow",
+      "reason": "tradable slice 11/53 legs = 28.9% of disclosed weight (< 30%)"
+    }
+  ],
+  "researchOnly": [
+    {
+      "indexId": "idx-theme-beta-caucus",
+      "tradableLegs": 1,
+      "totalLegs": 15,
+      "disclosedWeightBps": 679
+    },
+    {
+      "indexId": "idx-theme-capitol-arsenal",
+      "tradableLegs": 0,
+      "totalLegs": 6,
+      "disclosedWeightBps": 0
+    },
+    {
+      "indexId": "idx-theme-whips-desk",
+      "tradableLegs": 2,
+      "totalLegs": 6,
+      "disclosedWeightBps": 1417
+    },
+    {
+      "indexId": "insiderindex-julia-letlow",
+      "tradableLegs": 11,
+      "totalLegs": 53,
+      "disclosedWeightBps": 2894
+    },
+    {
+      "indexId": "insiderindex-kevin-hern",
+      "tradableLegs": 2,
+      "totalLegs": 8,
+      "disclosedWeightBps": 1798
+    },
+    {
+      "indexId": "insiderindex-patrick-fallon",
+      "tradableLegs": 1,
+      "totalLegs": 21,
+      "disclosedWeightBps": 828
+    },
+    {
+      "indexId": "insiderindex-susie-lee",
+      "tradableLegs": 3,
+      "totalLegs": 18,
+      "disclosedWeightBps": 2445
+    },
+    {
+      "indexId": "insiderindex-vern-buchanan",
+      "tradableLegs": 0,
+      "totalLegs": 5,
+      "disclosedWeightBps": 0
+    }
+  ],
+  "vaults": [
+    {
+      "indexId": "idx-theme-mag7-caucus",
+      "vault": "2w5g5aXmQj6o1cZSYbpV6R6rdK9KK7zAeJJRZu9PseM6",
+      "shareMint": "BZw8SegRiJmqmKgBDt5npmPo2dvsnv2nDPXvLQM6Mv4A",
+      "lookupTable": "482Et7YNkNQJS2cqhaRgugoNmjE3GmLqiSQFbZ81wmAr",
+      "initSignature": "nsZApxhdwwTE93ZMNgKVGtk9X16r65ov3pChenNBqfKieoqQGBmD1ZNV5MGmkSzBk85BCyPNGWEk62SrJCfrW6f",
+      "tradableLegs": 7,
+      "totalLegs": 7,
+      "disclosedWeightBps": 10000
+    },
+    {
+      "indexId": "insiderindex-nancy-pelosi",
+      "vault": "7TLXMdueAtbgNyQy6Ysrs7YoQxadyuK7fT5qxWathM8Q",
+      "shareMint": "8rHzNZpq91DtyzThcfD9U2ePPEZbZQyY7yyrKit7NeU1",
+      "lookupTable": "34MNdQW8S6mm6STRRaPfRQ9NwMC4ME5PkbJGuCeryKQG",
+      "initSignature": "51bLSriqMrPqae7sCqFE8MT7antkqbF7XsurDmgZxtMgrqGFVZSvVwVGhKEfaL9cmME2FtZg5GsUaKUmBs2cuCPB",
+      "tradableLegs": 5,
+      "totalLegs": 18,
+      "disclosedWeightBps": 7261,
+      "legs": [
+        "AAPL:4385",
+        "NVDA:1755",
+        "GOOGL:1755",
+        "AMZN:1754",
+        "AVGO:351"
+      ]
+    },
+    {
+      "indexId": "insiderindex-josh-gottheimer",
+      "vault": "BPXmpspgbBb5FmSzaxMurhMyRxqf6y1ZEAHWRzn4osVy",
+      "shareMint": "ERqqFaBMq5BV5PEc9ySaHykQ7jmrCSvEj6sG6jwByQu1",
+      "lookupTable": "8CRUPF1xc3gH2z5FDxXvoJpDTk1Nz1hxrsPPaQeVmRkw",
+      "initSignature": "5HXD1REvUuPbgdEjx8ZFaCV9cdNQEYKcPx7gpxRgUsCvRr3GUjrGUEPgKJcq4jQBEsPrzuBgiFDmWKf1MBSSpNEX",
+      "tradableLegs": 5,
+      "totalLegs": 25,
+      "disclosedWeightBps": 7847,
+      "legs": [
+        "MSFT:8635",
+        "META:865",
+        "AMZN:404",
+        "LLY:77",
+        "ABT:19"
+      ]
+    },
+    {
+      "indexId": "insiderindex-shri-thanedar",
+      "vault": "EGgFPV88Y2CGqa3Jy89Zk95kBX5k66ps77Mb1pd2oiBj",
+      "shareMint": "6tq31T85DAZxSNogyAFaVaQXBWXXD9bL4zmVcZrVZCRY",
+      "lookupTable": "DmpWHdypzw6irHkurdEhLLRWqRQVjaxiEq2rMTQak188",
+      "initSignature": "5iZADzZYcdAamcpxGcN3Y925dq4pWCC4erxT2TH33awJuS5znEcnrYtZc8gxPYPZTDsUufnL4oUx9aMJnEVu3cw9",
+      "tradableLegs": 7,
+      "totalLegs": 8,
+      "disclosedWeightBps": 4378,
+      "legs": [
+        "GOOGL:3212",
+        "AAPL:3212",
+        "MSFT:1608",
+        "AMZN:751",
+        "BRK.B:751",
+        "WMT:324",
+        "MSTR:142"
+      ]
+    },
+    {
+      "indexId": "insiderindex-lisa-mcclain",
+      "vault": "BwBjkwnF8qoHFf41tptG3EyVu1cobZRiLSWpW1yw2jFF",
+      "shareMint": "5Kj8gMGVv4SJXpZTfR4bXA7Mg5AXAqpxGhhaYgWzTK6t",
+      "lookupTable": "D43SacNTh6AByndf9uxw2NksDn98bPDCZ47JCLhLfFCj",
+      "initSignature": "3C5143MauongFo7DARZLq43mQS54x91Eq5L2ytmH3JP4hEbARjbs9MNAvduKNTfJCxemEpXVc4LKNajjJFuE7dWm",
+      "tradableLegs": 11,
+      "totalLegs": 45,
+      "disclosedWeightBps": 3781,
+      "legs": [
+        "NVDA:4018",
+        "PLTR:3840",
+        "TSLA:717",
+        "AMZN:180",
+        "AAPL:180",
+        "COST:180",
+        "LLY:177",
+        "META:177",
+        "MSFT:177",
+        "NFLX:177",
+        "SHOP:177"
+      ]
+    },
+    {
+      "indexId": "idx-theme-silicon-hill",
+      "vault": "HfY7wv2YhEAvkDr1yvua1GrR2EqMXe49Djt5zoSkWjVw",
+      "shareMint": "7hBqGdEEq6xRSyRq4uQmWzbz3kXEeQERFAWySQmtrzGo",
+      "lookupTable": "8MtCsaPD3V6ssr8Yy9mAAyJtBuCHYtfthUvT8KcK41xQ",
+      "initSignature": "2P9sZw9tgxm3gCviKmXigm66K6g5H88LCYUsvpitBuvDJogW9fDVsorRjfHk2rzN71cEQ4QG6vdGMwmkFtJpgeBd",
+      "tradableLegs": 10,
+      "totalLegs": 18,
+      "disclosedWeightBps": 9067,
+      "legs": [
+        "MSFT:3565",
+        "AAPL:2548",
+        "GOOGL:1366",
+        "AMZN:1078",
+        "NVDA:758",
+        "META:346",
+        "AVGO:133",
+        "ORCL:100",
+        "TSLA:66",
+        "INTC:40"
+      ]
+    },
+    {
+      "indexId": "idx-theme-fresh-ink",
+      "vault": "6BZDQMXX4cHbvEiKHRqhUeF6LYuV6rzD48Tao4aF4dPc",
+      "shareMint": "FsUaca3nwDhC6MGYDWtZTbVfnrkJN2YPTHNq63p69xG3",
+      "lookupTable": "FqjVTkdkyhWFYoPuExtZm4UrKMCR73xQpkKYzW9CmHV4",
+      "initSignature": "7xUx1mtEAPbz3dmybUUL5czZnUmgYpoDgkJBR9GDpJFcVPH7PLdxbyf4STHhQW3QUoN5yEGe3nW9P4zc9kLGAJ9",
+      "tradableLegs": 8,
+      "totalLegs": 20,
+      "disclosedWeightBps": 7364,
+      "legs": [
+        "MSFT:3675",
+        "NVDA:2610",
+        "AVGO:2003",
+        "INTC:707",
+        "GOOGL:380",
+        "AMZN:359",
+        "AAPL:172",
+        "PLTR:94"
+      ]
+    },
+    {
+      "indexId": "idx-theme-bipartisan-handshake",
+      "vault": "3GSFokxsLiy1LbygvQrRSAZkPEtAxJByMrrHtqVBBKm7",
+      "shareMint": "GS8CVUZREgkBEZsxRQZX4Z23g24MeM1jouuHgUP3mMta",
+      "lookupTable": "JDrHq9WwZjhoSs11FpbGRKeCVFRV2KYapC8AMY7ML2J5",
+      "initSignature": "3kAcippCXJF79FFrSBGHSu16oJUrK8ZUAuAgHcZ5ZuRBaSf8JVgzHQZQuohrM7S5C1fHdyq9v2QozV69tRRtVWDk",
+      "tradableLegs": 3,
+      "totalLegs": 5,
+      "disclosedWeightBps": 6000,
+      "legs": [
+        "AVGO:3334",
+        "NVDA:3333",
+        "TSLA:3333"
+      ]
+    }
+  ],
+  "keeper": {
+    "mode": "nav-vault-keeper --all --loop 40",
+    "pricePostsPerCycle": "2 txs (x7 + x1) for 8 vaults"
+  },
+  "vercel": {
+    "removedProductionEnv": [
+      "STOCKLANA_NAV_VAULT_INDEXES",
+      "NEXT_PUBLIC_NAV_VAULT_INDEXES"
+    ],
+    "takesEffect": "next production deploy from main"
+  }
+}
