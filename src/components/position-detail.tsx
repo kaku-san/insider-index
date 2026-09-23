@@ -74,9 +74,9 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   const depositFill = activeOperation?.kind === "deposit" ? activeOperation.fill : undefined;
   const delivery = activeOperation?.kind === "withdraw" ? activeOperation.delivery ?? [] : [];
   const book = position?.basket
-    ? { title: "Held now", note: `${position.basket.heldCount} of ${position.basket.targetCount} target names are in the vault. Missing names are not held.`, filled: position.basket.legs.filter(leg => leg.held), missing: position.basket.legs.filter(leg => !leg.held) }
+    ? { title: "Held now", note: `${position.basket.heldCount} of ${position.basket.targetCount} target names are in the vault. Missing names are not held.`, filled: position.basket.legs.filter(leg => leg.held), missing: position.basket.legs.filter(leg => !leg.held), state: "held" as const }
     : depositFill
-      ? { title: "Bought so far", note: "This auction has not minted shares. Missing names were not bought.", filled: depositFill.filled, missing: depositFill.missing }
+      ? { title: "Bought so far", note: "This auction has not minted shares. Missing names were not bought.", filled: depositFill.filled, missing: depositFill.missing, state: "bought" as const }
       : null;
   const cashOutNetwork = readiness?.identity?.network ?? readiness?.vault?.network;
   const canCashOut = Boolean(position && cashOutNetwork && BigInt(position.sharesRaw) > 0n && !activeOperation && publicIndexCanCashOut(indexId, {
@@ -107,7 +107,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
         </div>
       </section>
 
-      <div className={styles.grid}>{book ? <PositionBook title={book.title} note={book.note} filled={book.filled} missing={book.missing} /> : <section className={styles.panel}><header><h2>Held now</h2><p>Published target is not what this wallet holds</p></header><div className={styles.empty}>The held book is unavailable. The target mix is not shown as if it were held.</div></section>}</div>
+      <div className={styles.grid}>{book ? <PositionBook title={book.title} note={book.note} filled={book.filled} missing={book.missing} state={book.state} /> : <section className={styles.panel}><header><h2>Held now</h2><p>Published target is not what this wallet holds</p></header><div className={styles.empty}>The held book is unavailable. The target mix is not shown as if it were held.</div></section>}</div>
       {delivery.length ? <CashOutAssetList assets={delivery} heading="Still in this cash-out" note={CASH_OUT_STILL_NOTE} /> : null}
 
       {position.outstandingClaims?.length ? <section className={styles.claims}><h2>Outstanding claims</h2>{position.outstandingClaims.map((claim) => <div key={claim.mint}><strong>{claim.symbol ?? claim.mint.slice(0, 7)}</strong><span>{claim.amountRemainingRaw} units remaining</span><b>{claim.transferBlocked ? "NEEDS ATTENTION" : "PENDING"}</b></div>)}</section> : null}

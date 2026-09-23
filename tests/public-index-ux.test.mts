@@ -205,6 +205,16 @@ test("position book shows filled names and marks the rest not held", async () =>
   assert.match(html, /NVDA/);
   assert.match(html, /Not held/);
   assert.doesNotMatch(html, /Target mix/);
+  const pending = renderToStaticMarkup(createElement(PositionBook, {
+    title: "Bought so far",
+    note: "This auction has not minted shares.",
+    filled: [{ ticker: "AAPL", mint: "mint-aapl" }],
+    missing: [{ ticker: "NVDA", mint: "mint-nvda" }],
+    state: "bought",
+  }));
+  assert.match(pending, /Bought/);
+  assert.match(pending, /Not bought yet/);
+  assert.doesNotMatch(pending, /Held|Not held/);
   const receipt = renderToStaticMarkup(createElement(CashOutAssetList, {
     heading: "Sent to your wallet",
     note: "Unsold stocks and USDC are sent to your wallet. This is not a share refund.",
@@ -214,6 +224,16 @@ test("position book shows filled names and marks the rest not held", async () =>
   assert.match(receipt, /AAPL · 5 raw/);
   assert.match(receipt, /2\.5 USDC/);
   assert.match(receipt, /not a share refund/);
+});
+
+test("prepared quotes are bound to owner, network, mode, and raw amount", async () => {
+  const { prepareRequestKey } = await import("../src/lib/frontend/position-basket.ts");
+  const owner = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
+  const prepared = prepareRequestKey({ owner, network: "mainnet-beta", mode: "deposit", amountRaw: "1000000" });
+  assert.equal(prepared, prepareRequestKey({ owner, network: "mainnet-beta", mode: "deposit", amountRaw: "1000000" }));
+  assert.notEqual(prepared, prepareRequestKey({ owner, network: "mainnet-beta", mode: "deposit", amountRaw: "5000000" }));
+  assert.notEqual(prepared, prepareRequestKey({ owner, network: "devnet", mode: "deposit", amountRaw: "1000000" }));
+  assert.notEqual(prepared, prepareRequestKey({ owner, network: "mainnet-beta", mode: "withdraw", amountRaw: "1000000" }));
 });
 
 test("completed cash out does not present the pre-clear holdings as delivered", async () => {

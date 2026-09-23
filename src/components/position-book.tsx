@@ -4,12 +4,15 @@ import { StockIcon } from "./social/shared";
 import { formatObservedAmount, type CashOutAsset } from "@/lib/frontend/position-basket";
 import styles from "./position-detail.module.css";
 
-export function PositionBook({ title, note, filled, missing }: {
+export function PositionBook({ title, note, filled, missing, state = "held" }: {
   title: string;
   note: string;
   filled: { ticker: string; mint: string }[];
   missing: { ticker: string; mint: string }[];
+  state?: "held" | "bought";
 }) {
+  const filledLabel = state === "bought" ? "Bought" : "Held";
+  const missingLabel = state === "bought" ? "Not bought yet" : "Not held";
   return <section className={styles.panel} aria-label={title}>
     <header><h2>{title}</h2><p>{note}</p></header>
     {filled.length ? <div className={styles.weights}>{filled.map((leg, index) => <div key={leg.mint}>
@@ -17,9 +20,9 @@ export function PositionBook({ title, note, filled, missing }: {
       <StockIcon ticker={leg.ticker} size="sm" />
       <strong>{leg.ticker}</strong>
       <i><b style={{ width: "100%" }} /></i>
-      <em>Held</em>
-    </div>)}</div> : <div className={styles.empty}>None of the target names are held.</div>}
-    {missing.length ? <div className={styles.missing}><h3>Not held</h3><ul>{missing.map(leg => <li key={leg.mint}><StockIcon ticker={leg.ticker} size="sm" /><strong>{leg.ticker}</strong><span>Not held</span></li>)}</ul></div> : null}
+      <em>{filledLabel}</em>
+    </div>)}</div> : <div className={styles.empty}>{state === "bought" ? "None of the target names have been bought yet." : "None of the target names are held."}</div>}
+    {missing.length ? <div className={styles.missing}><h3>{missingLabel}</h3><ul>{missing.map(leg => <li key={leg.mint}><StockIcon ticker={leg.ticker} size="sm" /><strong>{leg.ticker}</strong><span>{missingLabel}</span></li>)}</ul></div> : null}
   </section>;
 }
 

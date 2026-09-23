@@ -141,6 +141,10 @@ export function cashOutDeliveryOf(position?: { pendingOperations?: { kind?: stri
 
 export type PrepareCheckStatus = "idle" | "checking" | "ready" | "blocked";
 
+export function prepareRequestKey(input: { owner: string; network: string; mode: "deposit" | "withdraw"; amountRaw: string }): string {
+  return JSON.stringify([input.owner, input.network, input.mode, input.amountRaw]);
+}
+
 /** Quote and cash-out checks stay on the form. A stack, hang, or blank failure becomes one human line. */
 export function humanPrepareMessage(error: unknown, mode: "deposit" | "withdraw"): string {
   if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError" || error.message === "QUOTE_TIMEOUT")) {

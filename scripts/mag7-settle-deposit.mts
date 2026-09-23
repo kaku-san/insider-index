@@ -132,10 +132,6 @@ export function lockedMag7IntentAddresses(intents: readonly ScanIntent[]): strin
     .filter((intent, index, all) => all.indexOf(intent) === index);
 }
 
-export function lockedMag7DepositIntentAddresses(intents: readonly ScanIntent[]): string[] {
-  return lockedMag7IntentAddresses(intents.filter(intent => intent.chain_data.rebalanceType === RebalanceType.Deposit));
-}
-
 function loadExternalKeypair(path: string): Keypair {
   const absolute = resolve(path), root = resolve(".");
   const outside = relative(root, absolute);

@@ -11,7 +11,7 @@ import { legBindings } from "../src/lib/index-vaults/keeper-tick.ts";
 import { allSevenVm, definition } from "./support/all-seven-vm.mts";
 
 register("./support/ui-loader.mjs", import.meta.url);
-const { lockedMag7DepositIntentAddresses, mag7MintPlan, mag7SkippableRouteReason, parseArgs, prepareMag7Mint, settleMag7IntentBurst } = await import("../scripts/mag7-settle-deposit.mts");
+const { lockedMag7IntentAddresses, mag7MintPlan, mag7SkippableRouteReason, parseArgs, prepareMag7Mint, settleMag7IntentBurst } = await import("../scripts/mag7-settle-deposit.mts");
 
 const VAULT = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
 const OTHER_VAULT = "8vQmbDWWSph7qQvSdvYcJ4W3xQnn6Nwg3Bh85P6iyReL";
@@ -34,12 +34,12 @@ test("Mag7 watcher defaults to the fixed vault and keeps external-key safeguards
   assert.throws(() => parseArgs(["--watch-vault", "--interval-seconds", "4"]), /5 to 86400/);
 });
 
-test("Mag7 watcher selects every locked Mag7 deposit but no unlocked or foreign intent", () => {
-  assert.deepEqual(lockedMag7DepositIntentAddresses([
+test("Mag7 watcher selects locked Mag7 deposits and withdrawals but no unlocked or foreign intent", () => {
+  assert.deepEqual(lockedMag7IntentAddresses([
     intent("locked-price"), intent("locked-auction", VAULT, RebalanceAction.Auction), intent("locked-price"),
     intent("unlocked", VAULT, RebalanceAction.DepositTokens), intent("inactive", VAULT, RebalanceAction.NotActive),
     intent("other-vault", OTHER_VAULT), intent("withdraw", VAULT, RebalanceAction.UpdatePrices, RebalanceType.Withdraw),
-  ]), ["locked-price", "locked-auction"]);
+  ]), ["locked-price", "locked-auction", "withdraw"]);
 });
 
 test("Mag7 auction burst immediately walks seven legs in four two-swap-capped fills", async () => {
