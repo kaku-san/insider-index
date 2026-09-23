@@ -53,6 +53,16 @@ node --experimental-strip-types scripts/nav-vault-devnet.mts --payer <devnet key
 
 Every readback matched the prepare estimate, and the keeper wallet's USDC did not change. Keeper swaps on devnet go through the mock venue because Jupiter has no devnet deployment. The Jupiter CPI path is proven offline against the deployed Jupiter binary in `tests/nav-vault-jupiter.test.mts`. The same script's `solana-test-validator` rehearsal is in `evidence/vaults/nav-vault-localnet-rehearsal.json`.
 
+Note: the devnet proof ran the pre-cap build (sha256 `3fa7cc51…`). Later commits added the per-deposit cap field (`max_deposit_usdc`, `set_max_deposit`), which changes the vault account layout. The committed `programs/bin/*.so` are the current builds.
+
+## Mainnet (captain-approved pilot)
+
+- Build: `programs/bin/nav_vault.so`. The default features pin the venues to Jupiter V6 exact-in routes and Raydium CLMM `swap_v2`; there is no mock venue.
+- Cost: program rent is about 1.73 SOL for 340,085 bytes of program data, recoverable with `solana program close`. Init is about 0.05 SOL (vault, share mint, 9 token accounts, LUT). The keeper needs about 0.05 SOL for fees.
+- Operator CLI: `npm run nav-vault -- init|keeper …` (`scripts/nav-vault-cli.mts`). It is dry run by default, `--execute --keypair <file>` sends, and the keeper must not be the admin. Pilot flags are `--max-price-age 60 --entry-fee 25 --buffer 500 --max-deposit-raw 50000000`.
+- Swaps: Jupiter v2 `/swap/v2/build` is used when `JUPITER_API_KEY` is set; otherwise v1 `/swap-instructions`. A read-only mainnet check with the Mag7 vault PDA as taker returned `shared_accounts_route` with the PDA as the only signer. Wrapped in `keeper_swap` with the vault LUT, the transactions were 568–669 bytes and 30–34 accounts (MSFT and TSLA buys, NVDA sell).
+- App flag: `STOCKLANA_NAV_VAULT_NETWORK=mainnet-beta` (RPC defaults to the server Helius URL) plus the index lists. The public site stays unflipped until the captain decides.
+
 ## Not done here
 
 Audit, mainnet deploy, Raydium direct-pool adapter in the TS keeper (on-chain allowlist supports it; `buildCycleRoute` rejects off-curve owners), async large exits, migrating the Symmetry Mag7 vault.

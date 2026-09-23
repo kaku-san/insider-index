@@ -115,6 +115,7 @@ pub mod nav_vault {
         vault.entry_fee_bps = args.entry_fee_bps;
         vault.buffer_bps = args.buffer_bps;
         vault.fee_account = ctx.accounts.fee_account.key();
+        vault.max_deposit_usdc = args.max_deposit_usdc;
         vault.prices_updated_at = 0;
         vault.prices_updated_slot = 0;
         vault.bump = ctx.bumps.vault;
@@ -126,6 +127,12 @@ pub mod nav_vault {
 
     pub fn set_keeper(ctx: Context<SetKeeper>, keeper: Pubkey) -> Result<()> {
         ctx.accounts.vault.keeper = keeper;
+        Ok(())
+    }
+
+    /// Admin-only pilot limit: per-deposit USDC cap in raw units (0 removes the cap).
+    pub fn set_max_deposit(ctx: Context<SetKeeper>, max_deposit_usdc: u64) -> Result<()> {
+        ctx.accounts.vault.max_deposit_usdc = max_deposit_usdc;
         Ok(())
     }
 
@@ -152,6 +159,7 @@ pub mod nav_vault {
     pub fn deposit<'info>(ctx: Context<'_, '_, 'info, 'info, Deposit<'info>>, usdc_amount: u64, min_shares: u64) -> Result<()> {
         require!(usdc_amount > 0, VaultError::ZeroAmount);
         let vault = &ctx.accounts.vault;
+        require!(vault.max_deposit_usdc == 0 || usdc_amount <= vault.max_deposit_usdc, VaultError::DepositAboveCap);
         require_keys_neq!(ctx.accounts.user.key(), vault.keeper, VaultError::KeeperCannotDeposit);
         assert_fresh_prices(vault)?;
         // Marks must be at least one slot old: the keeper cannot post a mark and trade on it in the same slot.
@@ -540,6 +548,8 @@ pub struct InitVaultArgs {
     pub max_slippage_bps: u16,
     pub entry_fee_bps: u16,
     pub buffer_bps: u16,
+    /// Per-deposit USDC cap in raw units (0 = no cap). Pilot: $50.
+    pub max_deposit_usdc: u64,
     pub weights_bps: Vec<u16>,
 }
 
@@ -574,6 +584,8 @@ pub struct Vault {
     pub fee_account: Pubkey,
     /// Address lookup table clients use to fit the one-signature exit into a single v0 transaction.
     pub lookup_table: Pubkey,
+    /// Per-deposit USDC cap in raw units (0 = no cap).
+    pub max_deposit_usdc: u64,
     pub bump: u8,
     pub authority_bump: u8,
     pub mint_authority_bump: u8,
@@ -794,6 +806,8 @@ pub enum VaultError {
     KeeperCannotDeposit,
     #[msg("Marks must be at least one slot old")]
     MarksTooNew,
+    #[msg("Deposit is above the per-deposit cap")]
+    DepositAboveCap,
     #[msg("Math overflow")]
     MathOverflow,
 }

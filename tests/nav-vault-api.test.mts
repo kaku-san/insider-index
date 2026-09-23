@@ -19,10 +19,14 @@ function setup() {
 }
 const post = (body: unknown) => new Request("http://local/api", { method: "POST", body: JSON.stringify(body) });
 
-test("NAV vault flag is off by default and devnet-only", () => {
+test("NAV vault flag is off by default; mainnet only when chosen explicitly", () => {
   assert.equal(navVaultConfig({}).enabled, false);
+  assert.equal(navVaultConfig({}).network, "devnet");
   assert.equal(navVaultServes("idx-theme-mag7-caucus", navVaultConfig({})), false);
-  assert.throws(() => navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: "x", STOCKLANA_NAV_VAULT_NETWORK: "mainnet-beta" }), /devnet-only/);
+  const mainnet = navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: "x", STOCKLANA_NAV_VAULT_NETWORK: "mainnet-beta", STOCKLANA_NAV_VAULT_RPC_URL: "https://rpc.example" });
+  assert.equal(mainnet.network, "mainnet-beta");
+  assert.equal(mainnet.rpcUrl, "https://rpc.example");
+  assert.throws(() => navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: "x", STOCKLANA_NAV_VAULT_NETWORK: "testnet" }), /devnet or mainnet-beta/);
 });
 
 test("readiness, position and both prepare routes return one-transaction steps for a flagged index", async () => {
@@ -101,7 +105,7 @@ test("Mag7-size (7 Token-2022 legs) in-kind exit fits ONE v0 transaction with th
   const authority = program.authorityPda(vault);
   const legs = Array.from({ length: 7 }, () => { const mint = key(); return { mint, account: program.ata(authority, mint, spl.TOKEN_2022_PROGRAM_ID), tokenProgram: spl.TOKEN_2022_PROGRAM_ID, decimals: 8, weightBps: 1428, price: 1n }; });
   const usdcMint = key();
-  const state = { address: vault, admin: key(), keeper: key(), indexSeed: Buffer.alloc(32), indexId: "idx-theme-mag7-caucus", shareMint: program.shareMintPda(vault), usdcMint, usdcAccount: program.ata(authority, usdcMint), maxPriceAgeSecs: 300, maxSlippageBps: 100, pricesUpdatedAt: 1, pricesUpdatedSlot: 1n, entryFeeBps: 25, bufferBps: 500, feeAccount: key(), lookupTable: null, bump: 255, authorityBump: 255, mintAuthorityBump: 255, legs };
+  const state = { address: vault, admin: key(), keeper: key(), indexSeed: Buffer.alloc(32), indexId: "idx-theme-mag7-caucus", shareMint: program.shareMintPda(vault), usdcMint, usdcAccount: program.ata(authority, usdcMint), maxPriceAgeSecs: 300, maxSlippageBps: 100, pricesUpdatedAt: 1, pricesUpdatedSlot: 1n, entryFeeBps: 25, bufferBps: 500, feeAccount: key(), lookupTable: null, maxDepositUsdc: 0n, bump: 255, authorityBump: 255, mintAuthorityBump: 255, legs };
   const user = key();
   const ixs = [
     web3.ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),

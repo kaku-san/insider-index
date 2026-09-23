@@ -4,7 +4,7 @@ import { Keypair, TransactionInstruction, VersionedTransaction } from "@solana/w
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   JUPITER_V6_PROGRAM_ID, USDC_LEG, ata, computeNav, depositIx, keeperSwapIx, mockPoolPda, mockSetPriceIx, mockSwapIx,
-  previewDeposit, previewWithdraw, updatePricesIx, withdrawInKindIx, withdrawIx,
+  previewDeposit, previewWithdraw, setMaxDepositIx, updatePricesIx, withdrawInKindIx, withdrawIx,
 } from "../src/lib/nav-vault/program.ts";
 import { prepareNavDeposit, prepareNavWithdraw } from "../src/lib/nav-vault/prepare.ts";
 import { keeperTick, markFromQuote, mockVenue, planRebalance } from "../src/lib/nav-vault/keeper.ts";
@@ -267,4 +267,16 @@ test("keeper tick posts marks, buys legs one swap per transaction from vault USD
   assert.ok(refill.signatures.some(x => x.step.startsWith("sell:")));
   const topped = navOf(vm, s);
   assert.ok(topped.usdc * 10_000n >= topped.nav * 500n, "buffer restored by selling legs");
+});
+
+test("pilot per-deposit cap: above-cap deposits refuse on chain; only the admin can change it", () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  const v = vm.vault(s.indexId);
+  failsWith(vm.send([setMaxDepositIx(v, s.alice.publicKey, 1n)], s.alice), "ConstraintHasOne");
+  vm.must(vm.send([setMaxDepositIx(v, s.admin.publicKey, 50_000_000n)], s.admin), "admin sets $50 cap");
+  assert.equal(vm.vault(s.indexId).maxDepositUsdc, 50_000_000n);
+  failsWith(deposit(vm, s, s.alice, 50_000_001n), "DepositAboveCap");
+  vm.must(deposit(vm, s, s.alice, 50_000_000n), "deposit at the cap");
 });

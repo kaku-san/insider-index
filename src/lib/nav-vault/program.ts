@@ -25,6 +25,7 @@ export const IX = {
   initVault: disc("global", "init_vault"),
   setKeeper: disc("global", "set_keeper"),
   setLookupTable: disc("global", "set_lookup_table"),
+  setMaxDeposit: disc("global", "set_max_deposit"),
   updatePrices: disc("global", "update_prices"),
   deposit: disc("global", "deposit"),
   withdraw: disc("global", "withdraw"),
@@ -92,6 +93,8 @@ export type NavVaultState = {
   bufferBps: number;
   feeAccount: PublicKey;
   lookupTable: PublicKey | null;
+  /** Per-deposit USDC cap in raw units; 0n = none. */
+  maxDepositUsdc: bigint;
   bump: number;
   authorityBump: number;
   mintAuthorityBump: number;
@@ -118,11 +121,12 @@ export function decodeVault(address: PublicKey, data: Uint8Array): NavVaultState
   const feeAccount = key();
   const lut = key();
   const lookupTable = lut.equals(PublicKey.default) ? null : lut;
+  const maxDepositUsdc = u64();
   const bump = u8(), authorityBump = u8(), mintAuthorityBump = u8();
   const n = u32();
   const legs: NavLeg[] = [];
   for (let i = 0; i < n; i++) legs.push({ mint: key(), account: key(), tokenProgram: key(), decimals: u8(), weightBps: u16(), price: u64() });
-  return { address, admin, keeper, indexSeed: seed, indexId, shareMint, usdcMint, usdcAccount, maxPriceAgeSecs, maxSlippageBps, pricesUpdatedAt, pricesUpdatedSlot, entryFeeBps, bufferBps, feeAccount, lookupTable, bump, authorityBump, mintAuthorityBump, legs };
+  return { address, admin, keeper, indexSeed: seed, indexId, shareMint, usdcMint, usdcAccount, maxPriceAgeSecs, maxSlippageBps, pricesUpdatedAt, pricesUpdatedSlot, entryFeeBps, bufferBps, feeAccount, lookupTable, maxDepositUsdc, bump, authorityBump, mintAuthorityBump, legs };
 }
 
 /** Raw SPL token-account amount (Token and Token-2022 share the base layout). */
@@ -177,6 +181,8 @@ export type InitVaultInput = {
   maxSlippageBps: number;
   entryFeeBps?: number;
   bufferBps?: number;
+  /** Per-deposit USDC cap in raw units (0 = none). */
+  maxDepositUsdc?: bigint;
   legs: { mint: PublicKey; tokenProgram: PublicKey; weightBps: number }[];
   programId?: PublicKey;
 };
@@ -193,7 +199,7 @@ export function initVaultIx(input: InitVaultInput): TransactionInstruction {
   const accounts = vaultTokenAccounts(input.indexId, input.usdcMint, input.legs, programId);
   const w = new Writer().bytes(indexSeed(input.indexId)).string(input.indexId).key(input.keeper)
     .u32(input.maxPriceAgeSecs).u16(input.maxSlippageBps).u16(input.entryFeeBps ?? DEFAULT_ENTRY_FEE_BPS).u16(input.bufferBps ?? DEFAULT_BUFFER_BPS)
-    .u32(input.legs.length);
+    .u64(input.maxDepositUsdc ?? 0n).u32(input.legs.length);
   for (const leg of input.legs) w.u16(leg.weightBps);
   return new TransactionInstruction({
     programId,
@@ -209,6 +215,10 @@ export function initVaultIx(input: InitVaultInput): TransactionInstruction {
 
 export function setKeeperIx(vault: NavVaultState, admin: PublicKey, keeper: PublicKey, programId = NAV_VAULT_PROGRAM_ID) {
   return new TransactionInstruction({ programId, data: new Writer().key(keeper).done(IX.setKeeper), keys: [meta(admin, false, true), meta(vault.address, true)] });
+}
+
+export function setMaxDepositIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, maxDepositUsdc: bigint, programId = NAV_VAULT_PROGRAM_ID) {
+  return new TransactionInstruction({ programId, data: new Writer().u64(maxDepositUsdc).done(IX.setMaxDeposit), keys: [meta(admin, false, true), meta(vault.address, true)] });
 }
 
 export function setLookupTableIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, lookupTable: PublicKey, programId = NAV_VAULT_PROGRAM_ID) {

@@ -6,7 +6,7 @@
  * every swap spends vault token accounts only, signed by the vault PDA inside `keeper_swap`.
  * No env, no `@/` aliases; network adapters are injected.
  */
-import { AddressLookupTableAccount, ComputeBudgetProgram, PublicKey, TransactionMessage, VersionedTransaction, type TransactionInstruction } from "@solana/web3.js";
+import { AddressLookupTableAccount, ComputeBudgetProgram, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import {
   BPS, JUPITER_V6_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, USDC_LEG, authorityPda, keeperSwapIx, legAccount, legMint, legTokenProgram, legValue,
   mockPoolPda, mockSwapIx, updatePricesIx, withSlippage, type NavVaultState,
@@ -126,6 +126,62 @@ export function jupiterSwapBuilder(options: { env?: { JUPITER_API_KEY?: string }
     const routes = built.instructions.filter(ix => ix.programId.equals(JUPITER_V6_PROGRAM_ID) && JUPITER_ROUTE_DISCRIMINATORS.includes(Buffer.from(ix.data.subarray(0, 8)).toString("hex")));
     if (routes.length !== 1) return null;
     return { swap: routes[0]!, minOut: BigInt(built.minOutRaw), venue: "jupiter", lookupTables: built.lookupTables };
+  };
+}
+
+/**
+ * Jupiter v1 `/quote` + `/swap-instructions` (keyless `lite-api.jup.ag`, or `api.jup.ag` with a key).
+ * Verified read-only on mainnet: with the vault authority PDA as `userPublicKey` it returns a
+ * `shared_accounts_route` whose only signer is the PDA. Setup (ATA create, payer = PDA) is dropped:
+ * vault token accounts already exist.
+ */
+export function jupiterV1SwapBuilder(options: {
+  connection: Pick<NavConnection, "getAddressLookupTable">;
+  baseUrl?: string;
+  apiKey?: string;
+  slippageBps?: number;
+  fetchImpl?: typeof fetch;
+}): SwapBuilder {
+  const base = options.baseUrl ?? (options.apiKey ? "https://api.jup.ag/swap/v1" : "https://lite-api.jup.ag/swap/v1");
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const headers: Record<string, string> = { Accept: "application/json", ...(options.apiKey ? { "x-api-key": options.apiKey } : {}) };
+  return async input => {
+    const quoteUrl = new URL(`${base}/quote`);
+    quoteUrl.searchParams.set("inputMint", input.inMint.toBase58());
+    quoteUrl.searchParams.set("outputMint", input.outMint.toBase58());
+    quoteUrl.searchParams.set("amount", input.amountIn.toString());
+    quoteUrl.searchParams.set("slippageBps", String(options.slippageBps ?? 50));
+    quoteUrl.searchParams.set("swapMode", "ExactIn");
+    const quoteResponse = await fetchImpl(quoteUrl, { headers, signal: AbortSignal.timeout(15_000) });
+    if (!quoteResponse.ok) return null;
+    const quote = await quoteResponse.json() as { inAmount?: string; otherAmountThreshold?: string; inputMint?: string; outputMint?: string };
+    if (quote.inputMint !== input.inMint.toBase58() || quote.outputMint !== input.outMint.toBase58() || quote.inAmount !== input.amountIn.toString()) return null;
+    const response = await fetchImpl(`${base}/swap-instructions`, {
+      method: "POST", headers: { ...headers, "Content-Type": "application/json" }, signal: AbortSignal.timeout(15_000),
+      body: JSON.stringify({ quoteResponse: quote, userPublicKey: input.authority.toBase58(), wrapAndUnwrapSol: false, useSharedAccounts: true }),
+    });
+    if (!response.ok) return null;
+    const body = await response.json() as { swapInstruction?: { programId: string; data: string; accounts: { pubkey: string; isSigner: boolean; isWritable: boolean }[] }; addressLookupTableAddresses?: string[] };
+    const raw = body.swapInstruction;
+    if (!raw || raw.programId !== JUPITER_V6_PROGRAM_ID.toBase58()) return null;
+    const data = Buffer.from(raw.data, "base64");
+    if (!JUPITER_ROUTE_DISCRIMINATORS.includes(data.subarray(0, 8).toString("hex"))) return null;
+    if (raw.accounts.some(meta => meta.isSigner && meta.pubkey !== input.authority.toBase58())) return null;
+    const swap = new TransactionInstruction({ programId: JUPITER_V6_PROGRAM_ID, data, keys: raw.accounts.map(meta => ({ pubkey: new PublicKey(meta.pubkey), isSigner: meta.isSigner, isWritable: meta.isWritable })) });
+    const lookupTables = (await Promise.all((body.addressLookupTableAddresses ?? []).map(async key => (await options.connection.getAddressLookupTable(new PublicKey(key))).value))).filter((t): t is AddressLookupTableAccount => Boolean(t));
+    const minOut = BigInt(quote.otherAmountThreshold ?? "0");
+    if (minOut <= 0n) return null;
+    return { swap, minOut, venue: "jupiter-v1", lookupTables };
+  };
+}
+
+/** Try each venue in order (e.g. Jupiter v2 build with a key, then v1 swap-instructions). */
+export function firstRoute(...builders: SwapBuilder[]): SwapBuilder {
+  return async input => {
+    for (const build of builders) {
+      try { const built = await build(input); if (built) return built; } catch (error) { if (error instanceof Error && /API key was rejected/.test(error.message)) throw error; }
+    }
+    return null;
   };
 }
 

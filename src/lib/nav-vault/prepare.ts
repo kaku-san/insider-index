@@ -115,6 +115,7 @@ export function simulationMessage(logs: readonly string[]): string {
   if (/SlippageExceeded/.test(text)) return "The vault value moved. Check the amount again.";
   if (/UsdcBufferShort/.test(text)) return "The vault USDC buffer changed. Check the cash out again.";
   if (/KeeperCannotDeposit/.test(text)) return "The keeper wallet cannot invest.";
+  if (/DepositAboveCap/.test(text)) return "This deposit is above the pilot limit.";
   if (/insufficient funds/i.test(text)) return "This wallet does not have enough USDC.";
   return "The vault transaction did not simulate.";
 }
@@ -158,6 +159,7 @@ export async function prepareNavDeposit(input: {
   if (!snapshot) throw new Error("This index does not have a NAV vault.");
   const { state } = snapshot;
   if (owner.equals(state.keeper)) throw new Error("The keeper wallet cannot invest.");
+  if (state.maxDepositUsdc > 0n && amount > state.maxDepositUsdc) throw new Error(`The pilot limit is ${formatUsdc(state.maxDepositUsdc)} USDC per deposit.`);
   if (!snapshot.pricesFresh) throw new Error(NAV_STALE_PRICES);
   const userUsdc = await input.connection.getAccountInfo(ata(owner, state.usdcMint), "confirmed");
   if (tokenAmount(userUsdc?.data) < amount) throw new Error("This wallet does not have enough USDC.");
