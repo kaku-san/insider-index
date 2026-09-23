@@ -8,7 +8,7 @@ import type { PublishedIndex, PublishedIndexResponse } from "@/lib/frontend/rese
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navSliceLabel, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
@@ -212,6 +212,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const availability = id ? (vaultError ?? publicIndexStatusCopy(status)) : publicIndexStatusCopy("Research");
   const resourceReadiness = id && resource.data ? vaultReadinessFromIndex(routeId, resource.data) : null;
   const flowReadiness = vault ?? resourceReadiness;
+  const disclosedSlice = vault?.kind === "nav-vault" && navSliceLabel(vault) ? vault.slice : null;
   const following = ui.deviceFollows.includes(index.person_id);
   const canCashOut = vaultLoaded && navVaultLive(routeId, vault) !== null ? vault?.redeemEnabled === true && hasIndexShares(position) : publicIndexCanCashOut(routeId, {
     vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
@@ -242,7 +243,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
           <button type="button" className={styles.tertiary} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(index.person_id)}><Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
-        {live ? <TradableSliceNote readiness={vault} className={styles.availability} /> : null}
+        {disclosedSlice ? <TradableSliceNote readiness={vault} className={styles.availability} /> : null}
       </div>
     </section>
 
@@ -257,7 +258,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       {([["allocation", "Allocation"], ["moves", "Moves"], ["about", "About"]] as const).map(([id, label]) => <button type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "allocation" ? <span>{allocationItems.length}</span> : null}</button>)}
     </nav>
     <section className={styles.tabContent}>
-      {tab === "allocation" ? <IndexAllocation items={allocationItems} slice={live && vault?.kind === "nav-vault" ? vault.slice : null} /> : null}
+      {tab === "allocation" ? <IndexAllocation items={allocationItems} slice={disclosedSlice} /> : null}
       {tab === "moves" ? (/^[A-Z][0-9]{6}$/.test(activityProfileId ?? "")
         ? <ActivityTab personId={activityProfileId!} />
         : <div className={styles.activityEmpty}><div className={styles.activityIcon}><Icon name="file" size={22} /></div><h3>Person-specific activity is unavailable.</h3><p>This index does not have a verified bioguide identifier, so InsiderIndex will not guess which disclosure rows belong here.</p><Link href="/feed">Open full disclosure feed <Icon name="arrow" size={13} /></Link></div>) : null}

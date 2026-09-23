@@ -15,7 +15,7 @@ import { themeArtFor } from "@/lib/frontend/theme-art";
 import { VaultFlow } from "./vault-flow";
 import { TradableSliceNote } from "./tradable-slice-note";
 import { usePrivySolana } from "./providers/privy-provider";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navVaultEnabledFor, navVaultLive, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navSliceLabel, navVaultEnabledFor, navVaultLive, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { markedDollars } from "@/lib/frontend/research-format";
 import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
@@ -90,6 +90,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
     depositsEnabled: initialVault.depositsEnabled,
     publicFundsEnabled: vaultResource.data?.publicFundsEnabled,
   }) : null);
+  const disclosedSlice = vault?.kind === "nav-vault" && navSliceLabel(vault) ? vault.slice : null;
 
   return <div className={styles.page}>
     <div className={styles.breadcrumb}><Link href="/"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />All indexes</Link><span>{index.indexName}</span></div>
@@ -105,7 +106,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
-        {live ? <TradableSliceNote readiness={vault} className={styles.availability} /> : null}
+        {disclosedSlice ? <TradableSliceNote readiness={vault} className={styles.availability} /> : null}
         {ownedFigures ? <p className={styles.ownedPosition}>Your position: <strong>{ownedFigures[0].text}</strong> {ownedFigures[0].label}. {ownedFigures[1].text} {ownedFigures[1].label}. <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
         {activeOperation ? <p className={styles.ownedPosition} data-settlement-status={plainStatusForOperation(activeOperation)}>{plainStatusForOperation(activeOperation)}{activeOperation.phase === "FAILED" ? ". This deposit did not finish the basket. It is not shares." : "."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}
@@ -124,7 +125,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
     </nav>
     <section className={styles.tabContent}>
       {/* Theme constituent mints are the mainnet catalog assets; independent of the vault deployment network. */}
-      {tab === "allocation" ? <IndexAllocation slice={live && vault?.kind === "nav-vault" ? vault.slice : null} items={holdings.map(item => ({ ticker: item.ticker, name: item.name, weightBps: item.weight_bps, mint: item.mint, issuer: item.issuer, tokenSymbol: item.venueSymbol, network: "mainnet-beta" }))} /> : null}
+      {tab === "allocation" ? <IndexAllocation slice={disclosedSlice} items={holdings.map(item => ({ ticker: item.ticker, name: item.name, weightBps: item.weight_bps, mint: item.mint, issuer: item.issuer, tokenSymbol: item.venueSymbol, network: "mainnet-beta" }))} /> : null}
       {tab === "about" ? <div className={styles.aboutGrid}>
         <section><span>HOW IT IS BUILT</span><h3>About this index</h3><p>{content?.portfolioIntro ?? index.whyItExists}</p><p>{index.rule}</p></section>
         <section><span>SOURCE</span><h3>Where the data comes from</h3><p>{index.sourceLine}</p><p>{index.members.length} members.</p></section>
