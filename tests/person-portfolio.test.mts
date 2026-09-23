@@ -88,11 +88,13 @@ test("consumer person portfolios merge published evidence into the complete annu
     publishedIndex: { hash: "a".repeat(64), person_id: "insider-test", constituents: [{ ticker: "AAPL", mint: "mint-aapl", issuer: "xstock", weight_bps: 6000 }, { ticker: "MSFT", mint: "mint-msft", issuer: "xstock", weight_bps: 4000 }], definition: { evidence: [{ holding: { id: "h1" }, token: { mint: "mint-aapl", issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h2" }, token: { mint: "mint-aapl", issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h3" }, token: { mint: "mint-msft", issuer: "xstock", symbol: "MSFTx" } }] } },
   } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
   const rows = researchHoldings(initialData);
-  assert.equal(rows.length, 4);
-  assert.deepEqual(rows.map(row => row.weightPct), [.6, null, .4, null]);
-  assert.deepEqual(rows.map(row => row.tokenSymbol), ["AAPLx", "AAPLx", "MSFTx", null]);
+  assert.equal(rows.length, 3);
+  assert.deepEqual(rows.map(row => row.weightPct), [.6, .4, null]);
+  assert.deepEqual(rows.map(row => row.tokenSymbol), ["AAPLx", "MSFTx", null]);
+  assert.match(rows[0].name, /2 filings/);
   const html = renderToStaticMarkup(withProviders(createElement(ProfileView, { id: "insider-test", initialData })));
-  assert.match(html, /Allocation 4/);
+  assert.match(html, /Allocation 3/);
+  assert.match(html, /2 filings/);
   assert.match(html, /60\.0%/);
   assert.match(html, /40\.0%/);
   assert.doesNotMatch(html, />Stocks \d|>Breakdown</);

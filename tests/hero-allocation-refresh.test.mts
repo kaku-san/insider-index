@@ -2,14 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { register } from 'node:module';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { linkedToken, isSolanaAddress, shortMint } from '../src/lib/frontend/linked-token.ts';
 import { allocationView } from '../src/lib/frontend/allocation-view.ts';
 import { INDEX_CONTENT } from '../src/lib/frontend/index-content.ts';
 import { derivePersonIndex } from '../src/lib/index-vaults/person-index-map.ts';
+import { definitionForDb } from '../src/lib/index-vaults/vault-definition-store.ts';
 import { indexCatalog } from '../src/lib/venues/catalog-parse.ts';
 import { PENDING_POOL_SOURCE } from '../src/lib/index-vaults/pool-evidence.ts';
 register('./support/ui-loader.mjs', import.meta.url);
-const { personIndexAllocation } = await import('../src/components/consumer-index.tsx');
+const { PersonIndexProof, personIndexAllocation } = await import('../src/components/consumer-index.tsx');
 const text=(p:string)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 // Derived from the committed catalog snapshot, FMP person books and thematic feed (not a preview snapshot).
 const snapshot=JSON.parse(text('src/lib/venues/catalog-snapshot.json'));
@@ -51,7 +54,7 @@ test('allocation transport retains addresses and preserves basis points',()=>{
  assert.equal(rows[0].mint,mint);assert.equal(rows[0].weightBps,6000);assert.equal(rows[1].weightBps,4000);
 });
 test('person index allocation keeps source-only rows and supplied token symbols',()=>{
- const index={hash:'hash',person_id:'person',constituents:[{ticker:'AAPL',mint,issuer:'xstock',weight_bps:10000}],definition:{evidence:[{token:{mint,issuer:'xstock',symbol:'AAPLx'}}],excluded:[{holdingId:'fund',ticker:'FUND',name:'Unmapped mutual fund',reason:'no-token'}]}};
+ const index={hash:'hash',person_id:'person',constituents:[{ticker:'AAPL',symbol:'AAPLx',mint,issuer:'xstock',weight_bps:10000}],definition:{excluded:[{holdingId:'fund',ticker:'FUND',name:'Unmapped mutual fund',reason:'no-token'}]}};
  const rows=personIndexAllocation(index,[{ticker:'FUND',name:'Unmapped mutual fund'},{ticker:'BOND',name:'Source-only bond'}],'mainnet-beta');
  assert.equal(rows.length,3);
  assert.equal(rows[0].tokenSymbol,'AAPLx');
@@ -59,4 +62,14 @@ test('person index allocation keeps source-only rows and supplied token symbols'
  assert.ok(Number.isNaN(rows[1].weightBps));
  assert.equal(rows[1].mint,null);
  assert.equal(rows[2].ticker,'BOND');
+ const proof=renderToStaticMarkup(createElement(PersonIndexProof,{items:rows,coverageBps:10000,updated:'Sep 23, 2026'}));
+ assert.match(proof,/3 holdings/);
+ assert.match(proof,/Sep 23, 2026/);
+});
+test('published vault legs retain catalog token symbols',()=>{
+ const book=JSON.parse(text('data/insiderindex-source-buckets/pelositracker-fmp-latest-top20/holdings/nancy-pelosi.json'));
+ const definition=derivePersonIndex(book,catalog,PENDING_POOL_SOURCE);
+ const stored=definitionForDb(definition) as {legs:{mint:string;symbol?:string}[]};
+ assert.equal(stored.legs.length,definition.legs.length);
+ for(const leg of definition.legs)assert.equal(stored.legs.find(row=>row.mint===leg.mint)?.symbol,leg.symbol);
 });

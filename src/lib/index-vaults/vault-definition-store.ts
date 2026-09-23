@@ -23,6 +23,7 @@ export type VaultDefinitionDocument = {
 function legForDb(leg: PersonIndexDefinition["legs"][number]) {
   return {
     ticker: leg.ticker,
+    symbol: leg.symbol,
     provider: leg.provider,
     mint: leg.mint,
     decimals: leg.decimals,
@@ -148,6 +149,7 @@ export type PersistedVaultDefinition = {
 export type PublicVaultLeg = {
   ticker: string;
   name?: string | null;
+  symbol?: string | null;
   provider: "xstock" | "backpack";
   mint: string;
   bookWeightBps: number;

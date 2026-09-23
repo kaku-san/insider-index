@@ -80,6 +80,7 @@ export type ResearchActivity = {
 
 export type PublishedConstituent = {
   ticker: string;
+  symbol?: string | null;
   mint: string;
   issuer: string;
   weight_bps: number;

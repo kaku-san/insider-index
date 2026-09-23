@@ -35,19 +35,27 @@ export function researchHoldings(book:PersonPortfolioResponse):HoldingView[]{
  const index=book.publishedIndex;
  const snapshot=[...(book.snapshots??[])].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0];
  const items=snapshot?.items??[];
- const tickerCounts=new Map<string,number>();
- for(const item of items){if(item.ticker)tickerCounts.set(item.ticker,(tickerCounts.get(item.ticker)??0)+1)}
  const evidenceByHolding=new Map((index?.definition?.evidence??[]).flatMap(evidence=>evidence.holding?.id&&evidence.token?[[evidence.holding.id,evidence.token] as const]:[]));
- const weightedConstituents=new Set<string>();
- return items.map(item=>{
+ const assigned=new Set<string>();
+ const weighted=(index?.constituents??[]).flatMap(constituent=>{
+  const matches=items.filter(item=>{
+   const evidence=evidenceByHolding.get(item.id);
+   const exact=(evidence?.mint&&evidence.mint===constituent.mint)||constituent.payload?.holdingIds?.includes(item.id);
+   return Boolean(exact||(!evidence?.mint&&item.ticker===constituent.ticker));
+  });
+  for(const item of matches)assigned.add(item.id);
+  const first=matches[0];
+  const evidence=matches.map(item=>evidenceByHolding.get(item.id)).find(Boolean);
+  const tokenSymbol=evidence?.symbol??matches.map(item=>item.token?.symbol).find(Boolean)??constituent.symbol??constituent.payload?.token?.symbol??null;
+  const baseName=first?.name??companyNameFor(constituent.ticker,constituent.issuer);
+  return [{key:`published-${constituent.mint}`,ticker:constituent.ticker,name:matches.length>1?`${baseName} · ${matches.length} filings`:baseName,weightPct:constituent.weight_bps/10000,venue:evidence?.issuer??first?.token?.issuer??constituent.issuer??null,mint:constituent.mint,tokenSymbol,disclosedValue:first&&matches.length===1?moneyBand(first.valueRange):null}];
+ });
+ const sourceOnly=items.filter(item=>!assigned.has(item.id)).map(item=>{
   const evidence=evidenceByHolding.get(item.id);
   const sourceMint=evidence?.mint??item.token?.mint;
-  const linkedConstituent=index?.constituents.find(candidate=>(sourceMint&&candidate.mint===sourceMint)||candidate.payload?.holdingIds?.includes(item.id));
-  const constituent=linkedConstituent??(item.ticker&&tickerCounts.get(item.ticker)===1?index?.constituents.find(candidate=>candidate.ticker===item.ticker):undefined);
-  const weightPct=constituent&&!weightedConstituents.has(constituent.mint)?constituent.weight_bps/10000:null;
-  if(constituent&&weightPct!==null)weightedConstituents.add(constituent.mint);
-  return {key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct,venue:evidence?.issuer??item.token?.issuer??linkedConstituent?.issuer??null,mint:sourceMint??linkedConstituent?.mint??null,tokenSymbol:evidence?.symbol??item.token?.symbol??linkedConstituent?.payload?.token?.symbol??null,disclosedValue:moneyBand(item.valueRange)};
+  return {key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:null,venue:evidence?.issuer??item.token?.issuer??null,mint:sourceMint??null,tokenSymbol:evidence?.symbol??item.token?.symbol??null,disclosedValue:moneyBand(item.valueRange)};
  });
+ return [...weighted,...sourceOnly];
 }
 function trackerHoldings(person:TrackerPerson):HoldingView[]{return person.holdings.map((item,index)=>({key:`${item.ticker??item.name??index}`,ticker:item.ticker??"—",name:item.name??"Tracked holding",weightPct:typeof item.percentage==="number"&&item.percentage>0?item.percentage/100:null,venue:"PelosiTracker estimate",mint:null,tokenSymbol:null,disclosedValue:typeof item.value==="number"&&item.value>0?formatUsd(item.value):null}))}
 function trackerActivity(person:TrackerPerson):ActivityView[]{return person.trades.map((item,index)=>({id:`tracker-${person.id}-${index}`,ticker:item.ticker??"—",name:item.ticker??"Tracked trade",side:eventSide(item.type),tradeDate:item.date,filedDate:item.notificationDate??item.date,amount:moneyBand(stockActBandFromMidpoint(item.amount))}))}

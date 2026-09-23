@@ -61,7 +61,7 @@ function sortedHoldings(index: PublishedIndex) {
 export function personIndexAllocation(index: PublishedIndex, unmapped: UnmappedIndexLeg[] = [], network?: string | null): AllocationInput[] {
   const weighted = sortedHoldings(index).map(item => {
     const token = index.definition?.evidence?.find(evidence => evidence.token?.mint === item.mint)?.token ?? item.payload?.token;
-    return { ticker: item.ticker, name: item.issuer, weightBps: item.weight_bps, mint: item.mint, issuer: token?.issuer ?? item.issuer, tokenSymbol: token?.symbol ?? null, network };
+    return { ticker: item.ticker, name: item.issuer, weightBps: item.weight_bps, mint: item.mint, issuer: token?.issuer ?? item.issuer, tokenSymbol: token?.symbol ?? item.symbol ?? null, network };
   });
   const excluded = (index.definition?.excluded ?? []).map(item => ({
     ticker: item.ticker ?? item.name ?? "Unmapped holding",
@@ -77,6 +77,10 @@ export function personIndexAllocation(index: PublishedIndex, unmapped: UnmappedI
     .filter(item => !excludedKeys.has(`${item.ticker}\u0000${item.name ?? ""}`))
     .map(item => ({ ticker: item.ticker, name: item.name, weightBps: Number.NaN, mint: null, issuer: null, tokenSymbol: null, network: null }));
   return [...weighted, ...excluded, ...additional];
+}
+
+export function PersonIndexProof({ items, coverageBps, updated }: { items: AllocationInput[]; coverageBps?: number | null; updated: string }) {
+  return <div className={styles.proof}>{indexProofFor({ holdingCount: items.length, coverageBps })} · updated {updated}</div>;
 }
 
 function alignedPerformanceReturns(performance?: IndexPerformance): [number, number] | null {
@@ -231,7 +235,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         <div className={styles.titleLine}><span>Person index</span><em>{index.period ? `${index.period} annual holdings` : "Annual disclosure"}</em></div>
         <h1>{index.indexName ?? "Person index"}</h1>
         <p>{content?.cardHook ?? "The stocks in this index, the mix, and how it was built — in one place."}</p>
-        <div className={styles.proof}>{indexProofFor({ holdingCount: holdings.length, coverageBps: resource.data?.coverage?.mappableByWeightBps ?? resource.data?.coverageBps })} · updated {updated}</div>
+        <PersonIndexProof items={allocationItems} coverageBps={resource.data?.coverage?.mappableByWeightBps ?? resource.data?.coverageBps} updated={updated} />
         <div className={styles.actions}>
           {live ? <button type="button" className={styles.primary} onClick={() => { setInvestMode("deposit"); setInvestOpen(true); }}>Invest <Icon name="arrow" size={14} /></button> : null}{canCashOut ? <button type="button" className={styles.secondary} onClick={() => { setInvestMode("withdraw"); setInvestOpen(true); }}>Cash out</button> : null}
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
@@ -244,7 +248,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
 
     <IndexPerformanceLine performance={resource.data?.performance} />
     <section className={styles.statStrip}>
-      <div><span>Stocks</span><strong>{index.constituents.length}</strong><small>{index.period ? `${index.period} holdings` : "published mix"}</small></div>
+      <div><span>Holdings</span><strong>{allocationItems.length}</strong><small>{index.period ? `${index.period} displayed book` : "displayed book"}</small></div>
       <div><span>Names in the source</span><strong>{disclosedCount}</strong></div>
       <div><span>Updated</span><strong>{updated}</strong></div>
       <div><span>Status</span><strong>{status}</strong></div>
@@ -263,7 +267,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
         <section className={styles.disclaimer}><span>STATUS</span><h3>{status}</h3><p>{availability}</p></section>
       </div> : null}
     </section>
-    <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${index.constituents.length} stocks`} image={image} />
+    <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${allocationItems.length} holdings`} image={image} />
     <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); if (wallet.solanaAddress) void getIndexPosition(routeId, wallet.solanaAddress).then(value => setPosition(value)).catch(() => {}); }} onPosition={value => { if (value) setPosition(value); }} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} position={position} />
   </div>;
 }

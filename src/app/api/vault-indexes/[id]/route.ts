@@ -32,6 +32,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         },
         constituents: index.legs.map((leg) => ({
           ticker: leg.ticker,
+          symbol: leg.symbol,
           mint: leg.mint,
           issuer: leg.provider,
           weight_bps: leg.targetWeightBps,
