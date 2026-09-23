@@ -35,7 +35,9 @@ solana program deploy programs/bin/mock_swap.so --program-id <mock_swap keypair>
 node --experimental-strip-types scripts/nav-vault-devnet.mts --payer <devnet keypair>
 ```
 
-`--localnet` rehearses the same script against `solana-test-validator`. Receipts: `evidence/vaults/nav-vault-devnet.json`.
+`--localnet` rehearses the same script against `solana-test-validator`.
+
+**Status: devnet NOT run** (faucet rate-limited; decision `devnet-sol` = ship on local proofs). Evidence instead: the LiteSVM suites above, the real-Jupiter CPI test, and a full `solana-test-validator` rehearsal of this script — `evidence/vaults/nav-vault-localnet-rehearsal.json` (localnet signatures, not devnet receipts): deposit 100 → 99.75 shares + 0.25 fee, two keeper buys leaving a 5.50% buffer, 2-share USDC exit (1.999998 USDC), full exit via in-kind fallback (3.486271 USDC + both stocks), every readback equal to the prepare estimate. Devnet receipts would go to `evidence/vaults/nav-vault-devnet.json`.
 
 ## Not done here
 
