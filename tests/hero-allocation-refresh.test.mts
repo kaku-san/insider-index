@@ -8,8 +8,9 @@ import { linkedToken, isSolanaAddress, shortMint } from '../src/lib/frontend/lin
 import { allocationView } from '../src/lib/frontend/allocation-view.ts';
 import { INDEX_CONTENT } from '../src/lib/frontend/index-content.ts';
 import { derivePersonIndex } from '../src/lib/index-vaults/person-index-map.ts';
-import { definitionForDb, enrichPublicVaultLegSymbols, type PublicVaultLeg } from '../src/lib/index-vaults/vault-definition-store.ts';
+import { definitionForDb, enrichPublicVaultLegSymbols, readPublicVaultDefinition, type PublicVaultLeg } from '../src/lib/index-vaults/vault-definition-store.ts';
 import { indexCatalog } from '../src/lib/venues/catalog-parse.ts';
+import { snapshotCatalog } from '../src/lib/venues/solana-catalog.ts';
 import { PENDING_POOL_SOURCE } from '../src/lib/index-vaults/pool-evidence.ts';
 register('./support/ui-loader.mjs', import.meta.url);
 const { PersonIndexProof, personIndexAllocation } = await import('../src/components/consumer-index.tsx');
@@ -81,4 +82,19 @@ test('public vault legs enrich symbols by exact catalog mint only',()=>{
  const rows=enrichPublicVaultLegSymbols([leg('NOT-AAPL',knownMint),leg('AAPL',unknownMint)],exactMintCatalog);
  assert.equal(rows[0].symbol,'AAPLx');
  assert.equal(rows[1].symbol,undefined);
+});
+test('public definition reads enrich from the local catalog without a network request',async()=>{
+ const token=snapshotCatalog().tokens[0];
+ const unknownMint='B'.repeat(44);
+ const row={index_id:'insiderindex-test',kind:'person',person_slug:'test',bioguide_id:'T000001',name:'Test Index',symbol:'IITEST',status:'CREATABLE',network:'mainnet-beta',weight_basis:'annual',deposits_enabled:false,deposit_reason:'closed',coverage:{},provenance:{kind:'person'},legs:[{ticker:'NOT-'+token.ticker,mint:token.mint,provider:token.issuer,bookWeightBps:5000,targetWeightBps:5000,vaultReady:true},{ticker:token.ticker,mint:unknownMint,provider:token.issuer,bookWeightBps:5000,targetWeightBps:5000,vaultReady:true}],unmapped:[],vault_address:null,share_mint:null,updated_at:'2026-09-23T00:00:00Z'};
+ const db={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:row,error:null})})})})};
+ const originalFetch=globalThis.fetch;
+ let fetches=0;
+ globalThis.fetch=(async()=>{fetches++;throw new Error('network disabled')}) as typeof fetch;
+ try{
+  const result=await readPublicVaultDefinition(db as never,row.index_id);
+  assert.equal(fetches,0);
+  assert.equal(result?.legs[0].symbol,token.symbol);
+  assert.equal(result?.legs[1].symbol,undefined);
+ }finally{globalThis.fetch=originalFetch;}
 });

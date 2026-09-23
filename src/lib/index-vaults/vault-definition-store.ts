@@ -8,7 +8,7 @@
  * which hands the persisted vault legs straight to the shared `kakuSanDrift` eligibility math.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loadSolanaCatalog } from "../venues/solana-catalog.ts";
+import { snapshotCatalog } from "../venues/solana-catalog.ts";
 import type { CatalogIndex } from "../venues/catalog-parse.ts";
 import { kakuSanDrift } from "./kaku-san-rebalance.ts";
 import type { PersonIndexDefinition } from "./person-index-map.ts";
@@ -254,7 +254,7 @@ export async function readPublicVaultDefinitions(db: SupabaseClient): Promise<Pu
     .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,network,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
     .order("index_id");
   if (error || !data) throw new Error(`Vault definition directory read failed (${error?.code ?? "storage"})`);
-  const catalog = await loadSolanaCatalog();
+  const catalog = snapshotCatalog();
   return (data as PublicVaultRow[]).map((row) => publicDefinition(row, catalog));
 }
 
@@ -266,7 +266,7 @@ export async function readPublicVaultDefinition(db: SupabaseClient, indexId: str
     .maybeSingle();
   if (error) throw new Error(`Vault definition read failed (${error.code ?? "storage"})`);
   if (!data) return null;
-  return publicDefinition(data as PublicVaultRow, await loadSolanaCatalog());
+  return publicDefinition(data as PublicVaultRow, snapshotCatalog());
 }
 
 export async function readVaultDefinition(db: SupabaseClient, indexId: string): Promise<PersistedVaultDefinition | null> {

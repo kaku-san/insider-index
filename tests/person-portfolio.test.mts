@@ -8,7 +8,7 @@ import { baseIndexName, indexNames } from "../src/lib/fmp/index-name.ts";
 register("./support/ui-loader.mjs", import.meta.url);
 const { FmpPerson } = await import("../src/components/fmp-portfolio.tsx");
 const { PerformancePanel } = await import("../src/components/person-portfolio.tsx");
-const { ProfileView, researchHoldings } = await import("../src/components/profile-view.tsx");
+const { ProfileView, preferredProfileHoldings, researchHoldings } = await import("../src/components/profile-view.tsx");
 const { PrivySolanaProvider } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 type Portfolio = NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>;
@@ -83,23 +83,27 @@ test("empty performance has no fabricated curve; real points remain labelled his
 test("consumer person portfolios merge published evidence into the complete annual book", () => {
   const initialData = {
     person: { id: "insider-test", name: "Example Insider", office: "Officer", image: null },
-    snapshots: [{ id: "s1", year: 2025, items: [{ id: "h1", ticker: "AAPL", name: "Apple Inc.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h2", ticker: "AAPL", name: "Apple Inc. (spouse)", kind: "stock", valueRange: { low: 15000, high: 50000 } }, { id: "h3", ticker: "MSFT", name: "Microsoft Corp.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h4", ticker: null, name: "Unmapped mutual fund", kind: "mutual-fund", valueRange: { low: null, high: 5000 } }] }],
+    snapshots: [{ id: "s1", year: 2025, items: [{ id: "h1", ticker: "AAPL", name: "Apple Inc.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h2", ticker: "AAPL", name: "Apple Inc. (spouse)", kind: "stock", valueRange: { low: 15000, high: 50000 } }, { id: "h3", ticker: "MSFT", name: "Microsoft Corp.", kind: "stock", valueRange: { low: 5000, high: 15000 } }, { id: "h4", ticker: null, name: "Unmapped mutual fund", kind: "mutual-fund", valueRange: { low: null, high: 5000 } }, { id: "h5", ticker: "MSFT", name: "Ticker-only Microsoft row", kind: "stock", valueRange: { low: 1000, high: 5000 } }] }],
     activity: [],
     publishedIndex: { hash: "a".repeat(64), person_id: "insider-test", constituents: [{ ticker: "AAPL", mint: "mint-aapl", issuer: "xstock", weight_bps: 6000 }, { ticker: "MSFT", mint: "mint-msft", issuer: "xstock", weight_bps: 4000 }], definition: { evidence: [{ holding: { id: "h1" }, token: { mint: "mint-aapl", issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h2" }, token: { mint: "mint-aapl", issuer: "xstock", symbol: "AAPLx" } }, { holding: { id: "h3" }, token: { mint: "mint-msft", issuer: "xstock", symbol: "MSFTx" } }] } },
   } as unknown as NonNullable<ComponentProps<typeof ProfileView>["initialData"]>;
   const rows = researchHoldings(initialData);
-  assert.equal(rows.length, 3);
-  assert.deepEqual(rows.map(row => row.weightPct), [.6, .4, null]);
-  assert.deepEqual(rows.map(row => row.tokenSymbol), ["AAPLx", "MSFTx", null]);
+  assert.equal(rows.length, 4);
+  assert.deepEqual(rows.map(row => row.weightPct), [.6, .4, null, null]);
+  assert.deepEqual(rows.map(row => row.tokenSymbol), ["AAPLx", "MSFTx", null, null]);
   assert.match(rows[0].name, /2 filings/);
+  assert.equal(rows.at(-1)?.name, "Ticker-only Microsoft row");
+  assert.equal(rows.at(-1)?.mint, null);
+  assert.equal(preferredProfileHoldings(rows, [{ key: "tracker", ticker: "NVDA", name: "Tracker", weightPct: 1, venue: null, mint: null, tokenSymbol: null }], []), rows);
   const html = renderToStaticMarkup(withProviders(createElement(ProfileView, { id: "insider-test", initialData })));
-  assert.match(html, /Allocation 3/);
+  assert.match(html, /Allocation 4/);
   assert.match(html, /2 filings/);
   assert.match(html, /60\.0%/);
   assert.match(html, /40\.0%/);
   assert.doesNotMatch(html, />Stocks \d|>Breakdown</);
   assert.match(html, />About</);
   assert.match(html, /Unmapped mutual fund/);
+  assert.match(html, /Ticker-only Microsoft row/);
   assert.doesNotMatch(html, /AAPL 75\.0%|MSFT 25\.0%|\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:|publicFundsEnabled|VAULT_RELEASE/);
   assert.doesNotMatch(html, />Invest</);
 });
