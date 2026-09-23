@@ -1,0 +1,102 @@
+[
+  {
+    "id": "idx-theme-mag7-caucus",
+    "title": "Mag7 Caucus",
+    "hook": "The big-tech group chat.",
+    "alt": "An oversized seven keycap wearing sunglasses.",
+    "background": "#e5d7fa",
+    "cover": "/index-assets/themes/idx-theme-mag7-caucus-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-mag7-caucus-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-mag7-caucus-hero.svg"
+  },
+  {
+    "id": "idx-theme-silicon-hill",
+    "title": "Silicon Hill",
+    "hook": "Tech, beyond the usual suspects.",
+    "alt": "A microchip with a miniature green mountain.",
+    "background": "#dfece3",
+    "cover": "/index-assets/themes/idx-theme-silicon-hill-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-silicon-hill-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-silicon-hill-hero.svg"
+  },
+  {
+    "id": "idx-theme-capitol-cluster",
+    "title": "Capitol Cluster",
+    "hook": "Same ticker. Different filings.",
+    "alt": "A violet horseshoe magnet gathering silver spheres.",
+    "background": "#f7e59d",
+    "cover": "/index-assets/themes/idx-theme-capitol-cluster-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-capitol-cluster-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-capitol-cluster-hero.svg"
+  },
+  {
+    "id": "idx-theme-bipartisan-handshake",
+    "title": "Bipartisan Handshake",
+    "hook": "The crossover episode.",
+    "alt": "A handshake between orange and violet sleeves.",
+    "background": "#d6eaf0",
+    "cover": "/index-assets/themes/idx-theme-bipartisan-handshake-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-bipartisan-handshake-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-bipartisan-handshake-hero.svg"
+  },
+  {
+    "id": "idx-theme-fresh-ink",
+    "title": "Fresh Ink",
+    "hook": "Fresh filings. Fewer paper cuts.",
+    "alt": "A bright rubber stamp hovering over a newly marked filing.",
+    "background": "#d9ebc8",
+    "cover": "/index-assets/themes/idx-theme-fresh-ink-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-fresh-ink-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-fresh-ink-hero.svg"
+  },
+  {
+    "id": "idx-theme-beta-caucus",
+    "title": "Beta Caucus",
+    "hook": "The ETF group project.",
+    "alt": "A sleeping piggy bank with an eye mask and a single coin.",
+    "background": "#f1eddf",
+    "cover": "/index-assets/themes/idx-theme-beta-caucus-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-beta-caucus-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-beta-caucus-hero.svg"
+  },
+  {
+    "id": "idx-theme-whips-desk",
+    "title": "Whip’s Desk",
+    "hook": "Your wallet’s supporting cast.",
+    "alt": "A leather wallet holding three oversized bank cards.",
+    "background": "#f5d8c9",
+    "cover": "/index-assets/themes/idx-theme-whips-desk-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-whips-desk-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-whips-desk-hero.svg"
+  },
+  {
+    "id": "idx-theme-capitol-arsenal",
+    "title": "Capitol Arsenal",
+    "hook": "Aerospace. On the record.",
+    "alt": "An oversized folded paper aircraft on a sage background.",
+    "background": "#dbe6dd",
+    "cover": "/index-assets/themes/idx-theme-capitol-arsenal-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-capitol-arsenal-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-capitol-arsenal-hero.svg"
+  },
+  {
+    "id": "idx-theme-dual-lock",
+    "title": "Dual Lock",
+    "hook": "On the list. Back on the buy tape.",
+    "alt": "Two interlocking padlocks in blue and golden yellow.",
+    "background": "#dce6ff",
+    "cover": "/index-assets/themes/idx-theme-dual-lock-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-dual-lock-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-dual-lock-hero.svg"
+  },
+  {
+    "id": "idx-theme-house-heat",
+    "title": "House Heat",
+    "hook": "Déjà vu, but make it tickers.",
+    "alt": "A hot house-shaped tile popping from a blue toaster.",
+    "background": "#f5d1d5",
+    "cover": "/index-assets/themes/idx-theme-house-heat-cover.webp",
+    "thumb": "/index-assets/themes/idx-theme-house-heat-thumb.webp",
+    "svg": "/index-assets/themes/idx-theme-house-heat-hero.svg"
+  }
+]

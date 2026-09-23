@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Public filings, mapped",
   description: "Public congressional financial disclosures mapped into transparent person indexes and research models.",
-  openGraph: { images: [{ url: "/index-assets/home/home-hero-fallback.png", width: 1800, height: 1000, alt: "InsiderIndex public filings, mapped" }] },
-  twitter: { card: "summary_large_image", images: ["/index-assets/home/home-hero-fallback.png"] },
+  openGraph: { images: [{ url: "/index-assets/home/insiderindex-og.png", width: 1200, height: 630, alt: "InsiderIndex public filings, mapped" }] },
+  twitter: { card: "summary_large_image", images: ["/index-assets/home/insiderindex-og.png"] },
 };
 export default async function HomePage() {
   let initialData: PeopleDirectoryResponse | undefined;

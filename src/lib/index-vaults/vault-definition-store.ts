@@ -8,6 +8,8 @@
  * which hands the persisted vault legs straight to the shared `kakuSanDrift` eligibility math.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { snapshotCatalog } from "../venues/solana-catalog.ts";
+import type { CatalogIndex } from "../venues/catalog-parse.ts";
 import { kakuSanDrift } from "./kaku-san-rebalance.ts";
 import type { PersonIndexDefinition } from "./person-index-map.ts";
 import { buildPersonVaultInit, estimateVaultCost, type PersonVaultInit } from "./person-vault-init.ts";
@@ -23,6 +25,7 @@ export type VaultDefinitionDocument = {
 function legForDb(leg: PersonIndexDefinition["legs"][number]) {
   return {
     ticker: leg.ticker,
+    symbol: leg.symbol,
     provider: leg.provider,
     mint: leg.mint,
     decimals: leg.decimals,
@@ -148,6 +151,7 @@ export type PersistedVaultDefinition = {
 export type PublicVaultLeg = {
   ticker: string;
   name?: string | null;
+  symbol?: string | null;
   provider: "xstock" | "backpack";
   mint: string;
   bookWeightBps: number;
@@ -211,7 +215,16 @@ type PublicVaultRow = {
   updated_at: string;
 };
 
-function publicDefinition(row: PublicVaultRow): PublicVaultDefinition {
+export function enrichPublicVaultLegSymbols(
+  legs: readonly PublicVaultLeg[],
+  catalog: Pick<CatalogIndex, "byMint">,
+): PublicVaultLeg[] {
+  return legs.map((leg) => leg.symbol
+    ? leg
+    : { ...leg, symbol: catalog.byMint.get(leg.mint)?.symbol ?? leg.symbol });
+}
+
+function publicDefinition(row: PublicVaultRow, catalog: Pick<CatalogIndex, "byMint">): PublicVaultDefinition {
   return {
     indexId: row.index_id,
     kind: row.kind,
@@ -226,7 +239,7 @@ function publicDefinition(row: PublicVaultRow): PublicVaultDefinition {
     depositReason: row.deposit_reason,
     coverage: row.coverage ?? {},
     provenance: row.provenance ?? {},
-    legs: row.legs ?? [],
+    legs: enrichPublicVaultLegSymbols(row.legs ?? [], catalog),
     unmapped: row.unmapped ?? [],
     vaultAddress: row.vault_address,
     shareMint: row.share_mint,
@@ -241,7 +254,8 @@ export async function readPublicVaultDefinitions(db: SupabaseClient): Promise<Pu
     .select("index_id,kind,person_slug,bioguide_id,name,symbol,status,network,weight_basis,deposits_enabled,deposit_reason,coverage,provenance,legs,unmapped,vault_address,share_mint,updated_at")
     .order("index_id");
   if (error || !data) throw new Error(`Vault definition directory read failed (${error?.code ?? "storage"})`);
-  return (data as PublicVaultRow[]).map(publicDefinition);
+  const catalog = snapshotCatalog();
+  return (data as PublicVaultRow[]).map((row) => publicDefinition(row, catalog));
 }
 
 export async function readPublicVaultDefinition(db: SupabaseClient, indexId: string): Promise<PublicVaultDefinition | null> {
@@ -251,7 +265,8 @@ export async function readPublicVaultDefinition(db: SupabaseClient, indexId: str
     .eq("index_id", indexId)
     .maybeSingle();
   if (error) throw new Error(`Vault definition read failed (${error.code ?? "storage"})`);
-  return data ? publicDefinition(data as PublicVaultRow) : null;
+  if (!data) return null;
+  return publicDefinition(data as PublicVaultRow, snapshotCatalog());
 }
 
 export async function readVaultDefinition(db: SupabaseClient, indexId: string): Promise<PersistedVaultDefinition | null> {

@@ -80,6 +80,7 @@ export type ResearchActivity = {
 
 export type PublishedConstituent = {
   ticker: string;
+  symbol?: string | null;
   mint: string;
   issuer: string;
   weight_bps: number;
@@ -89,6 +90,8 @@ export type PublishedConstituent = {
   vault_ready?: boolean;
   payload?: {
     evidencedMidpoint?: number | null;
+    holdingIds?: string[];
+    token?: { symbol?: string; issuer?: string; mint?: string } | null;
   } | null;
 };
 

@@ -1,0 +1,92 @@
+{
+  "notes": [
+    "SVG paths retain their source geometry. Marks belong to their respective owners.",
+    "Footer is attribution, not a partnership or security endorsement.",
+    "FMP is a plain typographic brand-name label; its official proprietary icon was not available in the supplied pack. No fabricated F icon is used.",
+    "Symmetry was removed after the NAV vault (#87) replaced it for public invest/cash-out."
+  ],
+  "assets": [
+    {
+      "id": "solana",
+      "source": "https://github.com/simple-icons/simple-icons/blob/develop/icons/solana.svg",
+      "license": "Simple Icons CC0; trademark rights remain with owner",
+      "sha": "9b14bf43431e8a47903f38652ea3e635ba953b87"
+    },
+    {
+      "id": "jupiter",
+      "source": "https://github.com/derodero24/react-web3-icons/blob/develop/src/dex/Jupiter.tsx",
+      "license": "MIT source implementation; trademark rights remain with owner"
+    },
+    {
+      "id": "raydium",
+      "source": "https://github.com/derodero24/react-web3-icons/blob/develop/src/dex/Raydium.tsx",
+      "license": "MIT source implementation; trademark rights remain with owner"
+    },
+    {
+      "id": "privy",
+      "source": "https://github.com/derodero24/react-web3-icons/blob/develop/src/devtool/Privy.tsx",
+      "license": "MIT source implementation; trademark rights remain with owner"
+    },
+    {
+      "id": "backpack",
+      "source": "https://github.com/derodero24/react-web3-icons/blob/develop/src/wallet/BackpackWallet.tsx",
+      "license": "MIT source implementation; trademark rights remain with owner"
+    },
+    {
+      "id": "xstocks",
+      "source": "https://github.com/Cryptonomist/stonkwars.fun/blob/main/public/integrations/xstocks.svg",
+      "upstreamClaim": "xStocks media kit white symbol, documented in that repository integrations.ts",
+      "license": "Proprietary brand asset; identification only; no claim of redistribution license",
+      "sha": "073af0de712122b2fb70c3a4816bdfc8a3f14f78"
+    },
+    {
+      "id": "fmp",
+      "source": "https://site.financialmodelingprep.com",
+      "kind": "typographic identification; not an official SVG brand asset"
+    }
+  ],
+  "integrationEvidence": [
+    {
+      "id": "solana",
+      "name": "Solana",
+      "role": "Network",
+      "sourceInRepo": "src/lib/index-vaults/person-index-map.ts: INDEX_NETWORK"
+    },
+    {
+      "id": "raydium",
+      "name": "Raydium",
+      "role": "Pool execution",
+      "sourceInRepo": "src/lib/index-vaults/raydium-pools-mainnet.ts"
+    },
+    {
+      "id": "jupiter",
+      "name": "Jupiter",
+      "role": "Swap routing",
+      "sourceInRepo": "src/lib/jupiter.ts"
+    },
+    {
+      "id": "privy",
+      "name": "Privy",
+      "role": "Wallet connection",
+      "sourceInRepo": "src/components/providers/privy-provider.tsx"
+    },
+    {
+      "id": "xstocks",
+      "name": "xStocks",
+      "role": "Stock tokens",
+      "sourceInRepo": "src/lib/venues/solana-catalog.ts"
+    },
+    {
+      "id": "backpack",
+      "name": "Backpack",
+      "role": "Stock-token catalog",
+      "sourceInRepo": "src/lib/venues/solana-catalog.ts"
+    },
+    {
+      "id": "fmp",
+      "name": "FMP",
+      "role": "Disclosure data",
+      "sourceInRepo": "src/lib/fmp/"
+    }
+  ]
+}

@@ -50,8 +50,10 @@ const mag7Index: PublicVaultDefinition = {
 test("home is one index catalog surface without stacked discovery sections", () => {
   const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" });
   assert.match(html, /They disclose it/);
-  assert.match(html, /Pick the index\. See the book/);
-  assert.match(html, /Built on Solana/);
+  assert.match(html, /Explore indexes/);
+  assert.match(html, /\/index-assets\/home\/editorial-collage\.webp/);
+  assert.equal((html.match(/Built on Solana/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /home-hero-fallback|thematic-grid\.jpg/);
   assert.doesNotMatch(html, /PEOPLE ARE THE INDEX|THE DIRECTORY|THE TAPE|Show more people/);
   assert.doesNotMatch(html, /Capitol Buys|Form-4 CEO|Sign &amp; buy|Basket Buy/);
 });
@@ -79,14 +81,13 @@ test("a live vault shows Live/Invest only when its signing path is open", () => 
   assert.match(html, /Example F Index/);
   assert.match(html, />Research</);
   assert.doesNotMatch(html, /Research only|Deposits closed|publicFundsEnabled|VAULT_RELEASE/);
-  const mag7At = html.indexOf("Mag7 Caucus");
-  const exampleAt = html.indexOf("Example F Index");
-  assert.ok(html.slice(mag7At, mag7At + 2500).includes("Invest"));
-  assert.ok(html.slice(exampleAt, exampleAt + 2500).includes("View"));
-  assert.ok(!html.slice(exampleAt, exampleAt + 2500).includes("Invest"));
+  const row = (name: string) => { const at = html.indexOf(name); return html.slice(at, html.indexOf("</article>", at)); };
+  assert.ok(row("Mag7 Caucus").includes("Invest"));
+  assert.ok(row("Example F Index").includes("View"));
+  assert.ok(!row("Example F Index").includes("Invest"));
 });
 
-test("home highlights the designated people and themes in the featured order", () => {
+test("home lists indexes A–Z by default and keeps the designated featured order as a sort", () => {
   const featured = [
     ["insiderindex-josh-gottheimer", "Josh Gottheimer", "person"],
     ["insiderindex-nancy-pelosi", "Nancy Pelosi", "person"],
@@ -108,9 +109,10 @@ test("home highlights the designated people and themes in the featured order", (
     weightBasis: kind === "person" ? "annual-holding-value-midpoint" : "thematic-multi-member-value",
   }));
   const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, indexes);
-  const offsets = featured.map(([indexId]) => html.indexOf(`/indexes/${indexId}`));
+  const alphabetical = [...featured].sort((a, b) => a[1].localeCompare(b[1]));
+  const offsets = alphabetical.map(([indexId]) => html.indexOf(`/indexes/${indexId}`));
   assert.ok(offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1])));
-  assert.equal((html.match(/>Featured<\/span>/g) ?? []).length, 10);
+  assert.match(html, /<option value="featured">Featured<\/option>/);
 });
 
 test("a failed disclosure tape renders a retryable error instead of an empty tape", () => {

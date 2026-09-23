@@ -9,7 +9,7 @@ import { moneyBand, personContext, shortDate, slugifyPerson, stockActBandFromMid
 import { portraitFor } from "@/lib/fomo/portraits";
 import { useUI } from "./providers/ui-provider";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
-import { AllocationBreakdown } from "./allocation-breakdown";
+import { IndexAllocation } from "./index-allocation";
 import { FilingLink } from "./person-portfolio";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { Icon } from "./social/icon";
@@ -25,30 +25,43 @@ import { formatUsd } from "@/lib/format";
 import styles from "./consumer-person.module.css";
 
 type LegacyProfileData = { profile: FomoProfile; trades: CopySignal[] };
-type HoldingView = { key:string; ticker:string; name:string; weightPct:number|null; venue:string|null; mint:string|null; disclosedValue?:string|null };
+export type HoldingView = { key:string; ticker:string; name:string; weightPct:number|null; venue:string|null; mint:string|null; tokenSymbol:string|null; network:"mainnet-beta"|null; disclosedValue?:string|null; filingCount?:number };
 type ActivityView = { id:string; ticker:string; name:string; side:"buy"|"sell"|"other"; tradeDate:string|null; filedDate:string|null; amount:string; sourceUrl?:string|null; copyHref?:string|null };
 
 
-const fmtWeight=(v:number|null)=>v==null||!Number.isFinite(v)?"—":`${(v*100).toFixed(v*100>=10?0:1)}%`;
 function eventSide(value?:string|null):ActivityView["side"]{if(/purchase|buy/i.test(value??""))return"buy";if(/sale|sell/i.test(value??""))return"sell";return"other"}
 
-function researchHoldings(book:PersonPortfolioResponse):HoldingView[]{
+export function researchHoldings(book:PersonPortfolioResponse):HoldingView[]{
  const index=book.publishedIndex;
  const snapshot=[...(book.snapshots??[])].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0];
  const items=snapshot?.items??[];
- const tickerCounts=new Map<string,number>();
- for(const item of items){if(item.ticker)tickerCounts.set(item.ticker,(tickerCounts.get(item.ticker)??0)+1)}
- const evidenceByHolding=new Map((index?.definition?.evidence??[]).flatMap(evidence=>evidence.holding?.id&&evidence.token?.mint?[[evidence.holding.id,evidence.token.mint] as const]:[]));
- return items.map(item=>{
-  const evidencedMint=evidenceByHolding.get(item.id);
-  const constituent=index?.constituents.find(candidate=>candidate.mint===(evidencedMint??item.token?.mint))??(item.ticker&&tickerCounts.get(item.ticker)===1?index?.constituents.find(candidate=>candidate.ticker===item.ticker):undefined);
-  return {key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:null,venue:constituent?.issuer??item.token?.issuer??null,mint:constituent?.mint??item.token?.mint??null,disclosedValue:moneyBand(item.valueRange)};
+ const evidenceByHolding=new Map((index?.definition?.evidence??[]).flatMap(evidence=>evidence.holding?.id&&evidence.token?[[evidence.holding.id,evidence.token] as const]:[]));
+ const assigned=new Set<string>();
+ const weighted=(index?.constituents??[]).flatMap(constituent=>{
+  const matches=items.filter(item=>{
+   const evidence=evidenceByHolding.get(item.id);
+   const exact=(evidence?.mint&&evidence.mint===constituent.mint)||constituent.payload?.holdingIds?.includes(item.id);
+   return Boolean(exact);
+  });
+  if(!matches.length)return [];
+  for(const item of matches)assigned.add(item.id);
+  const first=matches[0];
+  const evidence=matches.map(item=>evidenceByHolding.get(item.id)).find(Boolean);
+  const tokenSymbol=evidence?.symbol??matches.map(item=>item.token?.symbol).find(Boolean)??constituent.symbol??constituent.payload?.token?.symbol??null;
+  const baseName=first?.name??companyNameFor(constituent.ticker,constituent.issuer);
+  return [{key:`published-${constituent.mint}`,ticker:constituent.ticker,name:matches.length>1?`${baseName} · ${matches.length} filings`:baseName,weightPct:constituent.weight_bps/10000,venue:evidence?.issuer??first?.token?.issuer??constituent.issuer??null,mint:constituent.mint,tokenSymbol,network:"mainnet-beta" as const,disclosedValue:matches.length===1?moneyBand(first.valueRange):null,filingCount:matches.length}];
  });
+ const sourceOnly=items.filter(item=>!assigned.has(item.id)).map(item=>{
+  const evidence=evidenceByHolding.get(item.id);
+  const sourceMint=evidence?.mint??item.token?.mint;
+  return {key:item.id,ticker:item.ticker??item.name??"—",name:item.name??"Disclosed asset",weightPct:null,venue:evidence?.issuer??item.token?.issuer??null,mint:sourceMint??null,tokenSymbol:evidence?.symbol??item.token?.symbol??null,network:sourceMint?"mainnet-beta" as const:null,disclosedValue:moneyBand(item.valueRange)};
+ });
+ return [...weighted,...sourceOnly];
 }
-function researchAllocation(book:PersonPortfolioResponse):HoldingView[]{return [...(book.publishedIndex?.constituents??[])].sort((a,b)=>b.weight_bps-a.weight_bps).map(item=>({key:item.mint,ticker:item.ticker,name:companyNameFor(item.ticker,item.issuer),weightPct:item.weight_bps/10000,venue:item.issuer,mint:item.mint}))}
-function trackerHoldings(person:TrackerPerson):HoldingView[]{return person.holdings.map((item,index)=>({key:`${item.ticker??item.name??index}`,ticker:item.ticker??"—",name:item.name??"Tracked holding",weightPct:typeof item.percentage==="number"&&item.percentage>0?item.percentage/100:null,venue:"PelosiTracker estimate",mint:null,disclosedValue:typeof item.value==="number"&&item.value>0?formatUsd(item.value):null}))}
+function trackerHoldings(person:TrackerPerson):HoldingView[]{return person.holdings.map((item,index)=>({key:`${item.ticker??item.name??index}`,ticker:item.ticker??"—",name:item.name??"Tracked holding",weightPct:typeof item.percentage==="number"&&item.percentage>0?item.percentage/100:null,venue:"PelosiTracker estimate",mint:null,tokenSymbol:null,network:null,disclosedValue:typeof item.value==="number"&&item.value>0?formatUsd(item.value):null}))}
+export function preferredProfileHoldings(researchRows:HoldingView[],trackerRows:HoldingView[],legacyRows:HoldingView[]):HoldingView[]{return researchRows.length?researchRows:(trackerRows.length?trackerRows:legacyRows)}
 function trackerActivity(person:TrackerPerson):ActivityView[]{return person.trades.map((item,index)=>({id:`tracker-${person.id}-${index}`,ticker:item.ticker??"—",name:item.ticker??"Tracked trade",side:eventSide(item.type),tradeDate:item.date,filedDate:item.notificationDate??item.date,amount:moneyBand(stockActBandFromMidpoint(item.amount))}))}
-function legacyHoldings(profile:FomoProfile):HoldingView[]{return [...profile.portfolio].sort((a,b)=>b.weightPct-a.weightPct).map(item=>({key:item.mint??item.ticker,ticker:item.ticker,name:companyNameFor(item.ticker,item.issuerName),weightPct:Number.isFinite(item.weightPct)&&item.weightPct>0?item.weightPct:null,venue:item.venue==="none"?null:item.venue,mint:item.mint,disclosedValue:moneyBand({low:item.valueLow,high:item.valueHigh})}))}
+function legacyHoldings(profile:FomoProfile):HoldingView[]{return [...profile.portfolio].sort((a,b)=>b.weightPct-a.weightPct).map(item=>({key:item.mint??item.ticker,ticker:item.ticker,name:companyNameFor(item.ticker,item.issuerName),weightPct:Number.isFinite(item.weightPct)&&item.weightPct>0?item.weightPct:null,venue:item.venue==="none"?null:item.venue,mint:item.mint,tokenSymbol:item.venueSymbol,network:item.mint?"mainnet-beta" as const:null,disclosedValue:moneyBand({low:item.valueLow,high:item.valueHigh})}))}
 function researchActivity(book:PersonPortfolioResponse):ActivityView[]{return [...(book.activity??[])].sort((a,b)=>(b.transactionDate??b.disclosureDate??"").localeCompare(a.transactionDate??a.disclosureDate??"")).map((item:ResearchActivity)=>({id:item.id,ticker:item.ticker??item.name??"Asset",name:item.name??"Public disclosure",side:eventSide(item.event),tradeDate:item.transactionDate??null,filedDate:item.disclosureDate??null,amount:moneyBand(item.amount),sourceUrl:item.sourceUrl}))}
 function legacyActivity(trades:CopySignal[]):ActivityView[]{return [...trades].sort((a,b)=>b.transactionDate.localeCompare(a.transactionDate)).map(item=>({id:item.id,ticker:item.ticker,name:item.issuerName,side:item.side,tradeDate:item.transactionDate,filedDate:item.filedAt,amount:moneyBand({low:item.amountLow,high:item.amountHigh}),copyHref:item.tradeEligible?`/trade/${encodeURIComponent(item.id)}?copy=1`:null}))}
 
@@ -102,7 +115,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const ui=useUI();
  const wallet=usePrivySolana();
  const vaultDir=useResource<{indexes:PublicVaultDefinition[];publicFundsEnabled:boolean}>("/api/vault-indexes");
- const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"stocks"|"breakdown"|"moves"|"about">("stocks");
+ const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"allocation"|"moves"|"about">("allocation");
  const[investOpen,setInvestOpen]=useState(false),[investMode,setInvestMode]=useState<"deposit"|"withdraw">("deposit");
  const[vault,setVault]=useState<VaultReadiness|null>(null);
  const[vaultLoaded,setVaultLoaded]=useState(false);
@@ -120,11 +133,8 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  if(!trackerPerson&&!researchBook&&!legacyProfile)return <div className={styles.emptyPage}><strong>Portfolio not found.</strong><Link href="/">Back to Explore</Link></div>;
  const person=researchBook?.person;const name=trackerPerson?.name??person?.name??legacyProfile!.name;const image=trackerPerson?.image??person?.image??legacyProfile?.imageUrl??portraitFor(slugifyPerson(name));const context=trackerPerson?[trackerPerson.title,trackerPerson.state].filter(Boolean).join(" · ")||"Public disclosure record":person?personContext(person):legacyProfile!.title;const indexName=researchBook?.indexName||researchBook?.publishedIndex?.indexName||legacyProfile?.index?.name||`${name} portfolio`;
  const trackerBook=trackerPerson?trackerHoldings(trackerPerson):[];
- const indexStocks=researchBook?.publishedIndex?.constituents?.length?researchAllocation(researchBook):[];
- const holdings=trackerBook.length?trackerBook:(indexStocks.length?indexStocks:(legacyProfile?.portfolio?.length?legacyHoldings(legacyProfile):researchBook?researchHoldings(researchBook):[]));
- const allocation=trackerBook.filter(item=>item.weightPct!=null);
- const fmpAllocation=researchBook?.publishedIndex?.constituents?.length?researchAllocation(researchBook):legacyProfile?holdings.filter(item=>item.weightPct!=null):[];
- const overviewHoldings=allocation.length?allocation:fmpAllocation.length?fmpAllocation:holdings;
+ const researchRows=researchBook?researchHoldings(researchBook):[];
+ const holdings=preferredProfileHoldings(researchRows,trackerBook,legacyProfile?.portfolio?.length?legacyHoldings(legacyProfile):[]);
  const trackerMoves=trackerPerson?trackerActivity(trackerPerson):[];
  const activity=trackerMoves.length?trackerMoves:(researchBook?.activity?.length?researchActivity(researchBook):legacyActivity(legacy.data?.trades??[]));const snapshot=researchBook?[...researchBook.snapshots].sort((a,b)=>(b.referenceDate??"").localeCompare(a.referenceDate??""))[0]:null;const fullItems=snapshot?.items??[];const mappedCount=researchBook?.publishedIndex?.constituents.length??holdings.filter(x=>x.mint).length;const following=ui.deviceFollows.includes(id);const latestFiling=trackerPerson?.asOf??snapshot?.filingDate??snapshot?.referenceDate??activity[0]?.filedDate??null;
  const trackerPoints=trackerPerson?.performance.filter(point=>point.date&&typeof point.value==="number").map(point=>({label:point.date!,equity:point.value!}))??[];
@@ -148,15 +158,11 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
      <div className={styles.heroChart}><PerformanceGraphic profile={legacyProfile} activity={activity} series={trackerPoints} caption={trackerPerson?"PelosiTracker snapshot as of 2026-09-15 · not a live brokerage account":undefined}/></div>
    </section>
 
-   <div className={styles.tabs} role="tablist">{([['stocks',`Stocks ${holdings.length}`],['breakdown','Breakdown'],['moves',`Moves ${activity.length}`],['about','About']] as const).map(([key,label])=><button key={key} className={tab===key?styles.activeTab:""} onClick={()=>setTab(key)}>{label}</button>)}</div>
+   <div className={styles.tabs} role="tablist">{([['allocation',`Allocation ${holdings.length}`],['moves',`Moves ${activity.length}`],['about','About']] as const).map(([key,label])=><button key={key} className={tab===key?styles.activeTab:""} onClick={()=>setTab(key)}>{label}</button>)}</div>
 
-   {tab==="breakdown"?<section className={styles.overviewGrid}>
-     <div className={styles.allocationPanel}>{allocation.length?<AllocationBreakdown title="Index breakdown" subtitle="Weight by stock" items={allocation.map(h=>({ticker:h.ticker,name:h.name,weight:h.weightPct!}))}/>:null}<div className={styles.compactPanel}><header><div><h2>Top stocks</h2><p>{trackerPerson?"Largest names in the shown book.":allocation.length?"Largest published weights first.":"Latest disclosed names."}</p></div><button onClick={()=>setTab("stocks")}>See all</button></header>{overviewHoldings.length?<div className={styles.compactHoldings}>{overviewHoldings.slice(0,7).map((item)=><div className={styles.compactHolding} key={item.key}><StockIcon ticker={item.ticker}/><div><strong>{item.ticker}</strong><small>{item.name}</small></div><b className={styles.holdingPct}>{fmtWeight(item.weightPct)}</b></div>)}</div>:<div className={styles.emptyBlock}><strong>No stocks published.</strong></div>}</div></div>
-     <div className={styles.compactPanel}><header><div><h2>Recent moves</h2><p>Public filings, not live trades.</p></div><button onClick={()=>setTab("moves")}>See all</button></header>{activity.length?<div className={styles.compactMoves}>{activity.slice(0,5).map(item=><div className={styles.compactMove} key={item.id}><StockIcon ticker={item.ticker} size="sm"/><span className={`${styles.moveSide} ${styles[item.side]}`}>{item.side==="buy"?"BUY":item.side==="sell"?"SELL":"FILE"}</span><div><strong>{item.ticker}</strong><small>{shortDate(item.tradeDate)} → filed {shortDate(item.filedDate)}</small></div><b>{item.amount}</b></div>)}</div>:<div className={styles.emptyBlock}><strong>No recent activity saved.</strong></div>}</div>
-     <div className={styles.compactTrust}><Icon name="shield" size={18}/><div><strong>Public filings, not a live brokerage account.</strong><span>Source rows stay visible even when a name has no stock token.</span></div><button onClick={()=>setTab("about")}>How it works</button></div>
+   {tab==="allocation"?<section className={styles.tabSection}>
+     <IndexAllocation basis={researchRows.length ? "Published target weights; unweighted source holdings remain listed" : trackerPerson ? "Weights in the shown source book" : "Published target weights; unweighted source holdings remain listed"} items={holdings.map(item=>({ticker:item.ticker,name:item.name,weightBps:item.weightPct==null?Number.NaN:item.weightPct*10000,mint:item.mint,issuer:item.venue,tokenSymbol:item.tokenSymbol,network:item.network,detail:item.filingCount&&item.filingCount>1?`${item.filingCount} filings`:null}))}/>
    </section>:null}
-
-   {tab==="stocks"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Stocks in the index</h2><p>{trackerPerson?"Shown book as of 2026-09-15. Not a live brokerage account.":"Every disclosed name stays visible."}</p></div></div>{holdings.length?<div className={styles.holdingsGrid}>{holdings.map((item,index)=><article className={styles.holdingCard} key={item.key}><span className={styles.rank}>{String(index+1).padStart(2,"0")}</span><StockIcon ticker={item.ticker}/><div className={styles.holdingName}><strong>{item.ticker}</strong><span>{item.name}</span></div><div className={styles.holdingWeight}><strong>{fmtWeight(item.weightPct)}</strong><span>{item.venue??"Filing only"}</span></div><div className={styles.weightTrack}><i style={{width:item.weightPct!=null?`${Math.max(3,item.weightPct*100)}%`:"0%"}}/></div></article>)}</div>:<div className={styles.emptyBlock}><strong>No stocks are published.</strong></div>}</section>:null}
 
    {tab==="moves"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Public moves</h2><p>Information only. These prints do not change the published mix.</p></div><Link href="/feed">Open Feed</Link></div>{!activity.length?<div className={styles.emptyBlock}><strong>No activity is saved.</strong></div>:<div className={styles.movesList}>{activity.map((item,index)=><article className={styles.moveRow} key={item.id}><span className={styles.moveIndex}>{String(index+1).padStart(2,"0")}</span><StockIcon ticker={item.ticker} size="sm"/><span className={`${styles.moveSide} ${styles[item.side]}`}>{item.side==="buy"?"BOUGHT":item.side==="sell"?"SOLD":"FILED"}</span><div className={styles.moveAsset}><strong>{item.ticker}</strong><span>{item.name}</span></div><div className={styles.moveDates}><span><b>Trade</b>{shortDate(item.tradeDate)}</span><span><b>Filed</b>{shortDate(item.filedDate)}</span></div><div className={styles.moveAmount}><strong>{item.amount}</strong>{item.copyHref?<Link href={item.copyHref}>Copy this print</Link>:item.sourceUrl?<FilingLink url={item.sourceUrl}/>:null}</div></article>)}</div>}</section>:null}
 
