@@ -5,9 +5,9 @@ import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests
 
 const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
-export type NavDependencies = { config: () => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number };
+export type NavDependencies = { config: (host?: string | null) => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number };
 const defaults: NavDependencies = {
-  config: () => navVaultConfig(),
+  config: host => navVaultConfig(process.env, host),
   connection: config => new Connection(config.rpcUrl, { commitment: "confirmed" }),
 };
 
@@ -28,16 +28,16 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
   return body as Record<string, unknown>;
 }
 
-function served(indexId: string, deps: NavDependencies) {
-  const config = deps.config();
+function served(indexId: string, deps: NavDependencies, request?: Request) {
+  const config = deps.config(request?.headers.get("x-forwarded-host") ?? request?.headers.get("host"));
   if (!navVaultServes(indexId, config)) throw Object.assign(new Error("This index is not on the NAV vault."), { status: 404 });
   return { config, connection: deps.connection(config) };
 }
 
 /** VaultReadiness shape consumed by VaultFlow. Deposits need a fresh mark; exits are always open. */
-export async function handleNavReadiness(indexId: string, deps: NavDependencies = defaults): Promise<Response> {
+export async function handleNavReadiness(indexId: string, deps: NavDependencies = defaults, request?: Request): Promise<Response> {
   try {
-    const { config, connection } = served(indexId, deps);
+    const { config, connection } = served(indexId, deps, request);
     const snapshot = await readNavVault(connection, indexId, config.programId, deps.now?.());
     if (!snapshot) return plain(new Error("This index does not have a NAV vault yet."), 404);
     const { state } = snapshot;
@@ -66,7 +66,7 @@ export async function handleNavPosition(request: Request, indexId: string, deps:
   try {
     const wallet = new URL(request.url).searchParams.get("wallet") ?? "";
     const owner = new PublicKey(wallet);
-    const { config, connection } = served(indexId, deps);
+    const { config, connection } = served(indexId, deps, request);
     const snapshot = await readNavVault(connection, indexId, config.programId, deps.now?.());
     if (!snapshot) return plain(new Error("This index does not have a NAV vault yet."), 404);
     const shares = tokenAmount((await connection.getAccountInfo(shareAta(owner, snapshot.state.shareMint), "confirmed"))?.data);
@@ -93,7 +93,7 @@ export async function handleNavDepositPrepare(request: Request, indexId: string,
   try {
     const body = await readBody(request);
     if (typeof body.owner !== "string" || typeof body.amountRaw !== "string") throw new Error("Wallet owner and amountRaw are required.");
-    const { config, connection } = served(indexId, deps);
+    const { config, connection } = served(indexId, deps, request);
     const step = await prepareNavDeposit({ connection, network: config.network, indexId, owner: body.owner, amountRaw: body.amountRaw, programId: config.programId, nowSeconds: deps.now?.() });
     return Response.json(step, { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
@@ -103,7 +103,7 @@ export async function handleNavWithdrawPrepare(request: Request, indexId: string
   try {
     const body = await readBody(request);
     if (typeof body.owner !== "string" || typeof body.shareAmountRaw !== "string") throw new Error("Wallet owner and shareAmountRaw are required.");
-    const { config, connection } = served(indexId, deps);
+    const { config, connection } = served(indexId, deps, request);
     const step = await prepareNavWithdraw({ connection, network: config.network, indexId, owner: body.owner, shareAmountRaw: body.shareAmountRaw, inKind: body.requestedExitMode === "in-kind", programId: config.programId, nowSeconds: deps.now?.() });
     return Response.json(step, { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
@@ -113,7 +113,7 @@ export async function handleNavClaimPrepare(request: Request, indexId: string, d
   try {
     const body = await readBody(request);
     if (typeof body.owner !== "string" || typeof body.request !== "string") throw new Error("Wallet owner and request are required.");
-    const { config, connection } = served(indexId, deps);
+    const { config, connection } = served(indexId, deps, request);
     return Response.json(await prepareNavClaim({ connection, network: config.network, indexId, owner: body.owner, request: body.request, programId: config.programId }), { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
 }

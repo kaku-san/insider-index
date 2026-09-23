@@ -20,12 +20,16 @@ export function parseIndexList(value: string | undefined): string[] {
  * active in production (VERCEL_ENV=production) or on the self-hosted site (no VERCEL_ENV). */
 export const NAV_VAULT_PREVIEW_BRANCH = "fm/stocklana-nav-vault-f1";
 export const NAV_VAULT_PREVIEW_INDEXES = ["idx-theme-mag7-caucus"];
-export function navVaultBranchPreview(env: Record<string, string | undefined>): boolean {
-  return env.VERCEL_ENV === "preview" && (env.VERCEL_GIT_COMMIT_REF === NAV_VAULT_PREVIEW_BRANCH || Boolean(env.VERCEL_BRANCH_URL?.includes("nav-vault")));
+export function navVaultBranchPreview(env: Record<string, string | undefined>, host?: string | null): boolean {
+  if (env.VERCEL_ENV === "production") return false;
+  if (env.VERCEL_ENV === "preview" && (env.VERCEL_GIT_COMMIT_REF === NAV_VAULT_PREVIEW_BRANCH || Boolean(env.VERCEL_BRANCH_URL?.includes("nav-vault")))) return true;
+  // Fallback when Vercel system env vars are not exposed: the branch alias host of this preview.
+  const name = (host ?? "").split(":")[0]!.toLowerCase();
+  return name.endsWith(".vercel.app") && name.includes("nav-vault");
 }
 
-export function navVaultConfig(env: Record<string, string | undefined> = process.env): NavVaultConfig {
-  const preview = !env.STOCKLANA_NAV_VAULT_INDEXES?.trim() && navVaultBranchPreview(env);
+export function navVaultConfig(env: Record<string, string | undefined> = process.env, host?: string | null): NavVaultConfig {
+  const preview = !env.STOCKLANA_NAV_VAULT_INDEXES?.trim() && navVaultBranchPreview(env, host);
   const indexes = preview ? NAV_VAULT_PREVIEW_INDEXES : parseIndexList(env.STOCKLANA_NAV_VAULT_INDEXES);
   const network = preview ? "mainnet-beta" : env.STOCKLANA_NAV_VAULT_NETWORK?.trim() || "devnet";
   // Mainnet must be chosen explicitly; anything else is refused rather than guessed.

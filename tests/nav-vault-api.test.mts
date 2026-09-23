@@ -33,6 +33,9 @@ test("NAV vault flag is off by default; mainnet only when chosen explicitly", ()
   assert.equal(preview.programId.toBase58(), "HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB");
   assert.equal(navVaultConfig({ VERCEL_ENV: "production", VERCEL_GIT_COMMIT_REF: "fm/stocklana-nav-vault-f1" }).enabled, false);
   assert.equal(navVaultConfig({ VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "main" }).enabled, false);
+  assert.equal(navVaultConfig({}, "stocklana-git-fm-stocklana-nav-vault-f1-kakusans-projects.vercel.app").network, "mainnet-beta", "branch alias host fallback");
+  assert.equal(navVaultConfig({ VERCEL_ENV: "production" }, "stocklana-git-fm-stocklana-nav-vault-f1-kakusans-projects.vercel.app").enabled, false);
+  assert.equal(navVaultConfig({}, "insiderindex.xyz").enabled, false);
 });
 
 test("readiness, position and both prepare routes return one-transaction steps for a flagged index", async () => {
