@@ -66,16 +66,34 @@ test("readiness, position and both prepare routes return one-transaction steps f
   assert.equal((await claimFor.json()).sharesRaw, "0");
 });
 
-test("unflagged index 404s; stale marks close deposits but keep cash out open", async () => {
+test("unflagged index 404s; stale marks keep Invest visible (client retries) but the prepare itself refuses until the next mark", async () => {
   const { vm, s, deps } = setup();
   assert.equal((await handleNavReadiness("idx-other", deps)).status, 404);
   vm.advance(301);
   const readiness = await (await handleNavReadiness(s.indexId, deps)).json();
-  assert.equal(readiness.depositEnabled, false);
+  assert.equal(readiness.depositEnabled, true);
+  assert.equal(readiness.phase, "PRICES_STALE");
   assert.equal(readiness.redeemEnabled, true);
   const refused = await handleNavDepositPrepare(post({ owner: s.alice.publicKey.toBase58(), amountRaw: "250000000" }), s.indexId, deps);
   assert.equal(refused.status, 400);
   assert.match((await refused.json()).error, /stale/);
+});
+
+test("front-end stale-price auto-retry waits for the next mark and re-prepares without surfacing an error", async () => {
+  const { prepareWithStaleRetry, isNavStalePriceError } = await import("../src/lib/frontend/nav-vault-retry.ts");
+  assert.equal(isNavStalePriceError(new Error("Vault prices are stale. The keeper must refresh them before deposits and USDC exits.")), true);
+  assert.equal(isNavStalePriceError(new Error("Vault prices were refreshed this slot. Try again in a moment.")), true);
+  assert.equal(isNavStalePriceError(new Error("This wallet does not have enough USDC.")), false);
+  let calls = 0;
+  const slept: number[] = [];
+  const value = await prepareWithStaleRetry(async () => { calls += 1; if (calls < 3) throw new Error("Vault prices are stale."); return "fresh"; }, { sleep: async ms => { slept.push(ms); } });
+  assert.equal(value, "fresh");
+  assert.equal(calls, 3);
+  assert.deepEqual(slept, [5000, 5000]);
+  await assert.rejects(prepareWithStaleRetry(async () => { throw new Error("This wallet does not have enough USDC."); }, { sleep: async () => {} }), /enough USDC/);
+  let stopped = 0;
+  await assert.rejects(prepareWithStaleRetry(async () => { stopped += 1; throw new Error("Vault prices are stale."); }, { sleep: async () => {}, alive: () => stopped < 2 }), /stale/);
+  assert.equal(stopped, 2, "stops when the sheet's quote generation changes");
 });
 
 test("FE: the flag routes VaultFlow to NAV endpoints and the wallet-side validator accepts the one-transaction step", async () => {

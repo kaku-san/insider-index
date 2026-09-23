@@ -19,6 +19,7 @@ import {
 } from "@/lib/frontend/settlement-progress";
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_CHECK, CASH_OUT_STILL_NOTE, cashOutDeliveryOf, humanPrepareMessage, MAG7_FILL_CHECK, prepareCheckControl, prepareRequestKey, withPrepareTimeout, type PrepareCheckStatus } from "@/lib/frontend/position-basket";
 import { CashOutDeliveryStatus } from "./position-book";
+import { prepareWithStaleRetry } from "@/lib/frontend/nav-vault-retry";
 import styles from "./vault-flow.module.css";
 
 export { sharesIncreasedAfterSignature };
@@ -201,10 +202,12 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     setQuoteStatus("checking");
     setError(null);
     const timer = setTimeout(() => {
-      const work = mode === "deposit"
+      const once = () => withPrepareTimeout(mode === "deposit"
         ? prepareDeposit(indexId, { owner, amountRaw: raw, idempotencyKey: crypto.randomUUID() }, preparedNetwork)
-        : prepareWithdrawal(indexId, { owner, shareAmountRaw: raw, requestedExitMode: "verified-native-usdc", idempotencyKey: crypto.randomUUID() }, preparedNetwork);
-      void withPrepareTimeout(work).then(step => {
+        : prepareWithdrawal(indexId, { owner, shareAmountRaw: raw, requestedExitMode: "verified-native-usdc", idempotencyKey: crypto.randomUUID() }, preparedNetwork));
+      // NAV vault: a stale-mark refusal waits for the keeper's next price post and re-prepares, silently.
+      const work = isNav ? prepareWithStaleRetry(once, { alive: () => quoteGeneration.current === generation }) : once();
+      void work.then(step => {
         if (quoteGeneration.current !== generation) return;
         if (step.requires === "user-signature" && step.transactions.length) { setPrepared({ step, requestKey }); setQuoteStatus("ready"); return; }
         setPrepared(null);
@@ -218,7 +221,7 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
       });
     }, 400);
     return () => { clearTimeout(timer); quoteGeneration.current += 1; };
-  }, [open, screen, amount, mode, wallet.authenticated, wallet.solanaAddress, network, canPrepare, activeIntent, indexId, insufficientUsdc, position, readiness]);
+  }, [open, screen, amount, mode, wallet.authenticated, wallet.solanaAddress, network, canPrepare, activeIntent, indexId, insufficientUsdc, position, readiness, isNav]);
   /* eslint-enable react-hooks/set-state-in-effect */
   function currentRequestKey() {
     if (!wallet.solanaAddress || !network) return null;
@@ -246,13 +249,23 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     }
     setBusy(true); setError(null);
     try {
+      // NAV vault: re-prepare right before the wallet opens so the signed transaction carries fresh marks.
+      let step = prepared.step;
+      if (isNav) {
+        const raw = mode === "deposit" ? usdcRaw(amount) : decimalToRaw(amount, withdrawalDecimals(readiness, position), "share");
+        const owner = wallet.solanaAddress;
+        step = await prepareWithStaleRetry(() => withPrepareTimeout(mode === "deposit"
+          ? prepareDeposit(indexId, { owner, amountRaw: raw, idempotencyKey: crypto.randomUUID() }, prepared.step.network)
+          : prepareWithdrawal(indexId, { owner, shareAmountRaw: raw, requestedExitMode: "verified-native-usdc", idempotencyKey: crypto.randomUUID() }, prepared.step.network)));
+        if (step.requires !== "user-signature" || !step.transactions.length) throw new Error(mode === "deposit" ? "Mag7 could not be checked. Try that amount again." : "Cash out could not be checked. Try again.");
+      }
       setSharesBeforeSignature(position?.sharesRaw ?? "0");
       sawWithdrawRef.current = false;
       setSawWithdrawPending(false);
       const signatures: string[] = [];
-      for (const transaction of prepared.step.transactions) {
-        const signature = await wallet.signAndSendTransaction(transaction.messageBase64, prepared.step.network);
-        await confirmSignature(signature, prepared.step.network);
+      for (const transaction of step.transactions) {
+        const signature = await wallet.signAndSendTransaction(transaction.messageBase64, step.network);
+        await confirmSignature(signature, step.network);
         signatures.push(signature);
       }
       if (mode === "deposit" && prepared.step.basket?.stage === "acquire") {

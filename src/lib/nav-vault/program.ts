@@ -39,6 +39,7 @@ export const IX = {
   setLookupTable: disc("global", "set_lookup_table"),
   setMaxDeposit: disc("global", "set_max_deposit"),
   setPaused: disc("global", "set_paused"),
+  setMaxPriceAge: disc("global", "set_max_price_age"),
   adminSetPrices: disc("global", "admin_set_prices"),
   updatePrices: disc("global", "update_prices"),
   deposit: disc("global", "deposit"),
@@ -285,6 +286,9 @@ export function setMaxDepositIx(vault: Pick<NavVaultState, "address">, admin: Pu
 }
 export function setLookupTableIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, lookupTable: PublicKey, programId = defaultProgramId()) {
   return adminIx(programId, vault, admin, new Writer().key(lookupTable).done(IX.setLookupTable));
+}
+export function setMaxPriceAgeIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, maxPriceAgeSecs: number, programId = defaultProgramId()) {
+  return adminIx(programId, vault, admin, new Writer().u32(maxPriceAgeSecs).done(IX.setMaxPriceAge));
 }
 export function setPausedIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, paused: boolean, programId = defaultProgramId()) {
   return adminIx(programId, vault, admin, new Writer().bool(paused).done(IX.setPaused));

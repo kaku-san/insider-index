@@ -5,7 +5,7 @@ import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   CLAIM_LEGS_PER_TX, JUPITER_V6_PROGRAM_ID, USDC_LEG, adminRedeemInKindIx, adminSetPricesIx, ata, claimInKindIx, computeNav, crossRequestLegIx,
   decodeRequest, depositIx, fulfillSwapIx, keeperSwapIx, mockPoolPda, mockSetPriceIx, mockSwapIx, previewDeposit, previewWithdraw, requestPda,
-  requestWithdrawIx, setMaxDepositIx, setPausedIx, settleRequestIx, shareAta, updatePricesIx, withdrawIx, type NavVaultState,
+  requestWithdrawIx, setMaxDepositIx, setMaxPriceAgeIx, setPausedIx, settleRequestIx, shareAta, updatePricesIx, withdrawIx, type NavVaultState,
 } from "../src/lib/nav-vault/program.ts";
 import { prepareNavDeposit, prepareNavWithdraw, readNavRequests } from "../src/lib/nav-vault/prepare.ts";
 import { keeperTick, markFromQuote, mockVenue, planCycle, planRebalance } from "../src/lib/nav-vault/keeper.ts";
@@ -414,3 +414,17 @@ test("planRebalance buys toward weights down to the 5% buffer and sells the most
 });
 
 export type { NavVaultState };
+
+test("admin can raise the max mark age (e.g. 60s → 120s); nobody else can", () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  const v = vm.vault(s.indexId);
+  failsWith(send(vm, s, [setMaxPriceAgeIx(v, s.keeper.publicKey, 120)], s.keeper), "ConstraintHasOne");
+  failsWith(send(vm, s, [setMaxPriceAgeIx(v, s.admin.publicKey, 0)], s.admin), "InvalidConfig");
+  vm.advance(301);
+  failsWith(deposit(vm, s, s.alice, 10_000_000n), "StalePrices");
+  vm.must(send(vm, s, [setMaxPriceAgeIx(v, s.admin.publicKey, 600)], s.admin), "admin raises max age");
+  assert.equal(vm.vault(s.indexId).maxPriceAgeSecs, 600);
+  vm.must(deposit(vm, s, s.alice, 10_000_000n), "deposit with a 301 s old mark under the raised age");
+});

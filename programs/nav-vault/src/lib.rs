@@ -139,6 +139,13 @@ pub mod nav_vault {
         Ok(())
     }
 
+    /// Admin-only: maximum age of keeper marks accepted by deposits, instant withdraws and keeper swaps.
+    pub fn set_max_price_age(ctx: Context<AdminOnly>, max_price_age_secs: u32) -> Result<()> {
+        require!(max_price_age_secs > 0 && max_price_age_secs <= 3_600, VaultError::InvalidConfig);
+        ctx.accounts.vault.max_price_age_secs = max_price_age_secs;
+        Ok(())
+    }
+
     /// Client convenience only: the table is never trusted on chain (every account is re-checked).
     pub fn set_lookup_table(ctx: Context<AdminOnly>, lookup_table: Pubkey) -> Result<()> {
         ctx.accounts.vault.lookup_table = lookup_table;
