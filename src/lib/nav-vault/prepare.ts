@@ -58,11 +58,11 @@ export async function readNavVault(connection: NavConnection, indexId: string, p
   return { state, usdcBalance, legBalances, supply, nav, priceAgeSecs, pricesFresh };
 }
 
-/** Open withdraw requests for a vault (optionally one owner). */
-export async function readNavRequests(connection: NavConnection, vault: PublicKey, owner?: PublicKey, programId = defaultProgramId()): Promise<NavRequest[]> {
+/** Open withdraw requests for a vault (null = every vault of the program), optionally one owner. */
+export async function readNavRequests(connection: NavConnection, vault: PublicKey | null, owner?: PublicKey, programId = defaultProgramId()): Promise<NavRequest[]> {
   const filters = [
     { memcmp: { offset: 0, bytes: bs58.encode(REQUEST_ACCOUNT_DISCRIMINATOR) } },
-    { memcmp: { offset: 8, bytes: vault.toBase58() } },
+    ...(vault ? [{ memcmp: { offset: 8, bytes: vault.toBase58() } }] : []),
     ...(owner ? [{ memcmp: { offset: 40, bytes: owner.toBase58() } }] : []),
   ];
   let rows: { pubkey: PublicKey; account: { data: Buffer | Uint8Array } }[] | null = null;

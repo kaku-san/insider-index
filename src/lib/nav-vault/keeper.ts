@@ -274,6 +274,10 @@ export async function keeperTick(input: {
   priorityMicroLamports?: number;
   /** Smallest rebalance trade in USDC raw units (default $1). */
   minTradeUsdcRaw?: bigint;
+  /** Multi-vault cycles: prices were already posted for this vault in a batched transaction. */
+  pricesPosted?: boolean;
+  /** Multi-vault cycles: requests read once for the whole program (null = unreadable this cycle). */
+  requestsOverride?: NavRequest[] | null;
 }): Promise<KeeperTickResult> {
   const programId = input.programId ?? defaultProgramId();
   const now = input.nowSeconds ?? (() => Math.floor(Date.now() / 1000));
@@ -294,7 +298,12 @@ export async function keeperTick(input: {
   // Request discovery uses getProgramAccounts; an overloaded RPC index must not stop marks or rebalancing.
   let requests: NavRequest[] = [];
   let requestsReadable = true;
-  try { requests = await readNavRequests(input.connection, state.address, undefined, programId); } catch { requestsReadable = false; }
+  if (input.requestsOverride !== undefined) {
+    requestsReadable = input.requestsOverride !== null;
+    requests = (input.requestsOverride ?? []).filter(request => request.vault.equals(state.address));
+  } else {
+    try { requests = await readNavRequests(input.connection, state.address, undefined, programId); } catch { requestsReadable = false; }
+  }
   const result: KeeperTickResult = {
     indexId: input.indexId, dryRun: !input.execute,
     marks: marks.map((mark, i) => ({ mint: state.legs[i]!.mint.toBase58(), price: mark.price.toString(), venue: mark.venue })),
@@ -315,9 +324,11 @@ export async function keeperTick(input: {
   ];
   if (!input.execute) return result;
 
-  result.signatures.push({ step: "update_prices", signature: await input.execute(await compile([updatePricesIx(state, input.keeper, marks.map(m => m.price), programId)], vaultTables), "update_prices") });
-  if (input.maxSwaps === 0) return result;
-  await input.afterPrices?.();
+  if (!input.pricesPosted) {
+    result.signatures.push({ step: "update_prices", signature: await input.execute(await compile([updatePricesIx(state, input.keeper, marks.map(m => m.price), programId)], vaultTables), "update_prices") });
+    if (input.maxSwaps === 0) return result;
+    await input.afterPrices?.();
+  } else if (input.maxSwaps === 0) return result;
   const authority = authorityPda(state.address, programId);
 
   // 1. Crosses (batched, no venue).
@@ -357,7 +368,7 @@ export async function keeperTick(input: {
   for (const action of plan.swaps) await trySwap(action.kind, action.leg, action.inLeg, action.outLeg, action.amountInRaw);
   // 4. Settle converted requests; deliver unsellable legs in kind (only to existing owner accounts).
   let fresh: NavRequest[] = [];
-  if (requestsReadable) { try { fresh = await readNavRequests(input.connection, state.address, undefined, programId); } catch { fresh = []; } }
+  if (requestsReadable && result.requests.open > 0) { try { fresh = await readNavRequests(input.connection, state.address, undefined, programId); } catch { fresh = []; } }
   snapshot = (await readNavVault(input.connection, input.indexId, programId, now()))!;
   for (const request of fresh) {
     const stuck = request.legAmounts.map((a, leg) => ({ a, leg })).filter(x => x.a > 0n && noRoute.has(`${request.address.toBase58()}:${x.leg}`)).map(x => x.leg);
@@ -378,5 +389,106 @@ export async function keeperTick(input: {
   const final = (await readNavVault(input.connection, input.indexId, programId, now()))!;
   const freeUsdcAfter = final.usdcBalance > final.state.reservedUsdc ? final.usdcBalance - final.state.reservedUsdc : 0n;
   result.after = { usdcRaw: freeUsdcAfter.toString(), navRaw: final.nav.toString(), bufferBps: final.nav > 0n ? Number((freeUsdcAfter * BPS) / final.nav) : 0 };
+  return result;
+}
+
+// ---------- multi-vault cycle ----------
+
+export type KeeperCycleResult = {
+  vaults: { indexId: string; ok: boolean; error?: string; result?: KeeperTickResult }[];
+  priceTransactions: string[];
+  marks: number;
+};
+
+/** A mark source that quotes each mint once per cycle (vaults share legs such as NVDA or MSFT). */
+export function cachedMarks(source: MarkSource): MarkSource {
+  const cache = new Map<string, Promise<{ price: bigint; venue: string }>>();
+  return leg => {
+    const key = leg.mint.toBase58();
+    if (!cache.has(key)) cache.set(key, source(leg));
+    return cache.get(key)!;
+  };
+}
+
+/**
+ * One keeper cycle across many vaults: quote each mint once, post every vault's marks in as few
+ * transactions as fit (several `update_prices` per tx), wait a slot, then run each vault's netted
+ * cycle (crosses, exits, rebalance, settles) without re-posting prices. A failing vault never stops
+ * the others. Open requests are read once for the whole program.
+ */
+export async function keeperCycleAll(input: {
+  connection: NavConnection;
+  indexIds: readonly string[];
+  keeper: PublicKey;
+  marks: MarkSource;
+  swaps: SwapBuilder;
+  execute?: (tx: VersionedTransaction, step: string) => Promise<string>;
+  afterPrices?: () => Promise<void>;
+  programId?: PublicKey;
+  nowSeconds?: () => number;
+  priorityMicroLamports?: number;
+  minTradeUsdcRaw?: bigint;
+}): Promise<KeeperCycleResult> {
+  const programId = input.programId ?? defaultProgramId();
+  const now = input.nowSeconds ?? (() => Math.floor(Date.now() / 1000));
+  const marks = cachedMarks(input.marks);
+  const result: KeeperCycleResult = { vaults: [], priceTransactions: [], marks: 0 };
+  type Ready = { indexId: string; state: NavVaultState; prices: bigint[]; table: AddressLookupTableAccount | null };
+  const ready: Ready[] = [];
+  for (const indexId of input.indexIds) {
+    try {
+      const snapshot = await readNavVault(input.connection, indexId, programId, now());
+      if (!snapshot) throw new Error("no NAV vault");
+      const { state } = snapshot;
+      if (!state.keeper.equals(input.keeper)) throw new Error("this wallet is not the vault keeper");
+      if (state.paused) throw new Error("paused");
+      const prices: bigint[] = [];
+      for (const [index, leg] of state.legs.entries()) prices.push((await marks({ index, mint: leg.mint, decimals: leg.decimals, tokenProgram: leg.tokenProgram })).price);
+      if (prices.some(p => p <= 0n)) throw new Error("a mark is missing");
+      for (const [i, leg] of state.legs.entries()) {
+        const old = leg.price, next = prices[i]!;
+        if (old > 0n && (next > old ? next - old : old - next) * BPS > old * BigInt(state.maxPriceMoveBps)) throw new Error(`mark for ${leg.mint.toBase58()} moved more than ${state.maxPriceMoveBps} bps; admin override required`);
+      }
+      const table = state.lookupTable ? (await input.connection.getAddressLookupTable(state.lookupTable)).value : null;
+      ready.push({ indexId, state, prices, table });
+    } catch (error) {
+      result.vaults.push({ indexId, ok: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  }
+  result.marks = ready.reduce((n, r) => n + r.prices.length, 0);
+  if (!input.execute) {
+    for (const r of ready) result.vaults.push({ indexId: r.indexId, ok: true, result: await keeperTick({ ...input, indexId: r.indexId, marks: async leg => ({ price: r.prices[leg.index]!, venue: "cycle" }), execute: undefined }) });
+    return result;
+  }
+  // Batched price posts: pack as many update_prices as fit one transaction.
+  const priority = input.priorityMicroLamports ? [ComputeBudgetProgram.setComputeUnitPrice({ microLamports: input.priorityMicroLamports })] : [];
+  const build = async (batch: Ready[]) => {
+    const latest = await input.connection.getLatestBlockhash("confirmed");
+    const instructions = [ComputeBudgetProgram.setComputeUnitLimit({ units: Math.min(1_400_000, 60_000 * batch.length + 20_000) }), ...priority, ...batch.map(r => updatePricesIx(r.state, input.keeper, r.prices, programId))];
+    return new VersionedTransaction(new TransactionMessage({ payerKey: input.keeper, recentBlockhash: latest.blockhash, instructions }).compileToV0Message(batch.flatMap(r => r.table ? [r.table] : [])));
+  };
+  let batch: Ready[] = [];
+  const flush = async () => {
+    if (!batch.length) return;
+    result.priceTransactions.push(await input.execute!(await build(batch), `update_prices x${batch.length}`));
+    batch = [];
+  };
+  for (const r of ready) {
+    const candidate = [...batch, r];
+    if (batch.length && !fitsOnePacket(await build(candidate))) await flush();
+    batch.push(r);
+  }
+  await flush();
+  await input.afterPrices?.();
+  let requests: NavRequest[] | null;
+  try { requests = await readNavRequests(input.connection, null, undefined, programId); } catch { requests = null; }
+  for (const r of ready) {
+    try {
+      const tick = await keeperTick({ ...input, indexId: r.indexId, marks: async leg => ({ price: r.prices[leg.index]!, venue: "cycle" }), pricesPosted: true, requestsOverride: requests });
+      result.vaults.push({ indexId: r.indexId, ok: true, result: tick });
+    } catch (error) {
+      result.vaults.push({ indexId: r.indexId, ok: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  }
   return result;
 }

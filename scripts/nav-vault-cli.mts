@@ -3,7 +3,7 @@
  *
  *   npm run nav-vault -- init   --index <id> --keeper <pubkey> --fee-owner <pubkey> [--network mainnet-beta] [--definition file.json]
  *                               [--max-price-age 300] [--max-slippage 100] [--entry-fee 25] [--buffer 500] [--max-deposit-raw N (default 0 = no cap)] [--execute --keypair <admin file>]
- *   npm run nav-vault -- keeper --index <id> [--network mainnet-beta] [--execute --keypair <keeper file>] [--loop <seconds>]
+ *   npm run nav-vault -- keeper (--all | --indexes a,b | --index <id>) [--network mainnet-beta] [--execute --keypair <keeper file>] [--loop <cycle seconds>]
  *   npm run nav-vault -- pause|unpause --index <id> [--execute --keypair <admin file>]
  *
  * Legs/weights come from insiderindex_vault_definitions (service-role Supabase from .env.local) unless
@@ -19,11 +19,11 @@ import { createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-t
 import { getHeliusRpcUrl } from "../src/lib/helius.ts";
 import { createServiceSupabase } from "../src/lib/supabase.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
-import { readVaultDefinition, type PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
+import { readVaultDefinition, readVaultDefinitions, type PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 import {
   NAV_VAULT_DEVNET_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, setDefaultProgramId, decodeVault, initVaultIx, setLookupTableIx, setPausedIx, vaultLookupAddresses, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
-import { keeperTick, mockVenue } from "../src/lib/nav-vault/keeper.ts";
+import { keeperCycleAll, keeperTick, mockVenue } from "../src/lib/nav-vault/keeper.ts";
 import { mainnetVenue } from "../src/lib/nav-vault/mainnet-venue.ts";
 
 const MAX_LEGS = 16;
@@ -118,43 +118,68 @@ async function init() {
   console.log(JSON.stringify(report, null, 2));
 }
 
-async function keeper() {
-  const indexId = need("--index");
-  const programId = new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58());
-  const vaultInfo = await connection.getAccountInfo(vaultPda(indexId, programId));
-  if (!vaultInfo) throw new Error(`No NAV vault for ${indexId} on ${network}.`);
-  const state = decodeVault(vaultPda(indexId, programId), vaultInfo.data);
-  const keypair = execute ? loadKey(need("--keypair")) : null;
-  const keeperKey = keypair?.publicKey ?? state.keeper;
-  if (keypair && keypair.publicKey.equals(state.admin)) throw new Error("Refusing: the admin key is not a keeper key.");
-  const definition = network === "mainnet-beta" ? await loadDefinition(indexId).catch(() => null) : null;
-  const venue = network === "mainnet-beta"
-    ? mainnetVenue({ connection, legs: definition?.vaultLegs ?? [], quoteOwner: keeperKey.toBase58(), env: { JUPITER_API_KEY: process.env.JUPITER_API_KEY } })
-    : mockVenue(connection, state.usdcMint);
-  const once = async () => {
-    const result = await keeperTick({
-      connection, indexId, keeper: keeperKey, programId, ...venue,
-      priorityMicroLamports: Number(opt("--priority-micro-lamports") ?? (network === "mainnet-beta" ? 20_000 : 0)),
-      ...(opt("--min-trade-raw") ? { minTradeUsdcRaw: BigInt(opt("--min-trade-raw")!) } : {}),
-      execute: keypair ? async (tx, step) => {
-        tx.sign([keypair]);
-        const signature = await connection.sendTransaction(tx);
-        const latest = await connection.getLatestBlockhash("confirmed");
-        const confirmed = await connection.confirmTransaction({ signature, ...latest }, "confirmed");
-        if (confirmed.value.err) throw new Error(`${step}: ${JSON.stringify(confirmed.value.err)}`);
-        log(`${step}: ${signature}`);
-        return signature;
-      } : undefined,
-      afterPrices: async () => { const slot = await connection.getSlot("confirmed"); while ((await connection.getSlot("confirmed")) <= slot) await new Promise(r => setTimeout(r, 400)); },
-    });
-    console.log(JSON.stringify(result, (_, v) => typeof v === "bigint" ? v.toString() : v, 2));
+async function sendConfirmed(keypair: Keypair) {
+  return async (tx: VersionedTransaction, step: string) => {
+    tx.sign([keypair]);
+    const signature = await connection.sendTransaction(tx);
+    const latest = await connection.getLatestBlockhash("confirmed");
+    const confirmed = await connection.confirmTransaction({ signature, ...latest }, "confirmed");
+    if (confirmed.value.err) throw new Error(`${step}: ${JSON.stringify(confirmed.value.err)}`);
+    log(`${step}: ${signature}`);
+    return signature;
   };
+}
+const afterPrices = async () => { const slot = await connection.getSlot("confirmed"); while ((await connection.getSlot("confirmed")) <= slot) await new Promise(r => setTimeout(r, 400)); };
+const jsonOut = (value: unknown) => console.log(JSON.stringify(value, (_, v) => typeof v === "bigint" ? v.toString() : v, 2));
+
+/** --all: every DB index with an on-chain NAV vault; --indexes a,b: explicit list; --index a: one vault. */
+async function keeperIndexIds(programId: PublicKey): Promise<string[]> {
+  if (opt("--index")) return [need("--index")];
+  let ids: string[];
+  if (opt("--indexes")) ids = opt("--indexes")!.split(",").map(id => id.trim()).filter(Boolean);
+  else if (flag("--all")) {
+    const db = createServiceSupabase();
+    if (!db) throw new Error("--all needs Supabase service-role credentials to list indexes.");
+    ids = (await readVaultDefinitions(db)).map(row => row.indexId);
+  } else throw new Error("--index, --indexes or --all is required");
+  const infos = await connection.getMultipleAccountsInfo(ids.map(id => vaultPda(id, programId)));
+  return ids.filter((_, i) => Boolean(infos[i]));
+}
+
+async function keeper() {
+  const programId = new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58());
+  const keypair = execute ? loadKey(need("--keypair")) : null;
+  const priorityMicroLamports = Number(opt("--priority-micro-lamports") ?? (network === "mainnet-beta" ? 20_000 : 0));
+  const minTrade = opt("--min-trade-raw") ? { minTradeUsdcRaw: BigInt(opt("--min-trade-raw")!) } : {};
   const loop = Number(opt("--loop") ?? 0);
+  if (loop && !execute) throw new Error("--loop requires --execute.");
+  const once = async () => {
+    const indexIds = await keeperIndexIds(programId);
+    if (!indexIds.length) { log("no NAV vaults to keep"); return; }
+    const states = await Promise.all(indexIds.map(async id => decodeVault(vaultPda(id, programId), (await connection.getAccountInfo(vaultPda(id, programId)))!.data)));
+    const keeperKey = keypair?.publicKey ?? states[0]!.keeper;
+    if (keypair && states.some(state => state.admin.equals(keypair.publicKey))) throw new Error("Refusing: the admin key is not a keeper key.");
+    const legs = network === "mainnet-beta"
+      ? (await Promise.all(indexIds.map(id => loadDefinition(id).catch(() => null)))).flatMap(definition => definition?.vaultLegs ?? [])
+      : [];
+    const venue = network === "mainnet-beta"
+      ? mainnetVenue({ connection, legs, quoteOwner: keeperKey.toBase58(), env: { JUPITER_API_KEY: process.env.JUPITER_API_KEY } })
+      : mockVenue(connection, states[0]!.usdcMint);
+    const execute_ = keypair ? await sendConfirmed(keypair) : undefined;
+    if (indexIds.length === 1) {
+      jsonOut(await keeperTick({ connection, indexId: indexIds[0]!, keeper: keeperKey, programId, ...venue, priorityMicroLamports, ...minTrade, execute: execute_, afterPrices }));
+      return;
+    }
+    const cycle = await keeperCycleAll({ connection, indexIds, keeper: keeperKey, programId, ...venue, priorityMicroLamports, ...minTrade, execute: execute_, afterPrices });
+    for (const vault of cycle.vaults) if (!vault.ok) log(`vault ${vault.indexId} skipped: ${vault.error}`);
+    jsonOut({ priceTransactions: cycle.priceTransactions, marks: cycle.marks, vaults: cycle.vaults.map(v => ({ indexId: v.indexId, ok: v.ok, error: v.error, plan: v.result?.plan, signatures: v.result?.signatures, after: v.result?.after })) });
+  };
   if (!loop) return once();
-  if (!execute) throw new Error("--loop requires --execute.");
   for (;;) {
+    const started = Date.now();
     try { await once(); } catch (error) { log(`tick failed: ${(error as Error).message}`); }
-    await new Promise(r => setTimeout(r, loop * 1000));
+    // --loop is the target cycle period (seconds), so marks stay fresh as the vault count grows.
+    await new Promise(r => setTimeout(r, Math.max(1_000, loop * 1000 - (Date.now() - started))));
   }
 }
 

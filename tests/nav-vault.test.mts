@@ -428,3 +428,31 @@ test("admin can raise the max mark age (e.g. 60s → 120s); nobody else can", ()
   assert.equal(vm.vault(s.indexId).maxPriceAgeSecs, 600);
   vm.must(deposit(vm, s, s.alice, 10_000_000n), "deposit with a 301 s old mark under the raised age");
 });
+
+test("one keeper cycles many vaults: marks quoted once per mint, prices batched into few transactions, each vault rebalanced", async () => {
+  const { keeperCycleAll } = await import("../src/lib/nav-vault/keeper.ts");
+  const vm = navVaultVm();
+  const a = seedIndex(vm, "idx-test-a");
+  const b = seedIndex(vm, "idx-test-b", { keeper: a.keeper });
+  postPrices(vm, a);
+  postPrices(vm, b);
+  vm.must(deposit(vm, a, a.alice, 500_000_000n));
+  vm.must(deposit(vm, b, b.alice, 300_000_000n));
+  const venueA = mockVenue(vm.connection, a.usdc), venueB = mockVenue(vm.connection, b.usdc);
+  const byMint = new Map([...a.legs, ...b.legs].map((leg, i) => [leg.mint.toBase58(), i < 2 ? venueA : venueB]));
+  let quotes = 0;
+  const marks = async (leg: Parameters<typeof venueA.marks>[0]) => { quotes += 1; return byMint.get(leg.mint.toBase58())!.marks(leg); };
+  const swaps = async (input: Parameters<typeof venueA.swaps>[0]) => (input.inMint.equals(a.usdc) || input.outMint.equals(a.usdc) ? venueA : venueB).swaps(input);
+  const sent: string[] = [];
+  const execute = async (tx: VersionedTransaction, step: string) => { tx.sign([a.keeper]); vm.must(vm.sendRaw(tx.serialize()), step); sent.push(step); return step; };
+  const cycle = await keeperCycleAll({ connection: vm.connection, indexIds: ["idx-test-a", "idx-test-b", "idx-missing"], keeper: a.keeper.publicKey, marks, swaps, execute, afterPrices: async () => vm.advance(1), nowSeconds: () => Number(vm.svm.getClock().unixTimestamp) });
+  assert.equal(quotes, 4, "each mint quoted once per cycle");
+  assert.equal(cycle.priceTransactions.length, 1, "both vaults' marks posted in ONE transaction");
+  assert.deepEqual(cycle.vaults.filter(v => !v.ok).map(v => v.indexId), ["idx-missing"]);
+  for (const s of [a, b]) {
+    const state = navOf(vm, s);
+    assert.ok(state.legs.every(x => x > 0n), `${s.indexId} holds every leg`);
+    assert.ok(state.freeUsdc * 10_000n >= state.nav * 500n);
+  }
+  assert.ok(!sent.some(step => step === "update_prices"), "no per-vault price re-post");
+});

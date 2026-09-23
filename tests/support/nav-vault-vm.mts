@@ -133,8 +133,8 @@ export const PRICE_B = 400_000_000n;
 /** Test index: default two legs (60/40: A classic 6dp @ $200, B Token-2022 8dp @ $400), or `legCount`
  * legs for cap tests. 25 bps entry fee, 5% buffer, 300 s max mark age, 100 bps keeper slippage,
  * 15% mark band, 600 s request timeout. A vault LUT is installed so every path fits one packet. */
-export function seedIndex(vm: NavVm, indexId = "idx-test-nav", options: { legCount?: number; requestTimeoutSecs?: number } = {}) {
-  const admin = Keypair.generate(), keeper = Keypair.generate(), alice = Keypair.generate(), bob = Keypair.generate();
+export function seedIndex(vm: NavVm, indexId = "idx-test-nav", options: { legCount?: number; requestTimeoutSecs?: number; keeper?: Keypair } = {}) {
+  const admin = Keypair.generate(), keeper = options.keeper ?? Keypair.generate(), alice = Keypair.generate(), bob = Keypair.generate();
   for (const k of [admin, keeper, alice, bob]) vm.fund(k.publicKey, 50n);
   const usdc = vm.createMint(admin, USDC_DECIMALS);
   const legCount = options.legCount ?? 2;
