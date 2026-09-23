@@ -8,7 +8,7 @@ import { linkedToken, isSolanaAddress, shortMint } from '../src/lib/frontend/lin
 import { allocationView } from '../src/lib/frontend/allocation-view.ts';
 import { INDEX_CONTENT } from '../src/lib/frontend/index-content.ts';
 import { derivePersonIndex } from '../src/lib/index-vaults/person-index-map.ts';
-import { definitionForDb } from '../src/lib/index-vaults/vault-definition-store.ts';
+import { definitionForDb, enrichPublicVaultLegSymbols, type PublicVaultLeg } from '../src/lib/index-vaults/vault-definition-store.ts';
 import { indexCatalog } from '../src/lib/venues/catalog-parse.ts';
 import { PENDING_POOL_SOURCE } from '../src/lib/index-vaults/pool-evidence.ts';
 register('./support/ui-loader.mjs', import.meta.url);
@@ -72,4 +72,13 @@ test('published vault legs retain catalog token symbols',()=>{
  const stored=definitionForDb(definition) as {legs:{mint:string;symbol?:string}[]};
  assert.equal(stored.legs.length,definition.legs.length);
  for(const leg of definition.legs)assert.equal(stored.legs.find(row=>row.mint===leg.mint)?.symbol,leg.symbol);
+});
+test('public vault legs enrich symbols by exact catalog mint only',()=>{
+ const knownMint='A'.repeat(44);
+ const unknownMint='B'.repeat(44);
+ const exactMintCatalog=indexCatalog([{ticker:'AAPL',mint:knownMint,issuer:'xstock',symbol:'AAPLx',name:'Apple',decimals:8}]);
+ const leg=(ticker:string,mint:string):PublicVaultLeg=>({ticker,mint,provider:'xstock',bookWeightBps:5000,targetWeightBps:5000,vaultReady:true});
+ const rows=enrichPublicVaultLegSymbols([leg('NOT-AAPL',knownMint),leg('AAPL',unknownMint)],exactMintCatalog);
+ assert.equal(rows[0].symbol,'AAPLx');
+ assert.equal(rows[1].symbol,undefined);
 });
