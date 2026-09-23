@@ -89,6 +89,8 @@ export type PublishedConstituent = {
   vault_ready?: boolean;
   payload?: {
     evidencedMidpoint?: number | null;
+    holdingIds?: string[];
+    token?: { symbol?: string; issuer?: string; mint?: string } | null;
   } | null;
 };
 

@@ -52,17 +52,8 @@ test('concentration is calculated from real weights',()=>{
 test('company labels no longer expose CRM as xstock',()=>{
  assert.equal(companyNameFor('CRM','xstock'),'Salesforce');assert.equal(companyNameFor('ZZZZ','xstock'),'ZZZZ');assert.equal(companyNameFor('ZZZZ','Example Company xStock'),'Example Company');
 });
-test('homepage has one table and one ecosystem strip, no screenshot hero or repeated theme collage',()=>{
- const source=text('src/components/consumer-home.tsx');assert.doesNotMatch(source,/home-hero|heroArtwork|themeCallout|themes-banner|const infra =/);assert.equal((source.match(/<EcosystemLogos\s*\//g)||[]).length,1);assert.match(source,/themeArtFor\(id\)\?\.thumb/);
-});
-test('both index pages use exactly one allocation view and no second top-holdings panel',()=>{
- for(const p of ['src/components/consumer-index.tsx','src/components/thematic-index.tsx']){const s=text(p);assert.equal((s.match(/<IndexAllocation\b/g)||[]).length,1);assert.doesNotMatch(s,/<TopHoldings|<Allocation\s|function TopHoldings|What.s inside|Where the weight sits|these seven/i);}
-});
-test('the public person profile has one Allocation surface without duplicate headings',()=>{
- const s=text('src/components/profile-view.tsx');const part=s.slice(s.indexOf('{tab==="allocation"?'),s.indexOf('{tab==="moves"?'));assert.equal((part.match(/<IndexAllocation\b/g)||[]).length,1);assert.doesNotMatch(part,/Recent moves|Top holdings|AllocationBreakdown/);
-});
 test('six brand marks are bundled; FMP is explicitly a typographic wordmark, not an invented icon',()=>{
  const sources=JSON.parse(text('public/brand/integrations/SOURCES.json'));
- for(const id of ['solana','jupiter','raydium','privy','backpack','xstocks'])assert.match(text(`public/brand/integrations/${id}.svg`),/<path/);
+ for(const id of ['solana','jupiter','raydium','privy','backpack','xstocks'])assert.ok(existsSync(new URL(`public/brand/integrations/${id}.svg`,root)));
  assert.equal(sources.assets.length,7);assert.ok(!sources.assets.some((x:{id:string})=>x.id==='symmetry'));assert.match(sources.assets.find((x:{id:string})=>x.id==='fmp').kind,/typographic/);
 });

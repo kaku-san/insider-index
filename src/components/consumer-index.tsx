@@ -19,6 +19,7 @@ import { TradableSliceNote } from "./tradable-slice-note";
 import { usePrivySolana } from "./providers/privy-provider";
 import { ShareCard } from "./share-card";
 import { IndexAllocation } from "./index-allocation";
+import type { AllocationInput } from "@/lib/frontend/allocation-view";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton, StockIcon } from "./social/shared";
 import styles from "./consumer-index.module.css";
@@ -55,6 +56,27 @@ type ActivityResponse = { disclosures: Disclosure[]; total: number; hasMore?: bo
 
 function sortedHoldings(index: PublishedIndex) {
   return [...index.constituents].sort((a, b) => b.weight_bps - a.weight_bps || a.ticker.localeCompare(b.ticker));
+}
+
+export function personIndexAllocation(index: PublishedIndex, unmapped: UnmappedIndexLeg[] = [], network?: string | null): AllocationInput[] {
+  const weighted = sortedHoldings(index).map(item => {
+    const token = index.definition?.evidence?.find(evidence => evidence.token?.mint === item.mint)?.token ?? item.payload?.token;
+    return { ticker: item.ticker, name: item.issuer, weightBps: item.weight_bps, mint: item.mint, issuer: token?.issuer ?? item.issuer, tokenSymbol: token?.symbol ?? null, network };
+  });
+  const excluded = (index.definition?.excluded ?? []).map(item => ({
+    ticker: item.ticker ?? item.name ?? "Unmapped holding",
+    name: item.name,
+    weightBps: Number.NaN,
+    mint: null,
+    issuer: null,
+    tokenSymbol: null,
+    network: null,
+  }));
+  const excludedKeys = new Set(excluded.map(item => `${item.ticker}\u0000${item.name ?? ""}`));
+  const additional = unmapped
+    .filter(item => !excludedKeys.has(`${item.ticker}\u0000${item.name ?? ""}`))
+    .map(item => ({ ticker: item.ticker, name: item.name, weightBps: Number.NaN, mint: null, issuer: null, tokenSymbol: null, network: null }));
+  return [...weighted, ...excluded, ...additional];
 }
 
 function alignedPerformanceReturns(performance?: IndexPerformance): [number, number] | null {
@@ -194,6 +216,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   }) && hasIndexShares(position);
   const excluded = index.definition?.excluded ?? [];
   const holdings = sortedHoldings(index);
+  const allocationItems = personIndexAllocation(index, resource.data?.unmapped, resource.data?.index.network);
   const content = indexContentFor(routeId);
   const summary = content?.portfolioIntro ?? `A public annual-disclosure model led by ${holdings.slice(0, 4).map((item) => companyNameFor(item.ticker, item.issuer)).join(", ")}.`;
   const updated = index.published_at ? new Date(index.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "Unavailable";
@@ -227,10 +250,10 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       <div><span>Status</span><strong>{status}</strong></div>
     </section>
     <nav className={styles.tabs} aria-label="Index sections">
-      {([["allocation", "Allocation"], ["moves", "Moves"], ["about", "About"]] as const).map(([id, label]) => <button type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "allocation" ? <span>{index.constituents.length}</span> : null}</button>)}
+      {([["allocation", "Allocation"], ["moves", "Moves"], ["about", "About"]] as const).map(([id, label]) => <button type="button" key={id} className={tab === id ? styles.activeTab : ""} onClick={() => setTab(id)}>{label}{id === "allocation" ? <span>{allocationItems.length}</span> : null}</button>)}
     </nav>
     <section className={styles.tabContent}>
-      {tab === "allocation" ? <IndexAllocation items={holdings.map(item => ({ ticker: item.ticker, name: item.issuer, weightBps: item.weight_bps, mint: item.mint, issuer: item.issuer, network: resource.data?.index.network }))} /> : null}
+      {tab === "allocation" ? <IndexAllocation items={allocationItems} /> : null}
       {tab === "moves" ? (/^[A-Z][0-9]{6}$/.test(activityProfileId ?? "")
         ? <ActivityTab personId={activityProfileId!} />
         : <div className={styles.activityEmpty}><div className={styles.activityIcon}><Icon name="file" size={22} /></div><h3>Person-specific activity is unavailable.</h3><p>This index does not have a verified bioguide identifier, so InsiderIndex will not guess which disclosure rows belong here.</p><Link href="/feed">Open full disclosure feed <Icon name="arrow" size={13} /></Link></div>) : null}

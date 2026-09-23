@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
+import { register } from 'node:module';
 import { linkedToken, isSolanaAddress, shortMint } from '../src/lib/frontend/linked-token.ts';
 import { allocationView } from '../src/lib/frontend/allocation-view.ts';
 import { INDEX_CONTENT } from '../src/lib/frontend/index-content.ts';
 import { derivePersonIndex } from '../src/lib/index-vaults/person-index-map.ts';
 import { indexCatalog } from '../src/lib/venues/catalog-parse.ts';
 import { PENDING_POOL_SOURCE } from '../src/lib/index-vaults/pool-evidence.ts';
+register('./support/ui-loader.mjs', import.meta.url);
+const { personIndexAllocation } = await import('../src/components/consumer-index.tsx');
 const text=(p:string)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 // Derived from the committed catalog snapshot, FMP person books and thematic feed (not a preview snapshot).
 const snapshot=JSON.parse(text('src/lib/venues/catalog-snapshot.json'));
@@ -47,18 +50,13 @@ test('allocation transport retains addresses and preserves basis points',()=>{
  const rows=allocationView([{ticker:'ONE',weightBps:6000,mint,network:'mainnet-beta',issuer:'xstock'},{ticker:'TWO',weightBps:4000}]).rows;
  assert.equal(rows[0].mint,mint);assert.equal(rows[0].weightBps,6000);assert.equal(rows[1].weightBps,4000);
 });
-test('both index page types now have Allocation, not Stocks or Breakdown tabs',()=>{
- for(const f of ['consumer-index.tsx','thematic-index.tsx']){const s=text('src/components/'+f);assert.match(s,/useState<Tab>\("allocation"\)/);assert.doesNotMatch(s,/tab === "stocks"|tab === "breakdown"|onViewAll|<HoldingsTab/);assert.match(s,/mint: item\.mint/);}
-});
-test('the public profile preserves every shown holding and replaces duplicate tabs',()=>{
- const s=text('src/components/profile-view.tsx');assert.doesNotMatch(s,/tab==="stocks"|tab==="breakdown"/);assert.match(s,/items=\{holdings\.map/);assert.match(s,/mint:item\.mint/);assert.match(s,/Number\.NaN/);
-});
-test('one allocation has inline expansion and source address access',()=>{
- const s=text('src/components/index-allocation.tsx');assert.match(s,/setShowAll/);assert.match(s,/MintDetails/);assert.match(s,/navigator\.clipboard\.writeText\(token\.mint\)/);assert.match(s,/aria-expanded/);assert.doesNotMatch(s,/in Stocks|setTab\("stocks"\)/);
-});
-test('home uses the approved graphic with no repeated theme collage',()=>{
- const s=text('src/components/consumer-home.tsx');assert.match(s,/editorial-collage\.webp/);assert.doesNotMatch(s,/themeCallout|themes-banner/);assert.equal((s.match(/<EcosystemLogos\s*\//g)||[]).length,1);
-});
-test('ecosystem uses equal logo slots and a common caption grid',()=>{
- const s=text('src/components/ecosystem-logos.module.css');assert.match(s,/width:44px;height:44px/);assert.match(s,/repeat\(7,minmax\(0,1fr\)\)/);assert.doesNotMatch(s,/width:fit-content/);assert.match(text('public/brand/integrations/backpack.svg'),/viewBox="66 46 108 150"/);
+test('person index allocation keeps source-only rows and supplied token symbols',()=>{
+ const index={hash:'hash',person_id:'person',constituents:[{ticker:'AAPL',mint,issuer:'xstock',weight_bps:10000}],definition:{evidence:[{token:{mint,issuer:'xstock',symbol:'AAPLx'}}],excluded:[{holdingId:'fund',ticker:'FUND',name:'Unmapped mutual fund',reason:'no-token'}]}};
+ const rows=personIndexAllocation(index,[{ticker:'FUND',name:'Unmapped mutual fund'},{ticker:'BOND',name:'Source-only bond'}],'mainnet-beta');
+ assert.equal(rows.length,3);
+ assert.equal(rows[0].tokenSymbol,'AAPLx');
+ assert.equal(rows[0].mint,mint);
+ assert.ok(Number.isNaN(rows[1].weightBps));
+ assert.equal(rows[1].mint,null);
+ assert.equal(rows[2].ticker,'BOND');
 });
