@@ -44,7 +44,6 @@ export const CASH_OUT_CHECK_TIMEOUT = "Cash out could not be checked in time. Tr
 export const PREPARE_CHECK_MS = 45_000;
 export const CASH_OUT_BEFORE_SIGN = "Shares burn when you sign. We try to sell holdings to USDC. If a sale cannot be made, leftover stocks and USDC are sent to your wallet. This is not a share refund.";
 export const CASH_OUT_STILL_NOTE = "These holdings are still on this cash-out. We try to sell them to USDC. Anything unsold is sent to your wallet. This is not a share refund.";
-export const CASH_OUT_SENT_NOTE = "These are the holdings last read on this cash-out before it cleared. Unsold stocks and USDC are sent to your wallet. This is not a share refund.";
 
 function raw(amountRaw: string | undefined): bigint {
   if (!amountRaw || !rawAmountPattern.test(amountRaw)) return 0n;

@@ -15,8 +15,8 @@ import {
   SETTLEMENT_POLL_MS, SETTLEMENT_POLL_TIMEOUT_MS, settlementDetail, settlementView, sharesIncreasedAfterSignature,
   type SettlementView,
 } from "@/lib/frontend/settlement-progress";
-import { CASH_OUT_BEFORE_SIGN, CASH_OUT_CHECK, CASH_OUT_SENT_NOTE, CASH_OUT_STILL_NOTE, cashOutDeliveryOf, humanPrepareMessage, MAG7_FILL_CHECK, prepareCheckControl, withPrepareTimeout, type CashOutAsset, type PrepareCheckStatus } from "@/lib/frontend/position-basket";
-import { CashOutAssetList } from "./position-book";
+import { CASH_OUT_BEFORE_SIGN, CASH_OUT_CHECK, CASH_OUT_STILL_NOTE, cashOutDeliveryOf, humanPrepareMessage, MAG7_FILL_CHECK, prepareCheckControl, withPrepareTimeout, type PrepareCheckStatus } from "@/lib/frontend/position-basket";
+import { CashOutDeliveryStatus } from "./position-book";
 import styles from "./vault-flow.module.css";
 
 export { sharesIncreasedAfterSignature };
@@ -81,7 +81,6 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
   const [timedOut, setTimedOut] = useState(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null), [availableUsdcRaw, setAvailableUsdcRaw] = useState<string | null>(null);
   const [connectOpen, setConnectOpen] = useState(false);
-  const [sentAssets, setSentAssets] = useState<CashOutAsset[]>([]);
   const [quoteStatus, setQuoteStatus] = useState<PrepareCheckStatus>("idle");
   const quoteGeneration = useRef(0);
   const sawWithdrawRef = useRef(false);
@@ -115,7 +114,6 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     setError(null);
     setAvailableUsdcRaw(null);
     setAmount(mode === "deposit" ? "1" : positionSharesText(position) ?? "0");
-    setSentAssets(cashOutDeliveryOf(position));
     setQuoteStatus("idle");
     quoteGeneration.current += 1;
   }, [open, mode, indexId]);
@@ -147,8 +145,6 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
       setSawWithdrawPending(sawWithdrawRef.current);
       if (expired) setTimedOut(true);
       setSettlementPosition(value);
-      const observedDelivery = cashOutDeliveryOf(value);
-      if (observedDelivery.length) setSentAssets(observedDelivery);
       onPositionRef.current?.(value);
       const next = settlementView({ mode, sharesBeforeRaw: sharesBeforeSignature, position: value, timedOut: expired, sawWithdrawPending: sawWithdrawRef.current });
       if (next.listening) timer = setTimeout(observe, SETTLEMENT_POLL_MS);
@@ -236,7 +232,7 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
         {quoteStatus === "checking" ? <p role="status">{mode === "deposit" ? MAG7_FILL_CHECK : CASH_OUT_CHECK}</p> : null}{wallet.authenticated && !canPrepare ? <p role="status">This action is not available right now.</p> : null}{activeIntent ? <div className={styles.blockers}>{activeIntentCopy}</div> : null}{error ? <div className={styles.blockers} role="alert">{error}</div> : null}<div className={styles.notice}><Icon name="shield" size={18} /><p><strong>Nothing moves until you approve.</strong>Connecting a wallet does not invest or cash out.</p></div><div className={styles.cta}><button className={styles.primary} disabled={!check.enabled || busy || insufficientUsdc || Boolean(activeIntent)} onClick={start}>{busy ? "Waiting for wallet…" : check.label}</button></div></>
         : displayed === "prepare" ? <><div className={styles.intro}><h3>Not ready to sign yet.</h3><p>Nothing was sent. Cash out stays unavailable until the share burn can be prepared.</p></div>{error ? <div className={styles.blockers}>{error}</div> : <div className={styles.blockers}>{activeIntentCopy || "This action is not available right now."}</div>}<div className={styles.cta}><button className={styles.secondary} onClick={() => setScreen("amount")}>Back</button></div></>
         : displayed === "approval" ? <><div className={styles.intro}><h3>Approve in your wallet.</h3><p>{mode === "withdraw" ? `Check the amount before you sign. ${CASH_OUT_BEFORE_SIGN}` : "Check the amount before you sign."}</p></div>{error ? <div className={styles.blockers}>{error}</div> : null}<div className={styles.cta}><button className={styles.secondary} onClick={() => setScreen("amount")}>Back</button><button className={styles.primary} disabled={busy || !prepared?.transactions.length} onClick={() => void approve()}>{busy ? "Waiting for wallet…" : "Approve in wallet"}</button></div></>
-        : <>{view.cashOutFinished ? <div className={styles.phaseCard} role="status" aria-live="polite" data-settlement-status="cash-out-finished"><small>CASH OUT</small><h3>Your shares updated.</h3><p>{settlementDetail(view, settlementPosition, mode)}{observedShares ? ` ${observedShares} shares remain.` : ""}</p></div> : <SettlementListen status={view.status} listening={view.listening} detail={settlementDetail(view, settlementPosition, mode)} />}{mode === "withdraw" ? <CashOutAssetList assets={sentAssets.length ? sentAssets : cashOutDeliveryOf(observedPosition)} heading={view.cashOutFinished ? "Sent to your wallet" : "Still in this cash-out"} note={view.cashOutFinished ? CASH_OUT_SENT_NOTE : CASH_OUT_STILL_NOTE} /> : null}{error ? <div className={styles.blockers}>{error}</div> : null}<div className={styles.cta}><button className={styles.primary} onClick={onClose}>Close</button></div></>}
+        : <>{view.cashOutFinished ? <div className={styles.phaseCard} role="status" aria-live="polite" data-settlement-status="cash-out-finished"><small>CASH OUT</small><h3>Your shares updated.</h3><p>{settlementDetail(view, settlementPosition, mode)}{observedShares ? ` ${observedShares} shares remain.` : ""}</p></div> : <SettlementListen status={view.status} listening={view.listening} detail={settlementDetail(view, settlementPosition, mode)} />}{mode === "withdraw" ? <CashOutDeliveryStatus assets={cashOutDeliveryOf(observedPosition)} finished={view.cashOutFinished} pendingNote={CASH_OUT_STILL_NOTE} /> : null}{error ? <div className={styles.blockers}>{error}</div> : null}<div className={styles.cta}><button className={styles.primary} onClick={onClose}>Close</button></div></>}
     </div><footer className={styles.footer}>Target mix and share balances are separate from a completed auction. Fees and share amounts are shown only when preparation supplies them.</footer>
   </aside></div><WalletConnectSheet open={connectOpen} onClose={() => setConnectOpen(false)} /></>;
 }

@@ -215,3 +215,14 @@ test("position book shows filled names and marks the rest not held", async () =>
   assert.match(receipt, /2\.5 USDC/);
   assert.match(receipt, /not a share refund/);
 });
+
+test("completed cash out does not present the pre-clear holdings as delivered", async () => {
+  const { CashOutDeliveryStatus } = await import("../src/components/position-book.tsx");
+  const html = renderToStaticMarkup(createElement(CashOutDeliveryStatus, {
+    finished: true,
+    pendingNote: "Pending holdings",
+    assets: [{ mint: "mint-aapl", label: "AAPL", amountRaw: "5", kind: "stock" }],
+  }));
+  assert.match(html, /Cash out complete — check your wallet\./);
+  assert.doesNotMatch(html, /AAPL|Sent to your wallet|Pending holdings/);
+});

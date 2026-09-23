@@ -30,3 +30,8 @@ export function CashOutAssetList({ assets, heading, note }: { assets: CashOutAss
     {assets.length ? <ul>{assets.map(asset => <li key={asset.mint}>{formatObservedAmount(asset)}</li>)}</ul> : <p>No leftover holdings were listed on the last read.</p>}
   </section>;
 }
+
+export function CashOutDeliveryStatus({ assets, finished, pendingNote }: { assets: CashOutAsset[]; finished: boolean; pendingNote: string }) {
+  if (finished) return <p role="status">Cash out complete — check your wallet.</p>;
+  return <CashOutAssetList assets={assets} heading="Still in this cash-out" note={pendingNote} />;
+}
