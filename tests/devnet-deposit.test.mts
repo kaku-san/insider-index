@@ -76,9 +76,8 @@ test("HTTP preview is no-store; prepare is 503 with no signing payload; read fai
   const unavailable = await handleDevnetDeposit(request(input), false, () => broken);
   assert.equal(unavailable.status, 503);
   assert.deepEqual(Object.keys(await unavailable.json()), ["error"]);
-  for (const route of [prepareRoute, previewRoute]) {
-    assert.equal((await route(request({ ...input, network: "mainnet-beta" }))).status, 400);
-  }
+  // Public Symmetry devnet routes are retired; the library handler stays covered above.
+  for (const route of [prepareRoute, previewRoute]) assert.equal((await route()).status, 410);
   assert.equal((await handleDevnetDeposit(request(input), true, () => reader())).status, 400);
 });
 

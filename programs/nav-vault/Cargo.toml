@@ -1,0 +1,29 @@
+[package]
+name = "nav-vault"
+version = "0.1.0"
+edition = "2021"
+description = "InsiderIndex NAV vault: one-signature USDC deposit/withdraw with in-kind pro-rata fallback (unaudited hackathon program)"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "nav_vault"
+
+[features]
+default = []
+# Allows a non-Jupiter swap program (devnet mock). Default (mainnet) build pins Jupiter V6.
+devnet = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = "0.31.1"
+anchor-spl = { version = "0.31.1", default-features = false, features = ["token", "token_2022", "token_2022_extensions", "associated_token"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "allow" }

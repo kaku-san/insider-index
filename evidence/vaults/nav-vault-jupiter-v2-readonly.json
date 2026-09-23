@@ -1,0 +1,21 @@
+{
+  "what": "Read-only mainnet check: Jupiter GET /swap/v2/build (API key, never printed/committed) with the would-be Mag7 NAV vault authority PDA as taker; route instruction wrapped in keeper_swap and compiled with the vault LUT + Jupiter LUTs. Nothing signed or sent.",
+  "observedAt": "2026-09-23T11:05Z",
+  "taker": "FM2B3N2fEx4WJo2bG7rvfNcJmGj3em8dhN8Xmm4U4Dud",
+  "takerOnCurve": false,
+  "indexId": "idx-theme-mag7-caucus",
+  "programId": "HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB",
+  "routes": [
+    { "leg": "MSFT", "side": "buy", "usdcIn": "20000000", "discriminator": "route_v2", "jupiterAccounts": 29, "signers": ["FM2B3N2fEx4WJo2bG7rvfNcJmGj3em8dhN8Xmm4U4Dud"], "spendsVaultAta": true, "txBytes": 573, "loadedAccounts": 31, "minOut": "3930569" },
+    { "leg": "MSFT", "side": "buy", "usdcIn": "10000000", "discriminator": "route_v2", "jupiterAccounts": 29, "txBytes": 573, "loadedAccounts": 31, "minOut": "1965289" },
+    { "leg": "AAPL", "side": "buy", "usdcIn": "20000000", "discriminator": "route_v2", "jupiterAccounts": 60, "txBytes": 801, "loadedAccounts": 48, "minOut": "5829047" },
+    { "leg": "NVDA", "side": "buy", "usdcIn": "20000000", "discriminator": "route_v2", "jupiterAccounts": 26, "txBytes": 570, "loadedAccounts": 29, "minOut": "8684458" },
+    { "leg": "TSLA", "side": "buy", "usdcIn": "20000000", "discriminator": "route_v2", "jupiterAccounts": 40, "txBytes": 630, "loadedAccounts": 35, "minOut": "5237557" },
+    { "leg": "TSLA", "side": "sell", "tslaIn": "5000000", "discriminator": "route_v2", "jupiterAccounts": 26, "txBytes": 570, "loadedAccounts": 29, "minOut": "18892998" }
+  ],
+  "notes": [
+    "The first MSFT build attempt returned HTTP 400 (upstream Raydium CLMM ZeroAmountSpecified); an immediate retry built normally. The keeper treats a failed build as no-route and falls back to v1 /swap-instructions.",
+    "Every route's only signer is the vault PDA, which the program signs via invoke_signed; route_v2 is on the on-chain allowlist.",
+    "keeperTick skips any route that exceeds 1232 bytes or 64 loaded accounts (fitsOnePacket)."
+  ]
+}

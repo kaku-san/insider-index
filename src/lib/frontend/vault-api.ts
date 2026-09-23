@@ -17,7 +17,25 @@ export type VaultIdentity = {
   shareDecimals?: number;
   hostTreasury?: string;
   indexId?: string;
+  /** NAV vault only: the vault's USDC mint (devnet test vaults use their own). */
+  usdcMint?: string;
+  kind?: "nav-vault";
 };
+
+/** The NAV vault is the public invest/cash-out rail for every index (Symmetry is retired from public
+ * flows). `NEXT_PUBLIC_NAV_VAULT_DISABLED=1` is the kill switch; `NEXT_PUBLIC_NAV_VAULT_INDEXES` an optional allowlist. */
+export function navVaultEnabledFor(indexId: string): boolean {
+  if (process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED === "1") return false;
+  const explicit = (process.env.NEXT_PUBLIC_NAV_VAULT_INDEXES ?? "").split(",").map(item => item.trim()).filter(Boolean);
+  return explicit.length ? explicit.includes(indexId) : Boolean(indexId);
+}
+function navPath(indexId: string, suffix = "") { return `/api/nav-vault/${encodeURIComponent(indexId)}${suffix}`; }
+
+/** NAV vault: Invest follows the vault's own readiness, not the retired Symmetry release gate. Null when NAV is off. */
+export function navVaultLive(indexId: string, readiness?: VaultReadiness | null): boolean | null {
+  if (!navVaultEnabledFor(indexId)) return null;
+  return readiness?.kind === "nav-vault" && depositIsEnabled(readiness);
+}
 
 export type CostPreview = {
   hostEntryFeeBps?: number;
@@ -121,6 +139,7 @@ export type ObservedOperation = {
 
 export type VaultReadiness = {
   indexId: string;
+  kind?: "nav-vault";
   status?: string;
   phase?: string;
   identity?: VaultIdentity | null;
@@ -282,6 +301,7 @@ export function publicIndexIsLive(state: PublicVaultDepositState): boolean {
 
 /** Only Mag7 has the public withdrawal-prepare endpoint. A share balance alone never implies a cash-out rail. */
 export function publicIndexCanCashOut(indexId: string, state: PublicVaultDepositState): boolean {
+  if (navVaultEnabledFor(indexId)) return hasPublicVaultIdentity(state);
   return indexId === "idx-theme-mag7-caucus" && hasPublicVaultIdentity(state) && state.network === "mainnet-beta";
 }
 
@@ -293,6 +313,12 @@ export function publicIndexStatus(state: PublicVaultDepositState): PublicIndexSt
   return "Research";
 }
 
+/** Public status under the NAV rail: Live when the index has a NAV vault accepting deposits, else Research. */
+export function navIndexStatus(indexId: string, readiness?: VaultReadiness | null): PublicIndexStatus | null {
+  const live = navVaultLive(indexId, readiness);
+  return live === null ? null : live ? "Live" : "Research";
+}
+
 export function publicIndexStatusCopy(status: PublicIndexStatus): string {
   if (status === "Live") return "You can invest in this index.";
   if (status === "Coming soon") return "This index has a vault. Investing is not open yet.";
@@ -301,6 +327,7 @@ export function publicIndexStatusCopy(status: PublicIndexStatus): string {
 
 export async function getVaultReadiness(indexId: string): Promise<VaultReadiness | null> {
   try {
+    if (navVaultEnabledFor(indexId)) return await readApi<VaultReadiness>(navPath(indexId));
     return vaultReadinessFromIndex(indexId, await readApi<VaultIndexResponse>(`/api/vault-indexes/${encodeURIComponent(indexId)}`));
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
@@ -310,6 +337,7 @@ export async function getVaultReadiness(indexId: string): Promise<VaultReadiness
 
 export async function getIndexPosition(indexId: string, owner: string): Promise<IndexSharePosition | null> {
   try {
+    if (navVaultEnabledFor(indexId)) return await readApi<IndexSharePosition>(navPath(indexId, `/position?wallet=${encodeURIComponent(owner)}`));
     return await readApi<IndexSharePosition>(`/api/indexes/${encodeURIComponent(indexId)}/position?wallet=${encodeURIComponent(owner)}`);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
@@ -414,10 +442,12 @@ export async function validatePreparedStep(payload: unknown, context: { owner: s
 }
 
 export async function prepareDeposit(indexId: string, input: { owner: string; amountRaw: RawAmount; idempotencyKey: string; walletProof?: string; stage?: "acquire" | "contribute"; signatures?: string[] }, network: Network): Promise<PreparedStep> {
+  if (navVaultEnabledFor(indexId)) return validatePreparedStep(await writeApi<unknown>(navPath(indexId, "/deposit/prepare"), { owner: input.owner, amountRaw: input.amountRaw }), { owner: input.owner, network });
   return validatePreparedStep(await writeApi<unknown>(`/api/indexes/${encodeURIComponent(indexId)}/deposit/prepare`, input), { owner: input.owner, network });
 }
 
 export async function prepareWithdrawal(indexId: string, input: { owner: string; shareAmountRaw: RawAmount; requestedExitMode: "in-kind" | "verified-native-usdc"; idempotencyKey: string; walletProof?: string }, network: Network): Promise<PreparedStep> {
+  if (navVaultEnabledFor(indexId)) return validatePreparedStep(await writeApi<unknown>(navPath(indexId, "/withdraw/prepare"), { owner: input.owner, shareAmountRaw: input.shareAmountRaw }), { owner: input.owner, network });
   return validatePreparedStep(await writeApi<unknown>(`/api/indexes/${encodeURIComponent(indexId)}/withdraw/prepare`, input), { owner: input.owner, network });
 }
 
