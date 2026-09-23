@@ -144,9 +144,9 @@
     "nodeModules": "/home/deploy/insiderindex/stocklana/node_modules (read-only)",
     "key": "/home/deploy/keys/mag7-keeper.json (read-only) = GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq",
     "env": "/home/deploy/insiderindex/mag7-keeper.env (HELIUS, SUPABASE service role, JUPITER_API_KEY)",
-    "command": "npm run -s nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair /keys/mag7-keeper.json --loop 10 --priority-micro-lamports 5000",
+    "command": "npm run -s nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair /keys/mag7-keeper.json --loop 50 --priority-micro-lamports 5000",
     "startedAt": "2026-09-23T12:43:19Z",
-    "cadence": "one update_prices about every 18 s (max mark age 60 s)",
+    "cadence": "one update_prices every ~50-60 s (max mark age 60 s)",
     "feePerPriceUpdateSol": "0.000006015",
     "computeUnits": 22431,
     "firstPriceUpdates": [
@@ -178,5 +178,30 @@
     "commit": "a833b95",
     "protection": "Vercel SSO (captain login required)",
     "flag": "branch-only preview flag: Mag7 → mainnet NAV vault; production never"
+  },
+  "keeperFix": {
+    "at": "2026-09-23T13:17Z",
+    "commit": "1ad7f46 (+ --min-trade-raw)",
+    "problem": "Jupiter v2 /swap/v2/build route_v2 failed with JUP6 6025 InvalidTokenAccount for some (multi-hop / prop-AMM) routes when invoked via CPI with the vault PDA taker; getProgramAccounts overload on Helius; 429s.",
+    "fix": "Jupiter FIRST via v1 /quote + /swap-instructions (useSharedAccounts, wrapAndUnwrapSol=false) restricted to CPI-safe DEXes (Raydium CLMM/CP/AMM, Whirlpool, Meteora DLMM/DAMM v2/Meteora, Orca V2); per-leg fallback: direct Raydium CLMM swap_v2 rebound to the PDA; request discovery retries + Helius getProgramAccountsV2; marks every ~50 s (--loop 50).",
+    "earlierRouteV2BuysThatLanded": [
+      "bBpsQWLUZkufW1NbHEeNPHViathPcJCAtBCj8871bt9Jfxo3Gq79iUebwYT3HixWoEsP46gSzyS5BipvfVpdpwc",
+      "4sM1jchT69pvEVyTEPA5TFdW7MCM6AjAsVxo434n747Z6ok1kpT3F9fEarj9wdZSFbmC9gs3Lw8jg6WTr5HZbu9Q",
+      "4h8JMinSmZ7tKHkwa2C36YuEqsETfafC3ZwWNEfuZgzjtgCVY9S3i19iF315gCY58s8VigQiyfncD6iQCpSM5eA9",
+      "4awwXqWw5LXM6QaLbqWa6ye8ucEyUrh4fN3PgMgapMGjXNpJPXcCqMTmdKHaV13rZMCcKpohRSzwu1GmnrJv7rxK"
+    ],
+    "firstFixedPathJupiterBuys": [
+      {
+        "leg": "NVDA",
+        "signature": "V1EV2ipX8NhuBeW1gvRRjUNnX9P7FwXUxWD5d9Pxz3fx6G9UqN2mdAyNwDFdmef3PV6TMYDkPjfzLQstBn3uqDo",
+        "route": "SharedAccountsRoute → Raydium CLMM SwapV2"
+      },
+      {
+        "leg": "META",
+        "signature": "28PJ7TX9ZguZbYgvdBJW5p8TAWEtZNzLebpCZ1BWiJdKNhAUbeEnLRGS826AnEjZQvWRdAbfCuUt9GbVCtjiq22U",
+        "route": "SharedAccountsRoute → Raydium CLMM SwapV2"
+      }
+    ],
+    "simulatedOkAllLegs": "v1 CPI-safe route for all 7 legs and Raydium fallback (MSFT, TSLA) simulated OK on mainnet 2026-09-23"
   }
 }
