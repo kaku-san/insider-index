@@ -17,7 +17,13 @@ import { SettlementListen } from "./settlement-listen";
 import styles from "./position-detail.module.css";
 
 function pendingKey(position?: IndexSharePosition | null) {
-  return position?.pendingOperations?.map(operation => `${operation.operationId}:${operation.phase}:${operation.complete === true}`).join("|") ?? "";
+  return JSON.stringify(position?.pendingOperations?.map(operation => ({
+    operationId: operation.operationId,
+    phase: operation.phase,
+    complete: operation.complete === true,
+    fill: operation.fill,
+    delivery: operation.delivery,
+  })) ?? []);
 }
 
 export function PositionDetail({ indexId }: { indexId: string }) {
