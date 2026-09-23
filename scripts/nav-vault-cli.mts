@@ -2,7 +2,7 @@
  * NAV vault operator CLI (init + keeper). Dry run is the DEFAULT: it simulates and prints, broadcasts nothing.
  *
  *   npm run nav-vault -- init   --index <id> --keeper <pubkey> --fee-owner <pubkey> [--network mainnet-beta] [--definition file.json]
- *                               [--max-price-age 300] [--max-slippage 100] [--entry-fee 25] [--buffer 500] [--max-deposit-raw 50000000] [--execute --keypair <admin file>]
+ *                               [--max-price-age 300] [--max-slippage 100] [--entry-fee 25] [--buffer 500] [--max-deposit-raw N (default 0 = no cap)] [--execute --keypair <admin file>]
  *   npm run nav-vault -- keeper --index <id> [--network mainnet-beta] [--execute --keypair <keeper file>] [--loop <seconds>]
  *
  * Legs/weights come from insiderindex_vault_definitions (service-role Supabase from .env.local) unless

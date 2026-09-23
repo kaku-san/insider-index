@@ -37,7 +37,7 @@ node --experimental-strip-types scripts/nav-vault-devnet.mts --payer <devnet key
 
 `--localnet` rehearses the same script against `solana-test-validator`.
 
-**Devnet proof on the exact current build (done, finalized).** The devnet program was upgraded in place to `programs/bin/nav_vault_devnet.so` (sha256 `64801cd0…`). A dump of the deployed program matches the committed binary. This is the same source as the mainnet `nav_vault.so`, which only drops the mock venue. The index `idx-nav-devnet-mag7-pilot` ran with the mainnet pilot params: 25 bps entry fee, 5% buffer, 60 s max mark age, $50 per-deposit cap. SOL for the upgrade came from the devnet test wallet, and 1.67 SOL was returned. Receipts are in `evidence/vaults/nav-vault-devnet.json`. The earlier pre-cap run is `evidence/vaults/nav-vault-devnet-precap.json`.
+**Devnet proof on the exact current build (done, finalized).** The devnet program was upgraded in place to `programs/bin/nav_vault_devnet.so` (sha256 `64801cd0…`). A dump of the deployed program matches the committed binary. This is the same source as the mainnet `nav_vault.so`, which only drops the mock venue. The index `idx-nav-devnet-mag7-pilot` ran with 25 bps entry fee, 5% buffer, 60 s max mark age and a $50 per-deposit cap, which proves the cap path. Mainnet initializes with no cap. SOL for the upgrade came from the devnet test wallet, and 1.67 SOL was returned. Receipts are in `evidence/vaults/nav-vault-devnet.json`. The earlier pre-cap run is `evidence/vaults/nav-vault-devnet-precap.json`.
 
 | Step | Signature / result |
 | --- | --- |
@@ -55,7 +55,7 @@ Every readback matched the prepare estimate, and the keeper wallet's USDC did no
 
 - Build: `programs/bin/nav_vault.so`. The default features pin the venues to Jupiter V6 exact-in routes and Raydium CLMM `swap_v2`; there is no mock venue.
 - Cost: program rent is about 1.73 SOL for 340,085 bytes of program data, recoverable with `solana program close`. Init is about 0.05 SOL (vault, share mint, 9 token accounts, LUT). The keeper needs about 0.05 SOL for fees.
-- Operator CLI: `npm run nav-vault -- init|keeper …` (`scripts/nav-vault-cli.mts`). It is dry run by default, `--execute --keypair <file>` sends, and the keeper must not be the admin. Pilot flags are `--max-price-age 60 --entry-fee 25 --buffer 500 --max-deposit-raw 50000000`.
+- Operator CLI: `npm run nav-vault -- init|keeper …` (`scripts/nav-vault-cli.mts`). It is dry run by default, `--execute --keypair <file>` sends, and the keeper must not be the admin. Mainnet init flags are `--max-price-age 60 --entry-fee 25 --buffer 500`. The per-deposit cap is off by default (`max_deposit_usdc = 0`), per the captain's decision to remove the $50 cap. The admin can set one later with `set_max_deposit`; no layout change is needed.
 - Swaps: Jupiter v2 `/swap/v2/build` is used when `JUPITER_API_KEY` is set, with v1 `/swap-instructions` as the fallback. Both were checked read-only on mainnet with the Mag7 vault PDA as taker. v2 returns `route_v2` and v1 returns `shared_accounts_route`; in both, the PDA is the only signer. Wrapped in `keeper_swap` with the vault LUT, the v2 transactions were 570–801 bytes and 29–48 accounts (see `evidence/vaults/nav-vault-jupiter-v2-readonly.json`). The keeper skips any route that does not fit one packet or 64 accounts.
 - App flag: `STOCKLANA_NAV_VAULT_NETWORK=mainnet-beta` (RPC defaults to the server Helius URL) plus the index lists. The public site stays unflipped until the captain decides.
 
