@@ -1,0 +1,139 @@
+{
+  "network": "mainnet-beta",
+  "what": "NAV vault program deployed and a NEW Mag7 NAV vault initialized. Separate from the live Symmetry Mag7 vault (AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh), which is untouched. No deposits, no keeper swaps, public site not flipped.",
+  "program": {
+    "programId": "HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB",
+    "programData": "2RpgTUPsERvuSKrYBF4ke4Rk2MYjxFAaRTTw8pf32qzM",
+    "binary": "programs/bin/nav_vault.so (default features: devnet OFF — venues pinned to Jupiter V6 exact-in routes + Raydium CLMM swap_v2)",
+    "sha256": "7e8e8d65b4be4f22e911d93924973c373994762e82b78294ce4932ccfff619f5",
+    "dumpMatchesCommittedBinary": true,
+    "deploySignature": "rvMVLbjoizmGfJL8DZNRkCSyj4fkAjKigAqmBuX2jjccVTsF7g3tVwsTEJdNsUS4oSABw8Zb5g88MjVGJEGD8s6",
+    "slot": 449704373,
+    "upgradeAuthority": "5mVkJHMu2A25x45FsN5qrp5uwLJjevbPz4ziArNp1qaJ",
+    "programDataRentSol": "2.29797356"
+  },
+  "legsSource": "insiderindex_vault_definitions idx-theme-mag7-caucus v2 (tests/fixtures/composition/definition.json.gz), cross-checked equal to live GET https://insiderindex.xyz/api/vault-indexes/idx-theme-mag7-caucus constituents on 2026-09-23",
+  "init": {
+    "signatures": [
+      {
+        "step": "vault token accounts 1",
+        "signature": "4Jq8xRhXb3jqhqPth86zuNcgGSafTK4HJxG82nHkz5m4Cb7cfBwycBXuwVtGMcsFbD5btt64Qi3jHBgwWAQcYFJK",
+        "explorer": "https://explorer.solana.com/tx/4Jq8xRhXb3jqhqPth86zuNcgGSafTK4HJxG82nHkz5m4Cb7cfBwycBXuwVtGMcsFbD5btt64Qi3jHBgwWAQcYFJK"
+      },
+      {
+        "step": "vault token accounts 2",
+        "signature": "4KbyZwaxdrAksSHoenjxAHzk8xCkWRXNbYzYx2xqueMSZ4BscHgbLkpwSko6dwEHYXDjf7KgtkyTfic7kFjH6scD",
+        "explorer": "https://explorer.solana.com/tx/4KbyZwaxdrAksSHoenjxAHzk8xCkWRXNbYzYx2xqueMSZ4BscHgbLkpwSko6dwEHYXDjf7KgtkyTfic7kFjH6scD"
+      },
+      {
+        "step": "vault token accounts 3",
+        "signature": "642PHtwgpnK9kFNhQjgeCY54gg3YZ3UazjE17FTZzBi7kc1E17vgu9fPGpy3cSZWoN1hnHKkBuq11MnqMYLdXpXH",
+        "explorer": "https://explorer.solana.com/tx/642PHtwgpnK9kFNhQjgeCY54gg3YZ3UazjE17FTZzBi7kc1E17vgu9fPGpy3cSZWoN1hnHKkBuq11MnqMYLdXpXH"
+      },
+      {
+        "step": "init_vault",
+        "signature": "nsZApxhdwwTE93ZMNgKVGtk9X16r65ov3pChenNBqfKieoqQGBmD1ZNV5MGmkSzBk85BCyPNGWEk62SrJCfrW6f",
+        "explorer": "https://explorer.solana.com/tx/nsZApxhdwwTE93ZMNgKVGtk9X16r65ov3pChenNBqfKieoqQGBmD1ZNV5MGmkSzBk85BCyPNGWEk62SrJCfrW6f"
+      },
+      {
+        "step": "create lookup table",
+        "signature": "mPxQTwaPLnv9yCavS4dQEKAiq25AbvSeyADn472Psn2GBZ4CEc2NKJnpN2Uxj3SEtcnACJXx8ir7azQWgUPkZQN",
+        "explorer": "https://explorer.solana.com/tx/mPxQTwaPLnv9yCavS4dQEKAiq25AbvSeyADn472Psn2GBZ4CEc2NKJnpN2Uxj3SEtcnACJXx8ir7azQWgUPkZQN"
+      },
+      {
+        "step": "extend lookup table 1",
+        "signature": "2eXe6t4wpxeHUgiTZsykxdyw3RoaRMHuQNwyGqtEWAhxQy4jFFGbNKwop7x4crzeg6gBvVgJxBNBWFpKFDrgsjUd",
+        "explorer": "https://explorer.solana.com/tx/2eXe6t4wpxeHUgiTZsykxdyw3RoaRMHuQNwyGqtEWAhxQy4jFFGbNKwop7x4crzeg6gBvVgJxBNBWFpKFDrgsjUd"
+      },
+      {
+        "step": "extend lookup table 2",
+        "signature": "4aFnWXTBdyqVEezeWPfdBUoATiDtLNRgcu9PATpd2ZkkZhmRH5A8cxF5eU1ALvDdPZPH8YKQxsUYX2iyC7FoE4gZ",
+        "explorer": "https://explorer.solana.com/tx/4aFnWXTBdyqVEezeWPfdBUoATiDtLNRgcu9PATpd2ZkkZhmRH5A8cxF5eU1ALvDdPZPH8YKQxsUYX2iyC7FoE4gZ"
+      },
+      {
+        "step": "set_lookup_table",
+        "signature": "4a7h8FJhDfTPrKUuLTMxY5VNCd6cdLDEHZ3gJiXuah15xE1t6BrDc2jhpipPqb3CnAr4ZRmM9ui2oDTug67zxjR7",
+        "explorer": "https://explorer.solana.com/tx/4a7h8FJhDfTPrKUuLTMxY5VNCd6cdLDEHZ3gJiXuah15xE1t6BrDc2jhpipPqb3CnAr4ZRmM9ui2oDTug67zxjR7"
+      }
+    ]
+  },
+  "readback": {
+    "vault": "2w5g5aXmQj6o1cZSYbpV6R6rdK9KK7zAeJJRZu9PseM6",
+    "owner": "HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB",
+    "admin": "5mVkJHMu2A25x45FsN5qrp5uwLJjevbPz4ziArNp1qaJ",
+    "keeper": "GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq",
+    "indexId": "idx-theme-mag7-caucus",
+    "shareMint": "BZw8SegRiJmqmKgBDt5npmPo2dvsnv2nDPXvLQM6Mv4A",
+    "shareMintOwner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "shareMintLen": 202,
+    "usdcMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "usdcAccount": "CtgkQ6GGKE6KH6P8sTQkgLWS8NcUyR2ePQjnksU5qDdf",
+    "feeAccount": "9bhtfyxu5dtzzR9Z5mHitvVLXwehZQAwfUFhVFwb8Fuo",
+    "lookupTable": "482Et7YNkNQJS2cqhaRgugoNmjE3GmLqiSQFbZ81wmAr",
+    "lutAddresses": 26,
+    "maxPriceAgeSecs": 60,
+    "maxSlippageBps": 100,
+    "maxPriceMoveBps": 1500,
+    "entryFeeBps": 25,
+    "bufferBps": 500,
+    "maxDepositUsdc": "0",
+    "requestTimeoutSecs": 600,
+    "paused": false,
+    "legs": [
+      {
+        "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+        "account": "6Uvmfmyv3My2yHp5xwwA6EsUp9uLifz3fehLXstDAteP",
+        "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "decimals": 8,
+        "weightBps": 3448
+      },
+      {
+        "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+        "account": "7NAgRUJjuWmEZV23UrSvLvnGB2ZGG696KwKt6Z8PGEC7",
+        "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "decimals": 8,
+        "weightBps": 2740
+      },
+      {
+        "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+        "account": "EyyjxhoFtWg24LwBng5pe2nKH4scxTxhBfy3eZd59B2H",
+        "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "decimals": 8,
+        "weightBps": 1151
+      },
+      {
+        "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+        "account": "29DfXYrvHCqZ39H6yFxYgSoAUcLob6dYkJYkqQG1cvK9",
+        "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "decimals": 8,
+        "weightBps": 1424
+      },
+      {
+        "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+        "account": "JA5SShVYzXBgH5aR3koW9Gf1M92yhBPQwDYfss1KmMAx",
+        "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "decimals": 8,
+        "weightBps": 854
+      },
+      {
+        "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+        "account": "Hrq6c6ZTW8TagLjpKQVGMhQygjYGqZEaD6d4MTCDdXzk",
+        "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "decimals": 8,
+        "weightBps": 322
+      },
+      {
+        "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+        "account": "3SEhfFF3mCYCDRff63qptAqSd6tCQLA6uhWdCP4oCvLn",
+        "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "decimals": 8,
+        "weightBps": 61
+      }
+    ]
+  },
+  "funding": {
+    "deployerFundedSol": "2.8",
+    "deployerAfterSol": "0.459710955",
+    "spentSol": "2.340290045"
+  }
+}

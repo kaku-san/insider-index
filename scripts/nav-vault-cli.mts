@@ -53,7 +53,7 @@ async function loadDefinition(indexId: string): Promise<PersistedVaultDefinition
 async function run(label: string, payer: Keypair | PublicKey, instructions: TransactionInstruction[], extraSigners: Keypair[] = []) {
   const payerKey = payer instanceof Keypair ? payer.publicKey : payer;
   const latest = await connection.getLatestBlockhash("confirmed");
-  const tx = new VersionedTransaction(new TransactionMessage({ payerKey, recentBlockhash: latest.blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), ...instructions] }).compileToV0Message());
+  const tx = new VersionedTransaction(new TransactionMessage({ payerKey, recentBlockhash: latest.blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: Number(opt("--priority-micro-lamports") ?? 20_000) }), ...instructions] }).compileToV0Message());
   const sim = await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true });
   if (sim.value.err) throw new Error(`${label}: simulation failed ${JSON.stringify(sim.value.err)}\n${(sim.value.logs ?? []).join("\n")}`);
   if (!execute || !(payer instanceof Keypair)) { log(`[dry-run] ${label}: simulated ok`); return null; }

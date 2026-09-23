@@ -72,13 +72,22 @@ node --experimental-strip-types scripts/nav-vault-devnet.mts --payer <devnet key
 
 Final state: supply 0, nothing reserved. Every readback matched the prepare estimate, and the keeper wallet's USDC did not change.
 
-## Mainnet (captain-approved pilot)
+## Mainnet (deployed, 2026-09-23)
 
-- Build: `programs/bin/nav_vault.so`. The default features pin the venues to Jupiter V6 exact-in routes and Raydium CLMM `swap_v2`; there is no mock venue.
-- Cost: program rent is about 1.73 SOL for 340,085 bytes of program data, recoverable with `solana program close`. Init is about 0.05 SOL (vault, share mint, 9 token accounts, LUT). The keeper needs about 0.05 SOL for fees.
-- Operator CLI: `npm run nav-vault -- init|keeper …` (`scripts/nav-vault-cli.mts`). It is dry run by default, `--execute --keypair <file>` sends, and the keeper must not be the admin. Mainnet init flags are `--max-price-age 60 --entry-fee 25 --buffer 500`. The per-deposit cap is off by default (`max_deposit_usdc = 0`), per the captain's decision to remove the $50 cap. The admin can set one later with `set_max_deposit`; no layout change is needed.
-- Swaps: Jupiter v2 `/swap/v2/build` is used when `JUPITER_API_KEY` is set, with v1 `/swap-instructions` as the fallback. Both were checked read-only on mainnet with the Mag7 vault PDA as taker. v2 returns `route_v2` and v1 returns `shared_accounts_route`; in both, the PDA is the only signer. Wrapped in `keeper_swap` with the vault LUT, the v2 transactions were 570–801 bytes and 29–48 accounts (see `evidence/vaults/nav-vault-jupiter-v2-readonly.json`). The keeper skips any route that does not fit one packet or 64 accounts.
-- App flag: `STOCKLANA_NAV_VAULT_NETWORK=mainnet-beta` (RPC defaults to the server Helius URL) plus the index lists. The public site stays unflipped until the captain decides.
+- Program `HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB`, built from `programs/bin/nav_vault.so` (sha256 `7e8e8d65…`) with the devnet feature off, so only Jupiter V6 exact-in routes and Raydium CLMM `swap_v2` are allowed. A dump of the deployed program matches the committed binary. Upgrade authority and vault admin: `5mVkJHMu2A25x45FsN5qrp5uwLJjevbPz4ziArNp1qaJ`. Deploy signature: `rvMVLbjoizmGfJL8DZNRkCSyj4fkAjKigAqmBuX2jjccVTsF7g3tVwsTEJdNsUS4oSABw8Zb5g88MjVGJEGD8s6`.
+- New Mag7 NAV vault for `idx-theme-mag7-caucus`:
+  - vault `2w5g5aXmQj6o1cZSYbpV6R6rdK9KK7zAeJJRZu9PseM6`;
+  - Token-2022 share mint `BZw8SegRiJmqmKgBDt5npmPo2dvsnv2nDPXvLQM6Mv4A`;
+  - vault USDC account `CtgkQ6GGKE6KH6P8sTQkgLWS8NcUyR2ePQjnksU5qDdf`;
+  - fee account `9bhtfyxu5dtzzR9Z5mHitvVLXwehZQAwfUFhVFwb8Fuo` (the deployer's USDC ATA);
+  - LUT `482Et7YNkNQJS2cqhaRgugoNmjE3GmLqiSQFbZ81wmAr`;
+  - keeper `GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq`.
+  Params: 25 bps entry fee, 5% buffer, 60 s marks, 15% band, 100 bps swap slippage, no deposit cap, 600 s request timeout. The legs and weights are the DB Mag7 definition, 7 xStocks (Token-2022). init_vault signature: `nsZApxhdwwTE93ZMNgKVGtk9X16r65ov3pChenNBqfKieoqQGBmD1ZNV5MGmkSzBk85BCyPNGWEk62SrJCfrW6f`. All receipts are in `evidence/vaults/nav-vault-mainnet.json`.
+- Not done yet: keeper marks and swaps, which run from the server key (`npm run nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair <server key> [--loop 30]`); any deposit; flipping the public site. Deposits refuse until the keeper posts fresh marks. The live Symmetry Mag7 vault is untouched.
+- Cost: 2.3403 SOL spent (program rent 2.29797, recoverable with `solana program close`); 0.4597 SOL left on the deployer.
+- Operator CLI: `npm run nav-vault -- init|keeper|pause|unpause …` (`scripts/nav-vault-cli.mts`). It is dry run by default, `--execute --keypair <file>` sends, and the keeper must not be the admin.
+- Swaps: Jupiter v2 `/swap/v2/build` is used when `JUPITER_API_KEY` is set, with v1 `/swap-instructions` as the fallback. Both were checked read-only with this vault's PDA (`FM2B3N2f…`) as taker: the PDA is the only signer, and the wrapped transactions were 570–801 bytes and 29–48 accounts (`evidence/vaults/nav-vault-jupiter-v2-readonly.json`).
+- App flag: `STOCKLANA_NAV_VAULT_NETWORK=mainnet-beta` + `STOCKLANA_NAV_VAULT_INDEXES` + `NEXT_PUBLIC_NAV_VAULT_INDEXES`. The RPC defaults to the server Helius URL.
 
 ## Not done here
 
