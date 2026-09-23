@@ -19,7 +19,7 @@ import {
   MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createInitializeMint2Instruction, createMintToInstruction,
 } from "@solana/spl-token";
 import {
-  MOCK_SWAP_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, decodeVault, initVaultIx, mockInitPoolIx, mockPoolPda, setLookupTableIx, tokenAmount,
+  MOCK_SWAP_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, decodeVault, depositIx, initVaultIx, mockInitPoolIx, mockPoolPda, setLookupTableIx, tokenAmount,
   vaultLookupAddresses, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
 import { prepareNavDeposit, prepareNavWithdraw, readNavVault } from "../src/lib/nav-vault/prepare.ts";
@@ -108,8 +108,8 @@ async function main() {
     createAssociatedTokenAccountIdempotentInstruction(payer.publicKey, accounts.usdc, accounts.authority, usdc),
     ...legs.map((leg, i) => createAssociatedTokenAccountIdempotentInstruction(payer.publicKey, accounts.legs[i]!, accounts.authority, leg.mint, leg.tokenProgram)),
   ], payer);
-  await send("init_vault (60/40, 25 bps entry fee, 5% buffer, 600 s max mark age)", [
-    initVaultIx({ admin: payer.publicKey, indexId, keeper: keeper.publicKey, usdcMint: usdc, feeAccount, maxPriceAgeSecs: 600, maxSlippageBps: 100, entryFeeBps: 25, bufferBps: 500, legs }),
+  await send("init_vault (60/40, 25 bps entry fee, 5% buffer, 60 s max mark age, $50 per-deposit cap — mainnet pilot params)", [
+    initVaultIx({ admin: payer.publicKey, indexId, keeper: keeper.publicKey, usdcMint: usdc, feeAccount, maxPriceAgeSecs: 60, maxSlippageBps: 100, entryFeeBps: 25, bufferBps: 500, maxDepositUsdc: 50_000_000n, legs }),
   ], payer);
   const vault = vaultPda(indexId);
   let state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
@@ -143,10 +143,25 @@ async function main() {
   const marks = await keeperTick({ connection, indexId, keeper: keeper.publicKey, ...venue, execute, afterPrices: async () => waitSlot(await connection.getSlot("confirmed")) });
   console.log("marks", marks.marks);
 
-  // ONE-signature deposit.
-  const dep = await prepareNavDeposit({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), amountRaw: "100000000" });
+  const refreshMarks = async () => { await keeperTick({ connection, indexId, keeper: keeper.publicKey, ...venue, execute, maxSwaps: 0, afterPrices: async () => waitSlot(await connection.getSlot("confirmed")) }); };
+  // The $50 pilot cap is enforced on chain: simulate a 50.000001 deposit (not sent).
+  {
+    state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
+    const latest = await connection.getLatestBlockhash("confirmed");
+    const over = new VersionedTransaction(new TransactionMessage({ payerKey: user.publicKey, recentBlockhash: latest.blockhash, instructions: [
+      createAssociatedTokenAccountIdempotentInstruction(user.publicKey, ata(user.publicKey, state.shareMint), user.publicKey, state.shareMint),
+      depositIx(state, user.publicKey, 50_000_001n, 0n),
+    ] }).compileToV0Message());
+    const sim = await connection.simulateTransaction(over, { sigVerify: false });
+    const refused = (sim.value.logs ?? []).some(line => /DepositAboveCap/.test(line));
+    if (!refused) throw new Error("expected the on-chain cap to refuse 50.000001 USDC");
+    record.steps.push({ step: "simulate deposit 50.000001 tUSDC (above $50 cap) — refused on chain, not sent", signature: "", explorer: "", readback: { error: "DepositAboveCap", slot: sim.context.slot } });
+    save();
+  }
+  // ONE-signature deposit at the cap.
+  const dep = await prepareNavDeposit({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), amountRaw: "50000000" });
   if (dep.transactions.length !== 1) throw new Error("deposit prepare must return one transaction");
-  await sendVersioned("user deposit 100 tUSDC (ONE signature)", VersionedTransaction.deserialize(Buffer.from(dep.transactions[0].messageBase64, "base64")), user,
+  await sendVersioned("user deposit 50 tUSDC (ONE signature, at the cap)", VersionedTransaction.deserialize(Buffer.from(dep.transactions[0].messageBase64, "base64")), user,
     `expected shares ${dep.estimate.sharesRaw}, fee ${dep.navVault.feeRaw}`,
     async () => ({ userShares: (await balance(ata(user.publicKey, state.shareMint))).toString(), vaultUsdc: (await balance(accounts.usdc)).toString(), fee: (await balance(feeAccount)).toString() }));
 
@@ -157,7 +172,8 @@ async function main() {
   record.steps.push({ step: "keeper readback", signature: "", explorer: "", readback: { plan: buys.plan, usdc: snap.usdcBalance, legs: snap.legBalances, nav: snap.nav, bufferBpsNow: Number(snap.usdcBalance * 10_000n / snap.nav), keeperUsdcUnchanged: (await balance(ata(keeper.publicKey, usdc))) === keeperUsdcBefore } });
   save();
 
-  // ONE-signature USDC exit (small, buffer covers it).
+  // ONE-signature USDC exit (small, buffer covers it). Marks are refreshed first (60 s max age).
+  await refreshMarks();
   const small = await prepareNavWithdraw({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), shareAmountRaw: "2000000" });
   if (small.transactions.length !== 1 || small.navVault.path !== "usdc") throw new Error(`expected one-tx USDC exit, got ${small.navVault.path}`);
   const usdcBefore = await balance(ata(user.publicKey, usdc));
@@ -165,6 +181,7 @@ async function main() {
     async () => ({ usdcReceived: ((await balance(ata(user.publicKey, usdc))) - usdcBefore).toString(), expected: small.estimate.returnedUsdcRaw }));
 
   // ONE-signature exit of everything else: buffer is short → pro-rata in-kind basket.
+  await refreshMarks();
   state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
   const rest = (await balance(ata(user.publicKey, state.shareMint))).toString();
   const big = await prepareNavWithdraw({ connection, network: "devnet", indexId, owner: user.publicKey.toBase58(), shareAmountRaw: rest });
@@ -181,5 +198,4 @@ async function main() {
   console.log(`wrote ${outPath}`);
 }
 
-void TransactionMessage; // (kept for readers: prepare compiles v0 messages with the vault LUT)
 main().catch(error => { console.error(error); save(); process.exit(1); });

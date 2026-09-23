@@ -37,30 +37,26 @@ node --experimental-strip-types scripts/nav-vault-devnet.mts --payer <devnet key
 
 `--localnet` rehearses the same script against `solana-test-validator`.
 
-**Devnet proof (done, finalized).** Programs deployed with the upgrade authority `6t6tFss…RkC9`, funded with 3.6 devnet SOL from the devnet test wallet `C7ye…YQyB`; 1.27 SOL was returned afterwards. The programs are left open. Closing is permanent, so the ~2.19 SOL of rent can be recovered later with `solana program close`, as recorded in the evidence. The deployed `nav_vault` bytes match `programs/bin/nav_vault_devnet.so` (sha256 `3fa7cc51…`). Index `idx-nav-devnet-mag7-proof` uses synthetic test mints: tUSDC, a classic 6dp stock stand-in and a Token-2022 8dp stock stand-in. Full receipts are in `evidence/vaults/nav-vault-devnet.json`.
+**Devnet proof on the exact current build (done, finalized).** The devnet program was upgraded in place to `programs/bin/nav_vault_devnet.so` (sha256 `64801cd0…`). A dump of the deployed program matches the committed binary. This is the same source as the mainnet `nav_vault.so`, which only drops the mock venue. The index `idx-nav-devnet-mag7-pilot` ran with the mainnet pilot params: 25 bps entry fee, 5% buffer, 60 s max mark age, $50 per-deposit cap. SOL for the upgrade came from the devnet test wallet, and 1.67 SOL was returned. Receipts are in `evidence/vaults/nav-vault-devnet.json`. The earlier pre-cap run is `evidence/vaults/nav-vault-devnet-precap.json`.
 
-| Step | Signature |
+| Step | Signature / result |
 | --- | --- |
-| deploy nav_vault | `329wya2aiLSstQPC6C7bCkXZNM1Xp1Mtf86joDgHDYsy6dr3x6mCpfqbBuTvDKtjdi5AwP5vxC6QKH5wHdHKcqpD` |
-| deploy mock_swap | `5q5hS4RjKARRTvh1C74q4ZgSa8tsR37ihBjtn5YfwrjphFFSfv5HhXfyh76j5JDY7BAXFk87fRMWTakNcuAnqewZ` |
-| init_vault (60/40, 25 bps fee, 5% buffer) | `62gUk8AhvfbsNT5Q95t9v41tEecwStZbdpx55NCAsYXaneANLG1FFsNzcwzwzviKNAxFDhPCWsPmGWX1wCZP6sYL` |
-| keeper marks | `221i9PtpTccaZQ1ijy2YudWESfBqBvrL8GmxDNJdFRDMgg4bwJYSSD2iEDe2TaDaTgKdKBT4nMcA4AUS7YCpFnge` |
-| ONE-signature deposit 100 → 99.75 shares, 0.25 fee | `43ULRsXmSFeMV4QfzBMkmetfaYL44TYN385jxC21czY5n7bZPZFGtpgzmYK25RbUjvegeYBDeV157Er5Dwbc5Maf` |
-| keeper buy stock A (from vault USDC) | `4sEgPkPrXAZVE3cHumLqvJzraeQvyiTyuKrkXReSkDdAxaSFyRSwqy2jFCCk71qSudNhomdFL2LqEyMCzKxpxLVX` |
-| keeper buy stock B → buffer 5.50% | `2yEusBeFANDvPccYF8mosR2fgW3CmhhgbDSPStyvrk7Do8CJEP63TokZJYNvG4GPGkMbMfw7ZfHRs1MVCsw6ep7w` |
-| ONE-signature USDC exit (2 shares → 1.999998) | `5cEQqHFxe11oo4AFS2dsyeGr3DfdZxknbqpmAoLn2QWZ7NwTS5pnmpRnFjW98M42NzS8mNFgk3wrSoqqxPQQxuZF` |
-| ONE-signature full exit, buffer short, in-kind (3.486271 USDC + 282791 A + 9426370 B) | `3jX9Bqv3s4AviiPfwZc7srfyXiD2uBgy9NS77wL9R2y6y3V31LHcJY6u73Xcq5SWddwuRwXHHfYwGY9rmuh3sj1r` |
+| upgrade nav_vault (current build) | `4up17akbsvxCPM4acytVyzYQXDBbUK4qTYgNBPXJQfEfrgLtvSZSMoGZsZ6SmGxQK3VhfehfmFZV9qoP7gCtEp3e` |
+| init_vault (pilot params) | `3mANY3EoM2n4pSCRGd5V6dnJZoHNHiM6VKdvYwuTTEYHQKvbs2mG6FZ4knCi32fq7nbW6NRZD92Zg4dk4jgf47Xq` |
+| 50.000001 tUSDC deposit (simulated) | refused on chain with `DepositAboveCap` |
+| ONE-signature deposit of 50 → 49.875 shares, 0.125 fee | `4jpjneu25b1ErL8HmMiLDugzcCUHBVaEnRLZTiu6oQRz8LR8HvvbWhUtXxUX4ggnZxed6sdoiahwLwbqojhDrcnA` |
+| keeper buys A / B, buffer ends at 5.50% | `P5Kdsf4XiC6ByYGsMJ9eeVudsqReYtHwsfCdcTCjrv316Jy7C7qCZR8A5nAcTWREEXtgsFFs5ijQB93feBWL2MF` / `S4G71aXg4QudWQz2ZwePzYa1t55Ha8woJoe4VRx1G6HPDc9EmDt2WTDTFmMBKMedWpnxXPmr9eeEvcuyLLLfgWz` |
+| ONE-signature USDC exit (2 shares → 1.999995) | `JSUZLwY7Txh1YHghUwQTZArRxV7MyHrKRaYorAtfygiZSVtCWC4h3DwX3Q9rjgMZrzRoKfSqnoDURS6pHcHQ9bz` |
+| ONE-signature full exit, buffer short, in-kind (0.743178 USDC + 141395 A + 4713175 B) | `5uxEjdFymqHa1dCuhpZ4YEpDcjZt5Wpkf4qXj1SPC4yk4QMDjNpDeCSqBhoAUBEyP4cSLpzKUXA5JyGV4WiKcXSm` |
 
-Every readback matched the prepare estimate, and the keeper wallet's USDC did not change. Keeper swaps on devnet go through the mock venue because Jupiter has no devnet deployment. The Jupiter CPI path is proven offline against the deployed Jupiter binary in `tests/nav-vault-jupiter.test.mts`. The same script's `solana-test-validator` rehearsal is in `evidence/vaults/nav-vault-localnet-rehearsal.json`.
-
-Note: the devnet proof ran the pre-cap build (sha256 `3fa7cc51…`). Later commits added the per-deposit cap field (`max_deposit_usdc`, `set_max_deposit`), which changes the vault account layout. The committed `programs/bin/*.so` are the current builds.
+Every readback matched the prepare estimate, and the keeper wallet's USDC did not change. On devnet the keeper trades on the mock venue, because Jupiter has no devnet deployment. The Jupiter paths are covered by the offline CPI test against the deployed Jupiter binary and by the read-only mainnet v2 build check in `evidence/vaults/nav-vault-jupiter-v2-readonly.json`.
 
 ## Mainnet (captain-approved pilot)
 
 - Build: `programs/bin/nav_vault.so`. The default features pin the venues to Jupiter V6 exact-in routes and Raydium CLMM `swap_v2`; there is no mock venue.
 - Cost: program rent is about 1.73 SOL for 340,085 bytes of program data, recoverable with `solana program close`. Init is about 0.05 SOL (vault, share mint, 9 token accounts, LUT). The keeper needs about 0.05 SOL for fees.
 - Operator CLI: `npm run nav-vault -- init|keeper …` (`scripts/nav-vault-cli.mts`). It is dry run by default, `--execute --keypair <file>` sends, and the keeper must not be the admin. Pilot flags are `--max-price-age 60 --entry-fee 25 --buffer 500 --max-deposit-raw 50000000`.
-- Swaps: Jupiter v2 `/swap/v2/build` is used when `JUPITER_API_KEY` is set; otherwise v1 `/swap-instructions`. A read-only mainnet check with the Mag7 vault PDA as taker returned `shared_accounts_route` with the PDA as the only signer. Wrapped in `keeper_swap` with the vault LUT, the transactions were 568–669 bytes and 30–34 accounts (MSFT and TSLA buys, NVDA sell).
+- Swaps: Jupiter v2 `/swap/v2/build` is used when `JUPITER_API_KEY` is set, with v1 `/swap-instructions` as the fallback. Both were checked read-only on mainnet with the Mag7 vault PDA as taker. v2 returns `route_v2` and v1 returns `shared_accounts_route`; in both, the PDA is the only signer. Wrapped in `keeper_swap` with the vault LUT, the v2 transactions were 570–801 bytes and 29–48 accounts (see `evidence/vaults/nav-vault-jupiter-v2-readonly.json`). The keeper skips any route that does not fit one packet or 64 accounts.
 - App flag: `STOCKLANA_NAV_VAULT_NETWORK=mainnet-beta` (RPC defaults to the server Helius URL) plus the index lists. The public site stays unflipped until the captain decides.
 
 ## Not done here
