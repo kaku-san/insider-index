@@ -272,6 +272,8 @@ export async function keeperTick(input: {
   maxSwaps?: number;
   /** Optional compute-unit price for every keeper transaction (mainnet landing). */
   priorityMicroLamports?: number;
+  /** Smallest rebalance trade in USDC raw units (default $1). */
+  minTradeUsdcRaw?: bigint;
 }): Promise<KeeperTickResult> {
   const programId = input.programId ?? defaultProgramId();
   const now = input.nowSeconds ?? (() => Math.floor(Date.now() / 1000));
@@ -303,7 +305,7 @@ export async function keeperTick(input: {
   };
   const vaultTables = state.lookupTable ? [(await input.connection.getAddressLookupTable(state.lookupTable)).value].filter((t): t is AddressLookupTableAccount => Boolean(t)) : [];
   const priced: NavVaultSnapshot = { ...snapshot, state: { ...state, legs: state.legs.map((leg, i) => ({ ...leg, price: marks[i]!.price })) } };
-  const plan = planCycle({ snapshot: priced, requests });
+  const plan = planCycle({ snapshot: priced, requests, minTradeUsdcRaw: input.minTradeUsdcRaw });
   result.plan = [
     ...plan.crosses.map(c => ({ kind: "cross", mint: state.legs[c.leg]!.mint.toBase58(), amountInRaw: c.amount.toString(), valueUsdcRaw: c.usdc.toString(), reason: "exit settled from free USDC at mark" })),
     ...plan.swaps.map(a => ({ kind: a.kind, mint: state.legs[a.leg]!.mint.toBase58(), amountInRaw: a.amountInRaw.toString(), valueUsdcRaw: a.valueUsdcRaw.toString(), reason: a.reason })),
