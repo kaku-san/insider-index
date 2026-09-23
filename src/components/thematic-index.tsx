@@ -124,7 +124,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
     </nav>
     <section className={styles.tabContent}>
       {/* Theme constituent mints are the mainnet catalog assets; independent of the vault deployment network. */}
-      {tab === "allocation" ? <IndexAllocation items={holdings.map(item => ({ ticker: item.ticker, name: item.name, weightBps: item.weight_bps, mint: item.mint, issuer: item.issuer, tokenSymbol: item.venueSymbol, network: "mainnet-beta" }))} /> : null}
+      {tab === "allocation" ? <IndexAllocation slice={live && vault?.kind === "nav-vault" ? vault.slice : null} items={holdings.map(item => ({ ticker: item.ticker, name: item.name, weightBps: item.weight_bps, mint: item.mint, issuer: item.issuer, tokenSymbol: item.venueSymbol, network: "mainnet-beta" }))} /> : null}
       {tab === "about" ? <div className={styles.aboutGrid}>
         <section><span>HOW IT IS BUILT</span><h3>About this index</h3><p>{content?.portfolioIntro ?? index.whyItExists}</p><p>{index.rule}</p></section>
         <section><span>SOURCE</span><h3>Where the data comes from</h3><p>{index.sourceLine}</p><p>{index.members.length} members.</p></section>

@@ -1,15 +1,25 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { navVaultConfig, navVaultServes, type NavVaultConfig } from "./config.ts";
 import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, decodeVault, shareAta, tokenAmount, vaultPda } from "./program.ts";
-import { tradableSliceFor } from "./slices.ts";
+import { publishedSliceFor, type TradableSlice } from "./slices.ts";
+import { memo } from "../cache.ts";
+import { createServiceSupabase } from "../supabase.ts";
 import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests, readNavVault, type NavConnection } from "./prepare.ts";
 
 const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
-export type NavDependencies = { config: () => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number };
+export type NavDependencies = { config: () => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number; slice?: (indexId: string) => Promise<TradableSlice | null> };
+/** Published slice table (service role) with the committed JSON as fallback; memoised so readiness polls stay cheap. */
+function defaultSlice(indexId: string): Promise<TradableSlice | null> {
+  return memo(`nav_vault_slice:${indexId}`, { ttlMs: 5 * 60_000 }, () => {
+    const db = createServiceSupabase();
+    return publishedSliceFor(indexId, db ? (fn, args) => Promise.resolve(db.rpc(fn, args)) : null);
+  });
+}
 const defaults: NavDependencies = {
   config: () => navVaultConfig(process.env),
   connection: config => new Connection(config.rpcUrl, { commitment: "confirmed" }),
+  slice: defaultSlice,
 };
 
 function plain(error: unknown, status = 400) {
@@ -43,6 +53,7 @@ export async function handleNavReadiness(indexId: string, deps: NavDependencies 
     const snapshot = await readNavVault(connection, indexId, config.programId, deps.now?.());
     if (!snapshot) return plain(new Error("This index does not have a NAV vault yet."), 404);
     const { state } = snapshot;
+    const slice = await (deps.slice ?? defaultSlice)(indexId);
     return Response.json({
       indexId,
       kind: "nav-vault",
@@ -62,12 +73,13 @@ export async function handleNavReadiness(indexId: string, deps: NavDependencies 
       targetWeights: state.legs.map(leg => ({ mint: leg.mint.toBase58(), weightBps: leg.weightBps })),
       // The vault holds the TRADABLE slice of the disclosed book (on-chain legs are authoritative).
       slice: (() => {
-        const slice = tradableSliceFor(indexId);
         const tradableLegs = state.legs.length;
         // Only describe the slice when it IS the on-chain leg set (same mints); never invent totals.
         const matches = slice && slice.vaultLegs.length === tradableLegs && slice.vaultLegs.every(leg => state.legs.some(onChain => onChain.mint.toBase58() === leg.mint));
         if (!slice || !matches) return { tradableLegs, totalLegs: null, disclosedWeightBps: null, excluded: [] };
-        return { tradableLegs, totalLegs: slice.totalLegs, disclosedWeightBps: slice.disclosedWeightBps, excluded: slice.excluded.map(item => ({ ticker: item.ticker, reason: item.reason })) };
+        // Held names carry the on-chain target weight; excluded names carry disclosed weight + scan reason.
+        const vaultLegs = slice.vaultLegs.map(leg => ({ ticker: leg.ticker, mint: leg.mint, disclosedWeightBps: leg.disclosedWeightBps, targetWeightBps: state.legs.find(onChain => onChain.mint.toBase58() === leg.mint)?.weightBps ?? leg.targetWeightBps }));
+        return { tradableLegs, totalLegs: slice.totalLegs, disclosedWeightBps: slice.disclosedWeightBps, vaultLegs, excluded: slice.excluded.map(item => ({ ticker: item.ticker, mint: item.mint, disclosedWeightBps: item.disclosedWeightBps, reason: item.reason })) };
       })(),
       navVault: { navUsdc: micro(snapshot.nav), usdcBufferUsdc: micro(snapshot.usdcBalance), bufferBps: state.bufferBps, priceAgeSecs: snapshot.priceAgeSecs },
     }, { headers: HEADERS });

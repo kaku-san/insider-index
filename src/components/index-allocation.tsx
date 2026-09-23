@@ -3,6 +3,7 @@ import { useId, useMemo, useRef, useState } from "react";
 import { allocationView, ALLOCATION_COLORS, type AllocationInput, type AllocationRow } from "@/lib/frontend/allocation-view";
 import { linkedToken, shortMint } from "@/lib/frontend/linked-token";
 import { companyNameFor } from "@/lib/frontend/company-logos";
+import { formatBps, sliceHeadline, SLICE_FOOTNOTE, withSliceMarks, type NavSlice } from "@/lib/frontend/slice-notes";
 import { StockIcon } from "./social/shared";
 import { Icon } from "./social/icon";
 import styles from "./index-allocation.module.css";
@@ -42,8 +43,12 @@ function MintDetails({ item, id }: { item: AllocationInput; id: string }) {
   </div>;
 }
 
-/** One chart + its complete, expandable legend. Replaces both Stocks and Breakdown. */
-export function IndexAllocation({ items, basis = "Published target weights" }: { items: AllocationInput[]; basis?: string }) {
+/** One chart + its complete, expandable legend. Replaces both Stocks and Breakdown.
+ *  With a NAV vault `slice`, held rows show the vault target weight and every excluded name stays listed with an asterisk + reason. */
+export function IndexAllocation({ items: sourceItems, basis = "Published target weights", slice }: { items: AllocationInput[]; basis?: string; slice?: NavSlice | null }) {
+  const headline = sliceHeadline(slice);
+  const items = useMemo(() => withSliceMarks(sourceItems, slice), [sourceItems, slice]);
+  const hasExcluded = items.some(item => item.sliceMark && !item.sliceMark.held);
   const { rows, count, totalBps, denominator, topThreeBps } = allocationView(items);
   const [active, setActive] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -55,7 +60,8 @@ export function IndexAllocation({ items, basis = "Published target weights" }: {
   const shownKeys = new Set(rows.filter(row => !row.missing && !row.otherCount).map(row => row.key));
   const extra = all.filter(row => !shownKeys.has(row.key));
   const missing = rows.filter(row => row.missing);
-  const legend: AllocationRow[] = showAll ? [...all, ...missing] : [...rows, ...all.filter(row => !Number.isFinite(row.weightBps) || row.weightBps <= 0)];
+  // Collapsed legend still lists every name the vault does not hold (asterisked), even ones folded into Other.
+  const legend: AllocationRow[] = showAll ? [...all, ...missing] : [...rows, ...all.filter(row => !Number.isFinite(row.weightBps) || row.weightBps <= 0 || (row.sliceMark?.held === false && !shownKeys.has(row.key)))];
   // Hover/focus wins; otherwise the expanded holding keeps its chart slice selected so chart and legend agree.
   const focus = active ?? expanded;
   const selected = all.find(row => row.key === focus) ?? rows.find(row => row.key === focus);
@@ -64,7 +70,7 @@ export function IndexAllocation({ items, basis = "Published target weights" }: {
   const sliceStarts = rows.reduce<number[]>((starts, row, i) => [...starts, i ? starts[i - 1] + rows[i - 1].weightBps / denominator * 100 : 0], []);
   if (!items.length) return <section className={styles.empty}><h3>Allocation is not available yet.</h3><p>The source has no holdings for this view.</p></section>;
   return <section className={styles.panel} aria-labelledby={titleId}>
-    <header className={styles.header}><div><h2 id={titleId}>Allocation</h2><p>{basis}</p></div><span className={styles.count}>{items.length} holdings</span></header>
+    <header className={styles.header}><div><h2 id={titleId}>Allocation</h2><p>{basis}</p>{headline ? <p className={styles.sliceHeadline} data-slice-headline="true">{headline}</p> : null}</div><span className={styles.count}>{items.length} holdings</span></header>
     <div className={styles.body}>
       <div className={styles.chartColumn}>
         <div className={styles.chart} onPointerLeave={() => setActive(null)}>
@@ -82,7 +88,7 @@ export function IndexAllocation({ items, basis = "Published target weights" }: {
         <p className={styles.chartHint}>Select a holding to inspect its linked token.</p>
       </div>
       <div className={styles.legendColumn}>
-        <div className={styles.legendHead}><span>Asset / linked token</span><span>Weight</span></div>
+        <div className={styles.legendHead}><span>Asset / linked token</span><span>{headline ? "Disclosed weight" : "Weight"}</span></div>
         <div className={styles.legend}>
           {legend.map(row => {
             const index = rows.findIndex(slice => slice.key === row.key);
@@ -91,12 +97,14 @@ export function IndexAllocation({ items, basis = "Published target weights" }: {
             const isAggregate = Boolean(row.otherCount || row.missing || row.ticker === "OTHER" || row.ticker === "UNREPORTED");
             const detailsId = `${titleId}-${row.key}-details`;
             const open = expanded === row.key;
+            const mark = row.sliceMark;
+            const weight = Number.isFinite(row.weightBps) && row.weightBps >= 0 ? row.weightBps : mark && !mark.held && mark.disclosedWeightBps != null ? mark.disclosedWeightBps : null;
             return <div className={styles.legendItem} key={row.key}>
               <button type="button" className={`${styles.holdingButton} ${active === row.key || open ? styles.selected : ""}`} onPointerEnter={() => setActive(row.key)} onPointerLeave={() => setActive(null)} onFocus={() => setActive(row.key)} onBlur={() => setActive(null)} onClick={() => { if (row.otherCount) setShowAll(true); else if (!isAggregate) setExpanded(open ? null : row.key); }} aria-expanded={row.otherCount ? showAll : !isAggregate ? open : undefined} aria-controls={!isAggregate ? detailsId : undefined}>
                 <i style={{ background: row.missing ? "var(--border)" : ALLOCATION_COLORS[Math.max(0, colorIndex) % ALLOCATION_COLORS.length] }} />
                 {isAggregate ? <span className={styles.unknown}>{row.missing ? "—" : "•••"}</span> : <StockIcon ticker={row.ticker} size="sm" />}
-                <span className={styles.name}><strong>{row.otherCount ? "Other holdings" : row.missing ? "Unreported allocation" : row.ticker}</strong><small>{row.otherCount ? `${row.otherCount} holdings · expand all` : row.missing ? "Not supplied by this source" : `${companyNameFor(row.ticker, row.name)}${row.detail ? ` · ${row.detail}` : ""}`}</small>{!isAggregate ? <span className={styles.linkedHint}>{token.mint ? <><Icon name="copy" size={10} />{shortMint(token.mint)}</> : "Token details"}</span> : null}</span>
-                <b>{Number.isFinite(row.weightBps) && row.weightBps >= 0 ? `${(row.weightBps / 100).toFixed(row.weightBps >= 1000 ? 1 : 2)}%` : "—"}</b>
+                <span className={styles.name}><strong>{row.otherCount ? "Other holdings" : row.missing ? "Unreported allocation" : row.ticker}{mark && !mark.held ? <sup className={styles.asterisk} aria-label="not held in the vault yet">*</sup> : null}</strong><small>{row.otherCount ? `${row.otherCount} holdings · expand all` : row.missing ? "Not supplied by this source" : `${companyNameFor(row.ticker, row.name)}${row.detail ? ` · ${row.detail}` : ""}`}</small>{mark && !mark.held ? <span className={styles.sliceExcluded} data-slice-excluded="true">*{mark.reason}</span> : null}{mark?.held && mark.targetWeightBps != null ? <span className={styles.sliceHeld} data-slice-held="true">In vault · vault target {formatBps(mark.targetWeightBps)}</span> : null}{!isAggregate ? <span className={styles.linkedHint}>{token.mint ? <><Icon name="copy" size={10} />{shortMint(token.mint)}</> : "Token details"}</span> : null}</span>
+                <b>{weight != null ? formatBps(weight) : "—"}</b>
                 {!row.missing ? <Icon name="chevron" size={13} className={open ? styles.rotated : ""} /> : <span />}
               </button>
               {!isAggregate && open ? <MintDetails key={row.mint ?? row.key} item={row} id={detailsId} /> : null}
@@ -106,6 +114,8 @@ export function IndexAllocation({ items, basis = "Published target weights" }: {
         {hasMore ? <button className={styles.expandAll} type="button" aria-expanded={showAll} onClick={() => { setShowAll(!showAll); setExpanded(null); }}>{showAll ? "Show fewer holdings" : `Show all ${items.length} holdings`}<Icon name="chevron" size={14} className={showAll ? styles.upChevron : styles.downChevron} /></button> : null}
       </div>
     </div>
+    {headline && hasExcluded ? <p className={styles.sliceFootnote} data-slice-footnote="true">{SLICE_FOOTNOTE}</p> : null}
+    {headline ? <p className={styles.sliceBasis}>Disclosed weight is each name’s share of the disclosed book. Vault target is the weight the vault holds for names it can trade.</p> : null}
     <p className={styles.note}>{totalBps > 10001 ? `Source weights total ${(totalBps / 100).toFixed(2)}%; inspect the source before comparing. ` : ""}Allocation is a source snapshot, not your live position. Linked-token addresses come from the source record; source-only holdings are kept visible.</p>
   </section>;
 }

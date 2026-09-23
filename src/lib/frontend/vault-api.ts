@@ -3,6 +3,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 import { ApiError, readApi, writeApi } from "./api";
 import type { CashOutAsset, DepositFill, PositionBasket } from "./position-basket";
+import { sliceHeadline, type NavSlice } from "./slice-notes";
 
 export type Network = "devnet" | "mainnet-beta";
 export type RawAmount = string;
@@ -141,7 +142,7 @@ export type VaultReadiness = {
   indexId: string;
   kind?: "nav-vault";
   /** NAV vault: the tradable slice of the disclosed book the vault actually holds. */
-  slice?: { tradableLegs: number; totalLegs: number | null; disclosedWeightBps: number | null; excluded: { ticker: string; reason: string }[] };
+  slice?: NavSlice;
   status?: string;
   phase?: string;
   identity?: VaultIdentity | null;
@@ -317,9 +318,7 @@ export function publicIndexStatus(state: PublicVaultDepositState): PublicIndexSt
 
 /** "Tradable slice: 5 of 18 holdings (72.6% of disclosed weight)" for a NAV vault; null otherwise. */
 export function navSliceLabel(readiness?: VaultReadiness | null): string | null {
-  const slice = readiness?.kind === "nav-vault" ? readiness.slice : undefined;
-  if (!slice || slice.totalLegs == null || slice.disclosedWeightBps == null) return null;
-  return `Tradable slice: ${slice.tradableLegs} of ${slice.totalLegs} holdings (${(slice.disclosedWeightBps / 100).toFixed(1)}% of disclosed weight)`;
+  return sliceHeadline(readiness?.kind === "nav-vault" ? readiness.slice : undefined);
 }
 
 /** Public status under the NAV rail: Live when the index has a NAV vault accepting deposits, else Research. */
