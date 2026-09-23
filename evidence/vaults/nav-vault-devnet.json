@@ -1,0 +1,189 @@
+{
+  "network": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "indexId": "idx-nav-devnet-mag7-proof",
+  "programs": {
+    "navVault": "HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB",
+    "mockSwap": "9B8ryJEpnxpebZXzYNEyLkA3Ru173yQtC3BuP7Z1ce6R"
+  },
+  "accounts": {
+    "payer": "6t6tFssPVbonZF98swtyr3mkYe5m3uWhCZjQ3DCqRkC9",
+    "keeper": "Am2ocPczdUgQsyF1r9VDAb6k6rurPfHJU5VjbT1d9X9w",
+    "user": "8szwNs89BvARkGSHQwZ6BgMi53XRYCrkDhyZnJUR172t",
+    "testUsdcMint": "H4K9Mmk2dVhKHZguNMguo8emk3CCAd8BTg2yToSTHKDP",
+    "testStockA": "9T7fYKmtBcqZTo3xE3HLdLaGqJHTkP3oFB6nC63Ltw91",
+    "testStockB": "5fT8nSKujpYnuAn9mERWsbi24QEHyXRh1mhHu5y7ME1K",
+    "vault": "6xW9BfrBZjtRmxU5hRmfH4Zp6epaP5JQw1AA4kCY3ZAg",
+    "authority": "7vYePtVFYBrXLmGKxB45knfK3Qau8KkbiseEan6CoMnn",
+    "shareMint": "8Efq4n5LYzQ7cLXFUHADzuwVLuUNJ36GrEL81aogwmCD",
+    "vaultUsdc": "7vw7U1awTspynrq1PGrQADJEAJzcjZpuofnNGVCasbxi",
+    "feeAccount": "8f7F3cXgdpoEucu7yEcUa69FqK4raAzwb7GjrxVWX3gx",
+    "lookupTable": "H4MqVTPHnf3yGrkxcLWqr4M6Nx55rHYhusANYDFbPZJD"
+  },
+  "steps": [
+    {
+      "step": "fund keeper + user (SOL for fees/rent)",
+      "signature": "2FEi6EdFKLJBhKjFnoqRDYJ5UxhBUAipNGd2jaFLqthrpPgAvHxPF9okoktRWKXNEdJc1keuZTW34zipo2wJjERY",
+      "explorer": "https://explorer.solana.com/tx/2FEi6EdFKLJBhKjFnoqRDYJ5UxhBUAipNGd2jaFLqthrpPgAvHxPF9okoktRWKXNEdJc1keuZTW34zipo2wJjERY?cluster=devnet"
+    },
+    {
+      "step": "create test mints (tUSDC, tSTOCKA classic 6dp, tSTOCKB Token-2022 8dp)",
+      "signature": "3ok9mmfmNPa4rSCuUvGpspAsdRw8qxBrRVmY2yK45TfXjK6nJdJv921sGxJKQrFu8LPBxX74xowWbzxHQ6xk8B8Z",
+      "explorer": "https://explorer.solana.com/tx/3ok9mmfmNPa4rSCuUvGpspAsdRw8qxBrRVmY2yK45TfXjK6nJdJv921sGxJKQrFu8LPBxX74xowWbzxHQ6xk8B8Z?cluster=devnet"
+    },
+    {
+      "step": "vault token accounts (authority PDA ATAs) + fee account",
+      "signature": "3sj9izVE8HqDd94Cz5wz1FSmoMThKtLYWV6v1qiZtovoUJ5gUWPvtv5fDKXxtLXL3k9wyw6pTcmqjiuGbRy2KVn3",
+      "explorer": "https://explorer.solana.com/tx/3sj9izVE8HqDd94Cz5wz1FSmoMThKtLYWV6v1qiZtovoUJ5gUWPvtv5fDKXxtLXL3k9wyw6pTcmqjiuGbRy2KVn3?cluster=devnet"
+    },
+    {
+      "step": "init_vault (60/40, 25 bps entry fee, 5% buffer, 600 s max mark age)",
+      "signature": "62gUk8AhvfbsNT5Q95t9v41tEecwStZbdpx55NCAsYXaneANLG1FFsNzcwzwzviKNAxFDhPCWsPmGWX1wCZP6sYL",
+      "explorer": "https://explorer.solana.com/tx/62gUk8AhvfbsNT5Q95t9v41tEecwStZbdpx55NCAsYXaneANLG1FFsNzcwzwzviKNAxFDhPCWsPmGWX1wCZP6sYL?cluster=devnet"
+    },
+    {
+      "step": "vault lookup table",
+      "signature": "4KTLEpsBgyLBRu4mQTkRLBp7JwcNmsmibypoC91Uw2ak5Aa7hDQ5TpWP7AhWmVzxF6UpJr5Ru3WchyCXumJtf7R2",
+      "explorer": "https://explorer.solana.com/tx/4KTLEpsBgyLBRu4mQTkRLBp7JwcNmsmibypoC91Uw2ak5Aa7hDQ5TpWP7AhWmVzxF6UpJr5Ru3WchyCXumJtf7R2?cluster=devnet"
+    },
+    {
+      "step": "mock pool 9T7fYK",
+      "signature": "2XPJwEuYv4EFxXcvpshYrzR45E2jmXguqdejm5LKwo1VJ84YWwSRQwTf63MGGD1AJvHvuoUrLeWXk3ADzPxTDGTd",
+      "explorer": "https://explorer.solana.com/tx/2XPJwEuYv4EFxXcvpshYrzR45E2jmXguqdejm5LKwo1VJ84YWwSRQwTf63MGGD1AJvHvuoUrLeWXk3ADzPxTDGTd?cluster=devnet"
+    },
+    {
+      "step": "mock pool 5fT8nS",
+      "signature": "5JdZ4pkFc6n66wh6NdcvmZHvB9kKfM2M5vg3yN8GG6wUtknNrwad2p1yUcbqnmMqAbw9bvKbinLrQ9Ny1sX4zzHF",
+      "explorer": "https://explorer.solana.com/tx/5JdZ4pkFc6n66wh6NdcvmZHvB9kKfM2M5vg3yN8GG6wUtknNrwad2p1yUcbqnmMqAbw9bvKbinLrQ9Ny1sX4zzHF?cluster=devnet"
+    },
+    {
+      "step": "user test USDC (100)",
+      "signature": "35z98ZHxaXdq3bzmvx4DFdbquRHDTmcTX71ieFCSKqYok8LCwLh4cndLXbUXZJUqVTUCWhGCFmfRWy4kYjgMdVuE",
+      "explorer": "https://explorer.solana.com/tx/35z98ZHxaXdq3bzmvx4DFdbquRHDTmcTX71ieFCSKqYok8LCwLh4cndLXbUXZJUqVTUCWhGCFmfRWy4kYjgMdVuE?cluster=devnet"
+    },
+    {
+      "step": "keeper update_prices",
+      "signature": "221i9PtpTccaZQ1ijy2YudWESfBqBvrL8GmxDNJdFRDMgg4bwJYSSD2iEDe2TaDaTgKdKBT4nMcA4AUS7YCpFnge",
+      "explorer": "https://explorer.solana.com/tx/221i9PtpTccaZQ1ijy2YudWESfBqBvrL8GmxDNJdFRDMgg4bwJYSSD2iEDe2TaDaTgKdKBT4nMcA4AUS7YCpFnge?cluster=devnet"
+    },
+    {
+      "step": "user deposit 100 tUSDC (ONE signature)",
+      "signature": "43ULRsXmSFeMV4QfzBMkmetfaYL44TYN385jxC21czY5n7bZPZFGtpgzmYK25RbUjvegeYBDeV157Er5Dwbc5Maf",
+      "explorer": "https://explorer.solana.com/tx/43ULRsXmSFeMV4QfzBMkmetfaYL44TYN385jxC21czY5n7bZPZFGtpgzmYK25RbUjvegeYBDeV157Er5Dwbc5Maf?cluster=devnet",
+      "note": "expected shares 99750000, fee 250000",
+      "readback": {
+        "userShares": "99750000",
+        "vaultUsdc": "99750000",
+        "fee": "250000"
+      }
+    },
+    {
+      "step": "keeper update_prices",
+      "signature": "wko3fZbiCGsKwQjPtktFmdrMnR6GUTqjvKMybwdfCBwixuxYs2yz5CzZCnMfJ35fsFPH8vHTmzCTbLdUUqtBSVp",
+      "explorer": "https://explorer.solana.com/tx/wko3fZbiCGsKwQjPtktFmdrMnR6GUTqjvKMybwdfCBwixuxYs2yz5CzZCnMfJ35fsFPH8vHTmzCTbLdUUqtBSVp?cluster=devnet"
+    },
+    {
+      "step": "keeper buy:9T7fYKmtBcqZTo3xE3HLdLaGqJHTkP3oFB6nC63Ltw91",
+      "signature": "4sEgPkPrXAZVE3cHumLqvJzraeQvyiTyuKrkXReSkDdAxaSFyRSwqy2jFCCk71qSudNhomdFL2LqEyMCzKxpxLVX",
+      "explorer": "https://explorer.solana.com/tx/4sEgPkPrXAZVE3cHumLqvJzraeQvyiTyuKrkXReSkDdAxaSFyRSwqy2jFCCk71qSudNhomdFL2LqEyMCzKxpxLVX?cluster=devnet"
+    },
+    {
+      "step": "keeper buy:5fT8nSKujpYnuAn9mERWsbi24QEHyXRh1mhHu5y7ME1K",
+      "signature": "2yEusBeFANDvPccYF8mosR2fgW3CmhhgbDSPStyvrk7Do8CJEP63TokZJYNvG4GPGkMbMfw7ZfHRs1MVCsw6ep7w",
+      "explorer": "https://explorer.solana.com/tx/2yEusBeFANDvPccYF8mosR2fgW3CmhhgbDSPStyvrk7Do8CJEP63TokZJYNvG4GPGkMbMfw7ZfHRs1MVCsw6ep7w?cluster=devnet"
+    },
+    {
+      "step": "keeper readback",
+      "signature": "",
+      "explorer": "",
+      "readback": {
+        "plan": [
+          {
+            "kind": "buy",
+            "mint": "9T7fYKmtBcqZTo3xE3HLdLaGqJHTkP3oFB6nC63Ltw91",
+            "amountInRaw": "56558250",
+            "valueUsdcRaw": "56558250",
+            "reason": "below target weight"
+          },
+          {
+            "kind": "buy",
+            "mint": "5fT8nSKujpYnuAn9mERWsbi24QEHyXRh1mhHu5y7ME1K",
+            "amountInRaw": "37705500",
+            "valueUsdcRaw": "37705500",
+            "reason": "below target weight"
+          }
+        ],
+        "usdc": "5486269",
+        "legs": [
+          "282791",
+          "9426370"
+        ],
+        "nav": "99749949",
+        "bufferBpsNow": 550,
+        "keeperUsdcUnchanged": true
+      }
+    },
+    {
+      "step": "user cash out 2 shares → USDC buffer (ONE signature)",
+      "signature": "5cEQqHFxe11oo4AFS2dsyeGr3DfdZxknbqpmAoLn2QWZ7NwTS5pnmpRnFjW98M42NzS8mNFgk3wrSoqqxPQQxuZF",
+      "explorer": "https://explorer.solana.com/tx/5cEQqHFxe11oo4AFS2dsyeGr3DfdZxknbqpmAoLn2QWZ7NwTS5pnmpRnFjW98M42NzS8mNFgk3wrSoqqxPQQxuZF?cluster=devnet",
+      "note": "About 1.999998 USDC from the vault's USDC buffer.",
+      "readback": {
+        "usdcReceived": "1999998",
+        "expected": "1999998"
+      }
+    },
+    {
+      "step": "user cash out all remaining shares → buffer short → pro-rata in-kind (ONE signature)",
+      "signature": "3jX9Bqv3s4AviiPfwZc7srfyXiD2uBgy9NS77wL9R2y6y3V31LHcJY6u73Xcq5SWddwuRwXHHfYwGY9rmuh3sj1r",
+      "explorer": "https://explorer.solana.com/tx/3jX9Bqv3s4AviiPfwZc7srfyXiD2uBgy9NS77wL9R2y6y3V31LHcJY6u73Xcq5SWddwuRwXHHfYwGY9rmuh3sj1r?cluster=devnet",
+      "note": "The vault USDC buffer cannot cover this cash out. You receive your pro-rata share of the vault instead: 3.486271 USDC plus 2 stock tokens. This is not a USDC exit.",
+      "readback": {
+        "expectedInKind": [
+          {
+            "mint": "9T7fYKmtBcqZTo3xE3HLdLaGqJHTkP3oFB6nC63Ltw91",
+            "amountRaw": "282791"
+          },
+          {
+            "mint": "5fT8nSKujpYnuAn9mERWsbi24QEHyXRh1mhHu5y7ME1K",
+            "amountRaw": "9426370"
+          }
+        ],
+        "expectedUsdc": "3486271",
+        "usdcReceived": "3486271",
+        "stockA": "282791",
+        "stockB": "9426370",
+        "userSharesAfter": "0"
+      }
+    }
+  ],
+  "deployment": {
+    "fundedFrom": "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB (existing devnet test wallet, devnet only)",
+    "fundDeployer": {
+      "sol": "3.6",
+      "signature": "5qDaaoxfHu1iLjD7xbiduerUunTrJ2neZ7riBd2qaMs9sHpjK66dGvqeEm2gPtASirR5pnM99Mq8J8eMAgFTTqMA"
+    },
+    "mockSwap": {
+      "programId": "9B8ryJEpnxpebZXzYNEyLkA3Ru173yQtC3BuP7Z1ce6R",
+      "slot": 502908169,
+      "signature": "5q5hS4RjKARRTvh1C74q4ZgSa8tsR37ihBjtn5YfwrjphFFSfv5HhXfyh76j5JDY7BAXFk87fRMWTakNcuAnqewZ",
+      "programDataLamportsSol": "0.47453804"
+    },
+    "navVault": {
+      "programId": "HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB",
+      "build": "programs/bin/nav_vault_devnet.so (--features devnet)",
+      "sha256": "3fa7cc51479ffcbfb051afa1b10840329fef579e5a479dcf983a010439d3fe00",
+      "dumpMatchesCommittedBinary": true,
+      "slot": 502908246,
+      "signature": "329wya2aiLSstQPC6C7bCkXZNM1Xp1Mtf86joDgHDYsy6dr3x6mCpfqbBuTvDKtjdi5AwP5vxC6QKH5wHdHKcqpD",
+      "programDataLamportsSol": "1.7203166"
+    },
+    "upgradeAuthority": "6t6tFssPVbonZF98swtyr3mkYe5m3uWhCZjQ3DCqRkC9 (key in gitignored .toolchain/keys/devnet-deployer.json)",
+    "returnedToTestWallet": {
+      "sol": "1.27",
+      "signature": "3iXmpWc82uQMGNbLgjZYEC3LyNpSDaznusp1BYJnPHZ62PfVo2tcx16N4WGj9xPYfLp6LyPBtskTk3v1EVykm9Hw"
+    },
+    "programsLeftOpen": "Not closed: closing is permanent (the program ids can never be redeployed) and the captain is comparing designs on devnet. Recover ~2.19 SOL later with: solana program close <id> --recipient C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB --bypass-warning --keypair .toolchain/keys/devnet-deployer.json --url devnet"
+  },
+  "finality": "deposit / USDC exit / in-kind exit signatures confirmed Finalized via solana confirm"
+}

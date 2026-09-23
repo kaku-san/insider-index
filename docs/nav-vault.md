@@ -37,7 +37,21 @@ node --experimental-strip-types scripts/nav-vault-devnet.mts --payer <devnet key
 
 `--localnet` rehearses the same script against `solana-test-validator`.
 
-**Status: devnet NOT run** (faucet rate-limited; decision `devnet-sol` = ship on local proofs). Evidence instead: the LiteSVM suites above, the real-Jupiter CPI test, and a full `solana-test-validator` rehearsal of this script — `evidence/vaults/nav-vault-localnet-rehearsal.json` (localnet signatures, not devnet receipts): deposit 100 → 99.75 shares + 0.25 fee, two keeper buys leaving a 5.50% buffer, 2-share USDC exit (1.999998 USDC), full exit via in-kind fallback (3.486271 USDC + both stocks), every readback equal to the prepare estimate. Devnet receipts would go to `evidence/vaults/nav-vault-devnet.json`.
+**Devnet proof (done, finalized).** Programs deployed with the upgrade authority `6t6tFss…RkC9`, funded with 3.6 devnet SOL from the devnet test wallet `C7ye…YQyB`; 1.27 SOL was returned afterwards. The programs are left open. Closing is permanent, so the ~2.19 SOL of rent can be recovered later with `solana program close`, as recorded in the evidence. The deployed `nav_vault` bytes match `programs/bin/nav_vault_devnet.so` (sha256 `3fa7cc51…`). Index `idx-nav-devnet-mag7-proof` uses synthetic test mints: tUSDC, a classic 6dp stock stand-in and a Token-2022 8dp stock stand-in. Full receipts are in `evidence/vaults/nav-vault-devnet.json`.
+
+| Step | Signature |
+| --- | --- |
+| deploy nav_vault | `329wya2aiLSstQPC6C7bCkXZNM1Xp1Mtf86joDgHDYsy6dr3x6mCpfqbBuTvDKtjdi5AwP5vxC6QKH5wHdHKcqpD` |
+| deploy mock_swap | `5q5hS4RjKARRTvh1C74q4ZgSa8tsR37ihBjtn5YfwrjphFFSfv5HhXfyh76j5JDY7BAXFk87fRMWTakNcuAnqewZ` |
+| init_vault (60/40, 25 bps fee, 5% buffer) | `62gUk8AhvfbsNT5Q95t9v41tEecwStZbdpx55NCAsYXaneANLG1FFsNzcwzwzviKNAxFDhPCWsPmGWX1wCZP6sYL` |
+| keeper marks | `221i9PtpTccaZQ1ijy2YudWESfBqBvrL8GmxDNJdFRDMgg4bwJYSSD2iEDe2TaDaTgKdKBT4nMcA4AUS7YCpFnge` |
+| ONE-signature deposit 100 → 99.75 shares, 0.25 fee | `43ULRsXmSFeMV4QfzBMkmetfaYL44TYN385jxC21czY5n7bZPZFGtpgzmYK25RbUjvegeYBDeV157Er5Dwbc5Maf` |
+| keeper buy stock A (from vault USDC) | `4sEgPkPrXAZVE3cHumLqvJzraeQvyiTyuKrkXReSkDdAxaSFyRSwqy2jFCCk71qSudNhomdFL2LqEyMCzKxpxLVX` |
+| keeper buy stock B → buffer 5.50% | `2yEusBeFANDvPccYF8mosR2fgW3CmhhgbDSPStyvrk7Do8CJEP63TokZJYNvG4GPGkMbMfw7ZfHRs1MVCsw6ep7w` |
+| ONE-signature USDC exit (2 shares → 1.999998) | `5cEQqHFxe11oo4AFS2dsyeGr3DfdZxknbqpmAoLn2QWZ7NwTS5pnmpRnFjW98M42NzS8mNFgk3wrSoqqxPQQxuZF` |
+| ONE-signature full exit, buffer short, in-kind (3.486271 USDC + 282791 A + 9426370 B) | `3jX9Bqv3s4AviiPfwZc7srfyXiD2uBgy9NS77wL9R2y6y3V31LHcJY6u73Xcq5SWddwuRwXHHfYwGY9rmuh3sj1r` |
+
+Every readback matched the prepare estimate, and the keeper wallet's USDC did not change. Keeper swaps on devnet go through the mock venue because Jupiter has no devnet deployment. The Jupiter CPI path is proven offline against the deployed Jupiter binary in `tests/nav-vault-jupiter.test.mts`. The same script's `solana-test-validator` rehearsal is in `evidence/vaults/nav-vault-localnet-rehearsal.json`.
 
 ## Not done here
 
