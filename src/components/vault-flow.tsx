@@ -167,7 +167,7 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
   }
   function useMaxUsdc() { if (availableUsdcRaw !== null) changeAmount(rawToDecimal(availableUsdcRaw, 6)); }
   // Quote all seven slices, or the cash-out prepare, before the action can be signed.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  /* eslint-disable react-hooks/set-state-in-effect -- this effect resets and advances the quote state machine when its external inputs change */
   useEffect(() => {
     if (!open || screen !== "amount" || activeIntent || !wallet.authenticated || !wallet.solanaAddress || !network || !canPrepare) return;
     let raw: string;
@@ -205,6 +205,7 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     }, 400);
     return () => { clearTimeout(timer); quoteGeneration.current += 1; };
   }, [open, screen, amount, mode, wallet.authenticated, wallet.solanaAddress, network, canPrepare, activeIntent, indexId, insufficientUsdc, position, readiness]);
+  /* eslint-enable react-hooks/set-state-in-effect */
   function currentRequestKey() {
     if (!wallet.solanaAddress || !network) return null;
     try {
