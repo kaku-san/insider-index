@@ -8,12 +8,14 @@ import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests
 
 const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
-export type NavDependencies = { config: () => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number; slice?: (indexId: string) => Promise<TradableSlice | null> };
+export type NavDependencies = { config: () => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number; slice?: (indexId: string, vaultMints: readonly string[]) => Promise<TradableSlice | null> };
 /** Published slice table (service role) with the committed JSON as fallback; memoised so readiness polls stay cheap. */
-function defaultSlice(indexId: string): Promise<TradableSlice | null> {
-  return memo(`nav_vault_slice:${indexId}`, { ttlMs: 5 * 60_000 }, () => {
+function defaultSlice(indexId: string, vaultMints: readonly string[]): Promise<TradableSlice | null> {
+  const mintSet = new Set(vaultMints);
+  const matchesVault = (slice: TradableSlice) => slice.vaultLegs.length === mintSet.size && slice.vaultLegs.every(leg => mintSet.has(leg.mint));
+  return memo(`nav_vault_slice:${indexId}:${[...mintSet].sort().join(",")}`, { ttlMs: 5 * 60_000 }, () => {
     const db = createServiceSupabase();
-    return publishedSliceFor(indexId, db ? (fn, args) => Promise.resolve(db.rpc(fn, args)) : null);
+    return publishedSliceFor(indexId, db ? (fn, args) => Promise.resolve(db.rpc(fn, args)) : null, matchesVault);
   });
 }
 const defaults: NavDependencies = {
@@ -53,7 +55,7 @@ export async function handleNavReadiness(indexId: string, deps: NavDependencies 
     const snapshot = await readNavVault(connection, indexId, config.programId, deps.now?.());
     if (!snapshot) return plain(new Error("This index does not have a NAV vault yet."), 404);
     const { state } = snapshot;
-    const slice = await (deps.slice ?? defaultSlice)(indexId);
+    const slice = await (deps.slice ?? defaultSlice)(indexId, state.legs.map(leg => leg.mint.toBase58()));
     return Response.json({
       indexId,
       kind: "nav-vault",

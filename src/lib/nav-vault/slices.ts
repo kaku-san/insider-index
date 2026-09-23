@@ -34,7 +34,8 @@ export function sliceFromPublishedRow(row: unknown, indexId: string): TradableSl
   if (r.index_id !== indexId || !count(r.total_legs) || !count(r.tradable_legs) || !bps(r.disclosed_weight_bps)) return null;
   if (!legList(r.vault_legs, item => bps(item.targetWeightBps)) || !legList(r.excluded, item => typeof item.reason === "string")) return null;
   const vaultLegs = r.vault_legs as TradableSlice["vaultLegs"], excluded = r.excluded as TradableSlice["excluded"];
-  if (vaultLegs.length !== r.tradable_legs) return null;
+  const mints = [...vaultLegs, ...excluded].map(leg => leg.mint);
+  if (vaultLegs.length !== r.tradable_legs || mints.length !== r.total_legs || new Set(mints).size !== mints.length) return null;
   return {
     indexId, totalLegs: r.total_legs as number, tradableLegs: r.tradable_legs as number, disclosedWeightBps: r.disclosed_weight_bps as number, eligible: vaultLegs.length > 0,
     vaultLegs: vaultLegs.map(leg => ({ ticker: leg.ticker, mint: leg.mint, disclosedWeightBps: leg.disclosedWeightBps, targetWeightBps: leg.targetWeightBps })),
@@ -45,15 +46,16 @@ export function sliceFromPublishedRow(row: unknown, indexId: string): TradableSl
 export type SliceRpc = (fn: "read_insiderindex_nav_vault_slice", args: { p_index_id: string }) => Promise<{ data: unknown; error: unknown }>;
 
 /** The published slice table first; the committed JSON when the table is unreachable, empty or malformed. */
-export async function publishedSliceFor(indexId: string, rpc?: SliceRpc | null): Promise<TradableSlice | null> {
+export async function publishedSliceFor(indexId: string, rpc?: SliceRpc | null, accepts: (slice: TradableSlice) => boolean = () => true): Promise<TradableSlice | null> {
   if (rpc) {
     try {
       const { data, error } = await rpc("read_insiderindex_nav_vault_slice", { p_index_id: indexId });
       const published = error ? null : sliceFromPublishedRow(data, indexId);
-      if (published) return published;
+      if (published && accepts(published)) return published;
     } catch { /* fall back to the committed scan */ }
   }
-  return tradableSliceFor(indexId);
+  const committed = tradableSliceFor(indexId);
+  return committed && accepts(committed) ? committed : null;
 }
 
 /** "Tradable slice: 5 of 18 holdings (72.6% of disclosed weight)". */

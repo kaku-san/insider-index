@@ -59,17 +59,28 @@ test("slice marks: held rows get the vault target, excluded rows stay listed wit
 });
 
 test("published slice table wins; unreachable, empty or malformed rows fall back to the committed JSON", async () => {
-  const row = { index_id: "insiderindex-nancy-pelosi", total_legs: 19, tradable_legs: 1, disclosed_weight_bps: 5000,
+  const row = { index_id: "insiderindex-nancy-pelosi", total_legs: 2, tradable_legs: 1, disclosed_weight_bps: 5000,
     vault_legs: [{ ticker: "NVDA", mint: "mint-n", disclosedWeightBps: 5000, targetWeightBps: 10000 }],
     excluded: [{ ticker: "NEW", mint: "mint-x", disclosedWeightBps: 5000, reason: "no Jupiter or Raydium route" }] };
   const rpc = (data: unknown, error: unknown = null) => async () => ({ data, error });
   const published = await publishedSliceFor("insiderindex-nancy-pelosi", rpc(row));
-  assert.equal(published?.totalLegs, 19);
+  assert.equal(published?.totalLegs, 2);
   assert.deepEqual(published?.excluded.map(item => item.ticker), ["NEW"]);
   for (const fallback of [rpc(null), rpc(row, { code: "42P01" }), rpc({ ...row, excluded: "bad" }), rpc({ ...row, index_id: "other" }), async () => { throw new Error("down"); }, null]) {
     assert.deepEqual(await publishedSliceFor("insiderindex-nancy-pelosi", fallback), pelosi);
   }
   assert.equal(sliceFromPublishedRow({ ...row, tradable_legs: 2 }, "insiderindex-nancy-pelosi"), null, "leg count must match the published vault legs");
+  assert.equal(sliceFromPublishedRow({ ...row, total_legs: 3 }, "insiderindex-nancy-pelosi"), null, "every disclosed holding must be classified");
+  assert.equal(sliceFromPublishedRow({ ...row, excluded: [{ ...row.excluded[0], mint: "mint-n" }] }, "insiderindex-nancy-pelosi"), null, "a mint cannot appear twice");
+});
+
+test("a stale published slice falls back to a committed slice matching the vault", async () => {
+  const row = { index_id: pelosi.indexId, total_legs: 2, tradable_legs: 1, disclosed_weight_bps: 5000,
+    vault_legs: [{ ticker: "OLD", mint: "stale-mint", disclosedWeightBps: 5000, targetWeightBps: 10000 }],
+    excluded: [{ ticker: "NEW", mint: "excluded-mint", disclosedWeightBps: 5000, reason: "no Jupiter or Raydium route" }] };
+  const vaultMints = new Set(pelosi.vaultLegs.map(leg => leg.mint));
+  const matchesVault = (slice: TradableSlice) => slice.vaultLegs.length === vaultMints.size && slice.vaultLegs.every(leg => vaultMints.has(leg.mint));
+  assert.deepEqual(await publishedSliceFor(pelosi.indexId, async () => ({ data: row, error: null }), matchesVault), pelosi);
 });
 
 test("readiness carries the vault target for held names and the disclosed weight + reason for excluded names", async () => {
