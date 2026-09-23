@@ -46,3 +46,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local Solana/Anchor toolchain + devnet scratch (never committed)
+/.toolchain/
+
+# Rust build output (committed SBF binaries live in programs/bin)
+/programs/target/
