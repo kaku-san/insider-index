@@ -56,8 +56,10 @@ export function IndexAllocation({ items, basis = "Published target weights" }: {
   const extra = all.filter(row => !shownKeys.has(row.key));
   const missing = rows.filter(row => row.missing);
   const legend: AllocationRow[] = showAll ? [...all, ...missing] : [...rows, ...all.filter(row => !Number.isFinite(row.weightBps) || row.weightBps <= 0)];
-  const selected = all.find(row => row.key === active) ?? rows.find(row => row.key === active);
-  const selectedSlice = active && chartKeys.has(active) ? active : active && all.some(row => row.key === active && row.weightBps > 0) ? "other" : active;
+  // Hover/focus wins; otherwise the expanded holding keeps its chart slice selected so chart and legend agree.
+  const focus = active ?? expanded;
+  const selected = all.find(row => row.key === focus) ?? rows.find(row => row.key === focus);
+  const selectedSlice = focus && chartKeys.has(focus) ? focus : focus && all.some(row => row.key === focus && row.weightBps > 0) ? "other" : focus;
   const hasMore = extra.some(row => Number.isFinite(row.weightBps) && row.weightBps > 0);
   const sliceStarts = rows.reduce<number[]>((starts, row, i) => [...starts, i ? starts[i - 1] + rows[i - 1].weightBps / denominator * 100 : 0], []);
   if (!items.length) return <section className={styles.empty}><h3>Allocation is not available yet.</h3><p>The source has no holdings for this view.</p></section>;
@@ -71,7 +73,7 @@ export function IndexAllocation({ items, basis = "Published target weights" }: {
             {rows.map((row, i) => {
               const length = row.weightBps / denominator * 100;
               const start = sliceStarts[i];
-              return <circle key={row.key} cx="140" cy="140" r="108" pathLength="100" transform="rotate(-90 140 140)" fill="none" stroke={row.missing ? "var(--border)" : ALLOCATION_COLORS[i % ALLOCATION_COLORS.length]} strokeWidth={selectedSlice === row.key ? 37 : 31} strokeDasharray={`${Math.max(0, length - (rows.length > 1 ? Math.min(.8, length * .12) : 0))} 100`} strokeDashoffset={-start} opacity={active && selectedSlice !== row.key ? .45 : 1} onPointerEnter={() => setActive(row.key)} />;
+              return <circle key={row.key} cx="140" cy="140" r="108" pathLength="100" transform="rotate(-90 140 140)" fill="none" stroke={row.missing ? "var(--border)" : ALLOCATION_COLORS[i % ALLOCATION_COLORS.length]} strokeWidth={selectedSlice === row.key ? 37 : 31} strokeDasharray={`${Math.max(0, length - (rows.length > 1 ? Math.min(.8, length * .12) : 0))} 100`} strokeDashoffset={-start} opacity={focus && selectedSlice !== row.key ? .45 : 1} onPointerEnter={() => setActive(row.key)} />;
             })}
           </svg>
           <div className={styles.center} aria-hidden="true"><strong>{selected && Number.isFinite(selected.weightBps) ? `${(selected.weightBps / 100).toFixed(1)}%` : items.length}</strong><span>{selected ? (selected.ticker === "OTHER" ? "other holdings" : selected.ticker === "UNREPORTED" ? "unreported" : selected.ticker) : "holdings"}</span></div>
