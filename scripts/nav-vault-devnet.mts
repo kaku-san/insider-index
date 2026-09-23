@@ -19,7 +19,7 @@ import {
   MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, createInitializeMint2Instruction, createMintToInstruction,
 } from "@solana/spl-token";
 import {
-  MOCK_SWAP_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, decodeRequest, decodeVault, depositIx, initVaultIx, mockInitPoolIx, mockPoolPda, setLookupTableIx, setPausedIx, shareAta, tokenAmount, updatePricesIx,
+  MOCK_SWAP_PROGRAM_ID, NAV_VAULT_DEVNET_PROGRAM_ID, ata, setDefaultProgramId, decodeRequest, decodeVault, depositIx, initVaultIx, mockInitPoolIx, mockPoolPda, setLookupTableIx, setPausedIx, shareAta, tokenAmount, updatePricesIx,
   vaultLookupAddresses, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
 import { prepareNavDeposit, prepareNavWithdraw, readNavVault } from "../src/lib/nav-vault/prepare.ts";
@@ -44,9 +44,11 @@ function localKey(name: string) {
   return load(path);
 }
 const connection = new Connection(RPC, { commitment: "confirmed" });
+// The devnet-feature build lives at its own program id (mainnet build stays at NAV_VAULT_PROGRAM_ID).
+setDefaultProgramId(NAV_VAULT_DEVNET_PROGRAM_ID);
 const explorer = (sig: string) => `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
 const record: { network: "devnet"; rpc: string; indexId: string; programs: Record<string, string>; accounts: Record<string, string>; steps: { step: string; signature: string; explorer: string; note?: string; readback?: unknown }[] } = {
-  network: localnet ? "localnet-rehearsal" as "devnet" : "devnet", rpc: RPC, indexId, programs: { navVault: NAV_VAULT_PROGRAM_ID.toBase58(), mockSwap: MOCK_SWAP_PROGRAM_ID.toBase58() }, accounts: {}, steps: [],
+  network: localnet ? "localnet-rehearsal" as "devnet" : "devnet", rpc: RPC, indexId, programs: { navVault: NAV_VAULT_DEVNET_PROGRAM_ID.toBase58(), mockSwap: MOCK_SWAP_PROGRAM_ID.toBase58() }, accounts: {}, steps: [],
 };
 const save = () => writeFileSync(outPath, `${JSON.stringify(record, (_, v) => typeof v === "bigint" ? v.toString() : v, 2)}\n`);
 
@@ -74,7 +76,7 @@ async function balance(account: PublicKey) { return tokenAmount((await connectio
 
 async function main() {
   if (!localnet && (await connection.getGenesisHash()) !== DEVNET_GENESIS) throw new Error("Refusing: RPC is not devnet.");
-  for (const id of [NAV_VAULT_PROGRAM_ID, MOCK_SWAP_PROGRAM_ID]) {
+  for (const id of [NAV_VAULT_DEVNET_PROGRAM_ID, MOCK_SWAP_PROGRAM_ID]) {
     const info = await connection.getAccountInfo(id);
     if (!info?.executable) throw new Error(`Program ${id.toBase58()} is not deployed on devnet.`);
   }

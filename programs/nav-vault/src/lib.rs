@@ -27,7 +27,11 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface::{self, Burn, MintTo, TransferChecked};
 
+// Mainnet build and devnet build (mock venue allowed) live at different program ids.
+#[cfg(not(feature = "devnet"))]
 declare_id!("HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB");
+#[cfg(feature = "devnet")]
+declare_id!("2YwNAuwjYcEy1g63iRE3985GJzwt3BP2UVoud7pFxqCr");
 
 pub const JUPITER_V6: Pubkey = pubkey!("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4");
 pub const RAYDIUM_CLMM: Pubkey = pubkey!("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK");

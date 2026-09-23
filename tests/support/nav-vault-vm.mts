@@ -12,7 +12,7 @@ import {
   createInitializeMint2Instruction, createMintToInstruction,
 } from "@solana/spl-token";
 import {
-  JUPITER_V6_PROGRAM_ID, MOCK_SWAP_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, decodeVault, initVaultIx, mockInitPoolIx,
+  JUPITER_V6_PROGRAM_ID, MOCK_SWAP_PROGRAM_ID, NAV_VAULT_DEVNET_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, setDefaultProgramId, decodeVault, initVaultIx, mockInitPoolIx,
   mockPoolPda, setLookupTableIx, tokenAmount, vaultLookupAddresses, vaultPda, vaultTokenAccounts, type NavVaultState,
 } from "../../src/lib/nav-vault/program.ts";
 import type { NavConnection } from "../../src/lib/nav-vault/prepare.ts";
@@ -35,7 +35,9 @@ export function navVaultVm(build: "devnet" | "mainnet" = "devnet", options: { mo
   // Sends are signed with real local keypairs; sigverify is off only so unsigned prepare
   // messages can be simulated (the program's signer checks come from the message header).
   const svm = new LiteSVM().withSigverify(false);
-  svm.addProgram(address(NAV_VAULT_PROGRAM_ID.toBase58()), programBinary(build === "devnet" ? "nav_vault_devnet.so" : "nav_vault.so"));
+  const programId = build === "devnet" ? NAV_VAULT_DEVNET_PROGRAM_ID : NAV_VAULT_PROGRAM_ID;
+  setDefaultProgramId(programId);
+  svm.addProgram(address(programId.toBase58()), programBinary(build === "devnet" ? "nav_vault_devnet.so" : "nav_vault.so"));
   svm.addProgram(address(MOCK_SWAP_PROGRAM_ID.toBase58()), programBinary("mock_swap.so"));
   if (options.mockAtJupiter) svm.addProgram(address(JUPITER_V6_PROGRAM_ID.toBase58()), programBinary("mock_swap.so"));
   const clock = svm.getClock();

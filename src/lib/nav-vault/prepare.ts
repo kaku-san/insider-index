@@ -16,7 +16,7 @@ import {
 } from "@solana/web3.js";
 import { createAssociatedTokenAccountIdempotentInstruction, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  CLAIM_LEGS_PER_TX, NAV_VAULT_PROGRAM_ID, REQUEST_ACCOUNT_DISCRIMINATOR, SHARE_DECIMALS, SHARE_TOKEN_PROGRAM_ID, ata, claimInKindIx,
+  CLAIM_LEGS_PER_TX, defaultProgramId, REQUEST_ACCOUNT_DISCRIMINATOR, SHARE_DECIMALS, SHARE_TOKEN_PROGRAM_ID, ata, claimInKindIx,
   computeNav, decodeRequest, decodeVault, depositIx, previewDeposit, previewWithdraw, requestPda, requestWithdrawIx, shareAta, tokenAmount,
   vaultPda, withSlippage, withdrawIx, type NavRequest, type NavVaultState, type WithdrawPath,
 } from "./program.ts";
@@ -39,7 +39,7 @@ export type NavVaultSnapshot = {
   pricesFresh: boolean;
 };
 
-export async function readNavVault(connection: NavConnection, indexId: string, programId = NAV_VAULT_PROGRAM_ID, nowSeconds = Math.floor(Date.now() / 1000)): Promise<NavVaultSnapshot | null> {
+export async function readNavVault(connection: NavConnection, indexId: string, programId = defaultProgramId(), nowSeconds = Math.floor(Date.now() / 1000)): Promise<NavVaultSnapshot | null> {
   const address = vaultPda(indexId, programId);
   const info = await connection.getAccountInfo(address, "confirmed");
   if (!info) return null;
@@ -59,7 +59,7 @@ export async function readNavVault(connection: NavConnection, indexId: string, p
 }
 
 /** Open withdraw requests for a vault (optionally one owner). */
-export async function readNavRequests(connection: NavConnection, vault: PublicKey, owner?: PublicKey, programId = NAV_VAULT_PROGRAM_ID): Promise<NavRequest[]> {
+export async function readNavRequests(connection: NavConnection, vault: PublicKey, owner?: PublicKey, programId = defaultProgramId()): Promise<NavRequest[]> {
   const filters = [
     { memcmp: { offset: 0, bytes: bs58.encode(REQUEST_ACCOUNT_DISCRIMINATOR) } },
     { memcmp: { offset: 8, bytes: vault.toBase58() } },
@@ -176,7 +176,7 @@ export async function prepareNavDeposit(input: {
   const owner = new PublicKey(input.owner);
   const amount = raw(input.amountRaw, "USDC amount");
   if (amount < NAV_DEPOSIT_MINIMUM_RAW) throw new Error("The minimum is 1 USDC.");
-  const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
+  const programId = input.programId ?? defaultProgramId();
   const snapshot = await readNavVault(input.connection, input.indexId, programId, input.nowSeconds);
   if (!snapshot) throw new Error("This index does not have a NAV vault.");
   const { state } = snapshot;
@@ -228,7 +228,7 @@ export async function prepareNavWithdraw(input: {
 }): Promise<NavPreparedStep> {
   const owner = new PublicKey(input.owner);
   const shares = raw(input.shareAmountRaw, "Share amount");
-  const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
+  const programId = input.programId ?? defaultProgramId();
   const snapshot = await readNavVault(input.connection, input.indexId, programId, input.nowSeconds);
   if (!snapshot) throw new Error("This index does not have a NAV vault.");
   const { state } = snapshot;
@@ -284,7 +284,7 @@ export async function prepareNavWithdraw(input: {
 /** Owner claims an open request in kind (after its timeout). One tx per 13 legs. */
 export async function prepareNavClaim(input: { connection: NavConnection; network: NavNetwork; indexId: string; owner: string; request: string; programId?: PublicKey; simulate?: boolean }): Promise<NavPreparedStep> {
   const owner = new PublicKey(input.owner);
-  const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
+  const programId = input.programId ?? defaultProgramId();
   const snapshot = await readNavVault(input.connection, input.indexId, programId);
   if (!snapshot) throw new Error("This index does not have a NAV vault.");
   const { state } = snapshot;

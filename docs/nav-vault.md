@@ -55,19 +55,22 @@ node --experimental-strip-types scripts/nav-vault-devnet.mts --payer <devnet key
 
 `--localnet` rehearses the same script against `solana-test-validator`.
 
-**Devnet proof on the exact current build (done, finalized).** The devnet program was upgraded in place to `programs/bin/nav_vault_devnet.so` (sha256 `64801cd0…`). A dump of the deployed program matches the committed binary. This is the same source as the mainnet `nav_vault.so`, which only drops the mock venue. The index `idx-nav-devnet-mag7-pilot` ran with 25 bps entry fee, 5% buffer, 60 s max mark age and a $50 per-deposit cap, which proves the cap path. Mainnet initializes with no cap. SOL for the upgrade came from the devnet test wallet, and 1.67 SOL was returned. Receipts are in `evidence/vaults/nav-vault-devnet.json`. The earlier pre-cap run is `evidence/vaults/nav-vault-devnet-precap.json`.
+**Devnet proof on the exact current build (done, finalized).** The devnet-feature build (mock venue allowed) now has its own devnet program id, `2YwNAuwjYcEy1g63iRE3985GJzwt3BP2UVoud7pFxqCr`. The mainnet build stays at `HWHf…`. Both come from the same source; only `declare_id` differs, by cargo feature. A dump of the deployed program matches `programs/bin/nav_vault_devnet.so` (sha256 `dd36ecdf…`). The old HWHf devnet program was closed to reclaim its 1.77 SOL of rent. The index `idx-nav-devnet-mag7-v2` ran with the mainnet params: 25 bps fee, 5% buffer, 60 s marks, 15% band, no cap, 600 s request timeout. Receipts are in `evidence/vaults/nav-vault-devnet.json`; earlier runs are in `nav-vault-devnet-pilot-v1.json` and `nav-vault-devnet-precap.json`.
 
 | Step | Signature / result |
 | --- | --- |
-| upgrade nav_vault (current build) | `4up17akbsvxCPM4acytVyzYQXDBbUK4qTYgNBPXJQfEfrgLtvSZSMoGZsZ6SmGxQK3VhfehfmFZV9qoP7gCtEp3e` |
-| init_vault (pilot params) | `3mANY3EoM2n4pSCRGd5V6dnJZoHNHiM6VKdvYwuTTEYHQKvbs2mG6FZ4knCi32fq7nbW6NRZD92Zg4dk4jgf47Xq` |
-| 50.000001 tUSDC deposit (simulated) | refused on chain with `DepositAboveCap` |
-| ONE-signature deposit of 50 → 49.875 shares, 0.125 fee | `4jpjneu25b1ErL8HmMiLDugzcCUHBVaEnRLZTiu6oQRz8LR8HvvbWhUtXxUX4ggnZxed6sdoiahwLwbqojhDrcnA` |
-| keeper buys A / B, buffer ends at 5.50% | `P5Kdsf4XiC6ByYGsMJ9eeVudsqReYtHwsfCdcTCjrv316Jy7C7qCZR8A5nAcTWREEXtgsFFs5ijQB93feBWL2MF` / `S4G71aXg4QudWQz2ZwePzYa1t55Ha8woJoe4VRx1G6HPDc9EmDt2WTDTFmMBKMedWpnxXPmr9eeEvcuyLLLfgWz` |
-| ONE-signature USDC exit (2 shares → 1.999995) | `JSUZLwY7Txh1YHghUwQTZArRxV7MyHrKRaYorAtfygiZSVtCWC4h3DwX3Q9rjgMZrzRoKfSqnoDURS6pHcHQ9bz` |
-| ONE-signature full exit, buffer short, in-kind (0.743178 USDC + 141395 A + 4713175 B) | `5uxEjdFymqHa1dCuhpZ4YEpDcjZt5Wpkf4qXj1SPC4yk4QMDjNpDeCSqBhoAUBEyP4cSLpzKUXA5JyGV4WiKcXSm` |
+| deploy (devnet id) | `5e11FW7U2YvhpeP1gXHwHDNYq6M33RFTWBsX55pRFL6FBabNEj78du32uNaKUmChjMXMYcvHpa5yJ78ygxE2zu2k` |
+| init_vault | `62L1oDNgPDU9VCuyuMD4dyR6HBA4w5Ey8nie7hwsXuyPpK65qQYqBNc9EoAMK5pZcbCmAo6nahGAc12xFHCQHPhG` |
+| keeper +20% mark (simulated) | refused with `PriceMoveTooLarge` |
+| ONE-signature deposit of 50 → 49.875 shares, 0.125 fee | `3eTK1bFrX4L8v5EQAVb3YqBQDq2wdXBUDBdw63hMwZQL3DahnMWTHTAaouyHpGtb2ah63MAjj4gKXp9F2vaSKecY` |
+| keeper buys, buffer ends at 5.50% | `K7bL7orSuWufDbusXsRuChHW8himQAWKyBAv25VQWsg6yHcygafVo3EGNKVHehUyp4xRLH9bKwZ7n2QRmkM7DnL` / `3RU8Bq6UJhvSywHsFcF7wa2YTrhFv2WFgjbmBuJvZmeJMxTALCj3ELFPjTbdHYuJR9TbgohHoXcTVLytHc4UEwK1` |
+| ONE-signature instant USDC exit (2 shares → 1.999995) | `25xeFVwNHXEKqGkbij6M3uJy17XfcXbtFBRBdFYz1GWtKKbaLtHDaxcH6nU2pnAQkPc8q6VekQ9A8SCJJJhcn3yP` |
+| ONE-signature keeper request (20 shares) | `5FZ19u2Nxxetqd69aU8nXCkqPwQKZjBgm4TD2xjw2wEgy2Rfu82Go2L6RXv7Z3enPvcfNrcYJbJy3AkZwxuFYY4A` |
+| keeper fulfill A / B, then settle: 19.999865 USDC paid (estimate 19.99995) | `j4hQLpR6DqCeQPwAFacoU6rayNevm9C3TrkfD1YfowYqhGBaoihJCKD7Vcvpkae44k61YWJiMVddRQjnN86TdR7` / `5MoUVp7YEoEYeb1C7KFP8Z8ZrjZCmPKEtyzVg964Fuw9LnCk2cQNpL2fqyCJXtaBML4ENdhoQuR9MWGGbd8wpbKH` / `RLtPWJYwpd4rjgtk1DuW8RzsdxKN7NvUcuEgZLtHXQySJ4zFQTDJJJ2QwTXX1JNJpmMkjDTY9pJdLGmaWSwSysn` |
+| admin pause, then deposit (simulated) | refused with `Paused` |
+| ONE-signature in-kind exit while paused (request + claim): 0.432685 USDC + 82327 A + 2744232 B | `3DFGNYJenatEVMbBCMdvyVBXzT9akHuUZLXaQsWZaDJfnZctGuA1RYQN2esA5H9vBJ8H2jYx3LhynxJcAnVRYHdC` |
 
-Every readback matched the prepare estimate, and the keeper wallet's USDC did not change. On devnet the keeper trades on the mock venue, because Jupiter has no devnet deployment. The Jupiter paths are covered by the offline CPI test against the deployed Jupiter binary and by the read-only mainnet v2 build check in `evidence/vaults/nav-vault-jupiter-v2-readonly.json`.
+Final state: supply 0, nothing reserved. Every readback matched the prepare estimate, and the keeper wallet's USDC did not change.
 
 ## Mainnet (captain-approved pilot)
 

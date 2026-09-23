@@ -6,7 +6,14 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { PublicKey, SystemProgram, TransactionInstruction, type AccountMeta } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 
+/** Mainnet build (`programs/bin/nav_vault.so`). */
 export const NAV_VAULT_PROGRAM_ID = new PublicKey("HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB");
+/** Devnet-feature build (`programs/bin/nav_vault_devnet.so`, mock venue allowed): same source, own id. */
+export const NAV_VAULT_DEVNET_PROGRAM_ID = new PublicKey("2YwNAuwjYcEy1g63iRE3985GJzwt3BP2UVoud7pFxqCr");
+let defaultId = NAV_VAULT_PROGRAM_ID;
+/** Default program id for builders/readers that are not passed one (scripts/tests select the devnet build). */
+export function defaultProgramId(): PublicKey { return defaultId; }
+export function setDefaultProgramId(id: PublicKey): void { defaultId = id; }
 export const MOCK_SWAP_PROGRAM_ID = new PublicKey("9B8ryJEpnxpebZXzYNEyLkA3Ru173yQtC3BuP7Z1ce6R");
 export const JUPITER_V6_PROGRAM_ID = new PublicKey("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4");
 export const RAYDIUM_CLMM_PROGRAM_ID = new PublicKey("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK");
@@ -55,19 +62,19 @@ export function indexSeed(indexId: string): Buffer {
   if (!bytes.length || bytes.length > 64) throw new Error("Index id must be 1-64 bytes.");
   return Buffer.from(sha256(bytes));
 }
-export function vaultPda(indexId: string, programId = NAV_VAULT_PROGRAM_ID) {
+export function vaultPda(indexId: string, programId = defaultProgramId()) {
   return PublicKey.findProgramAddressSync([Buffer.from("nav_vault"), indexSeed(indexId)], programId)[0];
 }
-export function authorityPda(vault: PublicKey, programId = NAV_VAULT_PROGRAM_ID) {
+export function authorityPda(vault: PublicKey, programId = defaultProgramId()) {
   return PublicKey.findProgramAddressSync([Buffer.from("authority"), vault.toBuffer()], programId)[0];
 }
-export function mintAuthorityPda(vault: PublicKey, programId = NAV_VAULT_PROGRAM_ID) {
+export function mintAuthorityPda(vault: PublicKey, programId = defaultProgramId()) {
   return PublicKey.findProgramAddressSync([Buffer.from("mint_authority"), vault.toBuffer()], programId)[0];
 }
-export function shareMintPda(vault: PublicKey, programId = NAV_VAULT_PROGRAM_ID) {
+export function shareMintPda(vault: PublicKey, programId = defaultProgramId()) {
   return PublicKey.findProgramAddressSync([Buffer.from("shares"), vault.toBuffer()], programId)[0];
 }
-export function requestPda(vault: PublicKey, owner: PublicKey, nonce: bigint, programId = NAV_VAULT_PROGRAM_ID) {
+export function requestPda(vault: PublicKey, owner: PublicKey, nonce: bigint, programId = defaultProgramId()) {
   const n = Buffer.alloc(8); n.writeBigUInt64LE(nonce);
   return PublicKey.findProgramAddressSync([Buffer.from("request"), vault.toBuffer(), owner.toBuffer(), n], programId)[0];
 }
@@ -241,14 +248,14 @@ export type InitVaultInput = {
 };
 
 /** Vault USDC + leg accounts are ATAs of the authority PDA; create them (idempotently) before `initVault`. */
-export function vaultTokenAccounts(indexId: string, usdcMint: PublicKey, legs: readonly { mint: PublicKey; tokenProgram: PublicKey }[], programId = NAV_VAULT_PROGRAM_ID) {
+export function vaultTokenAccounts(indexId: string, usdcMint: PublicKey, legs: readonly { mint: PublicKey; tokenProgram: PublicKey }[], programId = defaultProgramId()) {
   const vault = vaultPda(indexId, programId);
   const authority = authorityPda(vault, programId);
   return { vault, authority, usdc: ata(authority, usdcMint), legs: legs.map(leg => ata(authority, leg.mint, leg.tokenProgram)) };
 }
 
 export function initVaultIx(input: InitVaultInput): TransactionInstruction {
-  const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
+  const programId = input.programId ?? defaultProgramId();
   if (input.legs.length < 1 || input.legs.length > MAX_LEGS) throw new Error(`A NAV vault holds 1-${MAX_LEGS} legs.`);
   const accounts = vaultTokenAccounts(input.indexId, input.usdcMint, input.legs, programId);
   const w = new Writer().bytes(indexSeed(input.indexId)).string(input.indexId).key(input.keeper)
@@ -270,21 +277,21 @@ export function initVaultIx(input: InitVaultInput): TransactionInstruction {
 
 const adminIx = (programId: PublicKey, vault: Pick<NavVaultState, "address">, admin: PublicKey, data: Buffer) =>
   new TransactionInstruction({ programId, data, keys: [meta(admin, false, true), meta(vault.address, true)] });
-export function setKeeperIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, keeper: PublicKey, programId = NAV_VAULT_PROGRAM_ID) {
+export function setKeeperIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, keeper: PublicKey, programId = defaultProgramId()) {
   return adminIx(programId, vault, admin, new Writer().key(keeper).done(IX.setKeeper));
 }
-export function setMaxDepositIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, maxDepositUsdc: bigint, programId = NAV_VAULT_PROGRAM_ID) {
+export function setMaxDepositIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, maxDepositUsdc: bigint, programId = defaultProgramId()) {
   return adminIx(programId, vault, admin, new Writer().u64(maxDepositUsdc).done(IX.setMaxDeposit));
 }
-export function setLookupTableIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, lookupTable: PublicKey, programId = NAV_VAULT_PROGRAM_ID) {
+export function setLookupTableIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, lookupTable: PublicKey, programId = defaultProgramId()) {
   return adminIx(programId, vault, admin, new Writer().key(lookupTable).done(IX.setLookupTable));
 }
-export function setPausedIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, paused: boolean, programId = NAV_VAULT_PROGRAM_ID) {
+export function setPausedIx(vault: Pick<NavVaultState, "address">, admin: PublicKey, paused: boolean, programId = defaultProgramId()) {
   return adminIx(programId, vault, admin, new Writer().bool(paused).done(IX.setPaused));
 }
 
 /** Every static vault account a one-signature deposit/exit/keeper step needs; the admin puts these in the vault LUT. */
-export function vaultLookupAddresses(vault: NavVaultState, programId = NAV_VAULT_PROGRAM_ID): PublicKey[] {
+export function vaultLookupAddresses(vault: NavVaultState, programId = defaultProgramId()): PublicKey[] {
   const keys = [
     vault.address, authorityPda(vault.address, programId), mintAuthorityPda(vault.address, programId), vault.shareMint, vault.usdcMint,
     vault.usdcAccount, vault.feeAccount, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, SystemProgram.programId, programId,
@@ -296,15 +303,15 @@ export function vaultLookupAddresses(vault: NavVaultState, programId = NAV_VAULT
 
 const pricesData = (prefix: Buffer, prices: readonly bigint[]) => { const w = new Writer().u32(prices.length); for (const p of prices) w.u64(p); return w.done(prefix); };
 /** Keeper marks; the leg accounts refresh the on-chain balance cache used by the buffer rule. */
-export function updatePricesIx(vault: Pick<NavVaultState, "address" | "legs">, keeper: PublicKey, prices: readonly bigint[], programId = NAV_VAULT_PROGRAM_ID) {
+export function updatePricesIx(vault: Pick<NavVaultState, "address" | "legs">, keeper: PublicKey, prices: readonly bigint[], programId = defaultProgramId()) {
   return new TransactionInstruction({ programId, data: pricesData(IX.updatePrices, prices), keys: [meta(keeper, false, true), meta(vault.address, true), ...legMetas(vault)] });
 }
 /** Admin override of the per-update mark band. */
-export function adminSetPricesIx(vault: Pick<NavVaultState, "address" | "legs">, admin: PublicKey, prices: readonly bigint[], programId = NAV_VAULT_PROGRAM_ID) {
+export function adminSetPricesIx(vault: Pick<NavVaultState, "address" | "legs">, admin: PublicKey, prices: readonly bigint[], programId = defaultProgramId()) {
   return new TransactionInstruction({ programId, data: pricesData(IX.adminSetPrices, prices), keys: [meta(admin, false, true), meta(vault.address, true), ...legMetas(vault)] });
 }
 
-export function depositIx(vault: NavVaultState, user: PublicKey, usdcAmount: bigint, minShares: bigint, programId = NAV_VAULT_PROGRAM_ID) {
+export function depositIx(vault: NavVaultState, user: PublicKey, usdcAmount: bigint, minShares: bigint, programId = defaultProgramId()) {
   return new TransactionInstruction({
     programId,
     data: new Writer().u64(usdcAmount).u64(minShares).done(IX.deposit),
@@ -318,7 +325,7 @@ export function depositIx(vault: NavVaultState, user: PublicKey, usdcAmount: big
 }
 
 /** Instant USDC from the free buffer (fails with `UsdcBufferShort` if it cannot cover the value). */
-export function withdrawIx(vault: NavVaultState, user: PublicKey, shares: bigint, minUsdc: bigint, programId = NAV_VAULT_PROGRAM_ID) {
+export function withdrawIx(vault: NavVaultState, user: PublicKey, shares: bigint, minUsdc: bigint, programId = defaultProgramId()) {
   return new TransactionInstruction({
     programId,
     data: new Writer().u64(shares).u64(minUsdc).done(IX.withdraw),
@@ -331,7 +338,7 @@ export function withdrawIx(vault: NavVaultState, user: PublicKey, shares: bigint
   });
 }
 
-export function requestWithdrawIx(vault: NavVaultState, user: PublicKey, input: { shares: bigint; minUsdc: bigint; nonce: bigint; inKindNow: boolean }, programId = NAV_VAULT_PROGRAM_ID) {
+export function requestWithdrawIx(vault: NavVaultState, user: PublicKey, input: { shares: bigint; minUsdc: bigint; nonce: bigint; inKindNow: boolean }, programId = defaultProgramId()) {
   return new TransactionInstruction({
     programId,
     data: new Writer().u64(input.shares).u64(input.minUsdc).u64(input.nonce).bool(input.inKindNow).done(IX.requestWithdraw),
@@ -343,7 +350,7 @@ export function requestWithdrawIx(vault: NavVaultState, user: PublicKey, input: 
   });
 }
 
-export function adminRedeemInKindIx(vault: NavVaultState, admin: PublicKey, holder: PublicKey, shares: bigint, nonce: bigint, programId = NAV_VAULT_PROGRAM_ID) {
+export function adminRedeemInKindIx(vault: NavVaultState, admin: PublicKey, holder: PublicKey, shares: bigint, nonce: bigint, programId = defaultProgramId()) {
   return new TransactionInstruction({
     programId,
     data: new Writer().u64(shares).u64(nonce).done(IX.adminRedeemInKind),
@@ -362,7 +369,7 @@ const settleKeys = (vault: NavVaultState, caller: PublicKey, request: Pick<NavRe
 ];
 /** Max legs per claim transaction (9 fixed + 4 per leg <= 64 accounts). */
 export const CLAIM_LEGS_PER_TX = 13;
-export function claimInKindIx(vault: NavVaultState, caller: PublicKey, request: Pick<NavRequest, "address" | "owner">, legs: readonly number[], programId = NAV_VAULT_PROGRAM_ID) {
+export function claimInKindIx(vault: NavVaultState, caller: PublicKey, request: Pick<NavRequest, "address" | "owner">, legs: readonly number[], programId = defaultProgramId()) {
   const w = new Writer().u32(legs.length); for (const i of legs) w.u8(i);
   return new TransactionInstruction({
     programId,
@@ -373,10 +380,10 @@ export function claimInKindIx(vault: NavVaultState, caller: PublicKey, request: 
     ],
   });
 }
-export function settleRequestIx(vault: NavVaultState, caller: PublicKey, request: Pick<NavRequest, "address" | "owner">, programId = NAV_VAULT_PROGRAM_ID) {
+export function settleRequestIx(vault: NavVaultState, caller: PublicKey, request: Pick<NavRequest, "address" | "owner">, programId = defaultProgramId()) {
   return new TransactionInstruction({ programId, data: Buffer.from(IX.settleRequest), keys: settleKeys(vault, caller, request, programId) });
 }
-export function crossRequestLegIx(vault: NavVaultState, keeper: PublicKey, request: PublicKey, leg: number, programId = NAV_VAULT_PROGRAM_ID) {
+export function crossRequestLegIx(vault: NavVaultState, keeper: PublicKey, request: PublicKey, leg: number, programId = defaultProgramId()) {
   return new TransactionInstruction({ programId, data: new Writer().u8(leg).done(IX.crossRequestLeg), keys: [meta(keeper, false, true), meta(vault.address, true), meta(request, true), meta(vault.usdcAccount)] });
 }
 
@@ -388,7 +395,7 @@ const swapKeys = (swap: TransactionInstruction, authority: PublicKey) =>
 
 /** Wrap one venue swap instruction (built with taker = authority PDA); the venue accounts must include the in/out vault accounts. */
 export function keeperSwapIx(input: { vault: NavVaultState; keeper: PublicKey; inLeg: number; outLeg: number; amountIn: bigint; minOut: bigint; swap: TransactionInstruction; programId?: PublicKey }) {
-  const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
+  const programId = input.programId ?? defaultProgramId();
   const authority = authorityPda(input.vault.address, programId);
   return new TransactionInstruction({
     programId,
@@ -398,7 +405,7 @@ export function keeperSwapIx(input: { vault: NavVaultState; keeper: PublicKey; i
 }
 /** Sell a request's reserved leg slice into USDC credited to the request. */
 export function fulfillSwapIx(input: { vault: NavVaultState; keeper: PublicKey; request: PublicKey; inLeg: number; amountIn: bigint; minOut: bigint; swap: TransactionInstruction; programId?: PublicKey }) {
-  const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
+  const programId = input.programId ?? defaultProgramId();
   const authority = authorityPda(input.vault.address, programId);
   return new TransactionInstruction({
     programId,

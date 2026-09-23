@@ -21,7 +21,7 @@ import { createServiceSupabase } from "../src/lib/supabase.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
 import { readVaultDefinition, type PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 import {
-  NAV_VAULT_PROGRAM_ID, ata, decodeVault, initVaultIx, setLookupTableIx, setPausedIx, vaultLookupAddresses, vaultPda, vaultTokenAccounts,
+  NAV_VAULT_DEVNET_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, setDefaultProgramId, decodeVault, initVaultIx, setLookupTableIx, setPausedIx, vaultLookupAddresses, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
 import { keeperTick, mockVenue } from "../src/lib/nav-vault/keeper.ts";
 import { mainnetVenue } from "../src/lib/nav-vault/mainnet-venue.ts";
@@ -37,6 +37,8 @@ if (network !== "mainnet-beta" && network !== "devnet") throw new Error("--netwo
 const execute = flag("--execute");
 const rpc = opt("--rpc") ?? (network === "mainnet-beta" ? getHeliusRpcUrl() : "https://api.devnet.solana.com");
 const connection = new Connection(rpc, { commitment: "confirmed" });
+const PROGRAM_DEFAULT = network === "mainnet-beta" ? NAV_VAULT_PROGRAM_ID : NAV_VAULT_DEVNET_PROGRAM_ID;
+setDefaultProgramId(new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58()));
 const loadKey = (path: string) => Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(path, "utf8"))));
 const log = (...parts: unknown[]) => console.error(...parts);
 
@@ -81,7 +83,7 @@ async function init() {
   const admin: Keypair | PublicKey = execute ? loadKey(need("--keypair")) : new PublicKey(opt("--admin") ?? need("--fee-owner"));
   const adminKey = admin instanceof Keypair ? admin.publicKey : admin;
   if (keeper.equals(adminKey)) throw new Error("The keeper must be a dedicated hot wallet, not the admin.");
-  const programId = new PublicKey(opt("--program-id") ?? NAV_VAULT_PROGRAM_ID.toBase58());
+  const programId = new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58());
   if (!(await connection.getAccountInfo(programId))?.executable) throw new Error(`Program ${programId.toBase58()} is not deployed on ${network}.`);
   const vault = vaultPda(indexId, programId);
   if (await connection.getAccountInfo(vault)) throw new Error(`Vault ${vault.toBase58()} already exists for ${indexId}.`);
@@ -118,7 +120,7 @@ async function init() {
 
 async function keeper() {
   const indexId = need("--index");
-  const programId = new PublicKey(opt("--program-id") ?? NAV_VAULT_PROGRAM_ID.toBase58());
+  const programId = new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58());
   const vaultInfo = await connection.getAccountInfo(vaultPda(indexId, programId));
   if (!vaultInfo) throw new Error(`No NAV vault for ${indexId} on ${network}.`);
   const state = decodeVault(vaultPda(indexId, programId), vaultInfo.data);
@@ -156,7 +158,7 @@ async function keeper() {
 
 async function pause(paused: boolean) {
   const indexId = need("--index");
-  const programId = new PublicKey(opt("--program-id") ?? NAV_VAULT_PROGRAM_ID.toBase58());
+  const programId = new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58());
   const address = vaultPda(indexId, programId);
   const info = await connection.getAccountInfo(address);
   if (!info) throw new Error(`No NAV vault for ${indexId} on ${network}.`);

@@ -8,7 +8,7 @@
  */
 import { AddressLookupTableAccount, ComputeBudgetProgram, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import {
-  BPS, CLAIM_LEGS_PER_TX, JUPITER_V6_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, USDC_LEG, ata, authorityPda, claimInKindIx, crossRequestLegIx, fulfillSwapIx,
+  BPS, CLAIM_LEGS_PER_TX, JUPITER_V6_PROGRAM_ID, defaultProgramId, USDC_LEG, ata, authorityPda, claimInKindIx, crossRequestLegIx, fulfillSwapIx,
   keeperSwapIx, legAccount, legMint, legTokenProgram, legValue, mockPoolPda, mockSwapIx, settleRequestIx, updatePricesIx, withSlippage,
   type NavRequest, type NavVaultState,
 } from "./program.ts";
@@ -263,7 +263,7 @@ export async function keeperTick(input: {
   /** 0 = marks only (no crosses, swaps, fulfills or settles). */
   maxSwaps?: number;
 }): Promise<KeeperTickResult> {
-  const programId = input.programId ?? NAV_VAULT_PROGRAM_ID;
+  const programId = input.programId ?? defaultProgramId();
   const now = input.nowSeconds ?? (() => Math.floor(Date.now() / 1000));
   let snapshot = await readNavVault(input.connection, input.indexId, programId, now());
   if (!snapshot) throw new Error(`No NAV vault for ${input.indexId}.`);

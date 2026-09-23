@@ -5,7 +5,7 @@
  * `NEXT_PUBLIC_NAV_VAULT_INDEXES` (same list) switches VaultFlow to the one-signature endpoints.
  */
 import { PublicKey } from "@solana/web3.js";
-import { NAV_VAULT_PROGRAM_ID } from "./program.ts";
+import { NAV_VAULT_DEVNET_PROGRAM_ID, NAV_VAULT_PROGRAM_ID } from "./program.ts";
 import { getHeliusRpcUrl } from "../helius.ts";
 
 export const NAV_VAULT_DEVNET_RPC = "https://api.devnet.solana.com";
@@ -20,7 +20,7 @@ export function navVaultConfig(env: Record<string, string | undefined> = process
   const network = env.STOCKLANA_NAV_VAULT_NETWORK?.trim() || "devnet";
   // Mainnet must be chosen explicitly; anything else is refused rather than guessed.
   if (network !== "devnet" && network !== "mainnet-beta") throw new Error("STOCKLANA_NAV_VAULT_NETWORK must be devnet or mainnet-beta.");
-  const programId = env.STOCKLANA_NAV_VAULT_PROGRAM_ID?.trim() ? new PublicKey(env.STOCKLANA_NAV_VAULT_PROGRAM_ID.trim()) : NAV_VAULT_PROGRAM_ID;
+  const programId = env.STOCKLANA_NAV_VAULT_PROGRAM_ID?.trim() ? new PublicKey(env.STOCKLANA_NAV_VAULT_PROGRAM_ID.trim()) : network === "mainnet-beta" ? NAV_VAULT_PROGRAM_ID : NAV_VAULT_DEVNET_PROGRAM_ID;
   const rpcUrl = env.STOCKLANA_NAV_VAULT_RPC_URL?.trim() || (network === "mainnet-beta" ? getHeliusRpcUrl() : NAV_VAULT_DEVNET_RPC);
   return { enabled: indexes.length > 0, indexes, network, programId, rpcUrl };
 }
