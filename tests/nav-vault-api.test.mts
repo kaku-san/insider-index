@@ -200,3 +200,12 @@ test("NAV is the public rail: vault list marks only indexes with a NAV vault; wa
   const none = await (await handleNavPositions(new Request(`http://local/api/positions/indexes?wallet=${s.bob.publicKey.toBase58()}`), { listIndexes }, allDeps)).json();
   assert.equal(none.positions.length, 0);
 });
+
+test("readiness tells the UI which tradable slice the vault holds (on-chain legs are authoritative)", async () => {
+  const { s, deps } = setup();
+  const readiness = await (await handleNavReadiness(s.indexId, deps)).json();
+  assert.deepEqual(readiness.slice, { tradableLegs: 2, totalLegs: null, disclosedWeightBps: null, excluded: [] }, "the committed Mag7 slice does not match this test vault's legs: no invented totals");
+  const { navSliceLabel } = await import("../src/lib/frontend/vault-api.ts");
+  assert.equal(navSliceLabel(readiness), null);
+  assert.equal(navSliceLabel({ indexId: "p", kind: "nav-vault", slice: { tradableLegs: 5, totalLegs: 18, disclosedWeightBps: 7260, excluded: [] } }), "Tradable slice: 5 of 18 holdings (72.6% of disclosed weight)");
+});

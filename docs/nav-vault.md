@@ -92,6 +92,13 @@ Final state: supply 0, nothing reserved. Every readback matched the prepare esti
 - Multi-vault keeper: `npm run nav-vault -- keeper --all --network mainnet-beta --execute --keypair <key> --loop 40`. It covers every DB index that has an on-chain NAV vault. Each cycle quotes each mint once, posts all vaults' marks in as few transactions as fit (several `update_prices` per transaction), and then runs each vault's netted cycle. `--loop` is the target cycle period.
 - Server keeper: container `nav-vault-keeper` on barelystable, running `node:22-bookworm` against a source copy at `/home/deploy/insiderindex/nav-vault`. It reuses the existing checkout's `node_modules` (read-only), the Mag7 keeper key (read-only) and `mag7-keeper.env`, and runs `npm run nav-vault -- keeper … --execute --loop 50 --priority-micro-lamports 5000`, a mark roughly every 50–60 s (captain's cost choice). Near the end of that window a deposit can hit `StalePrices` and needs a retry. The existing `mag7-keeper` container is untouched.
 
+## Tradable slices (captain decision B, 2026-09-23)
+
+- Each index's NAV vault holds its **tradable slice**, never a rewritten disclosed book. A leg is included when it routes via Jupiter on CPI-safe DEXes (Raydium fallback) at $0.05, $10 and $100, with the $100 fill's price within 2% of the $10 fill's. Kept weights are renormalized, capped at 25 legs (largest first). Slices under 3 legs or 30% of disclosed weight stay research only.
+- Generator: `scripts/nav-vault-slices.mts`, which writes `src/lib/nav-vault/tradable-slices.json` (every excluded name with its reason). Owner migration `202609230001_insiderindex_nav_vault_slices.sql` plus `npm run nav-vault -- slices --publish` mirror the slices into the DB, separately from the disclosed book. Init: `npm run nav-vault -- init --index <id> --slice …` creates the lookup table first, so init fits one v0 transaction at up to 25 legs; `--lut` resumes an interrupted init.
+- UI: `TradableSliceNote` / `navSliceLabel` show "Tradable slice: N of M holdings (X% of disclosed weight)" plus the excluded names with reasons (index, theme and profile pages, and VaultFlow). The label only appears when the committed slice matches the on-chain legs.
+- Mainnet vaults (8): Mag7, Pelosi, Gottheimer, Thanedar, McClain, Silicon Hill, Fresh Ink, Bipartisan Handshake. Addresses are in `evidence/vaults/nav-vault-slices-mainnet.json`.
+
 ## Not done here
 
 Audit, mainnet deploy, Raydium direct-pool adapter in the TS keeper (on-chain allowlist supports it; `buildCycleRoute` rejects off-curve owners), async large exits, migrating the Symmetry Mag7 vault.

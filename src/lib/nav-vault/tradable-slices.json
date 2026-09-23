@@ -1,0 +1,2981 @@
+{
+  "generatedAt": "2026-09-23T15:04:59.464Z",
+  "source": "https://insiderindex.xyz/api/vault-indexes",
+  "criteria": {
+    "dexes": [
+      "Raydium CLMM",
+      "Raydium CP",
+      "Raydium",
+      "Whirlpool",
+      "Meteora DLMM",
+      "Meteora DAMM v2",
+      "Meteora",
+      "Orca V2"
+    ],
+    "sizesUsdc": [
+      0.05,
+      10,
+      100
+    ],
+    "maxDriftPct": 2,
+    "minLegs": 3,
+    "minDisclosedWeightBps": 3000,
+    "maxLegs": 25
+  },
+  "slices": [
+    {
+      "indexId": "idx-theme-beta-caucus",
+      "kind": "thematic",
+      "name": "Beta Caucus",
+      "totalLegs": 15,
+      "tradableLegs": 1,
+      "disclosedWeightBps": 679,
+      "eligible": false,
+      "vaultLegs": [
+        {
+          "ticker": "SPY",
+          "mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6truu3rZuiB9rKQg4VYC3Dt3QwV7DgwGqXrYUcrvnDDE",
+          "disclosedWeightBps": 679,
+          "targetWeightBps": 10000
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "VOO",
+          "mint": "Xsd7TduTbjuYCFL7Uoujb8SbkZLmUsuYNLn7KdvX21x",
+          "disclosedWeightBps": 2746,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IVV",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "disclosedWeightBps": 1814,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "QQQ",
+          "mint": "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ",
+          "disclosedWeightBps": 623,
+          "reason": "no route at $10 or $100"
+        },
+        {
+          "ticker": "PAVE",
+          "mint": "PAVE8GmghNpPk9e2L7FAodLHKxufXTM4yE1JtfiGUcp",
+          "disclosedWeightBps": 545,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IJH",
+          "mint": "JHmkX2z8R7ak2uWJZSkfzmDGPpb4msABpGUbakvBbuq",
+          "disclosedWeightBps": 545,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "XLK",
+          "mint": "XLKJut9EA4bnRBRKeJnytbWBbeMXJGC5z3u5L9q8nF8",
+          "disclosedWeightBps": 416,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "EWJ",
+          "mint": "EWJQvQmWqKUpanexdCGEnNvy8PWnnEMQmSj9rbeGzGPs",
+          "disclosedWeightBps": 409,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IVW",
+          "mint": "VWZaHvgSkuCP43X6GQAFMskYEx8mmNweZKP1Sdf3g51",
+          "disclosedWeightBps": 387,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VO",
+          "mint": "VrqGozSeEg8WZWEor9z2jURfVcm5bzKxQF8qSMRcy2R",
+          "disclosedWeightBps": 378,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IWF",
+          "mint": "WFatekWWXWkrHBYKRxaDZak2fiaRRLeTaLGie43PZV7",
+          "disclosedWeightBps": 359,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "EFA",
+          "mint": "EFA8Zrv3SJw7WtBewU6AN9eUWVYcMnrnqdGcdFkYT741",
+          "disclosedWeightBps": 340,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IJR",
+          "mint": "XsyZcb97BzETAqi9BoP2C9D196MiMNBisGMVNje2Thz",
+          "disclosedWeightBps": 305,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IYW",
+          "mint": "YW2UxGzwpysoDqmPKnEnqb9zHRUWahHGiU5ERuimsLT",
+          "disclosedWeightBps": 246,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VNQ",
+          "mint": "VNQQhJE1KDED6FM2nn6ni8Ho3agVoEfkNSs45T8WUdT",
+          "disclosedWeightBps": 208,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-bipartisan-handshake",
+      "kind": "thematic",
+      "name": "Bipartisan Handshake",
+      "totalLegs": 5,
+      "tradableLegs": 3,
+      "disclosedWeightBps": 6000,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "AVGO",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB",
+          "disclosedWeightBps": 2000,
+          "targetWeightBps": 3334
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 2000,
+          "targetWeightBps": 3333
+        },
+        {
+          "ticker": "TSLA",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+          "disclosedWeightBps": 2000,
+          "targetWeightBps": 3333
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "CRM",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "disclosedWeightBps": 2000,
+          "reason": "price moves 829.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 2000,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-capitol-arsenal",
+      "kind": "thematic",
+      "name": "Capitol Arsenal",
+      "totalLegs": 6,
+      "tradableLegs": 0,
+      "disclosedWeightBps": 0,
+      "eligible": false,
+      "vaultLegs": [],
+      "excluded": [
+        {
+          "ticker": "BA",
+          "mint": "XsBcnKnZMsPaerLiUQ4eMFy4Fjysot4RugYXYDjiqCP",
+          "disclosedWeightBps": 5064,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "LMT",
+          "mint": "XssULacY8D3z3a8HoQuLid8wdJHcZLGpSST9MkNFzox",
+          "disclosedWeightBps": 1754,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GE",
+          "mint": "XsfsBjSZoXXKJsxoSt8TyLYsjhBAKFaDPZTCQbFRirP",
+          "disclosedWeightBps": 1425,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "HWM",
+          "mint": "XsCX8NnXq3qx6zUxXxWwjV2yQnGc9C5y6UyXvE6RG7r",
+          "disclosedWeightBps": 1053,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GEHC",
+          "mint": "XsQoxoLVogLGYRRRcFwjdcFQVLxFpCuYfDtvh3vJ2Ft",
+          "disclosedWeightBps": 352,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GEV",
+          "mint": "XswXzAsMV9kebQjCVtr1btvrQgQ7C4C9kKgH4QYAVzw",
+          "disclosedWeightBps": 352,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-capitol-cluster",
+      "kind": "thematic",
+      "name": "Capitol Cluster",
+      "totalLegs": 25,
+      "tradableLegs": 12,
+      "disclosedWeightBps": 4800,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 834
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 834
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 834
+        },
+        {
+          "ticker": "TSLA",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 834
+        },
+        {
+          "ticker": "AMD",
+          "mint": "XsXcJ6GZ9kVnjqGsjBnktRcuwMBmvKWh8S93RefZ1rF",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": null,
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        },
+        {
+          "ticker": "JPM",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "BxT1o9XsnbAPpQnRgfBoh77gcQH4EarYMBwHTcDhVQca",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        },
+        {
+          "ticker": "UNH",
+          "mint": "XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "5xm6QUDxRyMg3Gx59CxXB6VZnRKs4bVu44DS6DzZr3Bp",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        },
+        {
+          "ticker": "INTC",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6KoZB86BFDk6TZbB4CTBoAA8PPbpmEwSWFjCyfkt1Uw4",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        },
+        {
+          "ticker": "AVGO",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        },
+        {
+          "ticker": "COST",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "decimals": 6,
+          "provider": "backpack",
+          "pool": "8SkArvTgNRu95eEMDMwB7EsFEzmgQW2TaMcp8kj4pW24",
+          "disclosedWeightBps": 400,
+          "targetWeightBps": 833
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "HD",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NEE",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "JNJ",
+          "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GS",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ADBE",
+          "mint": "XsDZMGEU8zadWFCkTtPBoPWYcUX3JHVmghnwf2Mve2q",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AMAT",
+          "mint": "XsQZdaWUAGC4R3fgD2N1fupKvJfJq6YM51ccnsLUWFA",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DUK",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DVN",
+          "mint": "Xs8WNVWbYNsHsqEu9WTb9AazMfG7wFxFat11V6mVK1x",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NOW",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "V",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "disclosedWeightBps": 400,
+          "reason": "price moves 55.2% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "ABBV",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AMGN",
+          "mint": "XsgKwBMbv8LDzEYRgbKtyqsub6QB56PQVzgTGbiGaNe",
+          "disclosedWeightBps": 400,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-dual-lock",
+      "kind": "thematic",
+      "name": "Dual Lock",
+      "totalLegs": 20,
+      "tradableLegs": 9,
+      "disclosedWeightBps": 4500,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1112
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "AVGO",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "COST",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "decimals": 6,
+          "provider": "backpack",
+          "pool": "8SkArvTgNRu95eEMDMwB7EsFEzmgQW2TaMcp8kj4pW24",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "JPM",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "BxT1o9XsnbAPpQnRgfBoh77gcQH4EarYMBwHTcDhVQca",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "LLY",
+          "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "D6qd9W868h6Jw318vhLSYyymDycydYPEkfsCGDKSzf34",
+          "disclosedWeightBps": 500,
+          "targetWeightBps": 1111
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "GS",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CRM",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "disclosedWeightBps": 500,
+          "reason": "price moves 829.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "V",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "disclosedWeightBps": 500,
+          "reason": "price moves 55.2% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "ABBV",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AJG",
+          "mint": "XsYka4UhXnzoqmdPCfqX8EZBQcN2MkrG4gJt4SxGvsN",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DUK",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NEE",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NOW",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PH",
+          "mint": "XskVc7XiWmSqvzbjhA2LqGHQhvBdBNfatfeTpNru6KP",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "QCOM",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "disclosedWeightBps": 500,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-fresh-ink",
+      "kind": "thematic",
+      "name": "Fresh Ink",
+      "totalLegs": 20,
+      "tradableLegs": 8,
+      "disclosedWeightBps": 7364,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 2706,
+          "targetWeightBps": 3675
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 1922,
+          "targetWeightBps": 2610
+        },
+        {
+          "ticker": "AVGO",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB",
+          "disclosedWeightBps": 1475,
+          "targetWeightBps": 2003
+        },
+        {
+          "ticker": "INTC",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6KoZB86BFDk6TZbB4CTBoAA8PPbpmEwSWFjCyfkt1Uw4",
+          "disclosedWeightBps": 521,
+          "targetWeightBps": 707
+        },
+        {
+          "ticker": "GOOGL",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw",
+          "disclosedWeightBps": 280,
+          "targetWeightBps": 380
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 264,
+          "targetWeightBps": 359
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 127,
+          "targetWeightBps": 172
+        },
+        {
+          "ticker": "PLTR",
+          "mint": "XsoBhf2ufR8fTyNSjqfU71DYGaE6Z3SUGAidpzriAA4",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "2EbY6YYKdQY9mmn9voiadgMcEnmZ5oe7qkcFVmywNrrE",
+          "disclosedWeightBps": 69,
+          "targetWeightBps": 94
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "BE",
+          "mint": "XsmGSEqT6VXpVis3aVBDxaNwPgHNXbkjkVUCncsLkNB",
+          "disclosedWeightBps": 916,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 751,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VST",
+          "mint": "VST744yvWsHsE7oLLj1x6rcogMvC9HiPbEVpaURqdRR",
+          "disclosedWeightBps": 209,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MINT",
+          "mint": "MexfVVvTKfUoEgKkiaiN98T59QJsp3BZzBzfP21xrFV",
+          "disclosedWeightBps": 139,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IBIT",
+          "mint": "BtZy11yDM76fkku4bgyivbfMpgrdfn7TTdV9WVRKDZeP",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "UBER",
+          "mint": "XsAsZLF4MmsvS1sDxRMrUz7REjHfwbC9UAMXSRBqgEB",
+          "disclosedWeightBps": 95,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ETHA",
+          "mint": "ETHAACWgDvR6fg3FxaB5S9cM4ZnDKCHCJZ95z31EkKUy",
+          "disclosedWeightBps": 93,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ITOT",
+          "mint": "TtG7zYD5TvotiUNkWzCb6NHTy6R6rt3RRqfD9pWKeQ3",
+          "disclosedWeightBps": 92,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TSM",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "disclosedWeightBps": 62,
+          "reason": "price moves 14.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "VT",
+          "mint": "XsEdDDTcVGJU6nvdRdVnj53eKTrsCkvtrVfXGmUK68V",
+          "disclosedWeightBps": 52,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DYNF",
+          "mint": "DYNF9NwbD1qWSapJ3pEhxCMqSYSge8aBts2UW1EihDq1",
+          "disclosedWeightBps": 51,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IVV",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "disclosedWeightBps": 50,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-house-heat",
+      "kind": "thematic",
+      "name": "House Heat",
+      "totalLegs": 15,
+      "tradableLegs": 9,
+      "disclosedWeightBps": 6002,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1112
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1112
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "TSLA",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "AMD",
+          "mint": "XsXcJ6GZ9kVnjqGsjBnktRcuwMBmvKWh8S93RefZ1rF",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": null,
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "JPM",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "BxT1o9XsnbAPpQnRgfBoh77gcQH4EarYMBwHTcDhVQca",
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "BRK.B",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B4UdLnvzCrnfRndLdgGTYZjcKTDsaFKB54cmKb2GoSne",
+          "disclosedWeightBps": 667,
+          "targetWeightBps": 1111
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 666,
+          "targetWeightBps": 1110
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "UPS",
+          "mint": "XsnqNkeDhvaK8C5B3Z4D1ciCupVAgkw1AdS3U2uEn26",
+          "disclosedWeightBps": 667,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GOOG",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "disclosedWeightBps": 667,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 666,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "HD",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "disclosedWeightBps": 666,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NEE",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "disclosedWeightBps": 666,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "JNJ",
+          "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
+          "disclosedWeightBps": 666,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-mag7-caucus",
+      "kind": "thematic",
+      "name": "Mag7 Caucus",
+      "totalLegs": 7,
+      "tradableLegs": 7,
+      "disclosedWeightBps": 10000,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 3448,
+          "targetWeightBps": 3448
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 2740,
+          "targetWeightBps": 2740
+        },
+        {
+          "ticker": "GOOGL",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw",
+          "disclosedWeightBps": 1424,
+          "targetWeightBps": 1424
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 1151,
+          "targetWeightBps": 1151
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 854,
+          "targetWeightBps": 854
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 322,
+          "targetWeightBps": 322
+        },
+        {
+          "ticker": "TSLA",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+          "disclosedWeightBps": 61,
+          "targetWeightBps": 61
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "indexId": "idx-theme-silicon-hill",
+      "kind": "thematic",
+      "name": "Silicon Hill",
+      "totalLegs": 18,
+      "tradableLegs": 10,
+      "disclosedWeightBps": 9067,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 3232,
+          "targetWeightBps": 3565
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 2310,
+          "targetWeightBps": 2548
+        },
+        {
+          "ticker": "GOOGL",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw",
+          "disclosedWeightBps": 1239,
+          "targetWeightBps": 1366
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 977,
+          "targetWeightBps": 1078
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 687,
+          "targetWeightBps": 758
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 314,
+          "targetWeightBps": 346
+        },
+        {
+          "ticker": "AVGO",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB",
+          "disclosedWeightBps": 121,
+          "targetWeightBps": 133
+        },
+        {
+          "ticker": "ORCL",
+          "mint": "XsjFwUPiLofddX5cWFHW35GCbXcSu1BCUGfxoQAQjeL",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "GWjPMHYsmdosbMCPx14N627qf5WhpaxAwNBRCfqP9CM9",
+          "disclosedWeightBps": 91,
+          "targetWeightBps": 100
+        },
+        {
+          "ticker": "TSLA",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+          "disclosedWeightBps": 60,
+          "targetWeightBps": 66
+        },
+        {
+          "ticker": "INTC",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6KoZB86BFDk6TZbB4CTBoAA8PPbpmEwSWFjCyfkt1Uw4",
+          "disclosedWeightBps": 36,
+          "targetWeightBps": 40
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "CRM",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "disclosedWeightBps": 531,
+          "reason": "price moves 829.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 115,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CRWD",
+          "mint": "Xs7xXqkcK7K8urEqGg52SECi79dRp2cEKKuYjUePYDw",
+          "disclosedWeightBps": 109,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TSM",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "disclosedWeightBps": 62,
+          "reason": "price moves 14.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "QCOM",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "disclosedWeightBps": 43,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ADI",
+          "mint": "Xs3CytsvJshAYy1TQjq2o2yVWCyEGinNpvkB6f3Qs31",
+          "disclosedWeightBps": 42,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "INTU",
+          "mint": "XsfodJMz7SyMNsSgATVDcbuMiQDqQoAiRTL1xuyHNUn",
+          "disclosedWeightBps": 18,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NOW",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "disclosedWeightBps": 13,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "idx-theme-whips-desk",
+      "kind": "thematic",
+      "name": "Whip's Desk",
+      "totalLegs": 6,
+      "tradableLegs": 2,
+      "disclosedWeightBps": 1417,
+      "eligible": false,
+      "vaultLegs": [
+        {
+          "ticker": "BRK.B",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B4UdLnvzCrnfRndLdgGTYZjcKTDsaFKB54cmKb2GoSne",
+          "disclosedWeightBps": 962,
+          "targetWeightBps": 6789
+        },
+        {
+          "ticker": "JPM",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "BxT1o9XsnbAPpQnRgfBoh77gcQH4EarYMBwHTcDhVQca",
+          "disclosedWeightBps": 455,
+          "targetWeightBps": 3211
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "V",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "disclosedWeightBps": 8193,
+          "reason": "price moves 55.2% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "GS",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "disclosedWeightBps": 228,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MA",
+          "mint": "XsApJFV9MAktqnAc6jqzsHVujxkGm9xcSUffaBoYLKC",
+          "disclosedWeightBps": 97,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "WFC",
+          "mint": "XspHXejQ3A4VeimAqR1mAkvgTWgpmmoNR5CUhwCqzqr",
+          "disclosedWeightBps": 65,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-josh-gottheimer",
+      "kind": "person",
+      "name": "Josh G Index · InsiderIndex",
+      "totalLegs": 25,
+      "tradableLegs": 5,
+      "disclosedWeightBps": 7847,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 6776,
+          "targetWeightBps": 8635
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 679,
+          "targetWeightBps": 865
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 317,
+          "targetWeightBps": 404
+        },
+        {
+          "ticker": "LLY",
+          "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "D6qd9W868h6Jw318vhLSYyymDycydYPEkfsCGDKSzf34",
+          "disclosedWeightBps": 60,
+          "targetWeightBps": 77
+        },
+        {
+          "ticker": "ABT",
+          "mint": "XsHtf5RpxsQ7jeJ9ivNewouZKJHbPxhPoEy6yYvULr7",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8YQvLk8cuMuaQHGnkQfB7UyG6xYGJyDueFRmfjs9m3Qw",
+          "disclosedWeightBps": 15,
+          "targetWeightBps": 19
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "DLTR",
+          "mint": "XsPWGRNQF1Thif9qaadTNtF8xfHTb8sjvw1NC46hkED",
+          "disclosedWeightBps": 15,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TSCO",
+          "mint": "XsYMTZRVKs9he9redAPMhaBbCbmZvUxMTApsfCZsKzt",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ISRG",
+          "mint": "XsgBcHP3frsQGHr5EoDdoPZMANk52Y4JPg5BYx98NwL",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "QQQ",
+          "mint": "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ",
+          "disclosedWeightBps": 435,
+          "reason": "no route at $10 or $100"
+        },
+        {
+          "ticker": "AKAM",
+          "mint": "XsJW9EhZBVQawVj1aGFweU2LwQjZCvyHVYb3vXq8s99",
+          "disclosedWeightBps": 15,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ALLY",
+          "mint": "XsRifLZvp2XvCpPFQNK6XGTjHSL7sTZmmGyEs4NLAV2",
+          "disclosedWeightBps": 15,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "T",
+          "mint": "T48Qsk7MjNGaWXoTmuVSGJXYMmNuwrQ39hvyhw1nyzt",
+          "disclosedWeightBps": 15,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DRI",
+          "mint": "XsTNaRrDQtFJi56TAQbmk6tHzWQvihWGoafKSJzbJdY",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "FIS",
+          "mint": "XsTdkPyDNVtJYUjV7VhyZwtqQmA2Lg4DdTkRjYPD2gQ",
+          "disclosedWeightBps": 15,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "F",
+          "mint": "XsBNJXGu68cBH5hgFxdqZkeh8cMQv32jeEtZtYTYvfS",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GS",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "HD",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MLM",
+          "mint": "Xsvi61uutcLdAsa5NxJ2c9geLgzUFM3tMtpJ44eoegt",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PFGC",
+          "mint": "XsTnXvRqrDisLoYpLDUowPx2HLhd6p44ZAbEKyGsL3g",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PFE",
+          "mint": "XsAtbqkAP1HJxy7hFDeq7ok6yM43DQ9mQ1Rh861X8rw",
+          "disclosedWeightBps": 15,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SYF",
+          "mint": "XsWMBE3QzwuS7pJET8GUyaGzjNJG49RToPBYWdGHUTG",
+          "disclosedWeightBps": 60,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "UAL",
+          "mint": "XsKq6Ac27X857u18jH8MrWQ3bEA5ZfUSGriawpyu8xw",
+          "disclosedWeightBps": 137,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PAVE",
+          "mint": "PAVE8GmghNpPk9e2L7FAodLHKxufXTM4yE1JtfiGUcp",
+          "disclosedWeightBps": 317,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IJH",
+          "mint": "JHmkX2z8R7ak2uWJZSkfzmDGPpb4msABpGUbakvBbuq",
+          "disclosedWeightBps": 317,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IYW",
+          "mint": "YW2UxGzwpysoDqmPKnEnqb9zHRUWahHGiU5ERuimsLT",
+          "disclosedWeightBps": 317,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-julia-letlow",
+      "kind": "person",
+      "name": "Julia L Index · InsiderIndex",
+      "totalLegs": 53,
+      "tradableLegs": 11,
+      "disclosedWeightBps": 2894,
+      "eligible": false,
+      "vaultLegs": [
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 685,
+          "targetWeightBps": 2367
+        },
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 685,
+          "targetWeightBps": 2367
+        },
+        {
+          "ticker": "ABT",
+          "mint": "XsHtf5RpxsQ7jeJ9ivNewouZKJHbPxhPoEy6yYvULr7",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8YQvLk8cuMuaQHGnkQfB7UyG6xYGJyDueFRmfjs9m3Qw",
+          "disclosedWeightBps": 170,
+          "targetWeightBps": 588
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 170,
+          "targetWeightBps": 587
+        },
+        {
+          "ticker": "AVGO",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB",
+          "disclosedWeightBps": 170,
+          "targetWeightBps": 587
+        },
+        {
+          "ticker": "CVX",
+          "mint": "XsNNMt7WTNA2sV3jrb1NNfNgapxRF5i4i6GcnTRRHts",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "5v5prv4UMT8fhzYjYwxUmvFuSQiGqF45vuNcmTkHTmi",
+          "disclosedWeightBps": 169,
+          "targetWeightBps": 584
+        },
+        {
+          "ticker": "JPM",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "BxT1o9XsnbAPpQnRgfBoh77gcQH4EarYMBwHTcDhVQca",
+          "disclosedWeightBps": 169,
+          "targetWeightBps": 584
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 169,
+          "targetWeightBps": 584
+        },
+        {
+          "ticker": "MU",
+          "mint": "XsQLZycSZ7QnBBdBXQaTbQdiUcbRqjNJgyBGAMzhHav",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "5U8ejNMruHXNSd11x9KXb7LueRnkY3ZAz3vkmYc7bKxs",
+          "disclosedWeightBps": 169,
+          "targetWeightBps": 584
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 169,
+          "targetWeightBps": 584
+        },
+        {
+          "ticker": "UNH",
+          "mint": "XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "5xm6QUDxRyMg3Gx59CxXB6VZnRKs4bVu44DS6DzZr3Bp",
+          "disclosedWeightBps": 169,
+          "targetWeightBps": 584
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "ABBV",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ACN",
+          "mint": "Xs5UJzmCRQ8DWZjskExdSQDnbE6iLkRu2jjrRAB1JSU",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AA",
+          "mint": "Xs2XDRGh6AhivmYgaVa8woDGKGccR1WnnGnw9vqSWD9",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AJG",
+          "mint": "XsYka4UhXnzoqmdPCfqX8EZBQcN2MkrG4gJt4SxGvsN",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "T",
+          "mint": "T48Qsk7MjNGaWXoTmuVSGJXYMmNuwrQ39hvyhw1nyzt",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BA",
+          "mint": "XsBcnKnZMsPaerLiUQ4eMFy4Fjysot4RugYXYDjiqCP",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BMY",
+          "mint": "Xsa3dm4UT6TdzPJV75UiuGUeGywYUnfSNhsV5nHPZEu",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CF",
+          "mint": "XsH9yfX7GuRbCDnNvD4A7x8gvMc8sc8Htz1fQd7VYWw",
+          "disclosedWeightBps": 170,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DOV",
+          "mint": "XsXG3ytqNM8wMwxbZnbZjY3wFua4nU58ZR6Lwr5wSDp",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DUK",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "EXE",
+          "mint": "XsodbeGRpfyAzq1MMqZu7u1vCYNKNDuYrCtofaT1PJK",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GS",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DINO",
+          "mint": "D2vnr1YuqfXUxV3FPxTfyz8T58gF3bQvEGd9hj4DzSVJ",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IR",
+          "mint": "XsWx5RzivC8d5XwnLiMcgQqqhXiDnrTDwFCDap1o6NW",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ICE",
+          "mint": "XsG6o69zE7mQCeFf6utyMx9Q89cJjGV4vTwi3wFHrkN",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "KVUE",
+          "mint": "XsDDkXqF1sr1ixW4Y93Geqfd2LbrWxokCjQf9poGN3c",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "LVS",
+          "mint": "Xs9bwo2tkrKRJxr9787rKj2bKcQUMFNtbzruYTrxdst",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "LOW",
+          "mint": "XsixDLxXcKZBcRBddYiPZjB9FJcKMTLd4B7VBeKo3pB",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MKC",
+          "mint": "XscRMWo5xvLxenVLxmodRqZC3UJwACXoxAEEGQzrzKd",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MTD",
+          "mint": "XsXb7oGeK1N5Jk9mm9VD4ZQrXsu9NULWP3C3n7hhDWp",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NEE",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NUE",
+          "mint": "XsvdeDvbEfZkvfEUixS9SydEfJopFFD6NJjXZN1haYr",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PH",
+          "mint": "XskVc7XiWmSqvzbjhA2LqGHQhvBdBNfatfeTpNru6KP",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PINS",
+          "mint": "XswgfhwvyLQ6ZdNsrwBGkBVpqXzQPpDykCDBmiti1o5",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PNC",
+          "mint": "Xss1A59GFZcvyuTXLXMyYdJ7e9kpHq6AFKNjcVZ1rjA",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PEG",
+          "mint": "XsUytoK53kCKfXC61Dn3ZM8sjyVBUpScF111pfMG69U",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SAIA",
+          "mint": "XsdzBn1wxCibSdDZgaaWqGtdvo2JSFueo2CwHnA69Lf",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CRM",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "disclosedWeightBps": 169,
+          "reason": "price moves 829.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "SLB",
+          "mint": "SLBi3yDGZKrDNReJz2qSrASn3z67MaD6FBXhwrWseVg",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SYK",
+          "mint": "XshACd866qcdJYTotipkEHNKKnjDHJJkUciUxKVenE3",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TSM",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "disclosedWeightBps": 169,
+          "reason": "price moves 14.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "TPR",
+          "mint": "Xs2zWfkYjSCCW4fdC1L36rz77YzTcQtji7ewjWPvuWW",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CI",
+          "mint": "XsGfYyioN9bfk6M6RGKvucDq8grQehqkBz8ziEtT124",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TMO",
+          "mint": "Xs8drBWy3Sd5QY3aifG9kt9KFs2K3PGZmx7jWrsrk57",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VONG",
+          "mint": "VU46WU7M1jNW5QVbN7vPKwwPWKYpEjeEzx9FN7qvHhQ",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VRTX",
+          "mint": "XsgCWpLUC3pv6JmNAFtkYmuwSaikShy8QZRuripgBzn",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "V",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "disclosedWeightBps": 169,
+          "reason": "price moves 55.2% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "WBD",
+          "mint": "XsZUSqxAXKJkEimvD4CoVvEb4WUC92TFgj5zRtBxFeL",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "WFC",
+          "mint": "XspHXejQ3A4VeimAqR1mAkvgTWgpmmoNR5CUhwCqzqr",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "WELL",
+          "mint": "XsuKHFvcZLWvhk8XcprK4tiAZRefQ4nfTyNs6b9BArz",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "WSM",
+          "mint": "XsxjGDiXTcvRjbHgAkngyJgix766hJHKB3XLzNiRSro",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "WDAY",
+          "mint": "XsDa7zkFPXdu1wz29JLEV2XtWvrLdb16s4yH1LcKQ5r",
+          "disclosedWeightBps": 169,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-kevin-hern",
+      "kind": "person",
+      "name": "Kevin H Index · InsiderIndex",
+      "totalLegs": 8,
+      "tradableLegs": 2,
+      "disclosedWeightBps": 1798,
+      "eligible": false,
+      "vaultLegs": [
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 1516,
+          "targetWeightBps": 8432
+        },
+        {
+          "ticker": "INTC",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6KoZB86BFDk6TZbB4CTBoAA8PPbpmEwSWFjCyfkt1Uw4",
+          "disclosedWeightBps": 282,
+          "targetWeightBps": 1568
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "ITW",
+          "mint": "Xs7NEcjqek7SN135xwSafr721njNVyenBdd7NDG2cYo",
+          "disclosedWeightBps": 283,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PTC",
+          "mint": "Xs25CGQuYuoXrMMWUSxo9WmvnQZyFzBChaHbUPXzm6b",
+          "disclosedWeightBps": 650,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ORLY",
+          "mint": "XsZCRtj2wRfksr19c4Bf4L2WBB5EYPmr1nBQS1yXApD",
+          "disclosedWeightBps": 6495,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IQV",
+          "mint": "Xstzb2X8HbtJVUephHsF7XknnwiBRYMxWoLyfUBWaoC",
+          "disclosedWeightBps": 140,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BSX",
+          "mint": "Xs7vm4sZj1LiNLvnxUCyUTuxRMTt4WGJfdbCASTYhN9",
+          "disclosedWeightBps": 564,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SPLV",
+          "mint": "SPLVUUo19RsTjLc54MYaSrmQNk7F4J3CAEYsXjbDnzL",
+          "disclosedWeightBps": 70,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-lisa-mcclain",
+      "kind": "person",
+      "name": "Lisa M Index · InsiderIndex",
+      "totalLegs": 45,
+      "tradableLegs": 11,
+      "disclosedWeightBps": 3781,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 1519,
+          "targetWeightBps": 4018
+        },
+        {
+          "ticker": "PLTR",
+          "mint": "XsoBhf2ufR8fTyNSjqfU71DYGaE6Z3SUGAidpzriAA4",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "2EbY6YYKdQY9mmn9voiadgMcEnmZ5oe7qkcFVmywNrrE",
+          "disclosedWeightBps": 1452,
+          "targetWeightBps": 3840
+        },
+        {
+          "ticker": "TSLA",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+          "disclosedWeightBps": 271,
+          "targetWeightBps": 717
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 68,
+          "targetWeightBps": 180
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 68,
+          "targetWeightBps": 180
+        },
+        {
+          "ticker": "COST",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "decimals": 6,
+          "provider": "backpack",
+          "pool": "8SkArvTgNRu95eEMDMwB7EsFEzmgQW2TaMcp8kj4pW24",
+          "disclosedWeightBps": 68,
+          "targetWeightBps": 180
+        },
+        {
+          "ticker": "LLY",
+          "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "D6qd9W868h6Jw318vhLSYyymDycydYPEkfsCGDKSzf34",
+          "disclosedWeightBps": 67,
+          "targetWeightBps": 177
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 67,
+          "targetWeightBps": 177
+        },
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 67,
+          "targetWeightBps": 177
+        },
+        {
+          "ticker": "NFLX",
+          "mint": "XsEH7wWfJJu2ZT3UCFeVfALnVA6CP5ur7Ee11KmzVpL",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "7RQXW5KEBgHCcy1eSNs1Kh7BWaEL46q8jb9t18S151bL",
+          "disclosedWeightBps": 67,
+          "targetWeightBps": 177
+        },
+        {
+          "ticker": "SHOP",
+          "mint": "SH55hfaipFAbwT42nQYhRoM5o5t61QpkmJ6p62vXB3m",
+          "decimals": 6,
+          "provider": "backpack",
+          "pool": "GmUC1FtNFatTSWTmM1UQ4Rg4eirGoQG2a5tXi3BLNWos",
+          "disclosedWeightBps": 67,
+          "targetWeightBps": 177
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "AGG",
+          "mint": "AGGxGKCCzTqce3zFuLzWwjgMKDDJu8QaMz2yhtPZCyji",
+          "disclosedWeightBps": 337,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IVV",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "disclosedWeightBps": 2903,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BNDX",
+          "mint": "BNDXLvsN2N48inLgiULeJd9HAfJi3rHTmLbiiSWkHAG6",
+          "disclosedWeightBps": 134,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SMR",
+          "mint": "XsrwdnwLHjVnyy7fgE2Pdwjp3czEm73jPjkSC5xzUBw",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TSM",
+          "mint": "XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV",
+          "disclosedWeightBps": 623,
+          "reason": "price moves 14.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "ANET",
+          "mint": "XsrsM2RgtYxXqxmy4iWgxQJUkkHG1U5wzi74sVNUW8m",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AJG",
+          "mint": "XsYka4UhXnzoqmdPCfqX8EZBQcN2MkrG4gJt4SxGvsN",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BKR",
+          "mint": "XsBE7iAzaJEBpSwG5JZ7zQTWNgTaerweBy7nJCachaJ",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BSX",
+          "mint": "Xs7vm4sZj1LiNLvnxUCyUTuxRMTt4WGJfdbCASTYhN9",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CMG",
+          "mint": "XsR1ktNCRYDoDNxhaSxF6NX2HyT4ACSQBgPRLpXTWmm",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CTAS",
+          "mint": "XszBTLtg8oMmEWsZHbJJwViiB6unNh2ei1e6miArqps",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ETN",
+          "mint": "Xs8S5L4HkJpeBWF1J4oyUX6rVwGHmG7GZ7PiChPt7nY",
+          "disclosedWeightBps": 68,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ECL",
+          "mint": "XsPPAW5wuUa1ALN1NstEkUAajbwycXTRxtWoLfFriy4",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GS",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "HWM",
+          "mint": "XsCX8NnXq3qx6zUxXxWwjV2yQnGc9C5y6UyXvE6RG7r",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "INTU",
+          "mint": "XsfodJMz7SyMNsSgATVDcbuMiQDqQoAiRTL1xuyHNUn",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ISRG",
+          "mint": "XsgBcHP3frsQGHr5EoDdoPZMANk52Y4JPg5BYx98NwL",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MLM",
+          "mint": "Xsvi61uutcLdAsa5NxJ2c9geLgzUFM3tMtpJ44eoegt",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MCO",
+          "mint": "XseTVygt2sUPQsfYbYVMXzV1AeMRE6Usj9DEWwStMe3",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NXPI",
+          "mint": "NXPCCDk7jP2Js56He3ceGpsrXiRwFxR7uh2s3QL3N3E",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ORLY",
+          "mint": "XsZCRtj2wRfksr19c4Bf4L2WBB5EYPmr1nBQS1yXApD",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PH",
+          "mint": "XskVc7XiWmSqvzbjhA2LqGHQhvBdBNfatfeTpNru6KP",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CRM",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "disclosedWeightBps": 67,
+          "reason": "price moves 829.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "NOW",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SHW",
+          "mint": "XsfgitU15HiJX9UJN2fhcpbfRr5P8XJXvC1nuJs3jAr",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SNPS",
+          "mint": "XsfGN1hFHbigfAzUY1nLRjrECm3ohGzVcim5pMqgp9d",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TTD",
+          "mint": "TTDHDNUg8TQ4vXGtuQJ2M3QhBRwVCphQWEHshLUo8kj",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TMO",
+          "mint": "Xs8drBWy3Sd5QY3aifG9kt9KFs2K3PGZmx7jWrsrk57",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TJX",
+          "mint": "XsPWZN3FYcrvpEnxrQqogbVZtxpRX9tFomymKw2dWJS",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VRTX",
+          "mint": "XsgCWpLUC3pv6JmNAFtkYmuwSaikShy8QZRuripgBzn",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "V",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "disclosedWeightBps": 67,
+          "reason": "price moves 55.2% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "ZTS",
+          "mint": "XsRPgsEQ3dFR84DhMv18jtob5D77FivAsTTsv1jCYmv",
+          "disclosedWeightBps": 67,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IEFA",
+          "mint": "EFAcFxfbt1L7kv9WqY3z61bUhyiKB4wvKjDX7Qemh7kL",
+          "disclosedWeightBps": 271,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-marjorie-taylor-greene",
+      "kind": "person",
+      "name": "Marjorie G Index · InsiderIndex",
+      "totalLegs": 52,
+      "tradableLegs": 13,
+      "disclosedWeightBps": 3171,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 509,
+          "targetWeightBps": 1605
+        },
+        {
+          "ticker": "BRK.B",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B4UdLnvzCrnfRndLdgGTYZjcKTDsaFKB54cmKb2GoSne",
+          "disclosedWeightBps": 509,
+          "targetWeightBps": 1605
+        },
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 509,
+          "targetWeightBps": 1605
+        },
+        {
+          "ticker": "TSLA",
+          "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+          "disclosedWeightBps": 509,
+          "targetWeightBps": 1605
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 127,
+          "targetWeightBps": 401
+        },
+        {
+          "ticker": "AMD",
+          "mint": "XsXcJ6GZ9kVnjqGsjBnktRcuwMBmvKWh8S93RefZ1rF",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": null,
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 398
+        },
+        {
+          "ticker": "COST",
+          "mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+          "decimals": 6,
+          "provider": "backpack",
+          "pool": "8SkArvTgNRu95eEMDMwB7EsFEzmgQW2TaMcp8kj4pW24",
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 398
+        },
+        {
+          "ticker": "LLY",
+          "mint": "Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "D6qd9W868h6Jw318vhLSYyymDycydYPEkfsCGDKSzf34",
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 398
+        },
+        {
+          "ticker": "INTC",
+          "mint": "XshPgPdXFRWB8tP1j82rebb2Q9rPgGX37RuqzohmArM",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6KoZB86BFDk6TZbB4CTBoAA8PPbpmEwSWFjCyfkt1Uw4",
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 397
+        },
+        {
+          "ticker": "JPM",
+          "mint": "XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "BxT1o9XsnbAPpQnRgfBoh77gcQH4EarYMBwHTcDhVQca",
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 397
+        },
+        {
+          "ticker": "LULU",
+          "mint": "LULUmT9VMttkfAJE236LXJcYJ2tTP7nunrSWR5G1BdS",
+          "decimals": 6,
+          "provider": "backpack",
+          "pool": null,
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 397
+        },
+        {
+          "ticker": "META",
+          "mint": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "3L7KbPVaAQA4UTecaGQYsm6UCq5F3sZM9zAYkxqYt63j",
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 397
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 126,
+          "targetWeightBps": 397
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "AMAT",
+          "mint": "XsQZdaWUAGC4R3fgD2N1fupKvJfJq6YM51ccnsLUWFA",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BX",
+          "mint": "XsYtTeabUTJnkxWrHZUChwcKpNq6BbqPbWs9ZgLk4Xa",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CAH",
+          "mint": "XsrstNGy7STAR22txNru2ahbEwdBadFJwYRCBNEQYBS",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CAT",
+          "mint": "XsRvd1meWQ9kW1SrZPa1jokQqmBoPWWjd6wGTgdp5E6",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SCHW",
+          "mint": "XsK5U9qwT9ErPXnpgDzV9voTGASZbZnNTYTGVxCqPii",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NOW",
+          "mint": "XsBnEFd2EtpwBRNVfN8qLZcVUnuqXRaGCSEEFChLfxL",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SO",
+          "mint": "Xs5nNLYnMuwBTMQ7KnfCgfsDBa9WehDa1EZqzicarZm",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SCCO",
+          "mint": "XsQD8itHh5CdrWMiH8cZPB55KSATjdXsxcSJJ14YCFD",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GOOG",
+          "mint": "GzE1CXwDxL7RhZ6GNPzehzK5XEq4ovfehNt3utS11Bdo",
+          "disclosedWeightBps": 509,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ABBV",
+          "mint": "XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ADBE",
+          "mint": "XsDZMGEU8zadWFCkTtPBoPWYcUX3JHVmghnwf2Mve2q",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "ASML",
+          "mint": "XshuHQ6o6SVpUNawvnnTMxsZ4tacZsNgVCLorv7TkFq",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GLW",
+          "mint": "Xsg3UgvjxpUgV3WZx9Wt9deLx7qvKYp6ZLY6xMY2Dfq",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CRWD",
+          "mint": "Xs7xXqkcK7K8urEqGg52SECi79dRp2cEKKuYjUePYDw",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DELL",
+          "mint": "Xsu7Tc5J2fVUE4H5vYAiSr34cvLJeCsYPMjAYnayQn6",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DLR",
+          "mint": "Xstp4CYu1181rhhi7w32Lj6wQZ2VDjFhQNKZwZARk5G",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DUK",
+          "mint": "XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv",
+          "disclosedWeightBps": 509,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "FDX",
+          "mint": "XsEmsxmtT12GBiqtvTxoNaipTBNEdUs6oq7pwHFHTb7",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GILD",
+          "mint": "XsmAFboVqfDwGPgXfd7oCunvYAYSzzkuKE2BDRzwjGy",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GS",
+          "mint": "XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GSK",
+          "mint": "GSK5j86zXUqfk6PoF1ckMa4Ej4EDQ4y8TKmgy7jYeY5n",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "HD",
+          "mint": "XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "JNJ",
+          "mint": "XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "KMI",
+          "mint": "XsQxeWjN2M3Spr5YHRQiM1oQ8fgpJWtdBdg1E2ZrjFg",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "LRCX",
+          "mint": "XsSN912SN4Whn2xn59vWZHt1uLbw9WnoNGp5MigmHFf",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NEE",
+          "mint": "Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NSC",
+          "mint": "Xs4UsCDQKKJqHjidgoZBHUW9emLD4njpLPsYesp4ZpZ",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "OXY",
+          "mint": "XsRNiTxDeRvxTEMTV5BC98N7cTZXxjNdLnudR8YeB2b",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "QCOM",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "HSY",
+          "mint": "XscEuBenD5X7CMVdh6MKzTSBQLsKNqmsoLiXHrQMitH",
+          "disclosedWeightBps": 509,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TSCO",
+          "mint": "XsYMTZRVKs9he9redAPMhaBbCbmZvUxMTApsfCZsKzt",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "UPS",
+          "mint": "XsnqNkeDhvaK8C5B3Z4D1ciCupVAgkw1AdS3U2uEn26",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "V",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "disclosedWeightBps": 126,
+          "reason": "price moves 55.2% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "SCHG",
+          "mint": "SCHG7hmjtSbFh1a42ZKchgF6tTKJRRTfisy94GWvFe7",
+          "disclosedWeightBps": 509,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VEA",
+          "mint": "VEAue2ovVFspxicyrTDycnceVDPjCqyuyapNpFHdbnE",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VO",
+          "mint": "VrqGozSeEg8WZWEor9z2jURfVcm5bzKxQF8qSMRcy2R",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VOO",
+          "mint": "Xsd7TduTbjuYCFL7Uoujb8SbkZLmUsuYNLn7KdvX21x",
+          "disclosedWeightBps": 509,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VB",
+          "mint": "VBm6FpjKPmiosac4fkvgPT6LBsGEvsJnz7LNAJnMBCH",
+          "disclosedWeightBps": 126,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-nancy-pelosi",
+      "kind": "person",
+      "name": "Nancy P Index · InsiderIndex",
+      "totalLegs": 18,
+      "tradableLegs": 5,
+      "disclosedWeightBps": 7261,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 3184,
+          "targetWeightBps": 4385
+        },
+        {
+          "ticker": "NVDA",
+          "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+          "disclosedWeightBps": 1274,
+          "targetWeightBps": 1755
+        },
+        {
+          "ticker": "GOOGL",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw",
+          "disclosedWeightBps": 1274,
+          "targetWeightBps": 1755
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 1274,
+          "targetWeightBps": 1754
+        },
+        {
+          "ticker": "AVGO",
+          "mint": "XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "EkpbWmPzrzFsv2xkJRdvWs61aRuDBVdrJK7WQmctBFnB",
+          "disclosedWeightBps": 255,
+          "targetWeightBps": 351
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "PANW",
+          "mint": "XsQ6NfzzLH8nspjrB9X8R2K64Zz7Tnxqu12juDiMPMW",
+          "disclosedWeightBps": 256,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PYPL",
+          "mint": "XshWQWYVp5ff8CrAEsGmLVKD47nBWi3Ygn5v8wXK27G",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "QCOM",
+          "mint": "XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB",
+          "disclosedWeightBps": 4,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "RBLX",
+          "mint": "Xss5RAku5EH6UViFdvW7ss9xQjwQLsrs2opPMhb3k43",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CRM",
+          "mint": "XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN",
+          "disclosedWeightBps": 1274,
+          "reason": "price moves 829.3% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "V",
+          "mint": "XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p",
+          "disclosedWeightBps": 256,
+          "reason": "price moves 55.2% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "DIS",
+          "mint": "Xsg93jDV656ULQ5u9yT2x5DS9b4xGD8aDCtfESSW6Bb",
+          "disclosedWeightBps": 255,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "WBD",
+          "mint": "XsZUSqxAXKJkEimvD4CoVvEb4WUC92TFgj5zRtBxFeL",
+          "disclosedWeightBps": 4,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AXP",
+          "mint": "AXPgyGSi8MQSYxVZ9pUbGfE7k5pJwAyEtbPXQ7v332Bp",
+          "disclosedWeightBps": 255,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "T",
+          "mint": "T48Qsk7MjNGaWXoTmuVSGJXYMmNuwrQ39hvyhw1nyzt",
+          "disclosedWeightBps": 16,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CMCSA",
+          "mint": "XsvKCaNsxg2GN8jjUmq71qukMJr7Q1c5R2Mk9P8kcS8",
+          "disclosedWeightBps": 65,
+          "reason": "price moves 2.4% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "CRWD",
+          "mint": "Xs7xXqkcK7K8urEqGg52SECi79dRp2cEKKuYjUePYDw",
+          "disclosedWeightBps": 255,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IBKR",
+          "mint": "XsTS8D9tBV6oQRqkixzNCThctMwFzxScetp4BA9ByTK",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-patrick-fallon",
+      "kind": "person",
+      "name": "Pat F Index · InsiderIndex",
+      "totalLegs": 21,
+      "tradableLegs": 1,
+      "disclosedWeightBps": 828,
+      "eligible": false,
+      "vaultLegs": [
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 828,
+          "targetWeightBps": 10000
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "EWC",
+          "mint": "EWCjzCuDN5V2gd8w9Bjc1s98dgQxNcNSZCp54tAAemWA",
+          "disclosedWeightBps": 39,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VWO",
+          "mint": "VWKbCRSSmCDLMYmu8uxrG1pi54JiZz4XrT7CuRmMf9v",
+          "disclosedWeightBps": 155,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VGK",
+          "mint": "XsosCAu1L8Ebpr4SdBDV1EboYDRTWCH8j79UnHYzvbN",
+          "disclosedWeightBps": 155,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VGT",
+          "mint": "VGTwFgHPDtKijcK5hBLbLnTFGVWAuSZBhLY8vsqcFEn",
+          "disclosedWeightBps": 356,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VTI",
+          "mint": "XsssYEQjzxBCFgvYFFNuhJFBeHNdLWYeUSP8F45cDr9",
+          "disclosedWeightBps": 355,
+          "reason": "price moves 2.0% between a $10 and a $100 buy"
+        },
+        {
+          "ticker": "BTI",
+          "mint": "BTYrd2E3aDw9brSEdDaysVEx6CsoNCWVWjyJMW2paLSZ",
+          "disclosedWeightBps": 39,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GEHC",
+          "mint": "XsQoxoLVogLGYRRRcFwjdcFQVLxFpCuYfDtvh3vJ2Ft",
+          "disclosedWeightBps": 39,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GEV",
+          "mint": "XswXzAsMV9kebQjCVtr1btvrQgQ7C4C9kKgH4QYAVzw",
+          "disclosedWeightBps": 39,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "GE",
+          "mint": "XsfsBjSZoXXKJsxoSt8TyLYsjhBAKFaDPZTCQbFRirP",
+          "disclosedWeightBps": 155,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "OKE",
+          "mint": "XspDMNC416uCcUbngqyAwzk1phuRYdmm6AMsWo3EHd4",
+          "disclosedWeightBps": 355,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "TGT",
+          "mint": "TGTz2uEPMxMAp8kKMmtajQU527Vig7zKARWKzfNubbW",
+          "disclosedWeightBps": 39,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "WAB",
+          "mint": "XsGFoZFgiRxDk49QCAQUArX84V88t7Bz3fsExp7HLuX",
+          "disclosedWeightBps": 39,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VNQ",
+          "mint": "VNQQhJE1KDED6FM2nn6ni8Ho3agVoEfkNSs45T8WUdT",
+          "disclosedWeightBps": 828,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AGG",
+          "mint": "AGGxGKCCzTqce3zFuLzWwjgMKDDJu8QaMz2yhtPZCyji",
+          "disclosedWeightBps": 192,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "AAL",
+          "mint": "AALFWGekLbAgSW54dAmCwhCXKfX5z16N3wWNpMB5rdYK",
+          "disclosedWeightBps": 828,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BA",
+          "mint": "XsBcnKnZMsPaerLiUQ4eMFy4Fjysot4RugYXYDjiqCP",
+          "disclosedWeightBps": 355,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "FDX",
+          "mint": "XsEmsxmtT12GBiqtvTxoNaipTBNEdUs6oq7pwHFHTb7",
+          "disclosedWeightBps": 1774,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PYPL",
+          "mint": "XshWQWYVp5ff8CrAEsGmLVKD47nBWi3Ygn5v8wXK27G",
+          "disclosedWeightBps": 828,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "LUV",
+          "mint": "XseRUafvQDXZSddDFpsXQPBNggurszyztkh4TEnvEuM",
+          "disclosedWeightBps": 1774,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "DIS",
+          "mint": "Xsg93jDV656ULQ5u9yT2x5DS9b4xGD8aDCtfESSW6Bb",
+          "disclosedWeightBps": 828,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-shri-thanedar",
+      "kind": "person",
+      "name": "Shri T Index · InsiderIndex",
+      "totalLegs": 8,
+      "tradableLegs": 7,
+      "disclosedWeightBps": 4378,
+      "eligible": true,
+      "vaultLegs": [
+        {
+          "ticker": "GOOGL",
+          "mint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B8YAwjGYk6qidWzGBXMAxP7nYfG8g74EZ3Y4gFSsobRw",
+          "disclosedWeightBps": 1406,
+          "targetWeightBps": 3212
+        },
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 1406,
+          "targetWeightBps": 3212
+        },
+        {
+          "ticker": "MSFT",
+          "mint": "XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "CLu4kFM4nb67xrdN7vJnMxXXir8Z5hA4HJUzPFccXjsL",
+          "disclosedWeightBps": 704,
+          "targetWeightBps": 1608
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 329,
+          "targetWeightBps": 751
+        },
+        {
+          "ticker": "BRK.B",
+          "mint": "Xs6B6zawENwAbWVi7w92rjazLuAr5Az59qgWKcNb45x",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "B4UdLnvzCrnfRndLdgGTYZjcKTDsaFKB54cmKb2GoSne",
+          "disclosedWeightBps": 329,
+          "targetWeightBps": 751
+        },
+        {
+          "ticker": "WMT",
+          "mint": "Xs151QeqTCiuKtinzfRATnUESM2xTU6V9Wy8Vy538ci",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "36m7kUFCFheNBnvXDSvgCMt5c27VbUbhQnugCReFhet7",
+          "disclosedWeightBps": 142,
+          "targetWeightBps": 324
+        },
+        {
+          "ticker": "MSTR",
+          "mint": "XsP7xzNPvEHS1m6qfanPUGjNmdnmsLKEoNAnHjdxxyZ",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "RyhF4cksVZY7vcqJpoytHcxcGNKRp27PEGhSnEPpbGv",
+          "disclosedWeightBps": 62,
+          "targetWeightBps": 142
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "IBIT",
+          "mint": "BtZy11yDM76fkku4bgyivbfMpgrdfn7TTdV9WVRKDZeP",
+          "disclosedWeightBps": 5622,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-susie-lee",
+      "kind": "person",
+      "name": "Susie L Index · InsiderIndex",
+      "totalLegs": 18,
+      "tradableLegs": 3,
+      "disclosedWeightBps": 2445,
+      "eligible": false,
+      "vaultLegs": [
+        {
+          "ticker": "AAPL",
+          "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "ApniVWuZbZoruTAJdyJcLBA4AVw4DKGdV5fHxo6qrAZT",
+          "disclosedWeightBps": 1005,
+          "targetWeightBps": 4111
+        },
+        {
+          "ticker": "MGM",
+          "mint": "MGMuubtUEirmkhfEQdmGUh4pr7HuUdMWcZXFtpPbVJD",
+          "decimals": 6,
+          "provider": "backpack",
+          "pool": "CvM3CXvufGkwTptZd8SpFVpaGPyZ6RTVYJUoXzYgKz1k",
+          "disclosedWeightBps": 736,
+          "targetWeightBps": 3010
+        },
+        {
+          "ticker": "AMZN",
+          "mint": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+          "decimals": 8,
+          "provider": "xstock",
+          "pool": "6m5aXAve4uh6Kt4ytKyCLWNMjd8PYP5vujwNCtycrUiD",
+          "disclosedWeightBps": 704,
+          "targetWeightBps": 2879
+        }
+      ],
+      "excluded": [
+        {
+          "ticker": "EWJ",
+          "mint": "EWJQvQmWqKUpanexdCGEnNvy8PWnnEMQmSj9rbeGzGPs",
+          "disclosedWeightBps": 1135,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MMM",
+          "mint": "XsTEo8W2L8JprN57bmJgatDT84z57ReJYizr5f32BfP",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CAR",
+          "mint": "CAR5W1mspo5qPmeWFL6LVyne9gs2whsutKN8PLxbz8BF",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BDX",
+          "mint": "Xs3yrczxLidKAArdTKepU5NV8KUmwFM11NMyYbGqWDZ",
+          "disclosedWeightBps": 3,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "BA",
+          "mint": "XsBcnKnZMsPaerLiUQ4eMFy4Fjysot4RugYXYDjiqCP",
+          "disclosedWeightBps": 131,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "CAH",
+          "mint": "XsrstNGy7STAR22txNru2ahbEwdBadFJwYRCBNEQYBS",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "D",
+          "mint": "XsiYzgRPqPjAaJjpDMo2CaQ7c9khuCwD7Hj1po2dxSj",
+          "disclosedWeightBps": 131,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "MDLZ",
+          "mint": "Xs3hGRD2NSyUUC1fjK5gKe8hXQgLoqxjR5WtYL1NBbg",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PPL",
+          "mint": "Xs12SMK4MA7sLVS8eTged2pXns736u3qe2a1a9io6he",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PEG",
+          "mint": "XsUytoK53kCKfXC61Dn3ZM8sjyVBUpScF111pfMG69U",
+          "disclosedWeightBps": 131,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SONY",
+          "mint": "SjYvzdx9bfoU1aQ1nbrV196H3QN7QzV9cHvXefs7og9",
+          "disclosedWeightBps": 704,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IVV",
+          "mint": "VV4GWxSS8NMMee42EEfbHRLYar5h7pXg2zjEEhMqVtp",
+          "disclosedWeightBps": 2912,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "SBUX",
+          "mint": "Xs9gd8SGbYQn9kkUYQayn46BdqQbvvUshEF6ZpRAzM7",
+          "disclosedWeightBps": 1506,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "IJR",
+          "mint": "XsyZcb97BzETAqi9BoP2C9D196MiMNBisGMVNje2Thz",
+          "disclosedWeightBps": 704,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "NKE",
+          "mint": "XsGYpMvKbVt6ViHqRd7cF3s746dAMFBQWcC49hB9VVP",
+          "disclosedWeightBps": 33,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    },
+    {
+      "indexId": "insiderindex-vern-buchanan",
+      "kind": "person",
+      "name": "Vern B Index · InsiderIndex",
+      "totalLegs": 5,
+      "tradableLegs": 0,
+      "disclosedWeightBps": 0,
+      "eligible": false,
+      "vaultLegs": [],
+      "excluded": [
+        {
+          "ticker": "IJH",
+          "mint": "JHmkX2z8R7ak2uWJZSkfzmDGPpb4msABpGUbakvBbuq",
+          "disclosedWeightBps": 956,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VOO",
+          "mint": "Xsd7TduTbjuYCFL7Uoujb8SbkZLmUsuYNLn7KdvX21x",
+          "disclosedWeightBps": 7640,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "PAVE",
+          "mint": "PAVE8GmghNpPk9e2L7FAodLHKxufXTM4yE1JtfiGUcp",
+          "disclosedWeightBps": 956,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "EWJ",
+          "mint": "EWJQvQmWqKUpanexdCGEnNvy8PWnnEMQmSj9rbeGzGPs",
+          "disclosedWeightBps": 192,
+          "reason": "no Jupiter or Raydium route"
+        },
+        {
+          "ticker": "VBR",
+          "mint": "VBRpmvcVyhJP7oztgCuxBdfidDup3ERfa7AQLebrSqT",
+          "disclosedWeightBps": 256,
+          "reason": "no Jupiter or Raydium route"
+        }
+      ]
+    }
+  ]
+}

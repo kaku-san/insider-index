@@ -15,6 +15,7 @@ import { companyNameFor } from "@/lib/frontend/company-logos";
 import { indexContentFor } from "@/lib/frontend/index-content";
 import { useUI } from "./providers/ui-provider";
 import { VaultFlow } from "./vault-flow";
+import { TradableSliceNote } from "./tradable-slice-note";
 import { usePrivySolana } from "./providers/privy-provider";
 import { ShareCard } from "./share-card";
 import { Icon } from "./social/icon";
@@ -256,6 +257,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
           <button type="button" className={styles.tertiary} aria-pressed={following} onClick={() => ui.toggleDeviceFollow(index.person_id)}><Icon name={following ? "check" : "people"} size={14} />{following ? "Following" : "Follow"}</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
+        {live ? <TradableSliceNote readiness={vault} className={styles.availability} /> : null}
       </div>
     </section>
 

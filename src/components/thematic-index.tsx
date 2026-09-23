@@ -12,6 +12,7 @@ import { Icon } from "./social/icon";
 import { IndexPerformanceLine, type IndexResourceResponse } from "./consumer-index";
 import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
+import { TradableSliceNote } from "./tradable-slice-note";
 import { usePrivySolana } from "./providers/privy-provider";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navVaultEnabledFor, navVaultLive, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { markedDollars } from "@/lib/frontend/research-format";
@@ -106,6 +107,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
+        {live ? <TradableSliceNote readiness={vault} className={styles.availability} /> : null}
         {ownedFigures ? <p className={styles.ownedPosition}>Your position: <strong>{ownedFigures[0].text}</strong> {ownedFigures[0].label}. {ownedFigures[1].text} {ownedFigures[1].label}. <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
         {activeOperation ? <p className={styles.ownedPosition} data-settlement-status={plainStatusForOperation(activeOperation)}>{plainStatusForOperation(activeOperation)}{activeOperation.phase === "FAILED" ? ". This deposit did not finish the basket. It is not shares." : "."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}

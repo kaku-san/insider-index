@@ -13,15 +13,15 @@
  */
 import { readFileSync } from "node:fs";
 import {
-  AddressLookupTableProgram, ComputeBudgetProgram, Connection, Keypair, PublicKey, TransactionMessage, VersionedTransaction, type TransactionInstruction,
+  AddressLookupTableProgram, ComputeBudgetProgram, Connection, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction, type AddressLookupTableAccount, type TransactionInstruction,
 } from "@solana/web3.js";
-import { createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import { getHeliusRpcUrl } from "../src/lib/helius.ts";
 import { createServiceSupabase } from "../src/lib/supabase.ts";
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
 import { readVaultDefinition, readVaultDefinitions, type PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 import {
-  NAV_VAULT_DEVNET_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, setDefaultProgramId, decodeVault, initVaultIx, setLookupTableIx, setPausedIx, vaultLookupAddresses, vaultPda, vaultTokenAccounts,
+  NAV_VAULT_DEVNET_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, mintAuthorityPda, setDefaultProgramId, shareMintPda, decodeVault, initVaultIx, setLookupTableIx, setPausedIx, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
 import { keeperCycleAll, keeperTick, mockVenue } from "../src/lib/nav-vault/keeper.ts";
 import { mainnetVenue } from "../src/lib/nav-vault/mainnet-venue.ts";
@@ -50,24 +50,45 @@ async function loadDefinition(indexId: string): Promise<PersistedVaultDefinition
   return readVaultDefinition(db, indexId);
 }
 
-async function run(label: string, payer: Keypair | PublicKey, instructions: TransactionInstruction[], extraSigners: Keypair[] = []) {
+async function run(label: string, payer: Keypair | PublicKey, instructions: TransactionInstruction[], extraSigners: Keypair[] = [], tables: AddressLookupTableAccount[] = []) {
   const payerKey = payer instanceof Keypair ? payer.publicKey : payer;
-  const latest = await connection.getLatestBlockhash("confirmed");
-  const tx = new VersionedTransaction(new TransactionMessage({ payerKey, recentBlockhash: latest.blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: Number(opt("--priority-micro-lamports") ?? 20_000) }), ...instructions] }).compileToV0Message());
-  const sim = await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true });
-  if (sim.value.err) throw new Error(`${label}: simulation failed ${JSON.stringify(sim.value.err)}\n${(sim.value.logs ?? []).join("\n")}`);
-  if (!execute || !(payer instanceof Keypair)) { log(`[dry-run] ${label}: simulated ok`); return null; }
-  tx.sign([payer, ...extraSigners]);
-  const signature = await connection.sendTransaction(tx);
-  const confirmed = await connection.confirmTransaction({ signature, ...latest }, "confirmed");
-  if (confirmed.value.err) throw new Error(`${label}: ${JSON.stringify(confirmed.value.err)}`);
-  log(`${label}: ${signature}`);
-  return signature;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const latest = await connection.getLatestBlockhash("confirmed");
+    const tx = new VersionedTransaction(new TransactionMessage({ payerKey, recentBlockhash: latest.blockhash, instructions: [ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: Number(opt("--priority-micro-lamports") ?? 20_000) }), ...instructions] }).compileToV0Message(tables));
+    const sim = await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: true });
+    if (sim.value.err) throw new Error(`${label}: simulation failed ${JSON.stringify(sim.value.err)}\n${(sim.value.logs ?? []).join("\n")}`);
+    if (!execute || !(payer instanceof Keypair)) { log(`[dry-run] ${label}: simulated ok`); return null; }
+    tx.sign([payer, ...extraSigners]);
+    const raw = tx.serialize();
+    const signature = await connection.sendRawTransaction(raw, { skipPreflight: true, maxRetries: 0 });
+    // Re-broadcast until it lands or the blockhash expires (then rebuild: an expired tx can never land).
+    for (;;) {
+      await new Promise(r => setTimeout(r, 2_000));
+      const status = (await connection.getSignatureStatuses([signature])).value[0];
+      if (status?.err) throw new Error(`${label}: ${JSON.stringify(status.err)}`);
+      if (status?.confirmationStatus === "confirmed" || status?.confirmationStatus === "finalized") { log(`${label}: ${signature}`); return signature; }
+      if ((await connection.getBlockHeight("confirmed")) > latest.lastValidBlockHeight) break;
+      await connection.sendRawTransaction(raw, { skipPreflight: true, maxRetries: 0 }).catch(() => undefined);
+    }
+    log(`${label}: attempt ${attempt + 1} expired, rebuilding`);
+  }
+  throw new Error(`${label}: did not land after 4 attempts`);
+}
+
+/** --slice: the committed tradable slice (src/lib/nav-vault/tradable-slices.json) is the vault leg set. */
+function sliceDefinition(indexId: string): PersistedVaultDefinition | null {
+  if (!flag("--slice")) return null;
+  const file = JSON.parse(readFileSync(opt("--slices-file") ?? "src/lib/nav-vault/tradable-slices.json", "utf8")) as { slices: { indexId: string; eligible: boolean; vaultLegs: { ticker: string; mint: string; decimals: number; pool: string | null; targetWeightBps: number }[] }[] };
+  const slice = file.slices.find(item => item.indexId === indexId);
+  if (!slice) throw new Error(`No tradable slice for ${indexId}.`);
+  if (!slice.eligible) throw new Error(`${indexId}'s tradable slice is below the 3-leg / 30% floor; it stays research only.`);
+  return { indexId, name: indexId, symbol: "", status: "SLICE", bookSource: "tradable-slice", provenance: {}, vaultAddress: null, shareMint: null, keeper: { pubkey: null, automationEnabled: false },
+    vaultLegs: slice.vaultLegs.map(leg => ({ ticker: leg.ticker, mint: leg.mint, decimals: leg.decimals, pool: leg.pool ?? "", kind: leg.pool ? "raydium_clmm" : "none", targetWeightBps: leg.targetWeightBps })) };
 }
 
 async function init() {
   const indexId = need("--index");
-  const definition = await loadDefinition(indexId);
+  const definition = sliceDefinition(indexId) ?? await loadDefinition(indexId);
   if (!definition) throw new Error("No vault definition (DB unavailable and no --definition).");
   if (definition.vaultLegs.length > MAX_LEGS) throw new Error(`${indexId} has ${definition.vaultLegs.length} legs; the NAV vault holds at most ${MAX_LEGS}. Refusing (never truncates).`);
   const usdcMint = new PublicKey(network === "mainnet-beta" ? MAINNET_USDC : need("--usdc-mint"));
@@ -105,13 +126,33 @@ async function init() {
     maxPriceMoveBps: Number(opt("--max-price-move") ?? 1500), requestTimeoutSecs: Number(opt("--request-timeout") ?? 600),
   });
   if (!execute) { log("[dry-run] init_vault needs the token accounts above to exist; not simulated in dry run."); console.log(JSON.stringify(report, null, 2)); return; }
-  if (legs.length > 7) throw new Error("More than 7 legs: create the vault LUT first and send init_vault as a v0 transaction with it (see docs/nav-vault.md).");
-  sigs.push(await run("init_vault", admin, [initIx]));
+  // Lookup table FIRST (every address is known before init), so init_vault fits one v0 transaction at up to 25 legs.
+  const addresses = [...new Set([
+    vault, accounts.authority, mintAuthorityPda(vault, programId), shareMintPda(vault, programId), usdcMint, accounts.usdc, feeAccount,
+    TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, SystemProgram.programId, programId,
+    ...legs.flatMap((leg, i) => [accounts.legs[i]!, leg.mint]),
+  ].map(key => key.toBase58()))].map(key => new PublicKey(key));
+  let lut: PublicKey;
+  const existing = opt("--lut") ? (await connection.getAddressLookupTable(new PublicKey(opt("--lut")!))).value : null;
+  if (existing) {
+    // Resume: reuse a table from an interrupted init; add whatever it is missing.
+    lut = existing.key;
+    const have = new Set(existing.state.addresses.map(a => a.toBase58()));
+    const missing = addresses.filter(a => !have.has(a.toBase58()));
+    for (let i = 0; i < missing.length; i += 20) sigs.push(await run(`extend lookup table ${i / 20 + 1}`, admin, [AddressLookupTableProgram.extendLookupTable({ payer: adminKey, authority: adminKey, lookupTable: lut, addresses: missing.slice(i, i + 20) })]));
+  } else {
+    const [createLut, created] = AddressLookupTableProgram.createLookupTable({ authority: adminKey, payer: adminKey, recentSlot: await connection.getSlot("finalized") });
+    lut = created;
+    sigs.push(await run("create lookup table", admin, [createLut]));
+    for (let i = 0; i < addresses.length; i += 20) sigs.push(await run(`extend lookup table ${i / 20 + 1}`, admin, [AddressLookupTableProgram.extendLookupTable({ payer: adminKey, authority: adminKey, lookupTable: lut, addresses: addresses.slice(i, i + 20) })]));
+  }
+  log(`lookup table: ${lut.toBase58()}`);
+  const warm = await connection.getSlot("confirmed");
+  while ((await connection.getSlot("confirmed")) <= warm + 1) await new Promise(r => setTimeout(r, 400));
+  const table = (await connection.getAddressLookupTable(lut)).value;
+  if (!table) throw new Error("Lookup table is not readable yet; re-run init.");
+  sigs.push(await run("init_vault", admin, [initIx], [], [table]));
   const state = decodeVault(vault, (await connection.getAccountInfo(vault))!.data);
-  const [createLut, lut] = AddressLookupTableProgram.createLookupTable({ authority: adminKey, payer: adminKey, recentSlot: await connection.getSlot("finalized") });
-  const addresses = vaultLookupAddresses(state, programId);
-  sigs.push(await run("create lookup table", admin, [createLut]));
-  for (let i = 0; i < addresses.length; i += 20) sigs.push(await run(`extend lookup table ${i / 20 + 1}`, admin, [AddressLookupTableProgram.extendLookupTable({ payer: adminKey, authority: adminKey, lookupTable: lut, addresses: addresses.slice(i, i + 20) })]));
   sigs.push(await run("set_lookup_table", admin, [setLookupTableIx(state, adminKey, lut, programId)]));
   report.shareMint = state.shareMint.toBase58();
   report.lookupTable = lut.toBase58();
@@ -197,5 +238,24 @@ async function pause(paused: boolean) {
   console.log(JSON.stringify({ indexId, paused, signature }, null, 2));
 }
 
-(command === "init" ? init() : command === "keeper" ? keeper() : command === "pause" ? pause(true) : command === "unpause" ? pause(false) : Promise.reject(new Error("usage: nav-vault (init|keeper) --index <id> ...")))
+/** Mirror the committed tradable slices (+ on-chain vault identity) into insiderindex_nav_vault_slices. */
+async function slices() {
+  const doc = JSON.parse(readFileSync(opt("--slices-file") ?? "src/lib/nav-vault/tradable-slices.json", "utf8")) as { generatedAt: string; criteria: unknown; slices: { indexId: string; eligible: boolean }[] };
+  const programId = new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58());
+  const infos = await connection.getMultipleAccountsInfo(doc.slices.map(slice => vaultPda(slice.indexId, programId)));
+  const rows = doc.slices.map((slice, i) => {
+    const info = infos[i];
+    const state = info ? decodeVault(vaultPda(slice.indexId, programId), info.data) : null;
+    return { ...slice, vaultAddress: state?.address.toBase58() ?? null, shareMint: state?.shareMint.toBase58() ?? null };
+  });
+  const document = { generatedAt: doc.generatedAt, criteria: doc.criteria, slices: rows };
+  if (!flag("--publish")) { jsonOut(rows.map(r => ({ indexId: r.indexId, eligible: r.eligible, vault: r.vaultAddress }))); log("[dry-run] pass --publish to write insiderindex_nav_vault_slices (migration 202609230001 must be applied)."); return; }
+  const db = createServiceSupabase();
+  if (!db) throw new Error("Supabase service-role credentials are required to publish slices.");
+  const { data, error } = await db.rpc("publish_insiderindex_nav_vault_slices", { p_document: JSON.stringify(document) });
+  if (error) throw new Error(`Slice publication failed (${error.code ?? "storage"}); apply migration 202609230001 first.`);
+  jsonOut(data);
+}
+
+(command === "slices" ? slices() : command === "init" ? init() : command === "keeper" ? keeper() : command === "pause" ? pause(true) : command === "unpause" ? pause(false) : Promise.reject(new Error("usage: nav-vault (init|keeper) --index <id> ...")))
   .catch(error => { console.error(JSON.stringify({ mode: "failed-closed", error: (error as Error).message })); process.exitCode = 1; });
