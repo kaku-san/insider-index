@@ -174,7 +174,7 @@ test("Mag7 cash out uses the position's verified dust decimals", () => {
   })));
   assert.match(html, /value="0\.000003"/);
   assert.match(html, /Cash out\./);
-  assert.match(html, /1 approval now/);
+  assert.match(html, /You approve each step/);
   assert.match(html, /Shares burn when you sign/);
   assert.match(html, /leftover stocks and USDC/);
   assert.match(html, /not a share refund/);
@@ -191,6 +191,13 @@ test("Mag7 fill check stays on a human line and enables Invest only after it pas
   assert.equal(prepareCheckControl("deposit", "blocked", true).enabled, false);
   assert.deepEqual(prepareCheckControl("withdraw", "checking", true).label, CASH_OUT_CHECK);
   assert.equal(prepareCheckControl("withdraw", "ready", true).enabled, true);
+  const { observeUsdcReceived, formatUsdcRaw, CASH_OUT_NOT_SENT } = await import("../src/lib/frontend/position-basket.ts");
+  assert.equal(observeUsdcReceived("100", "100"), null);
+  assert.equal(observeUsdcReceived("100", "80"), null);
+  assert.equal(observeUsdcReceived("100", "250"), "150");
+  assert.equal(formatUsdcRaw("150"), "0.00015");
+  assert.match(CASH_OUT_NOT_SENT, /USDC received is shown after/);
+  assert.doesNotMatch(CASH_OUT_NOT_SENT, /Sent/);
 });
 
 test("position book shows filled names and marks the rest not held", async () => {

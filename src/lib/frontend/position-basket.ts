@@ -42,8 +42,12 @@ export const MAG7_CANNOT_FILL = "This amount cannot buy Mag7 right now.";
 export const MAG7_FILL_TIMEOUT = "Mag7 could not be checked in time. Try that amount again.";
 export const CASH_OUT_CHECK_TIMEOUT = "Cash out could not be checked in time. Try again.";
 export const PREPARE_CHECK_MS = 45_000;
-export const CASH_OUT_BEFORE_SIGN = "Shares burn when you sign. We try to sell holdings to USDC. If a sale cannot be made, leftover stocks and USDC are sent to your wallet. This is not a share refund.";
+export const CASH_OUT_BEFORE_SIGN = "Shares burn when you sign. We claim the basket to your wallet, then try to sell each name to USDC. If a sale cannot be made, leftover stocks and USDC are sent to your wallet. This is not a share refund.";
 export const CASH_OUT_STILL_NOTE = "These holdings are still on this cash-out. We try to sell them to USDC. Anything unsold is sent to your wallet. This is not a share refund.";
+export const CASH_OUT_APPROVALS = "You approve each step. No keeper funds this sale.";
+export const CASH_OUT_NOT_SENT = "USDC received is shown after this wallet balance moves.";
+export const CASH_OUT_CLAIMING = "Claiming your basket…";
+export const CASH_OUT_SELLING = "Selling claimed stocks to USDC…";
 
 function raw(amountRaw: string | undefined): bigint {
   if (!amountRaw || !rawAmountPattern.test(amountRaw)) return 0n;
@@ -106,14 +110,27 @@ export function cashOutDelivery(tokens: readonly { mint: string; amountRaw: stri
   return assets;
 }
 
+export function formatUsdcRaw(amountRaw: string): string | null {
+  if (!rawAmountPattern.test(amountRaw)) return null;
+  const padded = amountRaw.padStart(7, "0");
+  const fraction = padded.slice(-6).replace(/0+$/, "");
+  const whole = padded.slice(0, -6);
+  return fraction ? `${whole}.${fraction}` : whole;
+}
+
 export function formatObservedAmount(asset: Pick<CashOutAsset, "kind" | "label" | "amountRaw">): string {
   if (asset.kind === "usdc" && rawAmountPattern.test(asset.amountRaw)) {
-    const padded = asset.amountRaw.padStart(7, "0");
-    const fraction = padded.slice(-6).replace(/0+$/, "");
-    const whole = padded.slice(0, -6);
-    return fraction ? `${whole}.${fraction} USDC` : `${whole} USDC`;
+    const text = formatUsdcRaw(asset.amountRaw);
+    return text ? `${text} USDC` : `${asset.label} · ${asset.amountRaw} raw`;
   }
   return `${asset.label} · ${asset.amountRaw} raw`;
+}
+
+/** A pre-sign snapshot is not a receipt. Only a later increase is USDC received. */
+export function observeUsdcReceived(beforeRaw: string | null | undefined, afterRaw: string | null | undefined): string | null {
+  if (!beforeRaw || !afterRaw || !rawAmountPattern.test(beforeRaw) || !rawAmountPattern.test(afterRaw)) return null;
+  const delta = BigInt(afterRaw) - BigInt(beforeRaw);
+  return delta > 0n ? delta.toString() : null;
 }
 
 export function heldBookSummary(basket: PositionBasket): string {

@@ -21,13 +21,13 @@ The public Invest modal follows the release-gated deposit rail owned by [`src/li
 | Native index readiness | Done | Done | Native person-index route not present | Read-only until native backend exists |
 | Native index deposit | Done, including atomic first-depositor contribution + lock signing | Done | Persisted-definition prepare route with release/gate checks | Release-gated; keeper mint remains later |
 | Native index position | Done | Done | Authoritative person-index position route not present | Read-only until backend exists |
-| Mag7 USDC cash-out | Done | Done | Narrow simulated auction-prepare route; keeper settlement is operator-owned | Mainnet Mag7 identity only; dust attempt blocked by native intent constraint |
-| Generic native withdrawal / claim / resume | UI contract retained | Done | Not provided by the new cash-out route | Fail closed |
-| Optional redeemed-token → USDC conversion | UI contract retained | Done | Not used by the one-approval Mag7 auction rail | Fail closed |
+| Index USDC cash-out | Done | Done | Staged zap-out: all-keep burn, owner claim, Jupiter `/swap/v2/build` sells | Any created mainnet vault; empty keep refused; residual stocks possible |
+| Generic native withdrawal / claim / resume | UI contract retained | Done | Claim resume is the zap-out second step, not a separate recovery API | Fail closed outside that prepare route |
+| Optional redeemed-token → USDC conversion | UI contract retained | Done | Jupiter sells of the claim delta only; unsold names stay stock | No keeper subsidy |
 | Operation resume / recovery UI | UI contract retained | Done | Not used by the one-approval Mag7 auction rail | Fail closed |
 | Retired multi-leg basket stub | Safe tombstone only | No calls | N/A | **Never sign** |
 
-The rework does not add a generic API proxy. Existing same-origin routes continue to own research and copy behavior. The deposit prepare route is available behind persisted-definition and release gates. The narrow Mag7 cash-out prepare route simulates one empty-keep auction before signing; its keeper sale and settlement remain operator-owned. Generic withdrawal, reconciliation and recovery remain fail-closed.
+The rework does not add a generic API proxy. Existing same-origin routes continue to own research and copy behavior. The deposit prepare route is available behind persisted-definition and release gates. The public cash-out prepare route is staged zap-out for any created mainnet vault (`docs/zap-out.md`). It refuses an empty keep mask. Keeper auction settlement remains the escape for an already-open auction, not the new exit. Generic recovery outside that prepare route remains fail-closed.
 
 ---
 

@@ -52,6 +52,15 @@ export type PreparedStep = {
   constraints?: { label: string; value: string; strength?: string }[];
   costs?: CostPreview;
   blockers: string[];
+  zapOut?: {
+    kind: "zap-out";
+    legCount: number;
+    packaging: "staged";
+    keeperSubsidyRaw: "0";
+    warning: string;
+    residuals?: { mint: string; ticker: string | null; amountRaw: string; reason: string }[];
+    sells?: { mint: string; amountRaw: string; minOutRaw: string }[];
+  };
   estimate?: {
     sharesRaw?: RawAmount;
     sharesText?: string;
@@ -271,9 +280,9 @@ export function publicIndexIsLive(state: PublicVaultDepositState): boolean {
   return publicVaultDepositIsEnabled(state);
 }
 
-/** Only Mag7 has the public withdrawal-prepare endpoint. A share balance alone never implies a cash-out rail. */
+/** Any created mainnet vault can cash out. A share balance alone never implies a rail — identity is required. */
 export function publicIndexCanCashOut(indexId: string, state: PublicVaultDepositState): boolean {
-  return indexId === "idx-theme-mag7-caucus" && hasPublicVaultIdentity(state) && state.network === "mainnet-beta";
+  return /^(insiderindex-|idx-theme-)[a-z0-9-]+$/.test(indexId) && hasPublicVaultIdentity(state) && state.network === "mainnet-beta";
 }
 
 export type PublicIndexStatus = "Live" | "Coming soon" | "Research";
@@ -408,7 +417,7 @@ export async function prepareDeposit(indexId: string, input: { owner: string; am
   return validatePreparedStep(await writeApi<unknown>(`/api/indexes/${encodeURIComponent(indexId)}/deposit/prepare`, input), { owner: input.owner, network });
 }
 
-export async function prepareWithdrawal(indexId: string, input: { owner: string; shareAmountRaw: RawAmount; requestedExitMode: "in-kind" | "verified-native-usdc"; idempotencyKey: string; walletProof?: string }, network: Network): Promise<PreparedStep> {
+export async function prepareWithdrawal(indexId: string, input: { owner: string; shareAmountRaw: RawAmount; requestedExitMode: "in-kind" | "verified-native-usdc"; idempotencyKey: string; walletProof?: string; resume?: "claim" | "sell"; claimSignature?: string }, network: Network): Promise<PreparedStep> {
   return validatePreparedStep(await writeApi<unknown>(`/api/indexes/${encodeURIComponent(indexId)}/withdraw/prepare`, input), { owner: input.owner, network });
 }
 

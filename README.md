@@ -190,7 +190,7 @@ Copy `.env.example` → `.env.local`. Do not commit `.env`, `.env.local`, or `.e
 - `NEXT_PUBLIC_PRIVY_APP_ID` — Privy wallet (`NEXT_PUBLIC_PRIVY_APPID` alias also accepted)
 - `PRIVY_APP_ID` / `PRIVY_APP_SECRET` — Privy server SDK
 - `HELIUS_API_KEY` — builds `https://mainnet.helius-rpc.com/?api-key=<HELIUS_API_KEY>` (public Solana RPC when empty)
-- `JUPITER_API_KEY` — live Jupiter Swap V2 `/order` → `/execute`
+- `JUPITER_API_KEY` — live Jupiter Swap V2 `/order` → `/execute`, and required `x-api-key` for zap-out `GET /swap/v2/build`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` — required with the Supabase URL for production quote contexts and copy receipts; apply `202609150001_copy_positions.sql`, then `202609150002_prune_copy_orders.sql`, before deploying

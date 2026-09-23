@@ -78,18 +78,18 @@ USDC amount
 → shares received
 ```
 
-Exit (Mag7 only):
+Exit (any created mainnet vault):
 
 ```text
 exact share amount
 → POST /api/indexes/:id/withdraw/prepare
-→ one wallet approval starts an empty-keep native auction
-→ keeper sells vault-held assets to USDC
-→ keeper settles the withdrawal
-→ USDC lands in the wallet
+→ owner approves an all-keep share burn
+→ owner approves the claim into this wallet
+→ Jupiter GET /swap/v2/build sells each claimed name to USDC
+→ USDC received is shown only after the wallet balance moves
 ```
 
-The prepare route is restricted to the installed mainnet Mag7 identity and simulates the exact transaction before returning it. Failed or unsupported positions receive plain failure copy; no generic withdrawal route is implied. The entered share amount is converted to raw units using the share mint decimals and never silently replaced with the full wallet balance.
+`keep_tokens: []` is refused. A name that cannot sell stays in the wallet as stock plus any USDC; that is not a share refund and not a keeper subsidy. The route is definition-driven, not Mag7-only, and still simulates before releasing a signature. The entered share amount is converted to raw units using the share mint decimals and never silently replaced with the full wallet balance. See `docs/zap-out.md`.
 
 ## Native operation API contract
 
@@ -122,7 +122,7 @@ POST /api/indexes/execute
 
 ## Important implementation boundary
 
-The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Public pages show **Live / Invest** when `publicIndexIsLive` is true (created vault identity + per-index deposit gate). Wallet signing still requires `depositIsEnabled` (that gate plus `publicFundsEnabled`); the separate `publicIndexCanCashOut` predicate currently exposes Cash out only for the installed mainnet Mag7 identity. Lifecycle calls fail closed; indexes without a vault stay Research with no fake Invest. Do not print internal flag names in the UI.
+The frontend includes a typed same-origin native-vault boundary, but it does not infer funding availability from presentation state. Public pages show **Live / Invest** when `publicIndexIsLive` is true (created vault identity + per-index deposit gate). Wallet signing still requires `depositIsEnabled` (that gate plus `publicFundsEnabled`); the separate `publicIndexCanCashOut` predicate exposes Cash out for any created mainnet vault identity, not a share balance alone. The prepare route is staged zap-out (`docs/zap-out.md`): owner claim, then Jupiter sells, with leftover stocks possible. Lifecycle calls fail closed; indexes without a vault stay Research with no fake Invest. Do not print internal flag names in the UI.
 
 The preparation UI is not a production-readiness claim: wallet ownership proof/session validation, RPC simulation, chain reconciliation and keeper infrastructure remain required before broader public funding is enabled.
 
