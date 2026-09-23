@@ -154,3 +154,19 @@ test("an open keeper request shows as a pending withdraw operation on the positi
   await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds: deps.now });
   assert.equal((await positionOf()).pendingOperations.length, 0, "settled in USDC by the keeper");
 });
+
+test("keeper Jupiter swaps use v1 shared-accounts routes restricted to CPI-safe DEXes (no prop AMMs)", async () => {
+  const { jupiterV1SwapBuilder, JUPITER_CPI_SAFE_DEXES } = await import("../src/lib/nav-vault/keeper.ts");
+  const { PublicKey } = await import("@solana/web3.js");
+  const urls: string[] = [];
+  const bodies: string[] = [];
+  const fetchImpl = (async (url: string | URL, init?: RequestInit) => { urls.push(String(url)); if (init?.body) bodies.push(String(init.body)); return new Response(JSON.stringify({ inputMint: "x" }), { status: 200 }); }) as typeof fetch;
+  const key = PublicKey.default;
+  const build = jupiterV1SwapBuilder({ connection: { getAddressLookupTable: async () => ({ context: { slot: 0 }, value: null }) } as never, apiKey: "k", fetchImpl });
+  assert.equal(await build({ vault: {} as never, authority: key, inMint: key, outMint: key, amountIn: 1n, inTokenProgram: key, outTokenProgram: key }), null);
+  const quote = new URL(urls[0]!);
+  assert.equal(quote.origin + quote.pathname, "https://api.jup.ag/swap/v1/quote");
+  const dexes = quote.searchParams.get("dexes")!.split(",");
+  assert.deepEqual(dexes, JUPITER_CPI_SAFE_DEXES);
+  assert.ok(!dexes.some(d => /Quantum|HumidiFi|SolFi|Obric|Tessera|GoonFi|ZeroFi/.test(d)));
+});

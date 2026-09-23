@@ -65,8 +65,32 @@ export async function readNavRequests(connection: NavConnection, vault: PublicKe
     { memcmp: { offset: 8, bytes: vault.toBase58() } },
     ...(owner ? [{ memcmp: { offset: 40, bytes: owner.toBase58() } }] : []),
   ];
-  const rows = await connection.getProgramAccounts(programId, { commitment: "confirmed", filters });
+  let rows: { pubkey: PublicKey; account: { data: Buffer | Uint8Array } }[] | null = null;
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 3 && !rows; attempt++) {
+    try { rows = [...await connection.getProgramAccounts(programId, { commitment: "confirmed", filters })]; }
+    catch (error) { lastError = error; await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1))); }
+  }
+  // Helius asks overloaded callers to use its paginated getProgramAccountsV2.
+  if (!rows) rows = await programAccountsV2(connection, programId, filters).catch(() => null);
+  if (!rows) throw lastError instanceof Error ? lastError : new Error("Open cash-out requests could not be read.");
   return rows.map(row => decodeRequest(row.pubkey, row.account.data)).sort((a, b) => a.createdAt - b.createdAt);
+}
+
+async function programAccountsV2(connection: NavConnection, programId: PublicKey, filters: unknown[]) {
+  const endpoint = (connection as { rpcEndpoint?: string }).rpcEndpoint;
+  if (!endpoint || !/helius/i.test(endpoint)) return null;
+  const out: { pubkey: PublicKey; account: { data: Buffer } }[] = [];
+  let paginationKey: string | undefined;
+  for (let page = 0; page < 20; page++) {
+    const response = await fetch(endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getProgramAccountsV2", params: [programId.toBase58(), { encoding: "base64", commitment: "confirmed", filters, limit: 1000, ...(paginationKey ? { paginationKey } : {}) }] }) });
+    const body = await response.json() as { result?: { accounts?: { pubkey: string; account: { data: [string, string] } }[]; paginationKey?: string | null }; error?: unknown };
+    if (!response.ok || body.error || !body.result) return null;
+    for (const row of body.result.accounts ?? []) out.push({ pubkey: new PublicKey(row.pubkey), account: { data: Buffer.from(row.account.data[0], "base64") } });
+    if (!body.result.paginationKey) break;
+    paginationKey = body.result.paginationKey;
+  }
+  return out;
 }
 export type NavUnsignedTransaction = {
   stepId: string;

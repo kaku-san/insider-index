@@ -130,6 +130,9 @@ export function jupiterSwapBuilder(options: { env?: { JUPITER_API_KEY?: string }
   };
 }
 
+/** Jupiter DEX labels that accept being invoked via CPI from the vault program (no top-level-only prop AMMs). */
+export const JUPITER_CPI_SAFE_DEXES = ["Raydium CLMM", "Raydium CP", "Raydium", "Whirlpool", "Meteora DLMM", "Meteora DAMM v2", "Meteora", "Orca V2"];
+
 /**
  * Jupiter v1 `/quote` + `/swap-instructions` (keyless `lite-api.jup.ag`, or `api.jup.ag` with a key).
  * Verified read-only on mainnet: with the vault authority PDA as `userPublicKey` it returns a
@@ -142,6 +145,8 @@ export function jupiterV1SwapBuilder(options: {
   apiKey?: string;
   slippageBps?: number;
   fetchImpl?: typeof fetch;
+  /** Jupiter DEX labels allowed in the route (default: CPI-safe AMMs). */
+  dexes?: string[];
 }): SwapBuilder {
   const base = options.baseUrl ?? (options.apiKey ? "https://api.jup.ag/swap/v1" : "https://lite-api.jup.ag/swap/v1");
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -153,6 +158,8 @@ export function jupiterV1SwapBuilder(options: {
     quoteUrl.searchParams.set("amount", input.amountIn.toString());
     quoteUrl.searchParams.set("slippageBps", String(options.slippageBps ?? 50));
     quoteUrl.searchParams.set("swapMode", "ExactIn");
+    // CPI-safe venues only: several prop AMMs (e.g. Quantum, HumidiFi, SolFi) reject being called via CPI.
+    quoteUrl.searchParams.set("dexes", (options.dexes ?? JUPITER_CPI_SAFE_DEXES).join(","));
     const quoteResponse = await fetchImpl(quoteUrl, { headers, signal: AbortSignal.timeout(15_000) });
     if (!quoteResponse.ok) return null;
     const quote = await quoteResponse.json() as { inAmount?: string; otherAmountThreshold?: string; inputMint?: string; outputMint?: string };
@@ -186,12 +193,13 @@ export function firstRoute(...builders: SwapBuilder[]): SwapBuilder {
   };
 }
 
-/** 1232-byte packet and 64 loaded accounts (static + lookup) — the runtime limits a keeper swap must fit. */
+/** Packet size and loaded-account limits a keeper swap must fit. */
 export function fitsOnePacket(tx: VersionedTransaction): boolean {
   let bytes: number;
   try { bytes = tx.serialize().length; } catch { return false; }
   const loaded = tx.message.staticAccountKeys.length + tx.message.addressTableLookups.reduce((n, l) => n + l.writableIndexes.length + l.readonlyIndexes.length, 0);
-  return bytes <= 1232 && loaded <= 64;
+  // 1232-byte packet; mainnet's account-lock limit (verified by simulation of 66-account Jupiter routes) is 128.
+  return bytes <= 1232 && loaded <= 128;
 }
 
 // ---------- cycle plan ----------
@@ -279,7 +287,10 @@ export async function keeperTick(input: {
     const old = leg.price, next = marks[i]!.price;
     if (old > 0n && (next > old ? next - old : old - next) * BPS > old * BigInt(state.maxPriceMoveBps)) throw new Error(`Mark for ${leg.mint.toBase58()} moved more than ${state.maxPriceMoveBps} bps; admin override (admin_set_prices) required.`);
   }
-  const requests = await readNavRequests(input.connection, state.address, undefined, programId);
+  // Request discovery uses getProgramAccounts; an overloaded RPC index must not stop marks or rebalancing.
+  let requests: NavRequest[] = [];
+  let requestsReadable = true;
+  try { requests = await readNavRequests(input.connection, state.address, undefined, programId); } catch { requestsReadable = false; }
   const result: KeeperTickResult = {
     indexId: input.indexId, dryRun: !input.execute,
     marks: marks.map((mark, i) => ({ mint: state.legs[i]!.mint.toBase58(), price: mark.price.toString(), venue: mark.venue })),
@@ -341,7 +352,8 @@ export async function keeperTick(input: {
   // 3. Rebalance on free balances for the remaining legs.
   for (const action of plan.swaps) await trySwap(action.kind, action.leg, action.inLeg, action.outLeg, action.amountInRaw);
   // 4. Settle converted requests; deliver unsellable legs in kind (only to existing owner accounts).
-  const fresh = await readNavRequests(input.connection, state.address, undefined, programId);
+  let fresh: NavRequest[] = [];
+  if (requestsReadable) { try { fresh = await readNavRequests(input.connection, state.address, undefined, programId); } catch { fresh = []; } }
   snapshot = (await readNavVault(input.connection, input.indexId, programId, now()))!;
   for (const request of fresh) {
     const stuck = request.legAmounts.map((a, leg) => ({ a, leg })).filter(x => x.a > 0n && noRoute.has(`${request.address.toBase58()}:${x.leg}`)).map(x => x.leg);

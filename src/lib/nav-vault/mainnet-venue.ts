@@ -4,12 +4,14 @@
  * only if the leg has no usable pool; never Pyth/Hermes. Quotes are built, never sent.
  * Mainnet use requires the operator to deploy `programs/bin/nav_vault.so` (docs/nav-vault.md).
  */
-import type { Connection } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction, type Connection } from "@solana/web3.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { buildCycleRoute } from "../index-vaults/cycle-routes.ts";
 import { fetchJupiterBuild } from "../index-vaults/jupiter-build.ts";
 import { MAINNET_USDC } from "../index-vaults/native-defaults.ts";
 import type { PersistedVaultLeg } from "../index-vaults/vault-definition-store.ts";
-import { firstRoute, jupiterSwapBuilder, jupiterV1SwapBuilder, markFromQuote, type MarkSource, type SwapBuilder } from "./keeper.ts";
+import { firstRoute, jupiterV1SwapBuilder, markFromQuote, type MarkSource, type SwapBuilder } from "./keeper.ts";
+import { legAccount, legIndex } from "./program.ts";
 
 export const MARK_PROBE_USDC_RAW = 100_000_000n; // $100 probe: an executable ask, not a mid.
 
@@ -37,7 +39,38 @@ export function mainnetVenue(input: { connection: Connection; legs: readonly Per
     if (!quote?.outAmount || quote.inAmount !== MARK_PROBE_USDC_RAW.toString()) throw new Error(`No Raydium or Jupiter mark for ${leg.mint.toBase58()}.`);
     return { price: markFromQuote(MARK_PROBE_USDC_RAW, BigInt(quote.outAmount), leg.decimals), venue: "jupiter-v1" };
   };
-  // v2 build first when a key is configured; v1 swap-instructions (verified with a PDA taker) otherwise / as fallback.
-  const v1 = jupiterV1SwapBuilder({ connection: input.connection, apiKey: input.env?.JUPITER_API_KEY?.trim() || undefined });
-  return { marks, swaps: input.env?.JUPITER_API_KEY?.trim() ? firstRoute(jupiterSwapBuilder({ env: input.env }), v1) : v1 };
+  // Jupiter FIRST (v1 /swap-instructions with shared accounts, CPI-safe DEXes: v2 `route_v2` fails
+  // InvalidTokenAccount (6025) when invoked via CPI with the vault PDA as taker); a direct Raydium CLMM
+  // swap on the persisted pool is the per-leg fallback only when Jupiter has no working route.
+  const jupiter = jupiterV1SwapBuilder({ connection: input.connection, apiKey: input.env?.JUPITER_API_KEY?.trim() || undefined });
+  const raydium = raydiumSwapBuilder({ connection: input.connection, legs: input.legs, quoteOwner: input.quoteOwner });
+  return { marks, swaps: firstRoute(jupiter, raydium) };
+}
+
+/**
+ * Direct Raydium CLMM SwapV2 on the persisted pool (fallback only). `buildCycleRoute` builds for an
+ * on-curve wallet, so it is quoted for `quoteOwner` and then rebound: owner → vault authority PDA, the
+ * owner's input/output ATAs → the vault's own token accounts. Pool/tick accounts are untouched.
+ */
+export function raydiumSwapBuilder(input: { connection: Connection; legs: readonly PersistedVaultLeg[]; quoteOwner: string }): SwapBuilder {
+  return async swap => {
+    const stock = swap.inMint.toBase58() === MAINNET_USDC ? swap.outMint : swap.inMint;
+    const leg = input.legs.find(item => item.mint === stock.toBase58());
+    if (!leg?.pool || leg.kind !== "raydium_clmm") return null;
+    const route = await buildCycleRoute({
+      connection: input.connection, leg, owner: input.quoteOwner, inputMint: swap.inMint.toBase58(), outputMint: swap.outMint.toBase58(),
+      amountInRaw: swap.amountIn.toString(), slippageBps: 50, maxAgeMs: 60_000,
+    });
+    const owner = new PublicKey(input.quoteOwner);
+    const rebind = new Map([
+      [owner.toBase58(), swap.authority],
+      [getAssociatedTokenAddressSync(swap.inMint, owner, false, swap.inTokenProgram).toBase58(), legAccount(swap.vault, legIndex(swap.vault, swap.inMint))],
+      [getAssociatedTokenAddressSync(swap.outMint, owner, false, swap.outTokenProgram).toBase58(), legAccount(swap.vault, legIndex(swap.vault, swap.outMint))],
+    ]);
+    const ix = new TransactionInstruction({
+      programId: route.instruction.programId, data: route.instruction.data,
+      keys: route.instruction.keys.map(k => ({ ...k, pubkey: rebind.get(k.pubkey.toBase58()) ?? k.pubkey })),
+    });
+    return { swap: ix, minOut: BigInt(route.minOutRaw), venue: "raydium-clmm", lookupTables: route.lookupTables };
+  };
 }
