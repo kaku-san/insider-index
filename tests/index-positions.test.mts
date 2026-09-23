@@ -8,6 +8,7 @@ import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-defini
 import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
 import { RAYDIUM_ORACLE_KINDS, WSOL_MINT } from "../src/lib/index-vaults/raydium-oracles.ts";
 import { formatVaultShares } from "../src/lib/index-vaults/positions-contract.ts";
+import { basketVersusTarget, cashOutDelivery, heldBookSummary, positionBookLine, POSITION_USDC_MINT, POSITION_WSOL_MINT } from "../src/lib/frontend/position-basket.ts";
 
 const owner = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
 const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
@@ -49,6 +50,52 @@ test("position endpoint exposes only a chain-backed locked native deposit as pen
   });
   assert.equal(pendingNativeOperationForPosition(withdrawal, vault, mint, owner, "3"), null, "minted dust shares are the receipt; the leftover intent is not resumable");
   assert.deepEqual(pendingNativeOperationForPosition(withdrawal, vault, mint, owner, "0"), pendingNativeOperation(withdrawal, vault, mint, owner));
+});
+
+test("position book lists filled names and does not treat the target as held", () => {
+  assert.equal(POSITION_USDC_MINT, MAINNET_USDC);
+  assert.equal(POSITION_WSOL_MINT, WSOL_MINT);
+  const legs = [
+    { ticker: "AAPL", mint: mint, targetWeightBps: 5000 },
+    { ticker: "MSFT", mint: vault, targetWeightBps: 5000 },
+  ];
+  assert.equal(basketVersusTarget(legs, null), null);
+  const basket = basketVersusTarget(legs, [{ mint, amountRaw: "5" }, { mint: vault, amountRaw: "0" }, { mint: MAINNET_USDC, amountRaw: "9" }]);
+  assert.equal(basket?.heldCount, 1);
+  assert.equal(basket?.targetCount, 2);
+  assert.equal(heldBookSummary(basket!), "Holds AAPL (1 of 2). Not held: MSFT.");
+  assert.equal(positionBookLine({ basket: basket! }), heldBookSummary(basket!));
+  assert.equal(positionBookLine({ pendingOperations: [{ kind: "deposit", fill: { targetCount: 2, filledCount: 1, filled: [{ ticker: "AAPL", mint, amountRaw: "5" }], missing: [{ ticker: "MSFT", mint: vault }] } }] }), "Bought AAPL (1 of 2) so far. Not shares yet.");
+  const delivery = cashOutDelivery([
+    { mint, amountRaw: "5" },
+    { mint: MAINNET_USDC, amountRaw: "2500000" },
+    { mint: WSOL_MINT, amountRaw: "9" },
+    { mint: "unknowntokenmint", amountRaw: "3" },
+  ], [{ ticker: "AAPL", mint }]);
+  assert.deepEqual(delivery.map(asset => asset.label), ["AAPL", "USDC", "unknowntokenmint"]);
+  assert.equal(delivery.find(asset => asset.mint === WSOL_MINT), undefined);
+});
+
+test("a deposit intent reports bought names and a cash-out lists leftover holdings", () => {
+  const legs = [{ ticker: "AAPL", mint }, { ticker: "MSFT", mint: vault }];
+  const tokens = [
+    { mint: new PublicKey(mint), amount: new BN(5) },
+    { mint: new PublicKey(MAINNET_USDC), amount: new BN(9) },
+    { mint: new PublicKey(WSOL_MINT), amount: new BN(1) },
+  ];
+  const deposit = pendingNativeOperation({
+    formatted_data: { pubkey: "native-intent" }, mint_data: null,
+    chain_data: { vault: new PublicKey(vault), owner: new PublicKey(owner), rebalanceType: RebalanceType.Deposit, currentAction: RebalanceAction.Auction, tokens },
+  } as never, vault, mint, owner, Date.now(), legs)!;
+  assert.deepEqual(deposit.fill?.filled.map(leg => leg.ticker), ["AAPL"]);
+  assert.deepEqual(deposit.fill?.missing.map(leg => leg.ticker), ["MSFT"]);
+  assert.equal(deposit.delivery, undefined);
+  const withdrawal = pendingNativeOperation({
+    formatted_data: { pubkey: "native-intent" }, mint_data: null,
+    chain_data: { vault: new PublicKey(vault), owner: new PublicKey(owner), rebalanceType: RebalanceType.Withdraw, currentAction: RebalanceAction.Auction, tokens },
+  } as never, vault, mint, owner, Date.now(), legs)!;
+  assert.deepEqual(withdrawal.delivery?.map(asset => asset.label), ["AAPL", "USDC"]);
+  assert.equal(withdrawal.fill, undefined);
 });
 
 test("a closed Mag7 deposit auction without basket fills is failed, while an open auction remains pending", () => {

@@ -68,13 +68,19 @@ test("all seven persisted >$10k pools: bounded DEX fills in native auction windo
     assert.equal(filled.size, 7);
     const beforeMint = (await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data;
     vm.time(Number(initial.auctions[2].endTime.toString()) + 1);
-    // This legacy private-cycle fixture buys every name only once. Later auction
-    // target refreshes leave some legs below target: the direct public keeper must
-    // refuse that book, even though the permissionless native program accepts it.
-    await assert.rejects(prepareMag7Mint({ investmentLegMints: definition.vaultLegs.map(leg => leg.mint),
+    // This legacy fixture buys every name only once. Later target refreshes leave
+    // some legs below target. That partial book still mints; an empty book would not.
+    const prepared = await prepareMag7Mint({ investmentLegMints: definition.vaultLegs.map(leg => leg.mint),
       tokens: beforeMint.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString(), targetAmount: token.targetAmount.toString() })), wsolMint: WSOL_MINT },
-    () => vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent })), /MAG7_PARTIAL_FILL_DO_NOT_MINT/);
-    vm.apply(await vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent }));
+    () => vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent }));
+    const atTarget = definition.vaultLegs.every(leg => {
+      const token = beforeMint.tokens.find(item => item.mint.toBase58() === leg.mint);
+      return Boolean(token && BigInt(token.targetAmount.toString()) > 0n && BigInt(token.amount.toString()) >= BigInt(token.targetAmount.toString()));
+    });
+    assert.equal(atTarget, false);
+    assert.equal(prepared.plan.mayMint, true);
+    assert.ok(prepared.plan.filledLegMints.length > 0);
+    vm.apply(prepared.payload);
     const minted = await vm.balance(vm.owner, vm.shareMint), vault = await vm.native.sdk.fetchVault(vm.vault);
     assert(minted > 0n);
     const mint = unpackMint(pk(vm.shareMint), await vm.connection.getAccountInfo(pk(vm.shareMint)), TOKEN_PROGRAM_ID);

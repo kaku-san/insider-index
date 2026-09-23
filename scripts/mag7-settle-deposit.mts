@@ -40,23 +40,34 @@ const MAG7_SKIPPABLE_ROUTE_ERRORS = new Set([
   "CYCLE_NO_FULL_SIZE_ROUTE",
 ]);
 
-/** Refuse zero/partial books even though the native mint instruction would accept them. */
-export function mag7MintPlan(input: { investmentLegMints: readonly string[]; tokens: readonly Mag7MintToken[]; wsolMint: string }) {
+export type Mag7MintPlan = {
+  mayMint: boolean;
+  reason?: "MAG7_EXPECTED_SEVEN_DISTINCT_LEGS" | "MAG7_ACCOUNTED_SUPPORT_REQUIRES_RECONCILIATION" | "MAG7_NO_FILLED_LEGS_DO_NOT_MINT";
+  filledLegMints: string[];
+  skippedLegMints: string[];
+  soughtLegMints: string[];
+  unspentUsdcRaw: string;
+};
+
+/** Mint a partial book. An empty book does not mint, and this is not a refund. */
+export function mag7MintPlan(input: { investmentLegMints: readonly string[]; tokens: readonly Mag7MintToken[]; wsolMint: string }): Mag7MintPlan {
   const amounts = new Map(input.tokens.map(token => [token.mint, BigInt(token.amount)]));
   const targets = new Map(input.tokens.map(token => [token.mint, BigInt(token.targetAmount)]));
-  const filledLegMints = input.investmentLegMints.filter(mint => (amounts.get(mint) ?? 0n) > 0n && (targets.get(mint) ?? 0n) > 0n && amounts.get(mint)! >= targets.get(mint)!);
+  const filledLegMints = input.investmentLegMints.filter(mint => (amounts.get(mint) ?? 0n) > 0n && (targets.get(mint) ?? 0n) > 0n);
+  const atTarget = input.investmentLegMints.filter(mint => filledLegMints.includes(mint) && amounts.get(mint)! >= targets.get(mint)!);
   const skippedLegMints = input.investmentLegMints.filter(mint => !filledLegMints.includes(mint));
-  if (input.investmentLegMints.length !== 7 || new Set(input.investmentLegMints).size !== 7) return { mayMint: false, reason: "MAG7_EXPECTED_SEVEN_DISTINCT_LEGS", filledLegMints, skippedLegMints };
-  if ((amounts.get(input.wsolMint) ?? 0n) > 0n) return { mayMint: false, reason: "MAG7_ACCOUNTED_SUPPORT_REQUIRES_RECONCILIATION", filledLegMints, skippedLegMints };
-  if (!filledLegMints.length) return { mayMint: false, reason: "MAG7_NO_FILLED_LEGS_DO_NOT_MINT", filledLegMints, skippedLegMints };
-  if (skippedLegMints.length) return { mayMint: false, reason: "MAG7_PARTIAL_FILL_DO_NOT_MINT", filledLegMints, skippedLegMints };
-  return { mayMint: true, filledLegMints, skippedLegMints, unspentUsdcRaw: (amounts.get(MAINNET_USDC) ?? 0n).toString() };
+  const soughtLegMints = input.investmentLegMints.filter(mint => !atTarget.includes(mint));
+  const book = { filledLegMints, skippedLegMints, soughtLegMints, unspentUsdcRaw: (amounts.get(MAINNET_USDC) ?? 0n).toString() };
+  if (input.investmentLegMints.length !== 7 || new Set(input.investmentLegMints).size !== 7) return { mayMint: false, reason: "MAG7_EXPECTED_SEVEN_DISTINCT_LEGS", ...book };
+  if ((amounts.get(input.wsolMint) ?? 0n) > 0n) return { mayMint: false, reason: "MAG7_ACCOUNTED_SUPPORT_REQUIRES_RECONCILIATION", ...book };
+  if (!filledLegMints.length) return { mayMint: false, reason: "MAG7_NO_FILLED_LEGS_DO_NOT_MINT", ...book };
+  return { mayMint: true, ...book };
 }
 
-/** Keep the all-seven check on the actual mint preparation boundary. */
+/** Keep the empty-book check on the actual mint preparation boundary. */
 export async function prepareMag7Mint<T>(input: Parameters<typeof mag7MintPlan>[0], mint: () => Promise<T>) {
   const plan = mag7MintPlan(input);
-  if (!plan.mayMint) throw new Error(plan.reason);
+  if (!plan.mayMint) throw new Error(plan.reason ?? "MAG7_MINT_REFUSED");
   return { plan, payload: await mint() };
 }
 
@@ -119,10 +130,6 @@ export function lockedMag7IntentAddresses(intents: readonly ScanIntent[]): strin
       && intent.chain_data.currentAction !== RebalanceAction.NotActive)
     .map(intent => intent.formatted_data.pubkey)
     .filter((intent, index, all) => all.indexOf(intent) === index);
-}
-
-export function lockedMag7DepositIntentAddresses(intents: readonly ScanIntent[]): string[] {
-  return lockedMag7IntentAddresses(intents.filter(intent => intent.chain_data.rebalanceType === RebalanceType.Deposit));
 }
 
 function loadExternalKeypair(path: string): Keypair {
@@ -250,7 +257,7 @@ async function tickIntent(options: Options, spent: bigint, intentAddress: string
     // getSwapPairs refreshes native targets for the current auction window.
     const availablePairs = getSwapPairs(chain, vault);
     const plan = mag7MintPlan({ investmentLegMints: record.vaultLegs.map(leg => leg.mint), tokens: chain.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString(), targetAmount: token.targetAmount.toString() })), wsolMint: WSOL_MINT });
-    const missingLegs = new Set(plan.skippedLegMints);
+    const missingLegs = new Set(plan.soughtLegMints);
     if (!missingLegs.size) return { action: "wait", reason: "All Mag7 investment legs are filled; waiting for the native auction to close", intent: intentAddress, signatures: [], spent };
     const pairs = availablePairs.filter(pair => pair.outMint === MAINNET_USDC && missingLegs.has(pair.inMint));
     const fills = [], skipped: Array<{ mint: string; ticker: string; reason: string }> = [];

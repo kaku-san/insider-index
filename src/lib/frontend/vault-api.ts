@@ -2,6 +2,7 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 import { ApiError, readApi, writeApi } from "./api";
+import type { CashOutAsset, DepositFill, PositionBasket } from "./position-basket";
 
 export type Network = "devnet" | "mainnet-beta";
 export type RawAmount = string;
@@ -99,6 +100,10 @@ export type ObservedOperation = {
   confirmedSharesBurnedRaw?: RawAmount;
   outstandingClaims?: NativeClaim[];
   credits?: ConfirmedCredit[];
+  /** Names this deposit auction has bought. Missing names were not bought. */
+  fill?: DepositFill;
+  /** Holdings still on a cash-out. Not a share refund. */
+  delivery?: CashOutAsset[];
   complete?: boolean;
   blockers?: string[];
   evidence?: Evidence[];
@@ -142,6 +147,8 @@ export type IndexSharePosition = {
   priceBasis?: string | null;
   pendingOperations?: ObservedOperation[];
   outstandingClaims?: NativeClaim[];
+  /** Vault balances versus the published target. Absent until both are read. */
+  basket?: PositionBasket;
 };
 
 export type VaultUiState = "NO_VAULT" | "PREVIEW_ONLY" | "PREPARE_BLOCKED" | "LIVE_DEPOSIT" | "PENDING" | "HAS_SHARES";
