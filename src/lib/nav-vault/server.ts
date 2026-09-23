@@ -1,13 +1,13 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { navVaultConfig, navVaultServes, type NavVaultConfig } from "./config.ts";
-import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, shareAta, tokenAmount } from "./program.ts";
+import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, decodeVault, shareAta, tokenAmount, vaultPda } from "./program.ts";
 import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests, readNavVault, type NavConnection } from "./prepare.ts";
 
 const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
-export type NavDependencies = { config: (host?: string | null) => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number };
+export type NavDependencies = { config: () => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number };
 const defaults: NavDependencies = {
-  config: host => navVaultConfig(process.env, host),
+  config: () => navVaultConfig(process.env),
   connection: config => new Connection(config.rpcUrl, { commitment: "confirmed" }),
 };
 
@@ -29,7 +29,8 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
 }
 
 function served(indexId: string, deps: NavDependencies, request?: Request) {
-  const config = deps.config(request?.headers.get("x-forwarded-host") ?? request?.headers.get("host"));
+  void request;
+  const config = deps.config();
   if (!navVaultServes(indexId, config)) throw Object.assign(new Error("This index is not on the NAV vault."), { status: 404 });
   return { config, connection: deps.connection(config) };
 }
@@ -108,6 +109,47 @@ export async function handleNavWithdrawPrepare(request: Request, indexId: string
     const step = await prepareNavWithdraw({ connection, network: config.network, indexId, owner: body.owner, shareAmountRaw: body.shareAmountRaw, inKind: body.requestedExitMode === "in-kind", programId: config.programId, nowSeconds: deps.now?.() });
     return Response.json(step, { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
+}
+
+/** All NAV positions for a wallet across the DB's public indexes (one vault read per index with a NAV vault). */
+export async function handleNavPositions(request: Request, dependencies: { listIndexes: () => Promise<{ indexId: string; name?: string | null }[]> }, deps: NavDependencies = defaults): Promise<Response> {
+  let owner: PublicKey;
+  try { owner = new PublicKey(new URL(request.url).searchParams.get("wallet") ?? ""); }
+  catch { return plain(new Error("A valid connected Solana wallet is required."), 400); }
+  try {
+    const config = deps.config();
+    if (!config.enabled) return Response.json({ positions: [] }, { headers: HEADERS });
+    const connection = deps.connection(config);
+    const indexes = (await dependencies.listIndexes()).filter(index => navVaultServes(index.indexId, config));
+    const vaults = await connection.getMultipleAccountsInfo(indexes.map(index => vaultPda(index.indexId, config.programId)), "confirmed");
+    const positions = [];
+    for (const [i, index] of indexes.entries()) {
+      if (!vaults[i]) continue;
+      const response = await handleNavPosition(new Request(`http://local/?wallet=${owner.toBase58()}`), index.indexId, deps);
+      if (!response.ok) throw new Error("position read failed");
+      const position = await response.json() as { sharesRaw: string; pendingOperations: unknown[] };
+      if (position.sharesRaw !== "0" || position.pendingOperations.length) positions.push({ ...position, indexName: index.name ?? index.indexId });
+    }
+    return Response.json({ positions }, { headers: HEADERS });
+  } catch { return plain(new Error("Your positions aren't available right now."), 503); }
+}
+
+/** Which of these index ids have a NAV vault on chain (drives Live status on Discover). */
+export async function handleNavVaultList(request: Request, deps: NavDependencies = defaults): Promise<Response> {
+  try {
+    const ids = (new URL(request.url).searchParams.get("ids") ?? "").split(",").map(id => id.trim()).filter(id => /^[A-Za-z0-9_-]{1,64}$/.test(id)).slice(0, 100);
+    const config = deps.config();
+    if (!config.enabled || !ids.length) return Response.json({ indexes: [] }, { headers: HEADERS });
+    const served = ids.filter(id => navVaultServes(id, config));
+    const infos = await deps.connection(config).getMultipleAccountsInfo(served.map(id => vaultPda(id, config.programId)), "confirmed");
+    const indexes = served.flatMap((indexId, i) => {
+      const info = infos[i];
+      if (!info) return [];
+      const state = decodeVault(vaultPda(indexId, config.programId), info.data);
+      return [{ indexId, network: config.network, vault: state.address.toBase58(), shareMint: state.shareMint.toBase58(), paused: state.paused }];
+    });
+    return Response.json({ indexes }, { headers: { "Cache-Control": "public, max-age=30" } });
+  } catch (error) { return plain(error, 503); }
 }
 
 export async function handleNavClaimPrepare(request: Request, indexId: string, deps: NavDependencies = defaults): Promise<Response> {

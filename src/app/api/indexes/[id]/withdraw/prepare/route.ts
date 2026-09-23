@@ -1,7 +1,8 @@
-import { handleIndexWithdrawalPrepare } from "@/lib/index-vaults/index-withdraw";
+import { handleNavWithdrawPrepare } from "@/lib/nav-vault/server";
 
 export const runtime = "nodejs";
 
+/** Public cash-out is the NAV vault (Symmetry retired from public flows). */
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  return handleIndexWithdrawalPrepare(request, (await context.params).id);
+  return handleNavWithdrawPrepare(request, (await context.params).id);
 }

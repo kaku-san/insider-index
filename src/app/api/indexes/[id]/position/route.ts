@@ -1,10 +1,9 @@
-import { handleIndexPosition } from "@/lib/index-vaults/index-positions";
-import { vaultIndexService } from "@/lib/index-vaults/server";
+import { handleNavPosition } from "@/lib/nav-vault/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Public positions read the NAV vault (Symmetry retired from public flows). */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { id } = await context.params;
-  return handleIndexPosition(request, id, { getIndex: vaultIndexService.get });
+  return handleNavPosition(request, (await context.params).id);
 }

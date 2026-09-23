@@ -17,11 +17,11 @@ import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-defini
 
 register(new URL("./support/ui-loader.mjs", import.meta.url), import.meta.url);
 
-test("public route is present, original-Mag7-only, same-origin and closed without exact policy", async () => {
+test("public Symmetry cycle route is retired (410); the library handler stays original-Mag7-only, same-origin and closed without exact policy", async () => {
   const { POST } = await import("../src/app/api/indexes/[id]/cycle/route.ts");
   const p = cycleTestPolicy();
   const request = (body: unknown, origin = publicTestOrigin) => new Request(`${publicTestOrigin}/api/indexes/${PUBLIC_MAG7.indexId}/cycle`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) });
-  assert.equal((await POST(request({ action: "discover", wallet: p.owner }), { params: Promise.resolve({ id: "insiderindex-pelosi" }) })).status, 404);
+  assert.equal((await POST()).status, 410, "NAV vault replaced the public Symmetry rail");
   assert.equal((await handlePublicCycleRequest(request({ action: "discover", wallet: p.owner }), PUBLIC_MAG7.indexId, { env: {} })).status, 404);
   assert.equal((await handlePublicCycleRequest(request({ action: "discover", wallet: p.owner }, "https://other.example"), PUBLIC_MAG7.indexId, { env: {} })).status, 403);
   assert.equal((await handlePublicCycleRequest(request({ action: "discover", wallet: p.owner, policy: p }), PUBLIC_MAG7.indexId, { env: {} })).status, 409);

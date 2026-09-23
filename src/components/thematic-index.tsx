@@ -13,7 +13,7 @@ import { IndexPerformanceLine, type IndexResourceResponse } from "./consumer-ind
 import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, navVaultLive, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navVaultEnabledFor, navVaultLive, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { markedDollars } from "@/lib/frontend/research-format";
 import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
@@ -46,6 +46,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const [investOpen, setInvestOpen] = useState(false);
   const [investMode, setInvestMode] = useState<"deposit" | "withdraw">("deposit");
   const [vault, setVault] = useState<VaultReadiness | null>(null);
+  const [vaultLoaded, setVaultLoaded] = useState(false);
   const [position, setPosition] = useState<IndexSharePosition | null>(null);
   const [loadedPositionKey, setLoadedPositionKey] = useState<string | null>(null);
   const [positionError, setPositionError] = useState<string | null>(null);
@@ -54,12 +55,12 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const wallet = usePrivySolana();
   useEffect(() => {
     let alive = true;
-    getVaultReadiness(vaultId).then(value => { if (alive) setVault(value); }).catch(() => { if (alive) setVault(null); });
+    getVaultReadiness(vaultId).then(value => { if (alive) { setVault(value); setVaultLoaded(true); } }).catch(() => { if (alive) setVault(null); });
     return () => { alive = false; };
   }, [vaultId]);
   useEffect(() => {
     let alive = true;
-    if (vaultId !== PUBLIC_MAG7.indexId || !wallet.solanaAddress) return () => { alive = false; };
+    if ((vaultId !== PUBLIC_MAG7.indexId && !navVaultEnabledFor(vaultId)) || !wallet.solanaAddress) return () => { alive = false; };
     const key = `${vaultId}:${wallet.solanaAddress}`;
     getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive) { setPosition(value); setLoadedPositionKey(key); } }).catch(error => { if (alive) { setPosition(null); setLoadedPositionKey(null); setPositionError(error instanceof Error ? error.message : "Your share balance is unavailable right now."); setPositionErrorKey(key); } });
     return () => { alive = false; };
@@ -78,8 +79,9 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const shown = top.reduce((sum, item) => sum + item.weight_bps, 0);
   const updated = new Date(index.sourceGeneratedAt ?? index.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   const liveState = vaultState(initialVault, vaultResource.data, vault);
-  const live = navVaultLive(vaultId, vault) ?? publicIndexIsLive(liveState);
-  const status = publicIndexStatus(liveState);
+  // Until the NAV readiness read resolves, the server-rendered DB state stands in (no flash of "Research").
+  const live = (vaultLoaded ? navVaultLive(vaultId, vault) : null) ?? publicIndexIsLive(liveState);
+  const status = (vaultLoaded ? navIndexStatus(vaultId, vault) : null) ?? publicIndexStatus(liveState);
   const availability = publicIndexStatusCopy(status);
   const pendingOperations = currentPosition?.pendingOperations?.filter(operation => !operation.complete) ?? [];
   const activeOperation = pendingOperations[0] ?? null;

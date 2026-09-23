@@ -8,7 +8,7 @@ import type { PublishedIndex, PublishedIndexResponse } from "@/lib/frontend/rese
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
@@ -173,6 +173,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   );
   const [tab, setTab] = useState<Tab>("stocks");
   const [vault, setVault] = useState<VaultReadiness | null>(null);
+  const [vaultLoaded, setVaultLoaded] = useState(false);
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [position, setPosition] = useState<IndexSharePosition | null>(null);
   const [investOpen, setInvestOpen] = useState(false);
@@ -186,7 +187,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
     let alive = true;
     if (!index || !id) return;
     getVaultReadiness(routeId)
-      .then((value) => { if (alive) setVault(value); })
+      .then((value) => { if (alive) { setVault(value); setVaultLoaded(true); } })
       .catch((error) => { if (alive) setVaultError(errorText(error)); });
     return () => { alive = false; };
   }, [id, index, routeId]);
@@ -209,14 +210,14 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   if (!index) return null;
 
   const image = portraitFor(resource.data?.personSlug ?? index.person_id);
-  const live = navVaultLive(routeId, vault) ?? publicIndexIsLive({
+  const live = (vaultLoaded ? navVaultLive(routeId, vault) : null) ?? publicIndexIsLive({
     vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
     shareMint: vault?.identity?.shareMint ?? resource.data?.index.shareMint,
     network: vault?.identity?.network ?? resource.data?.index.network,
     depositsEnabled: resource.data?.depositsEnabled,
     publicFundsEnabled: resource.data?.publicFundsEnabled,
   });
-  const status = publicIndexStatus({
+  const status = (vaultLoaded ? navIndexStatus(routeId, vault) : null) ?? publicIndexStatus({
     vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
     shareMint: vault?.identity?.shareMint ?? resource.data?.index.shareMint,
     network: vault?.identity?.network ?? resource.data?.index.network,
@@ -227,7 +228,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const resourceReadiness = id && resource.data ? vaultReadinessFromIndex(routeId, resource.data) : null;
   const flowReadiness = vault ?? resourceReadiness;
   const following = ui.deviceFollows.includes(index.person_id);
-  const canCashOut = publicIndexCanCashOut(routeId, {
+  const canCashOut = vaultLoaded && navVaultLive(routeId, vault) !== null ? vault?.redeemEnabled === true && hasIndexShares(position) : publicIndexCanCashOut(routeId, {
     vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
     shareMint: vault?.identity?.shareMint ?? resource.data?.index.shareMint,
     network: vault?.identity?.network ?? resource.data?.index.network,

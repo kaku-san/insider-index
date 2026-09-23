@@ -22,23 +22,16 @@ export type VaultIdentity = {
   kind?: "nav-vault";
 };
 
-/** Flag (off by default): index ids served by the one-signature NAV vault (`NEXT_PUBLIC_NAV_VAULT_INDEXES`). */
+/** The NAV vault is the public invest/cash-out rail for every index (Symmetry is retired from public
+ * flows). `NEXT_PUBLIC_NAV_VAULT_DISABLED=1` is the kill switch; `NEXT_PUBLIC_NAV_VAULT_INDEXES` an optional allowlist. */
 export function navVaultEnabledFor(indexId: string): boolean {
+  if (process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED === "1") return false;
   const explicit = (process.env.NEXT_PUBLIC_NAV_VAULT_INDEXES ?? "").split(",").map(item => item.trim()).filter(Boolean);
-  if (explicit.length) return explicit.includes(indexId);
-  return navVaultBranchPreviewClient() && indexId === "idx-theme-mag7-caucus";
-}
-/** Mirrors `navVaultBranchPreview` (server): only this branch's Vercel preview, never production. */
-function navVaultBranchPreviewClient(): boolean {
-  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "production") return false;
-  if (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF === "fm/stocklana-nav-vault-f1") return true;
-  if (typeof window === "undefined") return false;
-  const host = window.location.hostname;
-  return host.endsWith(".vercel.app") && host.includes("nav-vault");
+  return explicit.length ? explicit.includes(indexId) : Boolean(indexId);
 }
 function navPath(indexId: string, suffix = "") { return `/api/nav-vault/${encodeURIComponent(indexId)}${suffix}`; }
 
-/** NAV vault: Invest follows the vault's own readiness (fresh marks), not the Symmetry release gate. Null when the flag is off. */
+/** NAV vault: Invest follows the vault's own readiness, not the retired Symmetry release gate. Null when NAV is off. */
 export function navVaultLive(indexId: string, readiness?: VaultReadiness | null): boolean | null {
   if (!navVaultEnabledFor(indexId)) return null;
   return readiness?.kind === "nav-vault" && depositIsEnabled(readiness);
@@ -318,6 +311,12 @@ export function publicIndexStatus(state: PublicVaultDepositState): PublicIndexSt
   if (publicIndexIsLive(state)) return "Live";
   if (hasPublicVaultIdentity(state)) return "Coming soon";
   return "Research";
+}
+
+/** Public status under the NAV rail: Live when the index has a NAV vault accepting deposits, else Research. */
+export function navIndexStatus(indexId: string, readiness?: VaultReadiness | null): PublicIndexStatus | null {
+  const live = navVaultLive(indexId, readiness);
+  return live === null ? null : live ? "Live" : "Research";
 }
 
 export function publicIndexStatusCopy(status: PublicIndexStatus): string {

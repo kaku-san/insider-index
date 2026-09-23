@@ -11,7 +11,7 @@ function setup() {
   vm.must(vm.send([updatePricesIx(vm.vault(s.indexId), s.keeper.publicKey, [PRICE_A, PRICE_B])], s.keeper));
   vm.advance(1);
   const deps: NavDependencies = {
-    config: () => navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: s.indexId }),
+    config: () => navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: s.indexId, STOCKLANA_NAV_VAULT_NETWORK: "devnet" }),
     connection: () => vm.connection,
     now: () => Number(vm.svm.getClock().unixTimestamp),
   };
@@ -19,23 +19,16 @@ function setup() {
 }
 const post = (body: unknown) => new Request("http://local/api", { method: "POST", body: JSON.stringify(body) });
 
-test("NAV vault flag is off by default; mainnet only when chosen explicitly", () => {
-  assert.equal(navVaultConfig({}).enabled, false);
-  assert.equal(navVaultConfig({}).network, "devnet");
-  assert.equal(navVaultServes("idx-theme-mag7-caucus", navVaultConfig({})), false);
+test("NAV vault is on by default for every index on mainnet; allowlist and kill switch still work", () => {
+  assert.equal(navVaultConfig({}).enabled, true);
+  assert.equal(navVaultServes("idx-theme-mag7-caucus", navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: "other" })), false);
   const mainnet = navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: "x", STOCKLANA_NAV_VAULT_NETWORK: "mainnet-beta", STOCKLANA_NAV_VAULT_RPC_URL: "https://rpc.example" });
   assert.equal(mainnet.network, "mainnet-beta");
   assert.equal(mainnet.rpcUrl, "https://rpc.example");
   assert.throws(() => navVaultConfig({ STOCKLANA_NAV_VAULT_INDEXES: "x", STOCKLANA_NAV_VAULT_NETWORK: "testnet" }), /devnet or mainnet-beta/);
-  // Branch preview only: this branch's Vercel preview serves Mag7 from the mainnet vault; production never.
-  const preview = navVaultConfig({ VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "fm/stocklana-nav-vault-f1" });
-  assert.deepEqual([preview.enabled, preview.network, preview.indexes], [true, "mainnet-beta", ["idx-theme-mag7-caucus"]]);
-  assert.equal(preview.programId.toBase58(), "HWHfPmyC2TKAL1tCdDZyK4ajG1HJnhbEMGRQzGfwYisB");
-  assert.equal(navVaultConfig({ VERCEL_ENV: "production", VERCEL_GIT_COMMIT_REF: "fm/stocklana-nav-vault-f1" }).enabled, false);
-  assert.equal(navVaultConfig({ VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "main" }).enabled, false);
-  assert.equal(navVaultConfig({}, "stocklana-git-fm-stocklana-nav-vault-f1-kakusans-projects.vercel.app").network, "mainnet-beta", "branch alias host fallback");
-  assert.equal(navVaultConfig({ VERCEL_ENV: "production" }, "stocklana-git-fm-stocklana-nav-vault-f1-kakusans-projects.vercel.app").enabled, false);
-  assert.equal(navVaultConfig({}, "insiderindex.xyz").enabled, false);
+  assert.equal(navVaultConfig({}).network, "mainnet-beta", "NAV is the default public rail on mainnet");
+  assert.equal(navVaultServes("idx-anything", navVaultConfig({})), true, "every index id is served; no vault → 404");
+  assert.equal(navVaultConfig({ STOCKLANA_NAV_VAULT_DISABLED: "1" }).enabled, false);
 });
 
 test("readiness, position and both prepare routes return one-transaction steps for a flagged index", async () => {
@@ -187,4 +180,23 @@ test("keeper Jupiter swaps use v1 shared-accounts routes restricted to CPI-safe 
   const dexes = quote.searchParams.get("dexes")!.split(",");
   assert.deepEqual(dexes, JUPITER_CPI_SAFE_DEXES);
   assert.ok(!dexes.some(d => /Quantum|HumidiFi|SolFi|Obric|Tessera|GoonFi|ZeroFi/.test(d)));
+});
+
+test("NAV is the public rail: vault list marks only indexes with a NAV vault; wallet positions come from NAV vaults", async () => {
+  const { vm, s, deps } = setup();
+  const { handleNavPositions, handleNavVaultList } = await import("../src/lib/nav-vault/server.ts");
+  const allDeps = { ...deps, config: () => navVaultConfig({ STOCKLANA_NAV_VAULT_NETWORK: "devnet" }) };
+  const list = await (await handleNavVaultList(new Request(`http://local/api/nav-vault?ids=${s.indexId},idx-no-vault`), allDeps)).json();
+  assert.deepEqual(list.indexes.map((row: { indexId: string }) => row.indexId), [s.indexId]);
+  const { VersionedTransaction } = await import("@solana/web3.js");
+  const step = await (await handleNavDepositPrepare(post({ owner: s.alice.publicKey.toBase58(), amountRaw: "20000000" }), s.indexId, allDeps)).json();
+  const tx = VersionedTransaction.deserialize(Buffer.from(step.transactions[0].messageBase64, "base64")); tx.sign([s.alice]); vm.must(vm.sendRaw(tx.serialize()));
+  const listIndexes = async () => [{ indexId: s.indexId, name: "Test index" }, { indexId: "idx-no-vault", name: "Research" }];
+  const positions = await (await handleNavPositions(new Request(`http://local/api/positions/indexes?wallet=${s.alice.publicKey.toBase58()}`), { listIndexes }, allDeps)).json();
+  assert.equal(positions.positions.length, 1);
+  assert.equal(positions.positions[0].indexId, s.indexId);
+  assert.equal(positions.positions[0].indexName, "Test index");
+  assert.equal(positions.positions[0].sharesRaw, step.estimate.sharesRaw);
+  const none = await (await handleNavPositions(new Request(`http://local/api/positions/indexes?wallet=${s.bob.publicKey.toBase58()}`), { listIndexes }, allDeps)).json();
+  assert.equal(none.positions.length, 0);
 });

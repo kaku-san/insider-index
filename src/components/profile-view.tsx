@@ -16,7 +16,7 @@ import { Icon } from "./social/icon";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
@@ -104,12 +104,13 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const[shareOpen,setShareOpen]=useState(false),[tab,setTab]=useState<"stocks"|"breakdown"|"moves"|"about">("stocks");
  const[investOpen,setInvestOpen]=useState(false),[investMode,setInvestMode]=useState<"deposit"|"withdraw">("deposit");
  const[vault,setVault]=useState<VaultReadiness|null>(null);
+ const[vaultLoaded,setVaultLoaded]=useState(false);
  const[position,setPosition]=useState<IndexSharePosition|null>(null);
  const researchBook=research.data,legacyProfile=legacy.data?.profile??null;
  const trackerPerson=tracker.data?.person??null;
  const vaultIndex=vaultDir.data?.indexes.find(item=>item.bioguideId===id);
  const vaultIndexId=vaultIndex?.indexId??null;
- useEffect(()=>{let alive=true;if(!vaultIndexId){setVault(null);return;}getVaultReadiness(vaultIndexId).then(value=>{if(alive)setVault(value)}).catch(()=>{if(alive)setVault(null)});return()=>{alive=false}},[vaultIndexId]);
+ useEffect(()=>{let alive=true;if(!vaultIndexId){setVault(null);return;}getVaultReadiness(vaultIndexId).then(value=>{if(alive){setVault(value);setVaultLoaded(true)}}).catch(()=>{if(alive)setVault(null)});return()=>{alive=false}},[vaultIndexId]);
  useEffect(()=>{let alive=true;if(!vaultIndexId||!wallet.solanaAddress){setPosition(null);return;}getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(alive)setPosition(value)}).catch(()=>{if(alive)setPosition(null)});return()=>{alive=false}},[vaultIndexId,wallet.solanaAddress]);
  useIndexPositionListen(vaultIndexId, wallet.solanaAddress, position, value=>setPosition(value), !investOpen);
  const loading=!trackerPerson&&!researchBook&&!legacyProfile&&(tracker.loading||research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));
@@ -128,9 +129,9 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const trackerPoints=trackerPerson?.performance.filter(point=>point.date&&typeof point.value==="number").map(point=>({label:point.date!,equity:point.value!}))??[];
  const curve=trackerPoints.length?trackerPoints:legacyProfile?.curve??[];const historicalReturn=curve.length>1&&curve[0].equity?((curve.at(-1)!.equity-curve[0].equity)/Math.abs(curve[0].equity))*100:null;
  const liveState={vaultAddress:vaultIndex?.vaultAddress,shareMint:vaultIndex?.shareMint,network:vaultIndex?.network,depositsEnabled:vaultIndex?.depositsEnabled,publicFundsEnabled:vaultIndex?.publicFundsEnabled===true};
- const live=Boolean(vaultIndex)&&(navVaultLive(vaultIndexId!,vault)??publicIndexIsLive(liveState));
- const liveStatus=vaultIndex?publicIndexStatus(liveState):null;
- const canCashOut=Boolean(vaultIndexId)&&(navVaultLive(vaultIndexId!,vault)!==null?vault?.redeemEnabled===true:publicIndexCanCashOut(vaultIndexId!,liveState))&&hasIndexShares(position);
+ const live=Boolean(vaultIndex)&&((vaultLoaded?navVaultLive(vaultIndexId!,vault):null)??publicIndexIsLive(liveState));
+ const liveStatus=vaultIndex?((vaultLoaded?navIndexStatus(vaultIndexId!,vault):null)??publicIndexStatus(liveState)):null;
+ const canCashOut=Boolean(vaultIndexId)&&(vaultLoaded&&navVaultLive(vaultIndexId!,vault)!==null?vault?.redeemEnabled===true:publicIndexCanCashOut(vaultIndexId!,liveState))&&hasIndexShares(position);
  const resourceReadiness=vaultIndex&&vaultIndexId?vaultReadinessFromIndex(vaultIndexId,{index:{vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network},depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultIndex.publicFundsEnabled===true}):null;
  const flowReadiness=vault??resourceReadiness;
 
