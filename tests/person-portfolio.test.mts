@@ -109,7 +109,8 @@ test("consumer person portfolios merge published evidence into the complete annu
   assert.doesNotMatch(html, />Stocks \d|>Breakdown</);
   assert.match(html, />About</);
   assert.match(html, /Unmapped mutual fund/);
-  assert.match(html, /Ticker-only Microsoft row/);
+  // The ticker-only row stays its own source-only row (no mint), rendered under its ticker beside the mapped MSFT row.
+  assert.equal((html.match(/<strong>MSFT<\/strong>/g) ?? []).length, 2);
   assert.doesNotMatch(html, /AAPL 75\.0%|MSFT 25\.0%|\$0|Copy latest|Buy the index|Tradable basket|Sign &amp; buy|privy-stub:|publicFundsEnabled|VAULT_RELEASE/);
   assert.doesNotMatch(html, />Invest</);
 });

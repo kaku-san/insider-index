@@ -25,7 +25,7 @@ import { formatUsd } from "@/lib/format";
 import styles from "./consumer-person.module.css";
 
 type LegacyProfileData = { profile: FomoProfile; trades: CopySignal[] };
-export type HoldingView = { key:string; ticker:string; name:string; weightPct:number|null; venue:string|null; mint:string|null; tokenSymbol:string|null; network:"mainnet-beta"|null; disclosedValue?:string|null };
+export type HoldingView = { key:string; ticker:string; name:string; weightPct:number|null; venue:string|null; mint:string|null; tokenSymbol:string|null; network:"mainnet-beta"|null; disclosedValue?:string|null; filingCount?:number };
 type ActivityView = { id:string; ticker:string; name:string; side:"buy"|"sell"|"other"; tradeDate:string|null; filedDate:string|null; amount:string; sourceUrl?:string|null; copyHref?:string|null };
 
 
@@ -49,7 +49,7 @@ export function researchHoldings(book:PersonPortfolioResponse):HoldingView[]{
   const evidence=matches.map(item=>evidenceByHolding.get(item.id)).find(Boolean);
   const tokenSymbol=evidence?.symbol??matches.map(item=>item.token?.symbol).find(Boolean)??constituent.symbol??constituent.payload?.token?.symbol??null;
   const baseName=first?.name??companyNameFor(constituent.ticker,constituent.issuer);
-  return [{key:`published-${constituent.mint}`,ticker:constituent.ticker,name:matches.length>1?`${baseName} · ${matches.length} filings`:baseName,weightPct:constituent.weight_bps/10000,venue:evidence?.issuer??first?.token?.issuer??constituent.issuer??null,mint:constituent.mint,tokenSymbol,network:"mainnet-beta" as const,disclosedValue:matches.length===1?moneyBand(first.valueRange):null}];
+  return [{key:`published-${constituent.mint}`,ticker:constituent.ticker,name:matches.length>1?`${baseName} · ${matches.length} filings`:baseName,weightPct:constituent.weight_bps/10000,venue:evidence?.issuer??first?.token?.issuer??constituent.issuer??null,mint:constituent.mint,tokenSymbol,network:"mainnet-beta" as const,disclosedValue:matches.length===1?moneyBand(first.valueRange):null,filingCount:matches.length}];
  });
  const sourceOnly=items.filter(item=>!assigned.has(item.id)).map(item=>{
   const evidence=evidenceByHolding.get(item.id);
@@ -161,7 +161,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
    <div className={styles.tabs} role="tablist">{([['allocation',`Allocation ${holdings.length}`],['moves',`Moves ${activity.length}`],['about','About']] as const).map(([key,label])=><button key={key} className={tab===key?styles.activeTab:""} onClick={()=>setTab(key)}>{label}</button>)}</div>
 
    {tab==="allocation"?<section className={styles.tabSection}>
-     <IndexAllocation basis={researchRows.length ? "Published target weights; unweighted source holdings remain listed" : trackerPerson ? "Weights in the shown source book" : "Published target weights; unweighted source holdings remain listed"} items={holdings.map(item=>({ticker:item.ticker,name:item.name,weightBps:item.weightPct==null?Number.NaN:item.weightPct*10000,mint:item.mint,issuer:item.venue,tokenSymbol:item.tokenSymbol,network:item.network}))}/>
+     <IndexAllocation basis={researchRows.length ? "Published target weights; unweighted source holdings remain listed" : trackerPerson ? "Weights in the shown source book" : "Published target weights; unweighted source holdings remain listed"} items={holdings.map(item=>({ticker:item.ticker,name:item.name,weightBps:item.weightPct==null?Number.NaN:item.weightPct*10000,mint:item.mint,issuer:item.venue,tokenSymbol:item.tokenSymbol,network:item.network,detail:item.filingCount&&item.filingCount>1?`${item.filingCount} filings`:null}))}/>
    </section>:null}
 
    {tab==="moves"?<section className={styles.tabSection}><div className={styles.tabHeading}><div><h2>Public moves</h2><p>Information only. These prints do not change the published mix.</p></div><Link href="/feed">Open Feed</Link></div>{!activity.length?<div className={styles.emptyBlock}><strong>No activity is saved.</strong></div>:<div className={styles.movesList}>{activity.map((item,index)=><article className={styles.moveRow} key={item.id}><span className={styles.moveIndex}>{String(index+1).padStart(2,"0")}</span><StockIcon ticker={item.ticker} size="sm"/><span className={`${styles.moveSide} ${styles[item.side]}`}>{item.side==="buy"?"BOUGHT":item.side==="sell"?"SOLD":"FILED"}</span><div className={styles.moveAsset}><strong>{item.ticker}</strong><span>{item.name}</span></div><div className={styles.moveDates}><span><b>Trade</b>{shortDate(item.tradeDate)}</span><span><b>Filed</b>{shortDate(item.filedDate)}</span></div><div className={styles.moveAmount}><strong>{item.amount}</strong>{item.copyHref?<Link href={item.copyHref}>Copy this print</Link>:item.sourceUrl?<FilingLink url={item.sourceUrl}/>:null}</div></article>)}</div>}</section>:null}

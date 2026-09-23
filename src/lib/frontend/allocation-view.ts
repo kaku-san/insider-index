@@ -1,5 +1,5 @@
 /** Presentation only: never changes the definition used to invest or rebalance. */
-export type AllocationInput = { ticker: string; name?: string | null; weightBps: number; mint?: string | null; issuer?: string | null; tokenSymbol?: string | null; network?: string | null };
+export type AllocationInput = { ticker: string; name?: string | null; weightBps: number; mint?: string | null; issuer?: string | null; tokenSymbol?: string | null; network?: string | null; detail?: string | null };
 export type AllocationRow = AllocationInput & { key: string; otherCount?: number; missing?: boolean };
 export const ALLOCATION_COLORS = ["#ed6943", "#6862cb", "#27836e", "#ce9b35", "#497cac", "#bc648a", "#736957", "#999891"];
 export function allocationView(items: AllocationInput[], limit = 7) {
