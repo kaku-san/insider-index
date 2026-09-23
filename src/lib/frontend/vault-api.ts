@@ -24,7 +24,17 @@ export type VaultIdentity = {
 
 /** Flag (off by default): index ids served by the one-signature NAV vault (`NEXT_PUBLIC_NAV_VAULT_INDEXES`). */
 export function navVaultEnabledFor(indexId: string): boolean {
-  return (process.env.NEXT_PUBLIC_NAV_VAULT_INDEXES ?? "").split(",").map(item => item.trim()).filter(Boolean).includes(indexId);
+  const explicit = (process.env.NEXT_PUBLIC_NAV_VAULT_INDEXES ?? "").split(",").map(item => item.trim()).filter(Boolean);
+  if (explicit.length) return explicit.includes(indexId);
+  return navVaultBranchPreviewClient() && indexId === "idx-theme-mag7-caucus";
+}
+/** Mirrors `navVaultBranchPreview` (server): only this branch's Vercel preview, never production. */
+function navVaultBranchPreviewClient(): boolean {
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "production") return false;
+  if (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF === "fm/stocklana-nav-vault-f1") return true;
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return host.endsWith(".vercel.app") && host.includes("nav-vault");
 }
 function navPath(indexId: string, suffix = "") { return `/api/nav-vault/${encodeURIComponent(indexId)}${suffix}`; }
 

@@ -87,7 +87,8 @@ Final state: supply 0, nothing reserved. Every readback matched the prepare esti
 - Cost: 2.3403 SOL spent (program rent 2.29797, recoverable with `solana program close`); 0.4597 SOL left on the deployer.
 - Operator CLI: `npm run nav-vault -- init|keeper|pause|unpause …` (`scripts/nav-vault-cli.mts`). It is dry run by default, `--execute --keypair <file>` sends, and the keeper must not be the admin.
 - Swaps: Jupiter v2 `/swap/v2/build` is used when `JUPITER_API_KEY` is set, with v1 `/swap-instructions` as the fallback. Both were checked read-only with this vault's PDA (`FM2B3N2f…`) as taker: the PDA is the only signer, and the wrapped transactions were 570–801 bytes and 29–48 accounts (`evidence/vaults/nav-vault-jupiter-v2-readonly.json`).
-- App flag: `STOCKLANA_NAV_VAULT_NETWORK=mainnet-beta` + `STOCKLANA_NAV_VAULT_INDEXES` + `NEXT_PUBLIC_NAV_VAULT_INDEXES`. The RPC defaults to the server Helius URL.
+- App flag: `STOCKLANA_NAV_VAULT_NETWORK=mainnet-beta` + `STOCKLANA_NAV_VAULT_INDEXES` + `NEXT_PUBLIC_NAV_VAULT_INDEXES`. The RPC defaults to the server Helius URL. **Branch preview:** this branch's Vercel PREVIEW deployment serves Mag7 from the mainnet NAV vault with no env change (`navVaultBranchPreview` in `config.ts`, `navVaultEnabledFor` in `vault-api.ts`). It is never active in production or on the self-hosted site.
+- Server keeper: container `nav-vault-keeper` on barelystable, running `node:22-bookworm` against a source copy at `/home/deploy/insiderindex/nav-vault`. It reuses the existing checkout's `node_modules` (read-only), the Mag7 keeper key (read-only) and `mag7-keeper.env`, and runs `npm run nav-vault -- keeper … --execute --loop 10 --priority-micro-lamports 5000`. That gives a fresh mark about every 18 s, against the 60 s max age. The existing `mag7-keeper` container is untouched.
 
 ## Not done here
 
