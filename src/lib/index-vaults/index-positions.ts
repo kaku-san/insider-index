@@ -4,6 +4,7 @@ import { getRebalanceIntentPda } from "@symmetry-hq/sdk/dist/instructions/pda.js
 import { RebalanceAction, RebalanceType, type UIRebalanceIntent } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { getHeliusRpcUrl } from "../helius.ts";
 import type { IndexSharePosition, Network, ObservedOperation } from "../frontend/vault-api.ts";
+import { cashOutDelivery, depositFillVersusTarget, heldBasket } from "../frontend/position-basket.ts";
 import type { NativeVaultBuilders } from "./symmetry-adapter.ts";
 import type { PublicVaultDefinition } from "./vault-definition-store.ts";
 import { MAINNET_USDC } from "./native-defaults.ts";
@@ -251,7 +252,7 @@ export function nativeDepositAuctionState(intent: UIRebalanceIntent, now = Date.
 }
 
 /** A native intent is the only pending-operation source; a prepare response is never a receipt. */
-export function pendingNativeOperation(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string, now = Date.now()): ObservedOperation | null {
+export function pendingNativeOperation(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string, now = Date.now(), legs?: readonly { ticker: string; mint: string }[]): ObservedOperation | null {
   const chain = intent.chain_data;
   if (chain.vault.toBase58() !== vaultAddress || chain.owner.toBase58() !== owner) throw new Error("Native intent identity mismatch");
   if (chain.currentAction === RebalanceAction.NotActive) return null;
@@ -267,7 +268,25 @@ export function pendingNativeOperation(intent: UIRebalanceIntent, vaultAddress: 
   const blocker = auctionState === "FAILED"
     ? "This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares."
     : deposit ? "Deposit pending settlement" : "Cash out pending settlement";
-  return { operationId: `native-${kind}-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind, phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: [blocker] };
+  const operation: ObservedOperation = { operationId: `native-${kind}-${intent.formatted_data.pubkey}`, identity: { vaultAccount: vaultAddress, shareMint }, owner, kind, phase, nativeIntent: intent.formatted_data.pubkey, complete: false, blockers: [blocker] };
+  const rows = intentTokenRows(intent);
+  if (deposit && legs?.length && Array.isArray(chain.tokens)) operation.fill = depositFillVersusTarget(legs, rows);
+  if (withdrawal) {
+    const delivery = cashOutDelivery(rows, legs ?? []);
+    if (delivery.length) operation.delivery = delivery;
+  }
+  return operation;
+}
+
+function intentTokenRows(intent: { chain_data: { tokens?: unknown } }): { mint: string; amountRaw: string }[] {
+  const tokens = intent.chain_data.tokens;
+  if (!Array.isArray(tokens)) return [];
+  return tokens.flatMap(token => {
+    const row = token as { mint?: { toBase58?: () => string }; amount?: { toString?: () => string } };
+    const mint = row.mint?.toBase58?.();
+    const amountRaw = row.amount?.toString?.();
+    return typeof mint === "string" && typeof amountRaw === "string" ? [{ mint, amountRaw }] : [];
+  });
 }
 
 /** Kept as the deposit-specific seam for callers that must never label a withdrawal as a deposit. */
@@ -278,18 +297,18 @@ export function pendingNativeDeposit(intent: UIRebalanceIntent, vaultAddress: st
 
 /** A completed mint is the wallet's receipt. Symmetry can leave its prior intent account around
  * after dust cleanup, but this app has no native-intent resume API to safely expose as an action. */
-export function pendingNativeOperationForPosition(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string, sharesRaw: string): ObservedOperation | null {
+export function pendingNativeOperationForPosition(intent: UIRebalanceIntent, vaultAddress: string, shareMint: string, owner: string, sharesRaw: string, now = Date.now(), legs?: readonly { ticker: string; mint: string }[]): ObservedOperation | null {
   if (BigInt(sharesRaw) > 0n) return null;
-  return pendingNativeOperation(intent, vaultAddress, shareMint, owner);
+  return pendingNativeOperation(intent, vaultAddress, shareMint, owner, now, legs);
 }
 
-async function pendingNativeOperations(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string, sharesRaw: string): Promise<ObservedOperation[]> {
+async function pendingNativeOperations(native: NativeVaultBuilders, vaultAddress: string, shareMint: string, owner: string, sharesRaw: string, legs: readonly { ticker: string; mint: string }[] = []): Promise<ObservedOperation[]> {
   const intentAddress = getRebalanceIntentPda(new PublicKey(vaultAddress), new PublicKey(owner)).toBase58();
   const account = await native.connection.getAccountInfo(new PublicKey(intentAddress), "confirmed");
   if (!account) return [];
   const { SYMMETRY_PROGRAM_ID } = await import("./symmetry-adapter.ts");
   if (!account.owner.equals(new PublicKey(SYMMETRY_PROGRAM_ID))) throw new Error("Native intent is unavailable");
-  const pending = pendingNativeOperationForPosition(await native.sdk.fetchRebalanceIntent(intentAddress), vaultAddress, shareMint, owner, sharesRaw);
+  const pending = pendingNativeOperationForPosition(await native.sdk.fetchRebalanceIntent(intentAddress), vaultAddress, shareMint, owner, sharesRaw, Date.now(), legs);
   return pending ? [pending] : [];
 }
 
@@ -324,20 +343,23 @@ export async function readPublishedIndexPosition(index: CreatedIndex, owner: str
     if (!account.isInitialized || account.owner.toBase58() !== owner || account.mint.toBase58() !== index.shareMint) throw new Error("Share account identity mismatch");
     shares += account.amount;
   }
-  const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString());
+  const pendingOperations = await pendingNativeOperations(activeNative, index.vaultAddress, index.shareMint, owner, shares.toString(), index.legs);
   const position: IndexSharePosition = {
     indexId: index.indexId, indexName: index.name, owner, shareMint: index.shareMint,
     shareDecimals: mint.decimals, sharesRaw: shares.toString(), shareSupplyRaw: mint.supply.toString(),
     ...(pendingOperations.length ? { pendingOperations } : {}),
   };
+  if (shares === 0n) return position;
   const slots = vaultNavHoldings(vault, index.shareMint);
-  if (!slots || shares === 0n) return position;
+  if (!slots) return position;
   const balances = await vaultTokenBalances(activeNative.connection, vaultKey);
   const holdings = holdingsWithVaultBalances(slots, balances);
+  const basket = heldBasket(position.sharesRaw, index.legs, holdings);
+  const booked = basket ? { ...position, basket } : position;
   let quotes: readonly NavVenueQuote[] | null = null;
   try { quotes = await (quoteStocks ?? (rows => liveStockQuotes(activeNative.connection, vault, rows)))(holdings); }
   catch { quotes = null; }
-  return attachPositionNav(position, holdings, quotes);
+  return attachPositionNav(booked, holdings, quotes);
 }
 
 /** Positive chain balances and locked native settlement intents are portfolio positions. A read

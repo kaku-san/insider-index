@@ -75,27 +75,42 @@ test("Mag7 settler skips only quote-size failures while seeking all seven fills"
 
 });
 
-test("Mag7 never invokes mint for zero, partial, duplicate, or under-target legs", async () => {
+test("Mag7 mints a partial book and still refuses an empty book, duplicates, and support balances", async () => {
   const investmentLegMints = definition.vaultLegs.map(leg => leg.mint);
   let mints = 0;
   for (let count = 0; count <= 7; count++) {
     const tokens = investmentLegMints.map((mint, n) => ({ mint, amount: n < count ? "42" : "0", targetAmount: "42" }));
     const input = { investmentLegMints, tokens, wsolMint: "wsol" };
-    if (count < 7) {
+    if (count === 0) {
       assert.equal(mag7MintPlan(input).mayMint, false);
-      await assert.rejects(prepareMag7Mint(input, async () => ++mints), count ? /PARTIAL_FILL/ : /NO_FILLED_LEGS/);
+      assert.equal(mag7MintPlan(input).skippedLegMints.length, 7);
+      await assert.rejects(prepareMag7Mint(input, async () => ++mints), /NO_FILLED_LEGS/);
       assert.equal(mints, 0);
     } else {
-      assert.equal((await prepareMag7Mint(input, async () => ++mints)).payload, 1);
-      tokens[0].amount = "1";
-      await assert.rejects(prepareMag7Mint(input, async () => ++mints), /PARTIAL_FILL/);
-      assert.equal(mag7MintPlan({ ...input, investmentLegMints: Array(7).fill(investmentLegMints[1]) }).mayMint, false);
-      tokens[0].amount = "42";
-      tokens[0].targetAmount = "0";
-      assert.equal(mag7MintPlan(input).mayMint, false);
+      const plan = mag7MintPlan(input);
+      assert.equal(plan.mayMint, true);
+      assert.equal(plan.filledLegMints.length, count);
+      assert.equal(plan.skippedLegMints.length, 7 - count);
+      assert.equal((await prepareMag7Mint(input, async () => ++mints)).payload, mints);
     }
   }
-  assert.equal(mints, 1);
+  const full = investmentLegMints.map(mint => ({ mint, amount: "42", targetAmount: "42" }));
+  const under = full.map((token, index) => index === 0 ? { ...token, amount: "1" } : token);
+  const underPlan = mag7MintPlan({ investmentLegMints, tokens: under, wsolMint: "wsol" });
+  assert.equal(underPlan.mayMint, true);
+  assert.equal(underPlan.filledLegMints.length, 7);
+  assert.equal(underPlan.soughtLegMints.length, 1);
+  assert.equal((await prepareMag7Mint({ investmentLegMints, tokens: under, wsolMint: "wsol" }, async () => ++mints)).payload, 8);
+  assert.equal(mag7MintPlan({ investmentLegMints, tokens: full, wsolMint: "wsol" }).mayMint, true);
+  assert.equal(mag7MintPlan({ investmentLegMints: Array(7).fill(investmentLegMints[1]), tokens: full, wsolMint: "wsol" }).mayMint, false);
+  assert.equal(mag7MintPlan({ investmentLegMints: investmentLegMints.slice(0, 6), tokens: full, wsolMint: "wsol" }).mayMint, false);
+  const zeroTarget = full.map((token, index) => index === 0 ? { ...token, targetAmount: "0" } : token);
+  const zeroTargetPlan = mag7MintPlan({ investmentLegMints, tokens: zeroTarget, wsolMint: "wsol" });
+  assert.equal(zeroTargetPlan.mayMint, true);
+  assert.equal(zeroTargetPlan.filledLegMints.includes(investmentLegMints[0]), false);
+  assert.equal(mag7MintPlan({ investmentLegMints, tokens: investmentLegMints.map(mint => ({ mint, amount: "42", targetAmount: "0" })), wsolMint: "wsol" }).mayMint, false);
+  assert.equal(mag7MintPlan({ investmentLegMints, tokens: [...full, { mint: "wsol", amount: "1", targetAmount: "0" }], wsolMint: "wsol" }).mayMint, false);
+  assert.equal(mints, 8);
 });
 
 test("price update immediately advances to fills; mint advances to cash cleanup", async () => {
@@ -104,7 +119,7 @@ test("price update immediately advances to fills; mint advances to cash cleanup"
   assert.deepEqual(results.map(result => result.action), ["prices", "fill", "mint", "redeem", "cleanup"]);
 });
 
-test("native partial deposit with USDC leftover is failed without minting shares", async () => {
+test("native partial deposit mints the filled names and does not refund USDC", async () => {
   const vm = allSevenVm(), realNow = Date.now;
   Date.now = vm.now;
   try {
@@ -141,11 +156,16 @@ test("native partial deposit with USDC leftover is failed without minting shares
     vm.apply({ batches: [{ transactions: [{ tx_b64: wire.txBase64 }] }] });
     intent = (await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data;
     const input = { investmentLegMints: definition.vaultLegs.map(leg => leg.mint), tokens: intent.tokens.map(token => ({ mint: token.mint.toBase58(), amount: token.amount.toString(), targetAmount: token.targetAmount.toString() })), wsolMint: "So11111111111111111111111111111111111111112" };
-    assert.equal(mag7MintPlan(input).mayMint, false);
+    const plan = mag7MintPlan(input);
+    assert.equal(plan.mayMint, true);
+    assert.ok(plan.filledLegMints.length > 0);
+    assert.ok(plan.skippedLegMints.length > 0);
+    const ownerUsdc = await vm.balance(vm.owner, MAINNET_USDC);
     vm.time(Number(intent.auctions[2].endTime.toString()) + 1);
-    await assert.rejects(prepareMag7Mint(input, () => vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent })), /PARTIAL_FILL/);
-    assert.equal(await vm.balance(vm.owner, vm.shareMint), 0n);
-    assert.equal((await vm.native.sdk.fetchRebalanceIntent(vm.intent)).chain_data.rebalanceType, RebalanceType.Deposit);
+    const minted = await prepareMag7Mint(input, () => vm.native.sdk.mintTx({ keeper: vm.keeper, rebalance_intent: vm.intent }));
+    vm.apply(minted.payload);
+    assert.ok(await vm.balance(vm.owner, vm.shareMint) > 0n);
+    assert.equal(await vm.balance(vm.owner, MAINNET_USDC), ownerUsdc, "partial mint is not a USDC refund");
   } finally {
     Date.now = realNow;
   }

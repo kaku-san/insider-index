@@ -44,7 +44,7 @@ Connection is never treated as trading authorization. In preview mode the connec
 
 They are never summed into one fabricated NAV.
 
-`/positions/[indexId]` is the authoritative native share-position detail and contains the exit entry point, outstanding claims and resumable operations.
+`/positions/[indexId]` is the authoritative native share-position detail and contains the exit entry point, outstanding claims and resumable operations. It shows filled legs versus the published target, not the target mix as holdings. Before Invest or cash-out sign, the sheet shows “Checking Mag7 can fill…” or “Checking cash out…”, times out to a human line, and enables the action only after that check passes. An unroutable amount stays “This amount cannot buy Mag7 right now.” Cash out says leftover stocks and USDC may be sent to the wallet, before signing and as an observed list after. That list is not a share refund.
 
 ## Money rails
 

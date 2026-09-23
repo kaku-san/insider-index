@@ -173,6 +173,45 @@ test("Mag7 cash out uses the position's verified dust decimals", () => {
   assert.match(html, /value="0\.000003"/);
   assert.match(html, /Cash out\./);
   assert.match(html, /1 approval now/);
-  assert.match(html, /USDC auction/);
+  assert.match(html, /Shares burn when you sign/);
+  assert.match(html, /leftover stocks and USDC/);
+  assert.match(html, /not a share refund/);
   assert.doesNotMatch(html, /verified share decimals|claim every asset|Exit mechanics/i);
+});
+
+test("Mag7 fill check stays on a human line and enables Invest only after it passes", async () => {
+  const { humanPrepareMessage, prepareCheckControl, MAG7_CANNOT_FILL, MAG7_FILL_CHECK, CASH_OUT_CHECK } = await import("../src/lib/frontend/position-basket.ts");
+  assert.equal(humanPrepareMessage(new Error(MAG7_CANNOT_FILL), "deposit"), "This amount cannot buy Mag7 right now.");
+  assert.equal(humanPrepareMessage(new Error("Error: boom\n    at quote (route.ts:1:1)"), "deposit"), "Mag7 could not be checked. Try that amount again.");
+  assert.equal(humanPrepareMessage(Object.assign(new Error("QUOTE_TIMEOUT"), { name: "TimeoutError" }), "withdraw"), "Cash out could not be checked in time. Try again.");
+  assert.deepEqual(prepareCheckControl("deposit", "checking", true), { label: MAG7_FILL_CHECK, enabled: false, status: MAG7_FILL_CHECK });
+  assert.deepEqual(prepareCheckControl("deposit", "ready", true), { label: "Invest", enabled: true, status: null });
+  assert.equal(prepareCheckControl("deposit", "blocked", true).enabled, false);
+  assert.deepEqual(prepareCheckControl("withdraw", "checking", true).label, CASH_OUT_CHECK);
+  assert.equal(prepareCheckControl("withdraw", "ready", true).enabled, true);
+});
+
+test("position book shows filled names and marks the rest not held", async () => {
+  const { PositionBook, CashOutAssetList } = await import("../src/components/position-book.tsx");
+  const html = renderToStaticMarkup(createElement(PositionBook, {
+    title: "Held now",
+    note: "2 of 7 target names are in the vault. Missing names are not held.",
+    filled: [{ ticker: "AAPL", mint: "mint-aapl" }, { ticker: "MSFT", mint: "mint-msft" }],
+    missing: [{ ticker: "NVDA", mint: "mint-nvda" }],
+  }));
+  assert.match(html, /Held now/);
+  assert.match(html, /AAPL/);
+  assert.match(html, /MSFT/);
+  assert.match(html, /NVDA/);
+  assert.match(html, /Not held/);
+  assert.doesNotMatch(html, /Target mix/);
+  const receipt = renderToStaticMarkup(createElement(CashOutAssetList, {
+    heading: "Sent to your wallet",
+    note: "Unsold stocks and USDC are sent to your wallet. This is not a share refund.",
+    assets: [{ mint: "mint-aapl", label: "AAPL", amountRaw: "5", kind: "stock" }, { mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", label: "USDC", amountRaw: "2500000", kind: "usdc" }],
+  }));
+  assert.match(receipt, /Sent to your wallet/);
+  assert.match(receipt, /AAPL · 5 raw/);
+  assert.match(receipt, /2\.5 USDC/);
+  assert.match(receipt, /not a share refund/);
 });
