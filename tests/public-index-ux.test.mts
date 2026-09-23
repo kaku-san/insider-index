@@ -140,7 +140,8 @@ test("Mag7 invest sheet shows chain share balance as Your position", () => {
     },
   })));
   assert.match(html, /Your position/);
-  assert.match(html, /1 shares/);
+  assert.match(html, /1,000,000 raw share units/);
+  assert.doesNotMatch(html, /0\.00002|1 shares/);
   assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation/i);
 });
 
@@ -152,7 +153,8 @@ test("Mag7 invest sheet keeps dust shares visible", () => {
       shareMint: mag7Vault.shareMint!, shareDecimals: 6, sharesRaw: "3",
     },
   })));
-  assert.match(html, /0\.000003 shares/);
+  assert.match(html, /3 raw share units · 6 decimals/);
+  assert.doesNotMatch(html, /0\.000003 shares/);
 });
 
 test("shares received requires an increase after this signature, not old dust", () => {

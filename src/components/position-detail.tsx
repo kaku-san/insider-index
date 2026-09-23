@@ -7,7 +7,7 @@ import { WalletButton } from "./wallet-button";
 import { Icon } from "./social/icon";
 import { getIndexPosition, getVaultReadiness, positionValueUsdc, publicIndexCanCashOut, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { markedDollars } from "@/lib/frontend/research-format";
-import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
+import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { errorText } from "@/lib/frontend/api";
 import { noticedShareArrival, plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS, settlementDetail } from "@/lib/frontend/settlement-progress";
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_STILL_NOTE } from "@/lib/frontend/position-basket";
@@ -86,8 +86,8 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   }));
   const settlementStatus = activeOperation ? plainStatusForOperation(activeOperation) : sharesArrived ? "shares received" : null;
   const name = position?.indexName ?? indexId;
-  const sharesText = position ? position.sharesText ?? formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0) : null;
   const valueText = position ? markedDollars(positionValueUsdc(position) ?? position.markedValueUsdc) : "—";
+  const figures = position ? positionHoldingFigures({ sharesRaw: position.sharesRaw, shareDecimals: position.shareDecimals, valueText }) : [];
 
   if (!wallet.solanaAddress) return <div className={styles.page}><Link className={styles.back} href="/positions"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />Your portfolio</Link><div className={styles.gate}><span>POSITION DETAIL</span><h1>Connect to open<br />this position.</h1><p>Connect your wallet to see your shares.</p><WalletButton /></div></div>;
 
@@ -98,8 +98,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
         <div className={styles.identity}>
           <small>INDEX POSITION</small><h1>{name}</h1>
           <div className={styles.numbers}>
-            <div><strong>{sharesText}</strong><span>shares</span></div>
-            <div><strong>{valueText}</strong><span>USDC value</span></div>
+            {figures.map(figure => <div key={figure.role} className={figure.primary ? styles.valueLead : undefined}><strong>{figure.text}</strong><span>{figure.label}</span></div>)}
           </div>
           <div className={styles.actions}><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link>{activeOperation ? <button type="button" disabled> {activeOperation.kind === "withdraw" ? "Cash out in progress" : "Deposit in progress"}</button> : canCashOut ? <button type="button" onClick={() => setCashOutOpen(true)}>Cash out</button> : null}</div>
           {settlementStatus ? <SettlementListen status={settlementStatus} listening={positionNeedsListen(position)} detail={activeOperation ? settlementDetail({ status: settlementStatus, listening: positionNeedsListen(position), cashOutFinished: false }, position, activeOperation.kind === "withdraw" ? "withdraw" : "deposit") : "Your share balance increased."} /> : null}

@@ -13,11 +13,12 @@ import { IndexPerformanceLine, type IndexResourceResponse } from "./consumer-ind
 import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { markedDollars } from "@/lib/frontend/research-format";
+import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { PUBLIC_MAG7 } from "@/lib/index-vaults/public-cycle-parse";
-import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import styles from "./consumer-index.module.css";
 
@@ -82,7 +83,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const availability = publicIndexStatusCopy(status);
   const pendingOperations = currentPosition?.pendingOperations?.filter(operation => !operation.complete) ?? [];
   const activeOperation = pendingOperations[0] ?? null;
-  const ownedShares = hasIndexShares(currentPosition) && currentPosition ? formatVaultShares(currentPosition.sharesRaw, currentPosition.shareDecimals ?? 0) : null;
+  const ownedFigures = hasIndexShares(currentPosition) && currentPosition ? positionHoldingFigures({ sharesRaw: currentPosition.sharesRaw, shareDecimals: currentPosition.shareDecimals, valueText: markedDollars(positionValueUsdc(currentPosition) ?? currentPosition.markedValueUsdc) }) : null;
   const readiness = vault ?? (initialVault ? vaultReadinessFromIndex(vaultId, {
     index: { vaultAddress: initialVault.vaultAddress, shareMint: initialVault.shareMint, network: initialVault.network },
     depositsEnabled: initialVault.depositsEnabled,
@@ -103,7 +104,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
           <button type="button" className={live ? styles.tertiary : styles.primary} onClick={() => setShareOpen(true)}><Icon name="share" size={14} />Share</button>
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
-        {ownedShares ? <p className={styles.ownedPosition}>Your position: <strong>{ownedShares} shares</strong> <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
+        {ownedFigures ? <p className={styles.ownedPosition}>Your position: <strong>{ownedFigures[0].text}</strong> {ownedFigures[0].label}. {ownedFigures[1].text} {ownedFigures[1].label}. <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
         {activeOperation ? <p className={styles.ownedPosition} data-settlement-status={plainStatusForOperation(activeOperation)}>{plainStatusForOperation(activeOperation)}{activeOperation.phase === "FAILED" ? ". This deposit did not buy the basket. Your USDC is still in Mag7 and is not shares." : "."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}
       </div>
