@@ -282,7 +282,9 @@ export async function keeperTick(input: {
   if (!snapshot.state.keeper.equals(input.keeper)) throw new Error("This wallet is not the vault keeper.");
   const { state } = snapshot;
   if (state.paused) throw new Error("The vault is paused; the keeper does nothing.");
-  const marks = await Promise.all(state.legs.map((leg, index) => input.marks({ index, mint: leg.mint, decimals: leg.decimals, tokenProgram: leg.tokenProgram })));
+  // Sequential quotes: parallel Raydium tick-array reads burst the RPC rate limit (429s).
+  const marks: { price: bigint; venue: string }[] = [];
+  for (const [index, leg] of state.legs.entries()) marks.push(await input.marks({ index, mint: leg.mint, decimals: leg.decimals, tokenProgram: leg.tokenProgram }));
   if (marks.some(mark => mark.price <= 0n)) throw new Error("A mark is missing; refusing to post prices.");
   // The program rejects a >band move per update; say so plainly instead of sending a failing tx.
   for (const [i, leg] of state.legs.entries()) {
