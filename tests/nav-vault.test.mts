@@ -7,6 +7,7 @@ import {
   previewDeposit, previewWithdraw, updatePricesIx, withdrawInKindIx, withdrawIx,
 } from "../src/lib/nav-vault/program.ts";
 import { prepareNavDeposit, prepareNavWithdraw } from "../src/lib/nav-vault/prepare.ts";
+import { keeperTick, markFromQuote, mockVenue, planRebalance } from "../src/lib/nav-vault/keeper.ts";
 import { navVaultVm, seedIndex, PRICE_A, PRICE_B, type NavVm } from "./support/nav-vault-vm.mts";
 
 type Seeded = ReturnType<typeof seedIndex>;
@@ -224,4 +225,46 @@ test("prepare returns exactly ONE transaction each way and those transactions ex
   vm.must(vm.sendRaw(sign(inKind.transactions[0].messageBase64, s.alice)), "prepared in-kind exit");
   assert.equal(vm.supply(vm.vault(s.indexId).shareMint), 0n);
   assert.ok(vm.balance(ata(s.alice.publicKey, s.legA)) > 0n && vm.balance(ata(s.alice.publicKey, s.legB, TOKEN_2022_PROGRAM_ID)) > 0n);
+});
+
+test("planRebalance buys toward weights down to the 5% buffer and sells the most overweight leg when the buffer is short", () => {
+  const legs = [{ weightBps: 6000, price: PRICE_A, decimals: 6 }, { weightBps: 4000, price: PRICE_B, decimals: 8 }];
+  const buys = planRebalance({ legs, usdc: 1_000_000_000n, legBalances: [0n, 0n], bufferBps: 500 });
+  assert.deepEqual(buys.map(a => [a.kind, a.leg, a.amountInRaw]), [["buy", 0, 567_000_000n], ["buy", 1, 378_000_000n]]);
+  assert.equal(1_000_000_000n - buys.reduce((sum, a) => sum + a.amountInRaw, 0n), 55_000_000n, "5% buffer + 0.5% slippage margin stays in USDC");
+  const sells = planRebalance({ legs, usdc: 10_000_000n, legBalances: [3_000_000n, 100_000_000n], bufferBps: 500 });
+  assert.equal(sells.length, 1);
+  assert.equal(sells[0]!.kind, "sell");
+  assert.equal(sells[0]!.leg, 0, "A is the most overweight leg");
+  assert.equal(markFromQuote(100_000_000n, 500_000n, 6), PRICE_A);
+});
+
+test("keeper tick posts marks, buys legs one swap per transaction from vault USDC, and restores the buffer after a big exit", async () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+  vm.must(deposit(vm, s, s.bob, 1_000_000_000n));
+  const venue = mockVenue(vm.connection, s.usdc);
+  const execute = async (tx: VersionedTransaction) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), "keeper tx"); return "local"; };
+  const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
+  const keeperBalance = vm.balance(ata(s.keeper.publicKey, s.usdc));
+  const dry = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, nowSeconds });
+  assert.equal(dry.dryRun, true);
+  assert.equal(dry.signatures.length, 0);
+  assert.equal(dry.plan.length, 2);
+  const tick = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds });
+  assert.deepEqual(tick.signatures.map(x => x.step.split(":")[0]), ["update_prices", "buy", "buy"]);
+  const filled = navOf(vm, s);
+  assert.ok(filled.usdc * 10_000n >= filled.nav * 500n, "buffer floor held");
+  assert.ok(filled.usdc * 10_000n <= filled.nav * 600n, "idle cash invested down to the buffer");
+  assert.equal(vm.balance(ata(s.keeper.publicKey, s.usdc)), keeperBalance, "keeper wallet paid for nothing");
+  // A USDC exit drains the buffer below 5%; the next tick sells the most overweight leg to refill it.
+  vm.must(vm.send([withdrawIx(filled.v, s.bob.publicKey, 50_000_000n, 0n, false)], s.bob));
+  const drained = navOf(vm, s);
+  assert.ok(drained.usdc * 10_000n < drained.nav * 500n);
+  const refill = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds });
+  assert.ok(refill.signatures.some(x => x.step.startsWith("sell:")));
+  const topped = navOf(vm, s);
+  assert.ok(topped.usdc * 10_000n >= topped.nav * 500n, "buffer restored by selling legs");
 });

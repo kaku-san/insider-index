@@ -16,7 +16,7 @@ import { Icon } from "./social/icon";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
@@ -128,9 +128,9 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const trackerPoints=trackerPerson?.performance.filter(point=>point.date&&typeof point.value==="number").map(point=>({label:point.date!,equity:point.value!}))??[];
  const curve=trackerPoints.length?trackerPoints:legacyProfile?.curve??[];const historicalReturn=curve.length>1&&curve[0].equity?((curve.at(-1)!.equity-curve[0].equity)/Math.abs(curve[0].equity))*100:null;
  const liveState={vaultAddress:vaultIndex?.vaultAddress,shareMint:vaultIndex?.shareMint,network:vaultIndex?.network,depositsEnabled:vaultIndex?.depositsEnabled,publicFundsEnabled:vaultIndex?.publicFundsEnabled===true};
- const live=Boolean(vaultIndex)&&publicIndexIsLive(liveState);
+ const live=Boolean(vaultIndex)&&(navVaultLive(vaultIndexId!,vault)??publicIndexIsLive(liveState));
  const liveStatus=vaultIndex?publicIndexStatus(liveState):null;
- const canCashOut=Boolean(vaultIndexId)&&publicIndexCanCashOut(vaultIndexId!,liveState)&&hasIndexShares(position);
+ const canCashOut=Boolean(vaultIndexId)&&(navVaultLive(vaultIndexId!,vault)!==null?vault?.redeemEnabled===true:publicIndexCanCashOut(vaultIndexId!,liveState))&&hasIndexShares(position);
  const resourceReadiness=vaultIndex&&vaultIndexId?vaultReadinessFromIndex(vaultIndexId,{index:{vaultAddress:vaultIndex.vaultAddress,shareMint:vaultIndex.shareMint,network:vaultIndex.network},depositsEnabled:vaultIndex.depositsEnabled,publicFundsEnabled:vaultIndex.publicFundsEnabled===true}):null;
  const flowReadiness=vault??resourceReadiness;
 

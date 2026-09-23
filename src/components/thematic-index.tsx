@@ -13,7 +13,7 @@ import { IndexPerformanceLine, type IndexResourceResponse } from "./consumer-ind
 import { ShareCard } from "./share-card";
 import { VaultFlow } from "./vault-flow";
 import { usePrivySolana } from "./providers/privy-provider";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navVaultLive, positionValueUsdc, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { markedDollars } from "@/lib/frontend/research-format";
 import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
@@ -78,7 +78,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const shown = top.reduce((sum, item) => sum + item.weight_bps, 0);
   const updated = new Date(index.sourceGeneratedAt ?? index.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   const liveState = vaultState(initialVault, vaultResource.data, vault);
-  const live = publicIndexIsLive(liveState);
+  const live = navVaultLive(vaultId, vault) ?? publicIndexIsLive(liveState);
   const status = publicIndexStatus(liveState);
   const availability = publicIndexStatusCopy(status);
   const pendingOperations = currentPosition?.pendingOperations?.filter(operation => !operation.complete) ?? [];

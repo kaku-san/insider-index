@@ -8,7 +8,7 @@ import type { PublishedIndex, PublishedIndexResponse } from "@/lib/frontend/rese
 import { moneyBand, shortDate } from "@/lib/frontend/research-format";
 import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
-import { getIndexPosition, getVaultReadiness, hasIndexShares, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
+import { getIndexPosition, getVaultReadiness, hasIndexShares, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
@@ -209,7 +209,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   if (!index) return null;
 
   const image = portraitFor(resource.data?.personSlug ?? index.person_id);
-  const live = publicIndexIsLive({
+  const live = navVaultLive(routeId, vault) ?? publicIndexIsLive({
     vaultAddress: vault?.identity?.vaultAccount ?? resource.data?.index.vaultAddress,
     shareMint: vault?.identity?.shareMint ?? resource.data?.index.shareMint,
     network: vault?.identity?.network ?? resource.data?.index.network,
