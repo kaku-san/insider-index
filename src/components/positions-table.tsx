@@ -5,8 +5,8 @@ import { useEffect } from "react";
 import { usePrivySolana } from "./providers/privy-provider";
 import { useResource } from "@/lib/frontend/use-resource";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
-import { formatVaultShares } from "@/lib/index-vaults/positions-contract";
 import { positionValueUsdc, type IndexSharePosition } from "@/lib/frontend/vault-api";
+import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { positionBookLine } from "@/lib/frontend/position-basket";
 import { markedDollars } from "@/lib/frontend/research-format";
 import { plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS } from "@/lib/frontend/settlement-progress";
@@ -77,7 +77,7 @@ export function PositionsTable() {
           <p>
             {PREVIEW_MODE
               ? "Interactive flow preview · values below are labelled design fixtures."
-              : "Your index shares for this wallet."}
+              : "USDC value for each index. Share counts are raw mint units from your wallet, not a price."}
           </p>
         </div>
         <div className={styles.walletPill}>
@@ -104,7 +104,7 @@ export function PositionsTable() {
           <div className={styles.sectionTitle}>
             <div>
               <h2>Your indexes</h2>
-              <p>Your shares in each index. These are read directly from your wallet.</p>
+              <p>USDC value is the number to read. Share counts are raw mint units, not a price.</p>
             </div>
           </div>
           {indexes.loading && !indexes.data ? <Skeleton cards={2} /> : indexes.error ? <PageError error={indexes.error} retry={indexes.reload} /> : !ownedIndexes.length ? <div className={styles.empty}>
@@ -115,9 +115,10 @@ export function PositionsTable() {
           </div> : <div className={styles.indexGrid}>{ownedIndexes.map(position => {
             const pending = position.pendingOperations?.filter(operation => !operation.complete) ?? [];
             const valueText = markedDollars(positionValueUsdc(position) ?? position.markedValueUsdc);
+            const figures = positionHoldingFigures({ sharesRaw: position.sharesRaw, shareDecimals: position.shareDecimals, valueText });
             const bookLine = positionBookLine(position);
             return <Link className={styles.indexCard} key={position.indexId} href={`/positions/${encodeURIComponent(position.indexId)}`}>
-              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX SHARES</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}><span><b>{formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)}</b><small>shares owned</small></span><span><b>{valueText}</b><small>{valueText === "—" ? "value unavailable" : "USDC value"}</small></span></div>{bookLine ? <p className={styles.bookLine}>{bookLine}</p> : null}{pending.length ? <div className={styles.pending} data-settlement-status={plainStatusForOperation(pending[0])} aria-busy={positionNeedsListen(position) ? true : undefined}><i />{plainStatusForOperation(pending[0])}</div> : null}</div>
+              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX VALUE</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}>{figures.map(figure => <span key={figure.role} className={figure.primary ? styles.valueLead : undefined}><b>{figure.text}</b><small>{figure.label}</small></span>)}</div>{bookLine ? <p className={styles.bookLine}>{bookLine}</p> : null}{pending.length ? <div className={styles.pending} data-settlement-status={plainStatusForOperation(pending[0])} aria-busy={positionNeedsListen(position) ? true : undefined}><i />{plainStatusForOperation(pending[0])}</div> : null}</div>
             </Link>;
           })}</div>}
         </section>

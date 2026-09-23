@@ -6,8 +6,9 @@ import { cycleActionPurpose, cycleActivationBlockers } from "../lib/index-vaults
 import type { PublicCycleClient, PublicCycleDiscovery, PublicCycleReply } from "../lib/frontend/public-cycle";
 import { publicCycleStatusCopy } from "../lib/frontend/public-cycle-copy";
 import { publicCycleNextRequest, publicCyclePrimaryCta, publicDepositAmountRaw } from "../lib/frontend/public-cycle-controls";
-import { hasIndexShares, type IndexSharePosition } from "../lib/frontend/vault-api";
-import { formatVaultShares } from "../lib/index-vaults/positions-contract";
+import { hasIndexShares, positionValueUsdc, type IndexSharePosition } from "../lib/frontend/vault-api";
+import { markedDollars } from "../lib/frontend/research-format";
+import { positionHoldingFigures } from "../lib/frontend/position-share-copy";
 import { shortenAddress } from "../lib/format";
 import styles from "./vault-flow.module.css";
 
@@ -21,7 +22,12 @@ function usdcText(raw: string) {
 function ownedSharesLabel(position?: IndexSharePosition | null) {
   try {
     if (!hasIndexShares(position) || !position) return null;
-    return `${formatVaultShares(position.sharesRaw, position.shareDecimals ?? 0)} shares`;
+    const [value, shares] = positionHoldingFigures({
+      sharesRaw: position.sharesRaw,
+      shareDecimals: position.shareDecimals,
+      valueText: markedDollars(positionValueUsdc(position) ?? position.markedValueUsdc),
+    });
+    return `${value.text} ${value.label}. ${shares.text} ${shares.label}`;
   } catch { return null; }
 }
 
