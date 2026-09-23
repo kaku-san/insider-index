@@ -185,6 +185,14 @@ export function firstRoute(...builders: SwapBuilder[]): SwapBuilder {
   };
 }
 
+/** 1232-byte packet and 64 loaded accounts (static + lookup) — the runtime limits a keeper swap must fit. */
+export function fitsOnePacket(tx: VersionedTransaction): boolean {
+  let bytes: number;
+  try { bytes = tx.serialize().length; } catch { return false; }
+  const loaded = tx.message.staticAccountKeys.length + tx.message.addressTableLookups.reduce((n, l) => n + l.writableIndexes.length + l.readonlyIndexes.length, 0);
+  return bytes <= 1232 && loaded <= 64;
+}
+
 // ---------- tick ----------
 
 export type KeeperTickResult = {
@@ -246,6 +254,7 @@ export async function keeperTick(input: {
     if (!built) { result.skipped.push({ mint: state.legs[next.leg]!.mint.toBase58(), reason: "no route" }); continue; }
     const ix = keeperSwapIx({ vault: snapshot.state, keeper: input.keeper, inLeg: next.inLeg, outLeg: next.outLeg, amountIn: next.amountInRaw, minOut: built.minOut, swap: built.swap, programId });
     const tx = await compile([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }), ix], built.lookupTables);
+    if (!fitsOnePacket(tx)) { result.skipped.push({ mint: state.legs[next.leg]!.mint.toBase58(), reason: "route too large for one transaction" }); continue; }
     const step = `${next.kind}:${state.legs[next.leg]!.mint.toBase58()}`;
     result.signatures.push({ step, signature: await input.execute(tx, step) });
   }
