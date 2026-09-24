@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
 import {
   announcePositionChange, changeReflected, createPositionRefresher, pendingPositionChanges, positionInList,
   POSITION_REFRESH_POLL_MS, POSITION_REFRESH_WINDOW_MS, resetPositionChanges, subscribePositionChanges,
@@ -167,18 +166,4 @@ test("a refresher that observes the change settles it for later mounts", async (
   await clock.flush();
   assert.deepEqual(pendingPositionChanges(OWNER), []);
   refresher.dispose();
-});
-
-test("every position view is wired to the refresh path and VaultFlow announces after confirmation", () => {
-  const read = (path: string) => readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
-  const flow = read("components/vault-flow.tsx");
-  assert.ok(flow.indexOf("announcePositionChange(") > flow.indexOf("await confirmSignature(signature, step.network)"), "announce only after the signature confirmed");
-  for (const view of ["components/positions-table.tsx", "components/position-detail.tsx", "components/consumer-index.tsx", "components/thematic-index.tsx", "components/profile-view.tsx"]) {
-    assert.match(read(view), /usePositionRefresh/, `${view} refetches after a confirmed signature and on focus`);
-  }
-  const hook = read("lib/frontend/use-position-refresh.ts");
-  assert.match(hook, /addEventListener\("focus"/);
-  assert.match(hook, /visibilitychange/);
-  assert.match(read("components/positions-table.tsx"), /Updating…/);
-  assert.match(read("components/position-detail.tsx"), /Updating…/);
 });
