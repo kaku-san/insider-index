@@ -28,7 +28,7 @@ flowchart LR
 | --- | --- |
 | `GET /api/nav-vault?ids=<comma-separated IDs>` | Batched on-chain existence/readiness |
 | `GET /api/nav-vault/[id]` | NAV identity, readiness, target weights and slice disclosure |
-| `GET /api/nav-vault/[id]/position?wallet=<pubkey>` | Share balance, marked value and pending requests |
+| `GET /api/nav-vault/[id]/position?wallet=<pubkey>` | Display name, share balance, marked value, pro-rata free on-chain holdings and pending requests |
 | `POST /api/nav-vault/[id]/deposit/prepare` | Unsigned deposit (`owner`, `amountRaw`) |
 | `POST /api/nav-vault/[id]/withdraw/prepare` | Unsigned exit (`owner`, `shareAmountRaw`) |
 | `POST /api/nav-vault/[id]/claim/prepare` | Remaining in-kind claim chunks |

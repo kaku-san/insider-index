@@ -5,6 +5,7 @@
  * migration (202609230001) is applied.
  */
 import document from "./tradable-slices.json" with { type: "json" };
+import { indexDisplayName } from "../frontend/index-name.ts";
 
 export type TradableSlice = {
   indexId: string;
@@ -63,6 +64,13 @@ export async function publishedSliceFor(indexId: string, rpc?: SliceRpc | null, 
 /** "Tradable slice: 5 of 18 holdings (72.6% of disclosed weight)". */
 export function tradableSliceLabel(slice: Pick<TradableSlice, "tradableLegs" | "totalLegs" | "disclosedWeightBps">): string {
   return `Tradable slice: ${slice.tradableLegs} of ${slice.totalLegs} holdings (${(slice.disclosedWeightBps / 100).toFixed(1)}% of disclosed weight)`;
+}
+
+const names = new Map((document.slices as { indexId: string; name?: string }[]).map(slice => [slice.indexId, slice.name]));
+export { indexDisplayName };
+/** Display name from the committed scan ("Nancy P Index"). */
+export function sliceDisplayName(indexId: string): string | null {
+  return indexDisplayName(names.get(indexId));
 }
 
 export const tradableSlicesMeta = { generatedAt: document.generatedAt as string, criteria: document.criteria };

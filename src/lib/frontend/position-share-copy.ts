@@ -1,7 +1,7 @@
 /**
- * Positions and detail copy only. The on-chain share mint stays 6 decimals.
- * Decimal-shifting 20 raw units prints 0.00002, which reads as a price or dust.
- * USDC value is the main figure. The share count is the raw mint balance, labeled as units.
+ * Positions and detail copy only. USDC value is the main figure. NAV vault shares are worth roughly a
+ * dollar each, so the share count is the human mint balance ("9.975 shares", exact to the mint's
+ * decimals). Raw units appear only when the decimals are unknown, labeled as units.
  */
 
 const rawAmountPattern = /^(0|[1-9][0-9]*)$/;
@@ -21,7 +21,14 @@ function knownDecimals(decimals?: number) {
   return Number.isInteger(decimals) && decimals! >= 0 && decimals! <= 255 ? decimals! : null;
 }
 
-/** Ordered figures: USDC value first, then an honestly labeled raw share count. */
+function humanShares(raw: string, decimals: number) {
+  const padded = raw.padStart(decimals + 1, "0");
+  const whole = padded.slice(0, padded.length - decimals);
+  const fraction = decimals ? padded.slice(-decimals).replace(/0+$/, "") : "";
+  return fraction ? `${groupInteger(whole)}.${fraction}` : groupInteger(whole);
+}
+
+/** Ordered figures: USDC value first, then the human share count (raw units only without decimals). */
 export function positionHoldingFigures(input: {
   sharesRaw: string;
   shareDecimals?: number;
@@ -30,8 +37,9 @@ export function positionHoldingFigures(input: {
   const valueUnavailable = input.valueText === "—";
   const decimals = knownDecimals(input.shareDecimals);
   const raw = rawAmountPattern.test(input.sharesRaw) ? input.sharesRaw : null;
+  const shareText = raw ? decimals === null ? groupInteger(raw) : humanShares(raw, decimals) : "—";
   const shareLabel = raw
-    ? decimals === null ? "raw share units" : `raw share units · ${decimals} decimals`
+    ? decimals === null ? "raw share units" : shareText === "1" ? "share" : "shares"
     : "share units unavailable";
   return [
     {
@@ -42,7 +50,7 @@ export function positionHoldingFigures(input: {
     },
     {
       role: "shares",
-      text: raw ? groupInteger(raw) : "—",
+      text: shareText,
       label: shareLabel,
       primary: false,
     },
