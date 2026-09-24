@@ -143,8 +143,8 @@ test("Mag7 invest sheet shows chain share balance as Your position", () => {
     },
   })));
   assert.match(html, /Your position/);
-  assert.match(html, /1,000,000 raw share units/);
-  assert.doesNotMatch(html, /0\.00002|1 shares/);
+  assert.match(html, /1 share</);
+  assert.doesNotMatch(html, /0\.00002|1 shares|1,000,000|raw share units/);
   assert.doesNotMatch(html, /CYCLE_|Retain the operation|reconcile operation/i);
 });
 
@@ -156,8 +156,8 @@ test("Mag7 invest sheet keeps dust shares visible", () => {
       shareMint: mag7Vault.shareMint!, shareDecimals: 6, sharesRaw: "3",
     },
   })));
-  assert.match(html, /3 raw share units · 6 decimals/);
-  assert.doesNotMatch(html, /0\.000003 shares/);
+  assert.match(html, /0\.000003 shares/);
+  assert.doesNotMatch(html, /raw share units/);
 });
 
 test("shares received requires an increase after this signature, not old dust", () => {
@@ -178,9 +178,10 @@ test("Mag7 cash out uses the position's verified dust decimals", () => {
   assert.match(html, /value="0\.000003"/);
   assert.match(html, /Cash out\./);
   assert.match(html, /1 approval now/);
-  assert.match(html, /Shares burn when you sign/);
-  assert.match(html, /leftover stocks and USDC/);
-  assert.match(html, /not a share refund/);
+  assert.match(html, /Cash out in one signature/);
+  assert.match(html, /keeper sells your share of each stock/);
+  assert.match(html, /sent to you as the token/);
+  assert.doesNotMatch(html, /Shares burn when you sign|not a share refund/);
   assert.doesNotMatch(html, /verified share decimals|claim every asset|Exit mechanics/i);
 });
 

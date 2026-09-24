@@ -1,7 +1,8 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { navVaultConfig, navVaultServes, type NavVaultConfig } from "./config.ts";
 import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, decodeVault, shareAta, tokenAmount, vaultPda } from "./program.ts";
-import { publishedSliceFor, type TradableSlice } from "./slices.ts";
+import { indexDisplayName, publishedSliceFor, sliceDisplayName, type TradableSlice } from "./slices.ts";
+import { navHeldSlice } from "./held.ts";
 import { memo } from "../cache.ts";
 import { createServiceSupabase } from "../supabase.ts";
 import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests, readNavVault, type NavConnection } from "./prepare.ts";
@@ -105,12 +106,22 @@ export async function handleNavPosition(request: Request, indexId: string, deps:
       nextAction: now >= request.claimableAt ? "Claim your share of the vault in kind." : "The keeper is converting your share of the vault to USDC.",
       blockers: [],
     }));
+    const { state } = snapshot;
+    const markedAt = state.pricesUpdatedAt > 0 ? new Date(state.pricesUpdatedAt * 1000).toISOString() : null;
+    // Tickers label the on-chain legs; balances and marks come only from the chain read above.
+    const mints = state.legs.map(leg => leg.mint.toBase58());
+    const slice = shares > 0n ? await (deps.slice ?? defaultSlice)(indexId, mints).catch(() => null) : null;
+    const held = navHeldSlice({
+      shares, supply: snapshot.supply, usdcBalance: snapshot.usdcBalance, reservedUsdc: state.reservedUsdc, markedAt, pricesFresh: snapshot.pricesFresh,
+      legs: state.legs.map((leg, i) => ({ ticker: slice?.vaultLegs.find(row => row.mint === mints[i])?.ticker ?? `${mints[i]!.slice(0, 4)}…${mints[i]!.slice(-4)}`, mint: mints[i]!, decimals: leg.decimals, price: leg.price, reserved: leg.reserved, balance: snapshot.legBalances[i] ?? 0n })),
+    });
     return Response.json({
-      indexId, owner: owner.toBase58(), shareMint: snapshot.state.shareMint.toBase58(), shareDecimals: SHARE_DECIMALS,
+      indexId, indexName: sliceDisplayName(indexId) ?? undefined, owner: owner.toBase58(), shareMint: state.shareMint.toBase58(), shareDecimals: SHARE_DECIMALS,
       sharesRaw: shares.toString(), shareSupplyRaw: snapshot.supply.toString(), vaultValueUsdc: micro(snapshot.nav),
-      markedAt: snapshot.state.pricesUpdatedAt > 0 ? new Date(snapshot.state.pricesUpdatedAt * 1000).toISOString() : null,
+      markedAt,
       priceBasis: "NAV vault: USDC buffer + keeper-posted stock marks (cash may be pending investment)",
       pendingOperations,
+      ...(held ? { held } : {}),
     }, { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
 }
@@ -151,8 +162,8 @@ export async function handleNavPositions(request: Request, dependencies: { listI
       if (!vaults[i]) continue;
       const response = await handleNavPosition(new Request(`http://local/?wallet=${owner.toBase58()}`), index.indexId, deps);
       if (!response.ok) throw new Error("position read failed");
-      const position = await response.json() as { sharesRaw: string; pendingOperations: unknown[] };
-      if (position.sharesRaw !== "0" || position.pendingOperations.length) positions.push({ ...position, indexName: index.name ?? index.indexId });
+      const position = await response.json() as { sharesRaw: string; pendingOperations: unknown[]; indexName?: string };
+      if (position.sharesRaw !== "0" || position.pendingOperations.length) positions.push({ ...position, indexName: indexDisplayName(index.name) ?? position.indexName ?? index.indexId });
     }
     return Response.json({ positions }, { headers: HEADERS });
   } catch { return plain(new Error("Your positions aren't available right now."), 503); }

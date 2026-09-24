@@ -11,9 +11,12 @@ import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { errorText } from "@/lib/frontend/api";
 import { noticedShareArrival, plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS, settlementDetail } from "@/lib/frontend/settlement-progress";
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_STILL_NOTE } from "@/lib/frontend/position-basket";
-import { CashOutAssetList, PositionBook } from "./position-book";
+import { CashOutAssetList, HeldNowBook, PositionBook } from "./position-book";
 import { VaultFlow } from "./vault-flow";
 import { SettlementListen } from "./settlement-listen";
+import { ShareCard } from "./share-card";
+import { portraitFor } from "@/lib/fomo/portraits";
+import { themeArtFor } from "@/lib/frontend/theme-art";
 import styles from "./position-detail.module.css";
 
 function pendingKey(position?: IndexSharePosition | null) {
@@ -33,6 +36,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cashOutOpen, setCashOutOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [sharesArrived, setSharesArrived] = useState(false);
   const pendingSignature = pendingKey(position);
 
@@ -87,6 +91,10 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   const settlementStatus = activeOperation ? plainStatusForOperation(activeOperation) : sharesArrived ? "shares received" : null;
   const name = position?.indexName ?? indexId;
   const valueText = position ? markedDollars(positionValueUsdc(position) ?? position.markedValueUsdc) : "—";
+  // The share card shares the public index (never this wallet's balance).
+  const themed = indexId.startsWith("idx-theme-");
+  const shareImage = themed ? themeArtFor(indexId)?.src ?? `/index-assets/themes/${indexId}-hero.png` : portraitFor(indexId.replace(/^insiderindex-/, ""));
+  const shareDetail = readiness?.slice?.totalLegs ? `${readiness.slice.totalLegs} holdings` : readiness?.slice?.tradableLegs ? `${readiness.slice.tradableLegs} stocks` : position?.held ? `${position.held.legs.length} stocks` : "Public filings index";
   const figures = position ? positionHoldingFigures({ sharesRaw: position.sharesRaw, shareDecimals: position.shareDecimals, valueText }) : [];
 
   if (!wallet.solanaAddress) return <div className={styles.page}><Link className={styles.back} href="/positions"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />Your portfolio</Link><div className={styles.gate}><span>POSITION DETAIL</span><h1>Connect to open<br />this position.</h1><p>Connect your wallet to see your shares.</p><WalletButton /></div></div>;
@@ -100,16 +108,17 @@ export function PositionDetail({ indexId }: { indexId: string }) {
           <div className={styles.numbers}>
             {figures.map(figure => <div key={figure.role} className={figure.primary ? styles.valueLead : undefined}><strong>{figure.text}</strong><span>{figure.label}</span></div>)}
           </div>
-          <div className={styles.actions}><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link>{activeOperation ? <button type="button" disabled> {activeOperation.kind === "withdraw" ? "Cash out in progress" : "Deposit in progress"}</button> : canCashOut ? <button type="button" onClick={() => setCashOutOpen(true)}>Cash out</button> : null}</div>
+          <div className={styles.actions}><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link><button type="button" className={styles.share} onClick={() => setShareOpen(true)}><Icon name="share" size={13} />Share</button>{activeOperation ? <button type="button" disabled> {activeOperation.kind === "withdraw" ? "Cash out in progress" : "Deposit in progress"}</button> : canCashOut ? <button type="button" onClick={() => setCashOutOpen(true)}>Cash out</button> : null}</div>
           {settlementStatus ? <SettlementListen status={settlementStatus} listening={positionNeedsListen(position)} detail={activeOperation ? settlementDetail({ status: settlementStatus, listening: positionNeedsListen(position), cashOutFinished: false }, position, activeOperation.kind === "withdraw" ? "withdraw" : "deposit") : "Your share balance increased."} /> : null}
           {BigInt(position.sharesRaw) > 0n ? <p className={styles.operation}>{CASH_OUT_BEFORE_SIGN}</p> : null}
         </div>
       </section>
 
-      <div className={styles.grid}>{book ? <PositionBook title={book.title} note={book.note} filled={book.filled} missing={book.missing} state={book.state} /> : <section className={styles.panel}><header><h2>Held now</h2><p>Published target is not what this wallet holds</p></header><div className={styles.empty}>The held book is unavailable. The target mix is not shown as if it were held.</div></section>}</div>
+      <div className={styles.grid}>{position.held ? <HeldNowBook held={position.held} /> : book ? <PositionBook title={book.title} note={book.note} filled={book.filled} missing={book.missing} state={book.state} /> : <section className={styles.panel}><header><h2>Held now</h2><p>Published target is not what this wallet holds</p></header><div className={styles.empty}>The held book is unavailable. The target mix is not shown as if it were held.</div></section>}</div>
       {delivery.length ? <CashOutAssetList assets={delivery} heading="Still in this cash-out" note={CASH_OUT_STILL_NOTE} /> : null}
 
       {position.outstandingClaims?.length ? <section className={styles.claims}><h2>Outstanding claims</h2>{position.outstandingClaims.map((claim) => <div key={claim.mint}><strong>{claim.symbol ?? claim.mint.slice(0, 7)}</strong><span>{claim.amountRemainingRaw} units remaining</span><b>{claim.transferBlocked ? "NEEDS ATTENTION" : "PENDING"}</b></div>)}</section> : null}
+      <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={name} kind={themed ? "Theme index" : "Person index"} detail={shareDetail} image={shareImage} url={typeof window !== "undefined" ? `${window.location.origin}/indexes/${encodeURIComponent(indexId)}` : undefined} />
       <VaultFlow open={cashOutOpen} onClose={() => setCashOutOpen(false)} indexId={indexId} indexName={name} readiness={readiness} mode="withdraw" position={position} onPosition={next => { if (!next) return; setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next); }} />
     </>}
   </div>;

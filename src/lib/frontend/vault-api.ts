@@ -4,6 +4,7 @@ import { VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 import { ApiError, readApi, writeApi } from "./api";
 import type { CashOutAsset, DepositFill, PositionBasket } from "./position-basket";
 import { sliceHeadline, type NavSlice } from "./slice-notes";
+import type { NavHeldBook } from "../nav-vault/held";
 
 export type Network = "devnet" | "mainnet-beta";
 export type RawAmount = string;
@@ -180,6 +181,8 @@ export type IndexSharePosition = {
   outstandingClaims?: NativeClaim[];
   /** Vault balances versus the published target. Absent until both are read. */
   basket?: PositionBasket;
+  /** NAV vault: this wallet's pro-rata slice of the vault's on-chain balances at keeper marks. Absent if unread. */
+  held?: NavHeldBook;
 };
 
 export type VaultUiState = "NO_VAULT" | "PREVIEW_ONLY" | "PREPARE_BLOCKED" | "LIVE_DEPOSIT" | "PENDING" | "HAS_SHARES";

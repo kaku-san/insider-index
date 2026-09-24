@@ -42,8 +42,8 @@ export const MAG7_CANNOT_FILL = "This amount cannot buy Mag7 right now.";
 export const MAG7_FILL_TIMEOUT = "Mag7 could not be checked in time. Try that amount again.";
 export const CASH_OUT_CHECK_TIMEOUT = "Cash out could not be checked in time. Try again.";
 export const PREPARE_CHECK_MS = 45_000;
-export const CASH_OUT_BEFORE_SIGN = "Shares burn when you sign. We try to sell holdings to USDC. If a sale cannot be made, leftover stocks and USDC are sent to your wallet. This is not a share refund.";
-export const CASH_OUT_STILL_NOTE = "These holdings are still on this cash-out. We try to sell them to USDC. Anything unsold is sent to your wallet. This is not a share refund.";
+export const CASH_OUT_BEFORE_SIGN = "Cash out in one signature. If the vault's USDC buffer covers it you get USDC right away; otherwise the keeper sells your share of each stock and sends USDC within about a minute. Any stock that cannot be sold is sent to you as the token.";
+export const CASH_OUT_STILL_NOTE = "These holdings are still on this cash-out. The keeper sells them to USDC; any stock that cannot be sold is sent to you as the token.";
 
 function raw(amountRaw: string | undefined): bigint {
   if (!amountRaw || !rawAmountPattern.test(amountRaw)) return 0n;
