@@ -1,6 +1,6 @@
 # Contributing
 
-Read [AGENTS.md](AGENTS.md) for the reviewer evidence map and local setup, and the relevant Next.js guide in `node_modules/next/dist/docs/` before code changes.
+Read [AGENTS.md](AGENTS.md) for the reviewer evidence map, the [README](README.md#run-locally) for local setup, and the relevant Next.js guide in `node_modules/next/dist/docs/` before code changes.
 
 Public brand: **InsiderIndex** / **InsiderIndex.xyz**. Package: `insider-index`. Existing `STOCKLANA_*` environment keys and database/API contracts remain compatible.
 
