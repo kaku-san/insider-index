@@ -25,6 +25,14 @@ export type PositionChange = {
 
 type ShareRead = { sharesRaw: string } | null | undefined;
 
+export async function readSharesBeforeSignature(load: () => Promise<ShareRead>, cached: ShareRead): Promise<string> {
+  try {
+    return (await load())?.sharesRaw ?? "0";
+  } catch {
+    return cached?.sharesRaw ?? "0";
+  }
+}
+
 /** True once a position read shows the share balance moved the way the confirmed signature must move it. */
 export function changeReflected(change: Pick<PositionChange, "mode" | "sharesBeforeRaw">, position: ShareRead): boolean {
   if (!position) return false;

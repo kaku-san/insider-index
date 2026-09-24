@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   announcePositionChange, changeReflected, createPositionRefresher, pendingPositionChanges, positionInList,
-  POSITION_REFRESH_POLL_MS, POSITION_REFRESH_WINDOW_MS, resetPositionChanges, subscribePositionChanges,
+  POSITION_REFRESH_POLL_MS, POSITION_REFRESH_WINDOW_MS, readSharesBeforeSignature, resetPositionChanges, subscribePositionChanges,
   type PositionChange, type Timers,
 } from "../src/lib/frontend/position-refresh.ts";
 
@@ -37,6 +37,17 @@ function fakeTimers() {
 }
 
 const change = (overrides: Partial<PositionChange> = {}): PositionChange => ({ indexId: PELOSI, owner: OWNER, mode: "deposit", sharesBeforeRaw: "0", signature: "sig", at: 1_000_000, ...overrides });
+
+test("the pre-signature read replaces a stale cached balance and failed reads fall back to it", async () => {
+  const staleCachedPosition = { sharesRaw: "0" };
+  const freshBaseline = await readSharesBeforeSignature(async () => ({ sharesRaw: "10" }), staleCachedPosition);
+  assert.equal(freshBaseline, "10");
+  assert.equal(changeReflected(change({ sharesBeforeRaw: freshBaseline }), { sharesRaw: "10" }), false, "another tab's earlier deposit does not settle this signature");
+  assert.equal(changeReflected(change({ sharesBeforeRaw: freshBaseline }), { sharesRaw: "20" }), true, "this deposit must move past the fresh baseline");
+
+  const fallbackBaseline = await readSharesBeforeSignature(async () => { throw new Error("position read unavailable"); }, { sharesRaw: "7" });
+  assert.equal(fallbackBaseline, "7");
+});
 
 test("a change is reflected only when the read shows the share balance moved the way the signature moves it", () => {
   assert.equal(changeReflected(change(), null), false);

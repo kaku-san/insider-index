@@ -21,7 +21,7 @@ import {
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_CHECK, CASH_OUT_STILL_NOTE, cashOutDeliveryOf, humanPrepareMessage, MAG7_FILL_CHECK, prepareCheckControl, prepareRequestKey, withPrepareTimeout, type PrepareCheckStatus } from "@/lib/frontend/position-basket";
 import { CashOutDeliveryStatus } from "./position-book";
 import { prepareWithStaleRetry } from "@/lib/frontend/nav-vault-retry";
-import { announcePositionChange, POSITION_REFRESH_POLL_MS, POSITION_REFRESH_WINDOW_MS } from "@/lib/frontend/position-refresh";
+import { announcePositionChange, POSITION_REFRESH_POLL_MS, POSITION_REFRESH_WINDOW_MS, readSharesBeforeSignature } from "@/lib/frontend/position-refresh";
 import styles from "./vault-flow.module.css";
 
 export { sharesIncreasedAfterSignature };
@@ -257,17 +257,17 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     }
     setBusy(true); setError(null);
     try {
+      const owner = wallet.solanaAddress;
       // NAV vault: re-prepare right before the wallet opens so the signed transaction carries fresh marks.
       let step = prepared.step;
       if (isNav) {
         const raw = mode === "deposit" ? usdcRaw(amount) : decimalToRaw(amount, withdrawalDecimals(readiness, position), "share");
-        const owner = wallet.solanaAddress;
         step = await prepareWithStaleRetry(() => withPrepareTimeout(mode === "deposit"
           ? prepareDeposit(indexId, { owner, amountRaw: raw, idempotencyKey: crypto.randomUUID() }, prepared.step.network)
           : prepareWithdrawal(indexId, { owner, shareAmountRaw: raw, requestedExitMode: "verified-native-usdc", idempotencyKey: crypto.randomUUID() }, prepared.step.network)));
         if (step.requires !== "user-signature" || !step.transactions.length) throw new Error(mode === "deposit" ? "Mag7 could not be checked. Try that amount again." : "Cash out could not be checked. Try again.");
       }
-      const sharesBeforeRaw = position?.sharesRaw ?? "0";
+      const sharesBeforeRaw = await readSharesBeforeSignature(() => getIndexPosition(indexId, owner), position);
       setSharesBeforeSignature(sharesBeforeRaw);
       sawWithdrawRef.current = false;
       setSawWithdrawPending(false);
@@ -278,7 +278,7 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
         lastSignature = signature;
       }
       // Every mounted position view (position page, Positions list, index page) refetches now and polls until the read shows it.
-      announcePositionChange({ indexId, owner: wallet.solanaAddress, mode, sharesBeforeRaw, signature: lastSignature, at: Date.now() });
+      announcePositionChange({ indexId, owner, mode, sharesBeforeRaw, signature: lastSignature, at: Date.now() });
       // NAV vault exits settle inside the signed transaction: a confirmed signature is the finished cash out.
       if (isNav && mode === "withdraw") { sawWithdrawRef.current = true; setSawWithdrawPending(true); }
       setPrepared(null); setSettlementPosition(null); setTimedOut(false); setScreen("submitted");
