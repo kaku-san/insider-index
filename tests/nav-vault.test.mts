@@ -456,3 +456,101 @@ test("one keeper cycles many vaults: marks quoted once per mint, prices batched 
   }
   assert.ok(!sent.some(step => step === "update_prices"), "no per-vault price re-post");
 });
+
+/** Ask-side marks: posted 3% above the venue price, so a sale at the venue misses the 1% on-chain bound. */
+function askPremiumVenue(vm: NavVm, s: Seeded, options: { staleQuote?: boolean } = {}) {
+  const venue = mockVenue(vm.connection, s.usdc);
+  return {
+    marks: async (leg: Parameters<typeof venue.marks>[0]) => { const m = await venue.marks(leg); return { price: m.price * 103n / 100n, venue: "ask" }; },
+    // staleQuote: an optimistic quote passes the keeper pre-check, so only the on-chain SwapPriceBound refuses the sale.
+    swaps: async (input: Parameters<typeof venue.swaps>[0]) => { const built = await venue.swaps(input); return built && options.staleQuote ? { ...built, expectedOut: built.expectedOut! * 110n / 100n } : built; },
+  };
+}
+
+test("an unsellable rebalance sell is deferred, never aborts the cycle: the converted cash-out still settles", async () => {
+  for (const staleQuote of [false, true]) {
+    const vm = navVaultVm();
+    const s = seedIndex(vm);
+    postPrices(vm, s);
+    vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+    vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 560_000_000n));
+    vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 370_000_000n));
+    vm.must(deposit(vm, s, s.bob, 100_000_000n));
+    const r = request(vm, s, s.alice, 150_000_000n);
+    vm.must(r.result);
+    const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
+    const execute = async (tx: VersionedTransaction, step: string) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), step); return step; };
+    const deferrals = new Map();
+    const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
+    const tick = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...askPremiumVenue(vm, s, { staleQuote }), execute, afterPrices: async () => vm.advance(1), nowSeconds, deferrals });
+    assert.equal(tick.requests.crosses, 2, "exit netted against free USDC");
+    assert.ok(tick.plan.some(p => p.kind === "sell"), "buffer below floor → planned a top-up sell");
+    assert.ok(!tick.signatures.some(x => x.step.startsWith("sell:")), "the sale did not land");
+    const skipped = tick.skipped.find(x => x.step === "sell");
+    assert.ok(skipped?.retryAt && skipped.retryAt > nowSeconds(), `sell deferred with a retry time (${staleQuote ? "on-chain bound" : "quote pre-check"})`);
+    assert.match(skipped!.reason, staleQuote ? /SwapPriceBound|0x1788/ : /posted-price bound/);
+    assert.equal(tick.requests.settled, 1, "settle ran after the failed sell");
+    assert.ok(vm.balance(ata(s.alice.publicKey, s.usdc)) > usdcBefore);
+    assert.equal(vm.info(r.address), null);
+    // Next cycle: the deferred leg is not retried; the next overweight leg is tried instead.
+    const soldLeg = tick.plan.find(p => p.kind === "sell")!.mint;
+    vm.advance(5);
+    const next = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...askPremiumVenue(vm, s, { staleQuote }), nowSeconds, deferrals });
+    assert.ok(!next.plan.some(p => p.kind === "sell" && p.mint === soldLeg), "deferred leg skipped next cycle");
+    assert.ok(next.skipped.some(x => x.mint === soldLeg && x.step === "sell (deferred)"));
+  }
+});
+
+test("a request slice that cannot sell inside the price bound is delivered in kind, pro-rata, with the USDC owed", async () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm);
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 560_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 370_000_000n));
+  const r = request(vm, s, s.alice, 600_000_000n);
+  vm.must(r.result);
+  const carved = r.read();
+  assert.ok(carved.legAmounts.every(a => a > 0n));
+  const v = vm.vault(s.indexId);
+  assert.equal(vm.info(ata(s.alice.publicKey, v.legs[1]!.mint, v.legs[1]!.tokenProgram)), null, "owner has no stock accounts yet");
+  const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
+  const steps: string[] = [];
+  const execute = async (tx: VersionedTransaction, step: string) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), step); steps.push(step); return step; };
+  const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
+  const tick = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...askPremiumVenue(vm, s), execute, afterPrices: async () => vm.advance(1), nowSeconds, deferrals: new Map() });
+  assert.equal(tick.requests.fulfills, 0);
+  assert.equal(tick.requests.deliveredInKind, 2, "both unsellable legs delivered in kind this cycle, before the timeout");
+  assert.ok(nowSeconds() < carved.claimableAt);
+  assert.equal(vm.info(r.address), null, "request closed");
+  assert.equal(vm.balance(ata(s.alice.publicKey, v.legs[0]!.mint, v.legs[0]!.tokenProgram)), carved.legAmounts[0]);
+  assert.equal(vm.balance(ata(s.alice.publicKey, v.legs[1]!.mint, v.legs[1]!.tokenProgram)), carved.legAmounts[1]);
+  assert.equal(vm.balance(ata(s.alice.publicKey, s.usdc)) - usdcBefore, carved.usdcOwed, "carved USDC paid with the stock");
+  const after = navOf(vm, s);
+  assert.equal(after.v.reservedUsdc, 0n);
+  assert.ok(after.v.legs.every(l => l.reserved === 0n));
+});
+
+test("a transiently failing fulfil is retried later, and delivered in kind once the request times out", async () => {
+  const vm = navVaultVm();
+  const s = seedIndex(vm, "idx-test-nav", { requestTimeoutSecs: 60 });
+  postPrices(vm, s);
+  vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 560_000_000n));
+  vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 1, 370_000_000n));
+  const r = request(vm, s, s.alice, 600_000_000n);
+  vm.must(r.result);
+  const venue = mockVenue(vm.connection, s.usdc);
+  const flaky = { marks: venue.marks, swaps: async () => { throw new Error("fetch failed: 503"); } };
+  const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
+  const execute = async (tx: VersionedTransaction, step: string) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), step); return step; };
+  const deferrals = new Map();
+  const first = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...flaky, execute, afterPrices: async () => vm.advance(1), nowSeconds, deferrals });
+  assert.equal(first.requests.deliveredInKind, 0, "a transient failure is not an in-kind trigger before the timeout");
+  assert.ok(vm.info(r.address));
+  assert.ok([...deferrals.values()].every(d => !d.unsellable));
+  vm.advance(61);
+  const second = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...flaky, execute, afterPrices: async () => vm.advance(1), nowSeconds, deferrals });
+  assert.equal(second.requests.deliveredInKind, 2, "timed-out request with failing legs goes in kind");
+  assert.equal(vm.info(r.address), null);
+});

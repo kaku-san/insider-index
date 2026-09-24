@@ -11,6 +11,8 @@ The keeper is a separate operator process, **not a Vercel function or user walle
 5. Rebalance free inventory toward on-chain target weights while respecting the USDC buffer.
 6. Settle converted requests; deliver unsellable slices in kind only to their owners.
 
+A failing step never aborts the cycle: later legs, settles and other vaults still run. A swap whose venue quote cannot pass the on-chain posted-price bound is refused before sending; any failed swap is **deferred per leg** with backoff (2 min doubling to 30 min, in-process memory) so the planner tries the next leg instead of retrying forever. Marks are ask-side quotes, so a sale whose bid/ask spread exceeds the vault's `max_slippage_bps` cannot fill; for a withdrawal request that slice is **delivered in kind, pro-rata, to the owner** in the same cycle (the keeper creates the owner's token accounts and pays that rent). A transiently failing slice is retried and goes in kind once the request's timeout passes.
+
 Swaps try **Jupiter v1 quote + swap-instructions first**, restricted to CPI-safe DEXes. If no usable route exists, the builder falls back to a direct persisted Raydium CLMM pool. Jupiter v2 builds are used for marks, not the mainnet swap CPI path. No keeper side-payment funds a user's fill. Each on-chain swap independently enforces venue, inventory, reserve, slippage and authority constraints.
 
 ## Configuration
@@ -38,6 +40,8 @@ Only an authorized operator should broadcast:
 npm run nav-vault -- keeper --all --network mainnet-beta \
   --execute --keypair /secure/path/keeper.json --loop 40
 ```
+
+RPC use is paced: one request in flight, `--rpc-interval-ms` apart (default 125), with 429 backoff that honours `Retry-After`; confirmations poll signature status, so no websocket is opened. Lookup tables and failing-leg deferrals are cached across `--loop` cycles.
 
 `--loop` is a target cycle period in seconds and requires execution. Mainnet vaults have **60-second marks**. Monitor observed price age, errors, request age, failed quotes and keeper SOL; do not assume a requested loop period proves fresh marks. Near or beyond the freshness boundary, deposits must refuse until a new mark lands.
 

@@ -71,6 +71,6 @@ export function raydiumSwapBuilder(input: { connection: Connection; legs: readon
       programId: route.instruction.programId, data: route.instruction.data,
       keys: route.instruction.keys.map(k => ({ ...k, pubkey: rebind.get(k.pubkey.toBase58()) ?? k.pubkey })),
     });
-    return { swap: ix, minOut: BigInt(route.minOutRaw), venue: "raydium-clmm", lookupTables: route.lookupTables };
+    return { swap: ix, minOut: BigInt(route.minOutRaw), expectedOut: BigInt(route.expectedOutRaw), venue: "raydium-clmm", lookupTables: route.lookupTables };
   };
 }
