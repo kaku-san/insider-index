@@ -73,6 +73,7 @@ test("published slice table wins; unreachable, empty or malformed rows fall back
   assert.equal(sliceFromPublishedRow({ ...row, total_legs: 3 }, "insiderindex-nancy-pelosi"), null, "every disclosed holding must be classified");
   assert.equal(sliceFromPublishedRow({ ...row, excluded: [{ ...row.excluded[0], mint: "mint-n" }] }, "insiderindex-nancy-pelosi"), null, "a mint cannot appear twice");
   assert.equal(sliceFromPublishedRow({ ...row, disclosed_weight_bps: 9000 }, "insiderindex-nancy-pelosi"), null, "published coverage must equal the held legs' disclosed weight");
+  assert.equal(sliceFromPublishedRow({ ...row, excluded: [{ ...row.excluded[0], disclosedWeightBps: 100 }] }, "insiderindex-nancy-pelosi"), null, "held and excluded disclosed weights must describe the complete book");
 });
 
 test("a stale published slice falls back to a committed slice matching the vault", async () => {
@@ -110,6 +111,11 @@ test("Allocation tab: headline, every excluded name asterisked with its reason, 
   assert.equal(count(html, /data-slice-held="true"/g), pelosi.vaultLegs.filter(leg => html.includes(`>${leg.ticker}<`)).length);
   for (const leg of pelosi.vaultLegs) if (html.includes(`>${leg.ticker}<`)) assert.ok(html.includes(`vault target ${(leg.targetWeightBps / 100).toFixed(leg.targetWeightBps >= 1000 ? 1 : 2)}%`), leg.ticker);
   assert.match(html, /\*No tradable liquidity on Solana yet/);
+  const other = html.match(/Other holdings<\/strong><small>(\d+) holdings[^<]*<\/small>[\s\S]*?<b>([\d.]+)%<\/b>/);
+  const individuallyShownWeight = [...html.matchAll(/data-slice-(?:held|excluded)="true"[^<]*<\/span>[\s\S]*?<b>([\d.]+)%<\/b>/g)].reduce((sum, match) => sum + Number(match[1]), 0);
+  assert.ok(other, "the collapsed legend keeps a residual Other holdings row");
+  assert.equal(Number(other[2]) + individuallyShownWeight, 100, "Other holdings excludes every individually shown slice row");
+  assert.match(html, new RegExp(`Other holdings: ${Number(other[2]).toFixed(2)}%`), "the chart uses the same residual Other holdings weight");
   assert.equal(count(html, /Not held in the vault yet\. Added as soon as trading volume and liquidity improve\./g), 1);
   const plain = renderToStaticMarkup(createElement(IndexAllocation, { items: disclosedItems(pelosi) }));
   assert.doesNotMatch(plain, /Tradable slice|Not held in the vault|<sup|vault target/, "no NAV vault: no slice notes");

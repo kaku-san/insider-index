@@ -36,7 +36,8 @@ export function sliceFromPublishedRow(row: unknown, indexId: string): TradableSl
   const vaultLegs = r.vault_legs as TradableSlice["vaultLegs"], excluded = r.excluded as TradableSlice["excluded"];
   const mints = [...vaultLegs, ...excluded].map(leg => leg.mint);
   const disclosedWeightBps = vaultLegs.reduce((sum, leg) => sum + leg.disclosedWeightBps, 0);
-  if (vaultLegs.length !== r.tradable_legs || mints.length !== r.total_legs || new Set(mints).size !== mints.length || disclosedWeightBps !== r.disclosed_weight_bps) return null;
+  const totalWeightBps = disclosedWeightBps + excluded.reduce((sum, leg) => sum + leg.disclosedWeightBps, 0);
+  if (vaultLegs.length !== r.tradable_legs || mints.length !== r.total_legs || new Set(mints).size !== mints.length || disclosedWeightBps !== r.disclosed_weight_bps || totalWeightBps !== 10_000) return null;
   return {
     indexId, totalLegs: r.total_legs as number, tradableLegs: r.tradable_legs as number, disclosedWeightBps: r.disclosed_weight_bps as number, eligible: vaultLegs.length > 0,
     vaultLegs: vaultLegs.map(leg => ({ ticker: leg.ticker, mint: leg.mint, disclosedWeightBps: leg.disclosedWeightBps, targetWeightBps: leg.targetWeightBps })),
