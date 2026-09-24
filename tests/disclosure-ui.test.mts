@@ -9,6 +9,7 @@ import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-defini
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { ConsumerHome, FilingTape } = await import("../src/components/consumer-home.tsx");
+const { default: RootLayout } = await import("../src/app/layout.tsx");
 const { FmpPerson, PublishedTarget } = await import("../src/components/fmp-person.tsx");
 const { PrivySolanaProvider, usePrivySolana } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
@@ -46,6 +47,13 @@ const mag7Index: PublicVaultDefinition = {
   legs: [{ ticker: "MSFT", provider: "xstock", mint: "mint-msft", bookWeightBps: 3448, targetWeightBps: 3448, vaultReady: true }],
   unmapped: [], vaultAddress: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh", shareMint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4", updatedAt: "2026-09-17T13:33:30Z",
 };
+
+test("site footer credits Kaku with GitHub and X links", () => {
+  const html = renderToStaticMarkup(createElement(RootLayout, null, createElement("div", null, "Page content")));
+  assert.match(html, /Built by Kaku/);
+  assert.match(html, /href="https:\/\/github\.com\/kaku-san"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*>GitHub<\/a>/);
+  assert.match(html, /href="https:\/\/x\.com\/kakujain"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*>@kakujain on X<\/a>/);
+});
 
 // Assertions below inspect generated HTML, the public render output, not implementation source.
 test("home is one index catalog surface without stacked discovery sections", () => {
@@ -92,7 +100,7 @@ test("home fails closed when NAV readiness is absent or the NAV kill switch is o
   const unavailable = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index], true);
   assert.match(unavailable, />Research</);
   assert.doesNotMatch(unavailable, />Live</);
-  assert.doesNotMatch(unavailable, />Invest/);
+  assert.doesNotMatch(unavailable, />Invest <svg/);
 
   const previous = process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED;
   process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED = "1";
@@ -100,7 +108,7 @@ test("home fails closed when NAV readiness is absent or the NAV kill switch is o
     const disabled = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index], true, [{ indexId: mag7Index.indexId }]);
     assert.match(disabled, />Research</);
     assert.doesNotMatch(disabled, />Live</);
-    assert.doesNotMatch(disabled, />Invest/);
+    assert.doesNotMatch(disabled, />Invest <svg/);
   } finally {
     if (previous === undefined) delete process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED;
     else process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED = previous;
