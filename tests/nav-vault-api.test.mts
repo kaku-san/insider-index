@@ -220,3 +220,11 @@ test("readiness tells the UI which tradable slice the vault holds (on-chain legs
   assert.equal(navSliceLabel(readiness), null);
   assert.equal(navSliceLabel({ indexId: "p", kind: "nav-vault", slice: { tradableLegs: 5, totalLegs: 18, disclosedWeightBps: 7260, excluded: [] } }), "Tradable slice: 5 of 18 holdings (72.6% of disclosed weight)");
 });
+
+test("route errors: RPC failures and raw library text become plain copy; product messages pass through", async () => {
+  const { plainMessage } = await import("../src/lib/nav-vault/server.ts");
+  assert.equal(plainMessage(new Error("failed to get info about account 7TLX: Error: 429 Too Many Requests: Too Many Requests")), "The NAV vault is unavailable.");
+  assert.equal(plainMessage(new Error("Invalid public key input")), "A valid connected Solana wallet is required.");
+  assert.equal(plainMessage(new Error("The limit is 500 USDC per deposit.")), "The limit is 500 USDC per deposit.");
+  assert.equal(plainMessage("nope"), "The NAV vault is unavailable.");
+});

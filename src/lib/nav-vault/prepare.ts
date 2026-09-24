@@ -14,7 +14,7 @@ import {
   AddressLookupTableAccount, ComputeBudgetProgram, PublicKey, TransactionMessage, VersionedTransaction,
   type Connection, type TransactionInstruction,
 } from "@solana/web3.js";
-import { createAssociatedTokenAccountIdempotentInstruction, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { createAssociatedTokenAccountIdempotentInstruction, createCloseAccountInstruction, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   CLAIM_LEGS_PER_TX, defaultProgramId, REQUEST_ACCOUNT_DISCRIMINATOR, SHARE_DECIMALS, SHARE_TOKEN_PROGRAM_ID, ata, claimInKindIx,
   computeNav, decodeRequest, decodeVault, depositIx, previewDeposit, previewWithdraw, requestPda, requestWithdrawIx, shareAta, tokenAmount,
@@ -22,9 +22,22 @@ import {
 } from "./program.ts";
 
 export type NavNetwork = "devnet" | "mainnet-beta";
-export type NavConnection = Pick<Connection, "getAccountInfo" | "getMultipleAccountsInfo" | "getLatestBlockhash" | "simulateTransaction" | "getAddressLookupTable" | "getProgramAccounts">;
+export type NavConnection = Pick<Connection, "getAccountInfo" | "getMultipleAccountsInfo" | "getLatestBlockhash" | "simulateTransaction" | "getAddressLookupTable" | "getProgramAccounts">
+  & Partial<Pick<Connection, "getRecentPrioritizationFees">>;
 export const NAV_DEPOSIT_MINIMUM_RAW = 1_000_000n; // 1 USDC: keeps the entry fee and share rounding meaningful.
 export const NAV_SLIPPAGE_BPS = 50;
+/**
+ * Marks must have this much life left when a transaction is prepared, so a signed deposit or USDC exit
+ * does not land after the on-chain `max_price_age` (a `StalePrices` failure that still costs the fee).
+ */
+export const NAV_MARK_HEADROOM_SECS = 15;
+/** Compute-unit price for user transactions: recent fees on the vault, clamped (mainnet landing). */
+export const NAV_PRIORITY_DEFAULT_MICRO_LAMPORTS = 20_000;
+export const NAV_PRIORITY_MIN_MICRO_LAMPORTS = 5_000;
+export const NAV_PRIORITY_MAX_MICRO_LAMPORTS = 500_000;
+/** New token accounts created inline with an in-kind claim; more go in preceding transactions (instruction trace limit). */
+export const NAV_INLINE_ACCOUNT_CREATES = 3;
+export const NAV_ACCOUNT_CREATES_PER_TX = 4;
 export const NAV_STALE_PRICES = "Vault prices are stale. The keeper must refresh them before deposits and USDC exits.";
 export const NAV_MARKS_TOO_NEW = "Vault prices were refreshed this slot. Try again in a moment.";
 export const NAV_PAUSED = "This vault is paused. Deposits are closed; cash out is in kind.";
@@ -56,6 +69,21 @@ export async function readNavVault(connection: NavConnection, indexId: string, p
   const priceAgeSecs = state.pricesUpdatedAt > 0 ? Math.max(0, nowSeconds - state.pricesUpdatedAt) : null;
   const pricesFresh = priceAgeSecs !== null && priceAgeSecs <= state.maxPriceAgeSecs;
   return { state, usdcBalance, legBalances, supply, nav, priceAgeSecs, pricesFresh };
+}
+
+/** Fresh with headroom: a transaction prepared now still lands before the marks expire on chain. */
+export function marksUsable(snapshot: Pick<NavVaultSnapshot, "priceAgeSecs" | "state">): boolean {
+  return snapshot.priceAgeSecs !== null && snapshot.priceAgeSecs <= Math.max(0, snapshot.state.maxPriceAgeSecs - NAV_MARK_HEADROOM_SECS);
+}
+
+/** 75th percentile of recent non-zero prioritization fees on the vault account, clamped; a default when unavailable. */
+export async function priorityMicroLamports(connection: NavConnection, vault: PublicKey): Promise<number> {
+  try {
+    const rows = await connection.getRecentPrioritizationFees?.({ lockedWritableAccounts: [vault] });
+    const fees = (rows ?? []).map(row => row.prioritizationFee).filter(fee => fee > 0).sort((a, b) => a - b);
+    const pick = fees.length ? fees[Math.min(fees.length - 1, Math.floor(fees.length * 0.75))]! : NAV_PRIORITY_DEFAULT_MICRO_LAMPORTS;
+    return Math.min(NAV_PRIORITY_MAX_MICRO_LAMPORTS, Math.max(NAV_PRIORITY_MIN_MICRO_LAMPORTS, pick));
+  } catch { return NAV_PRIORITY_DEFAULT_MICRO_LAMPORTS; }
 }
 
 /** Open withdraw requests for a vault (null = every vault of the program), optionally one owner. */
@@ -133,9 +161,11 @@ async function lookupTables(connection: NavConnection, state: NavVaultState): Pr
   return table ? [table] : [];
 }
 
-async function compile(connection: NavConnection, owner: PublicKey, instructions: TransactionInstruction[], tables: AddressLookupTableAccount[], simulate: boolean) {
+async function compile(connection: NavConnection, owner: PublicKey, instructions: TransactionInstruction[], tables: AddressLookupTableAccount[], simulate: boolean, priority?: number) {
   const latest = await connection.getLatestBlockhash("confirmed");
-  const tx = new VersionedTransaction(new TransactionMessage({ payerKey: owner, recentBlockhash: latest.blockhash, instructions }).compileToV0Message(tables));
+  // A compute-unit price so the user's transaction lands on a busy mainnet instead of being dropped.
+  const priced = priority ? [ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priority }), ...instructions] : instructions;
+  const tx = new VersionedTransaction(new TransactionMessage({ payerKey: owner, recentBlockhash: latest.blockhash, instructions: priced }).compileToV0Message(tables));
   let bytes: Uint8Array;
   try { bytes = tx.serialize(); } catch { throw new Error("The vault transaction does not fit in one transaction."); }
   const loaded = tx.message.staticAccountKeys.length + tx.message.addressTableLookups.reduce((n, l) => n + l.writableIndexes.length + l.readonlyIndexes.length, 0);
@@ -143,7 +173,7 @@ async function compile(connection: NavConnection, owner: PublicKey, instructions
   let simulation: NavUnsignedTransaction["simulation"];
   if (simulate) {
     const result = await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: false, commitment: "confirmed" });
-    if (result.value.err) throw new Error(simulationMessage(result.value.logs ?? []));
+    if (result.value.err) throw new Error(simulationMessage(result.value.logs ?? [], result.value.err));
     simulation = { ok: true, slot: result.context.slot, logsHash: hex(new TextEncoder().encode((result.value.logs ?? []).join("\n"))) };
   }
   const programs = [...new Set(tx.message.compiledInstructions.map(ix => tx.message.staticAccountKeys[ix.programIdIndex]!.toBase58()))];
@@ -151,8 +181,10 @@ async function compile(connection: NavConnection, owner: PublicKey, instructions
 }
 
 /** Plain user copy for the program's named errors. */
-export function simulationMessage(logs: readonly string[]): string {
+export function simulationMessage(logs: readonly string[], err?: unknown): string {
   const text = logs.join("\n");
+  // A fee payer with no SOL fails before any program runs (no logs): same wallet-funds message.
+  if (/AccountNotFound|InsufficientFundsForFee|InsufficientFundsForRent/.test(typeof err === "string" ? err : JSON.stringify(err ?? null))) return "This wallet does not have enough USDC or SOL.";
   if (/StalePrices/.test(text)) return NAV_STALE_PRICES;
   if (/MarksTooNew/.test(text)) return NAV_MARKS_TOO_NEW;
   if (/Error Code: Paused/.test(text)) return NAV_PAUSED;
@@ -207,7 +239,7 @@ export async function prepareNavDeposit(input: {
   if (state.paused) throw new Error(NAV_PAUSED);
   if (owner.equals(state.keeper)) throw new Error("The keeper wallet cannot invest.");
   if (state.maxDepositUsdc > 0n && amount > state.maxDepositUsdc) throw new Error(`The limit is ${formatUsdc(state.maxDepositUsdc)} USDC per deposit.`);
-  if (!snapshot.pricesFresh) throw new Error(NAV_STALE_PRICES);
+  if (!marksUsable(snapshot)) throw new Error(NAV_STALE_PRICES);
   const userUsdc = await input.connection.getAccountInfo(ata(owner, state.usdcMint), "confirmed");
   if (tokenAmount(userUsdc?.data) < amount) throw new Error("This wallet does not have enough USDC.");
   const preview = previewDeposit({ usdcAmount: amount, entryFeeBps: state.entryFeeBps, nav: snapshot.nav, supply: snapshot.supply });
@@ -218,7 +250,7 @@ export async function prepareNavDeposit(input: {
     createAssociatedTokenAccountIdempotentInstruction(owner, shareAta(owner, state.shareMint), owner, state.shareMint, SHARE_TOKEN_PROGRAM_ID),
     depositIx(state, owner, amount, minShares, programId),
   ];
-  const compiled = await compile(input.connection, owner, instructions, await lookupTables(input.connection, state), input.simulate ?? true);
+  const compiled = await compile(input.connection, owner, instructions, await lookupTables(input.connection, state), input.simulate ?? true, await priorityMicroLamports(input.connection, state.address));
   const transaction = unsigned("nav-deposit", owner, compiled, [{ owner: owner.toBase58(), mint: state.usdcMint.toBase58(), amountRaw: amount.toString() }], [{ owner: owner.toBase58(), mint: state.shareMint.toBase58() }]);
   return {
     network: input.network,
@@ -240,6 +272,32 @@ export async function prepareNavDeposit(input: {
   };
 }
 
+/**
+ * Which of the owner's leg token accounts are missing. Existing accounts get no create instruction; up
+ * to NAV_INLINE_ACCOUNT_CREATES missing ones are created inline, and beyond that every missing account
+ * moves to preceding setup transactions. A new Token-2022 account costs ~5 trace entries, so creating
+ * 10-11 inline beside the request and claim exceeds the 64-entry instruction trace limit.
+ */
+async function ownerLegAccounts(connection: NavConnection, owner: PublicKey, state: NavVaultState, legs: readonly number[]) {
+  const infos = legs.length ? await connection.getMultipleAccountsInfo(legs.map(i => ata(owner, state.legs[i]!.mint, state.legs[i]!.tokenProgram)), "confirmed") : [];
+  const missing = legs.filter((_, k) => !infos[k]);
+  const inlineLegs = missing.length <= NAV_INLINE_ACCOUNT_CREATES ? missing : [];
+  const setup = missing.length <= NAV_INLINE_ACCOUNT_CREATES ? [] : missing;
+  const inline = inlineLegs.map(i => { const leg = state.legs[i]!; return createAssociatedTokenAccountIdempotentInstruction(owner, ata(owner, leg.mint, leg.tokenProgram), owner, leg.mint, leg.tokenProgram, ASSOCIATED_TOKEN_PROGRAM_ID); });
+  return { inline, inlineLegs, setup };
+}
+
+async function accountSetupTransactions(connection: NavConnection, owner: PublicKey, state: NavVaultState, legs: readonly number[], tables: AddressLookupTableAccount[], priority: number, simulate: boolean): Promise<NavUnsignedTransaction[]> {
+  const out: NavUnsignedTransaction[] = [];
+  for (let k = 0; k < legs.length; k += NAV_ACCOUNT_CREATES_PER_TX) {
+    const chunk = legs.slice(k, k + NAV_ACCOUNT_CREATES_PER_TX);
+    const ixs = chunk.map(i => { const leg = state.legs[i]!; return createAssociatedTokenAccountIdempotentInstruction(owner, ata(owner, leg.mint, leg.tokenProgram), owner, leg.mint, leg.tokenProgram, ASSOCIATED_TOKEN_PROGRAM_ID); });
+    const compiled = await compile(connection, owner, [ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }), ...ixs], tables, simulate, priority);
+    out.push(unsigned(`nav-accounts-${out.length + 1}`, owner, compiled, [], chunk.map(i => ({ owner: owner.toBase58(), mint: state.legs[i]!.mint.toBase58() }))));
+  }
+  return out;
+}
+
 function nonceNow(): bigint {
   return BigInt(Date.now()) * 1000n + BigInt(Math.floor(Math.random() * 1000));
 }
@@ -257,9 +315,13 @@ export async function prepareNavWithdraw(input: {
   if (!snapshot) throw new Error("This index does not have a NAV vault.");
   const { state } = snapshot;
   const userShares = await input.connection.getAccountInfo(shareAta(owner, state.shareMint), "confirmed");
-  if (tokenAmount(userShares?.data) < shares) throw new Error("This wallet does not hold that many shares.");
+  const heldShares = tokenAmount(userShares?.data);
+  if (heldShares < shares) throw new Error("This wallet does not hold that many shares.");
+  // Stale (or nearly stale) marks: refuse like a deposit so the client waits for the next mark and
+  // re-prepares. In kind only when the owner asks for it or the vault is paused.
+  if (!state.paused && !input.inKind && !marksUsable(snapshot)) throw new Error(NAV_STALE_PRICES);
   const preview = previewWithdraw({ vault: state, shares, nav: snapshot.nav, supply: snapshot.supply, usdcBalance: snapshot.usdcBalance, legBalances: snapshot.legBalances });
-  const priced = snapshot.pricesFresh && !state.paused;
+  const priced = marksUsable(snapshot) && !state.paused;
   const minUsdc = priced ? withSlippage(preview.value, input.slippageBps ?? NAV_SLIPPAGE_BPS) : 0n;
   const inKindNow = Boolean(input.inKind) || !priced;
   const path: WithdrawPath = priced && preview.instant && !input.inKind ? "usdc" : inKindNow ? "in-kind" : "request";
@@ -269,16 +331,23 @@ export async function prepareNavWithdraw(input: {
   ];
   const nonce = input.nonce ?? nonceNow();
   const request = requestPda(state.address, owner, nonce, programId);
+  const tables = await lookupTables(input.connection, state);
+  const priority = await priorityMicroLamports(input.connection, state.address);
+  let setup: NavUnsignedTransaction[] = [];
   if (path === "usdc") {
     instructions.push(withdrawIx(state, owner, shares, minUsdc, programId));
   } else {
     instructions.push(requestWithdrawIx(state, owner, { shares, minUsdc, nonce, inKindNow }, programId));
     if (path === "in-kind" && state.legs.length <= CLAIM_LEGS_PER_TX) {
-      for (const leg of state.legs) instructions.push(createAssociatedTokenAccountIdempotentInstruction(owner, ata(owner, leg.mint, leg.tokenProgram), owner, leg.mint, leg.tokenProgram, ASSOCIATED_TOKEN_PROGRAM_ID));
-      instructions.push(claimInKindIx(state, owner, { address: request, owner }, state.legs.map((_, i) => i), programId));
+      const accounts = await ownerLegAccounts(input.connection, owner, state, state.legs.map((_, i) => i));
+      setup = accounts.setup.length ? await accountSetupTransactions(input.connection, owner, state, accounts.setup, tables, priority, input.simulate ?? true) : [];
+      instructions.push(...accounts.inline, claimInKindIx(state, owner, { address: request, owner }, state.legs.map((_, i) => i), programId));
     }
   }
-  const compiled = await compile(input.connection, owner, instructions, await lookupTables(input.connection, state), input.simulate ?? true);
+  // A full exit closes the emptied share account so its rent returns to the owner (the burn runs first).
+  if (shares === heldShares) instructions.push(createCloseAccountInstruction(shareAta(owner, state.shareMint), owner, owner, [], SHARE_TOKEN_PROGRAM_ID));
+  // The main transaction cannot simulate before its setup transactions create the owner accounts.
+  const compiled = await compile(input.connection, owner, instructions, tables, (input.simulate ?? true) && !setup.length, priority);
   const inKind = state.legs.map((leg, i) => ({ mint: leg.mint.toBase58(), amountRaw: preview.slice.legs[i]!.toString() }));
   const recipients = [{ owner: owner.toBase58(), mint: state.usdcMint.toBase58() }, ...(path === "in-kind" ? inKind.map(item => ({ owner: owner.toBase58(), mint: item.mint })) : [])];
   const transaction = unsigned(path === "usdc" ? "nav-withdraw" : "nav-request", owner, compiled, [{ owner: owner.toBase58(), mint: state.shareMint.toBase58(), amountRaw: shares.toString() }], recipients);
@@ -292,7 +361,7 @@ export async function prepareNavWithdraw(input: {
     operationId: path === "usdc" ? `nav-withdraw:${input.indexId}:${transaction.messageHash.slice(0, 16)}` : `nav-request:${request.toBase58()}`,
     phase: path === "usdc" ? "WITHDRAW_USDC" : path === "request" ? "WITHDRAW_REQUEST" : "WITHDRAW_IN_KIND",
     requires: "user-signature",
-    transactions: [transaction],
+    transactions: [...setup, transaction],
     configHash: configHash(state),
     constraints: [
       { label: "Signatures", value: "One wallet approval." },
@@ -320,15 +389,19 @@ export async function prepareNavClaim(input: { connection: NavConnection; networ
   const chunks: number[][] = [];
   for (let k = 0; k < Math.max(open.length, 1); k += CLAIM_LEGS_PER_TX) chunks.push(open.slice(k, k + CLAIM_LEGS_PER_TX));
   const tables = await lookupTables(input.connection, state);
-  const transactions: NavUnsignedTransaction[] = [];
+  const priority = await priorityMicroLamports(input.connection, state.address);
+  const accounts = await ownerLegAccounts(input.connection, owner, state, open);
+  // Owner accounts that would push a claim past the instruction trace limit are created first.
+  const transactions: NavUnsignedTransaction[] = accounts.setup.length ? await accountSetupTransactions(input.connection, owner, state, accounts.setup, tables, priority, input.simulate ?? true) : [];
+  const inline = new Set(accounts.inlineLegs);
   for (const [n, legs] of chunks.entries()) {
     const ixs: TransactionInstruction[] = [
       ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
       createAssociatedTokenAccountIdempotentInstruction(owner, ata(owner, state.usdcMint), owner, state.usdcMint),
-      ...legs.map(i => { const leg = state.legs[i]!; return createAssociatedTokenAccountIdempotentInstruction(owner, ata(owner, leg.mint, leg.tokenProgram), owner, leg.mint, leg.tokenProgram); }),
+      ...legs.filter(i => inline.has(i)).map(i => { const leg = state.legs[i]!; return createAssociatedTokenAccountIdempotentInstruction(owner, ata(owner, leg.mint, leg.tokenProgram), owner, leg.mint, leg.tokenProgram); }),
       claimInKindIx(state, owner, request, legs, programId),
     ];
-    const compiled = await compile(input.connection, owner, ixs, tables, (input.simulate ?? true) && n === 0);
+    const compiled = await compile(input.connection, owner, ixs, tables, (input.simulate ?? true) && n === 0 && !accounts.setup.length, priority);
     transactions.push(unsigned(`nav-claim-${n + 1}`, owner, compiled, [], legs.map(i => ({ owner: owner.toBase58(), mint: state.legs[i]!.mint.toBase58() }))));
   }
   return {

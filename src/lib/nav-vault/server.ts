@@ -27,8 +27,17 @@ const defaults: NavDependencies = {
   slice: defaultSlice,
 };
 
+const UNAVAILABLE = "The NAV vault is unavailable.";
+/** RPC/transport failures and raw library text never reach the user; product messages pass through. */
+export function plainMessage(error: unknown): string {
+  const text = error instanceof Error ? error.message : "";
+  if (!text) return UNAVAILABLE;
+  if (/Invalid public key input|Non-base58 character/i.test(text)) return "A valid connected Solana wallet is required.";
+  if (/\b429\b|Too Many Requests|failed to get|fetch failed|ECONN|ETIMEDOUT|socket hang up/i.test(text)) return UNAVAILABLE;
+  return text;
+}
 function plain(error: unknown, status = 400) {
-  return Response.json({ error: error instanceof Error ? error.message : "The NAV vault is unavailable." }, { status, headers: HEADERS });
+  return Response.json({ error: plainMessage(error) }, { status, headers: HEADERS });
 }
 
 function micro(raw: bigint) {
