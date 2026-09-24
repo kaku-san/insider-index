@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Rsync this tree to the production host. Never copies secrets.
-# Server env lives at /srv/projects/stocklana/.env (create it on the host).
+# Configure runtime secrets in the deployment directory on the host.
 set -euo pipefail
 
 REMOTE="${DEPLOY_HOST:?set DEPLOY_HOST (user@host)}"
-DEST="${DEPLOY_PATH:-/srv/projects/stocklana}"
+DEST="${DEPLOY_PATH:?set DEPLOY_PATH (remote deployment directory)}"
 
 rsync -az --delete \
   --exclude '.git/' \

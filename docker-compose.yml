@@ -6,7 +6,7 @@
 #   TRAEFIK_NETWORK=edge
 #   TRAEFIK_CERTRESOLVER=letsencrypt
 #
-# Runtime secrets: /srv/projects/stocklana/.env (gitignored, never rsynced).
+# Runtime secrets: .env in the deployment directory (gitignored, never rsynced).
 # NEXT_PUBLIC_* from that file are also passed as build args — never COPY .env*.
 
 services:
