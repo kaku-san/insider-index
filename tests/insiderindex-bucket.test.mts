@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { snapshotCatalog } from "../src/lib/venues/solana-catalog.ts";
 import { PENDING_POOL_SOURCE, poolSourceFromEvidence } from "../src/lib/index-vaults/pool-evidence.ts";
 import { deriveAllPersonIndexes, toPersonBook } from "../src/lib/index-vaults/person-index-source.ts";
-import { definitionForDb } from "../src/lib/index-vaults/vault-definition-store.ts";
 
 const bucket = join(process.cwd(), "data/insiderindex-source-buckets/pelositracker-fmp-latest-top20");
 const manifest = JSON.parse(readFileSync(join(bucket, "MANIFEST.json"), "utf8"));
@@ -63,18 +62,14 @@ test("all 20 derive: txn-derived blocked, annual books mapped, unmapped disclose
   assert.equal(pelosi.status, "WAIT_POOL_EVIDENCE"); // structure ready, pending pool evidence
 });
 
-test("the persisted record round-trips the full provenance, including annualFetchComplete false", () => {
+test("derived books preserve full provenance, including annualFetchComplete false", () => {
   const defs = deriveAllPersonIndexes(books, snapshotCatalog(), PENDING_POOL_SOURCE);
   // Nancy Pelosi's annual fetch is incomplete in the captain data (far fewer ticker rows than
   // holdings): exactly the honesty the DB record must preserve without re-reading the source zip.
   const pelosi = defs.find((d) => d.slug === "nancy-pelosi")!;
   assert.equal(pelosi.provenance.annualFetchComplete, false);
-  const row = definitionForDb(pelosi) as {
-    bookSource: string | null;
-    provenance: typeof pelosi.provenance;
-  };
-  // book_source stays its own queryable field AND the full provenance object is persisted.
-  assert.equal(row.bookSource, pelosi.provenance.bookSource);
+  const row = JSON.parse(JSON.stringify(pelosi)) as typeof pelosi;
+  // Serialized research definitions retain source provenance.
   assert.equal(row.provenance.annualFetchComplete, false);
   assert.equal(row.provenance.fmpYear, pelosi.provenance.fmpYear);
   assert.equal(row.provenance.holdingsCount, pelosi.provenance.holdingsCount);

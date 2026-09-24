@@ -3,7 +3,7 @@ import { peopleService } from "@/lib/fmp/server";
 import type { PeopleDirectoryResponse } from "@/lib/frontend/research-contract";
 import { thematicDirectory } from "@/lib/thematic/views";
 import { vaultIndexService } from "@/lib/index-vaults/server";
-import { publicCycleDirectory } from "@/lib/index-vaults/public-cycle-release";
+import { publicVaultDirectory } from "@/lib/index-vaults/public-directory";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function HomePage() {
   try {
     const [saved, indexes] = await Promise.all([peopleService.directory(), vaultIndexService.list()]);
     initialData = { ...saved, total: saved.people.length };
-    initialIndexes = publicCycleDirectory(indexes);
+    initialIndexes = publicVaultDirectory(indexes);
   } catch {
     // The client retries both saved-data APIs and renders a safe error if either is unavailable.
   }

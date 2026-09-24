@@ -1,24 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { PublicKey, TransactionMessage, VersionedTransaction, type ConnectionConfig } from "@solana/web3.js";
+import { Connection, PublicKey, TransactionMessage, VersionedTransaction, type ConnectionConfig } from "@solana/web3.js";
 import bs58 from "bs58";
-import { VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
-import { RebalanceIntentLayout } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 import { handleRpcProxy } from "../src/lib/rpc-proxy.ts";
-import { createCycleReadConnection } from "../src/lib/frontend/cycle-rpc.ts";
 
 const origin = "https://insiderindex.example", endpoint = origin + "/api/rpc";
 const key = "SERVER-ONLY-TEST-CREDENTIAL-NOT-A-REAL-KEY";
 const upstream = "https://rpc.example.invalid/?api-key=" + key;
-const vault = "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh";
+const vault = "2w5g5aXmQj6o1cZSYbpV6R6rdK9KK7zAeJJRZu9PseM6";
 const sig = bs58.encode(new Uint8Array(64).fill(1)), blockhash = PublicKey.default.toBase58();
-const discovery = { jsonrpc: "2.0", id: 7, method: "getProgramAccounts", params: [VAULTS_V3_PROGRAM_ID.toBase58(), {
-  commitment: "confirmed", encoding: "base64", filters: [{ dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 8, bytes: vault, encoding: "base58" } }],
-}] };
 const request = (body: unknown) => new Request(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
-// Execute the real web3 HTTP serialization -> app proxy -> synthetic upstream -> web3 parser.
-// Neither transport can reach a network; a successful mock simulation is not financial evidence.
+// Real web3 serialization -> app proxy -> synthetic upstream -> web3 parser, offline.
 function bridge(result: (method: string, params: unknown[]) => unknown) {
   const calls: { method: string; params: unknown[] }[] = [];
   const fetcher: ConnectionConfig["fetch"] = async (url, init) => {
@@ -39,14 +32,13 @@ function bridge(result: (method: string, params: unknown[]) => unknown) {
     assert(!(await response.clone().text()).includes(key));
     return response;
   };
-  return { connection: createCycleReadConnection(origin, fetcher), calls };
+  return { connection: new Connection(endpoint, { commitment: "confirmed", fetch: fetcher }), calls };
 }
 
-test("same-origin cycle connection forwards the real SDK discovery/history/simulation shapes without a public RPC key", async () => {
-  const { connection, calls } = bridge((method) => {
+test("same-origin RPC forwards wallet reads and simulation without a public RPC key", async () => {
+  const { connection, calls } = bridge(method => {
     switch (method) {
       case "getGenesisHash": return "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d";
-      case "getProgramAccounts": return [];
       case "getSignaturesForAddress": return [{ signature: sig, slot: 42, err: null, memo: null, blockTime: null, confirmationStatus: "finalized" }];
       case "getBlock": return { blockhash, previousBlockhash: blockhash, parentSlot: 41, blockTime: null, signatures: [sig] };
       case "getBlockTime": return 1780000000;
@@ -58,9 +50,6 @@ test("same-origin cycle connection forwards the real SDK discovery/history/simul
   });
   assert.equal(connection.rpcEndpoint, endpoint);
   assert.equal(await connection.getGenesisHash(), "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d");
-  assert.deepEqual(await connection.getProgramAccounts(VAULTS_V3_PROGRAM_ID, { commitment: "confirmed", filters: [
-    { dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 8, bytes: vault } },
-  ] }), []);
   assert.equal((await connection.getSignaturesForAddress(new PublicKey(vault), { limit: 100, minContextSlot: 42, before: sig }, "finalized"))[0].signature, sig);
   assert.equal((await connection.getSignaturesForAddress(new PublicKey(vault), { limit: 1, minContextSlot: 42 }, "finalized"))[0].signature, sig);
   assert.deepEqual((await connection.getBlockSignatures(42, "finalized")).signatures, [sig]);
@@ -68,19 +57,14 @@ test("same-origin cycle connection forwards the real SDK discovery/history/simul
   assert.equal(await connection.getTransaction(sig, { commitment: "finalized", maxSupportedTransactionVersion: 0 }), null);
   assert.equal(await connection.getBalance(new PublicKey(vault), "confirmed"), 123);
   const tx = new VersionedTransaction(new TransactionMessage({ payerKey: PublicKey.default, recentBlockhash: blockhash, instructions: [] }).compileToV0Message());
-  const simulated = await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: false, commitment: "confirmed", minContextSlot: 42, accounts: { encoding: "base64", addresses: [vault] } });
-  assert.equal(simulated.value.err, null);
+  assert.equal((await connection.simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: false, commitment: "confirmed", minContextSlot: 42, accounts: { encoding: "base64", addresses: [vault] } })).value.err, null);
   assert(tx.signatures.every(s => s.every(b => b === 0)));
-  assert.equal(calls.length, 9);
+  assert.equal(calls.length, 8);
   assert.equal(calls.filter(c => c.method === "sendTransaction").length, 0);
-  assert.deepEqual(calls.find(c => c.method === "getProgramAccounts")!.params, discovery.params);
 });
 
-test("proxy refuses broad scans, nonfinalized/unbounded history and malformed/bad batches before touching the upstream", async () => {
-  // Unknown-typed JSON mutations intentionally exercise the HTTP boundary, not TypeScript casts as evidence.
+test("proxy refuses program scans, unbounded history and malformed batches before touching upstream", async () => {
   const rpc = (call: Record<string, unknown>) => ({ jsonrpc: "2.0", id: 1, ...call });
-  const gpa = (config: Record<string, unknown>, program = VAULTS_V3_PROGRAM_ID.toBase58()) => rpc({ method: "getProgramAccounts", params: [program, config] });
-  const config = discovery.params[1] as Record<string, unknown>;
   const history = { commitment: "finalized", limit: 100, minContextSlot: 42 };
   const refused: unknown[] = [
     null, 1, "getGenesisHash", {}, [], [null], Array.from({ length: 21 }, () => ({ method: "getGenesisHash" })),
@@ -90,11 +74,7 @@ test("proxy refuses broad scans, nonfinalized/unbounded history and malformed/ba
     { jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: "invalid" },
     rpc({ method: "getGenesisHash", params: ["extra"] }), rpc({ method: "getBlockTime", params: [-1] }), rpc({ method: "getBlockTime", params: [1.5] }),
     rpc({ method: "getBlocks", params: [0, 1000] }),
-    gpa({ ...config, filters: [] }), gpa(config, PublicKey.default.toBase58()), gpa({ ...config, encoding: "jsonParsed" }),
-    gpa({ ...config, commitment: "processed" }), gpa({ ...config, dataSlice: { offset: 0, length: 1 } }),
-    gpa({ ...config, filters: [{ dataSize: RebalanceIntentLayout.span + 9 }, { memcmp: { offset: 8, bytes: vault } }] }),
-    gpa({ ...config, filters: [{ dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 0, bytes: vault } }] }),
-    gpa({ ...config, filters: [{ dataSize: RebalanceIntentLayout.span + 8 }, { memcmp: { offset: 8, bytes: "not-a-key" } }] }),
+    rpc({ method: "getProgramAccounts", params: [vault, { commitment: "confirmed", encoding: "base64", filters: [] }] }),
     rpc({ method: "getSignaturesForAddress", params: [vault, { ...history, limit: 101 }] }),
     rpc({ method: "getSignaturesForAddress", params: [vault, { ...history, commitment: "confirmed" }] }),
     rpc({ method: "getSignaturesForAddress", params: [vault, { limit: 100, commitment: "finalized" }] }),
@@ -103,7 +83,7 @@ test("proxy refuses broad scans, nonfinalized/unbounded history and malformed/ba
     rpc({ method: "getBlock", params: [42, { commitment: "confirmed", transactionDetails: "signatures", rewards: false }] }),
     rpc({ method: "getBlock", params: [42, { commitment: "finalized", transactionDetails: "full", rewards: false }] }),
     rpc({ method: "getBlock", params: [42, { commitment: "finalized", transactionDetails: "signatures", rewards: true }] }),
-    [discovery, rpc({ method: "requestAirdrop", params: [vault, 1] })],
+    [rpc({ method: "getGenesisHash" }), rpc({ method: "requestAirdrop", params: [vault, 1] })],
   ];
   let touched = 0;
   const options = { upstream: () => { touched++; return upstream; }, provider: "helius" as const, fetcher: async () => { touched++; throw new Error("No upstream call permitted"); } };
@@ -112,7 +92,7 @@ test("proxy refuses broad scans, nonfinalized/unbounded history and malformed/ba
   assert.equal(touched, 0);
 });
 
-test("proxy preserves existing relay and batch payloads but never signs or returns server credentials", async () => {
+test("proxy preserves relay and batch payloads but never signs or returns server credentials", async () => {
   const calls = [{ jsonrpc: "2.0", id: "a", method: "getGenesisHash", params: [] }, { jsonrpc: "2.0", id: "b", method: "sendTransaction", params: ["MOCK-ONLY-NOT-A-WIRE", { encoding: "base64" }] }];
   let forwarded = 0;
   const options = { upstream: () => upstream, provider: "helius" as const, fetcher: async (_url: unknown, init?: RequestInit) => {
@@ -130,12 +110,5 @@ test("proxy preserves existing relay and batch payloads but never signs or retur
     const refused = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), { ...options, fetcher });
     assert.equal(refused.status, 502);
     assert.deepEqual(await refused.json(), { error: "RPC upstream unavailable." });
-  }
-});
-
-test("cycle read connection accepts only an HTTP origin, not a secret-bearing RPC URL", () => {
-  assert.equal(createCycleReadConnection("http://localhost:3000").rpcEndpoint, "http://localhost:3000/api/rpc");
-  for (const invalid of [upstream, "https://user:secret@insiderindex.example", origin + "/other", "wss://insiderindex.example", origin + "#fragment"]) {
-    assert.throws(() => createCycleReadConnection(invalid), /CYCLE_RPC_ORIGIN_REQUIRED/);
   }
 });

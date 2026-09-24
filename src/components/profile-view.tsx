@@ -124,7 +124,9 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const trackerPerson=tracker.data?.person??null;
  const vaultIndex=vaultDir.data?.indexes.find(item=>item.bioguideId===id);
  const vaultIndexId=vaultIndex?.indexId??null;
+ // eslint-disable-next-line react-hooks/set-state-in-effect -- clear observed data when its index identity disappears
  useEffect(()=>{let alive=true;if(!vaultIndexId){setVault(null);return;}getVaultReadiness(vaultIndexId).then(value=>{if(alive){setVault(value);setVaultLoaded(true)}}).catch(()=>{if(alive)setVault(null)});return()=>{alive=false}},[vaultIndexId]);
+ // eslint-disable-next-line react-hooks/set-state-in-effect -- never retain a position after wallet/index identity disappears
  useEffect(()=>{let alive=true;if(!vaultIndexId||!wallet.solanaAddress){setPosition(null);return;}getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(alive)setPosition(value)}).catch(()=>{if(alive)setPosition(null)});return()=>{alive=false}},[vaultIndexId,wallet.solanaAddress]);
  useIndexPositionListen(vaultIndexId, wallet.solanaAddress, position, value=>setPosition(value), !investOpen);
  const loading=!trackerPerson&&!researchBook&&!legacyProfile&&(tracker.loading||research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));

@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { positionHoldingFigures } from "../src/lib/frontend/position-share-copy.ts";
-import { formatVaultShares } from "../src/lib/index-vaults/positions-contract.ts";
 
 test("20 raw Mag7 units are not shown as 0.00002", () => {
-  assert.equal(formatVaultShares("20", 6), "0.00002");
   const figures = positionHoldingFigures({ sharesRaw: "20", shareDecimals: 6, valueText: "$4.10" });
   assert.deepEqual(figures.map(figure => figure.role), ["value", "shares"]);
   assert.equal(figures[0].primary, true);
@@ -22,7 +20,7 @@ test("unavailable USDC stays the main number instead of a decimal share count", 
   assert.equal(figures[0].text, "—");
   assert.equal(figures[0].label, "value unavailable");
   assert.equal(figures[1].text, "20");
-  assert.notEqual(figures[0].text, formatVaultShares("20", 6));
+  assert.notEqual(figures[0].text, "0.00002");
 });
 
 test("raw share units keep integer precision and grouping", () => {

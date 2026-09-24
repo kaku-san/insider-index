@@ -97,7 +97,7 @@ test("FE: the flag routes VaultFlow to NAV endpoints and the wallet-side validat
   const api = await import("../src/lib/frontend/vault-api.ts");
   assert.equal(api.navVaultEnabledFor(s.indexId), true);
   assert.equal(api.navVaultEnabledFor("idx-other"), false);
-  assert.equal(api.navVaultLive("idx-other", null), null, "flag off keeps the existing Symmetry gate");
+  assert.equal(api.navVaultLive("idx-other", null), null, "disabled NAV does not report a live vault");
   const readiness = await (await handleNavReadiness(s.indexId, deps)).json();
   assert.equal(api.navVaultLive(s.indexId, readiness), true);
   assert.equal(api.publicIndexCanCashOut(s.indexId, { vaultAddress: readiness.identity.vaultAccount, shareMint: readiness.identity.shareMint, network: "devnet" }), true);

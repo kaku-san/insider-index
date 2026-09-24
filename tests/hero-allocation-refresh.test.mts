@@ -8,7 +8,7 @@ import { linkedToken, isSolanaAddress, shortMint } from '../src/lib/frontend/lin
 import { allocationView } from '../src/lib/frontend/allocation-view.ts';
 import { INDEX_CONTENT } from '../src/lib/frontend/index-content.ts';
 import { derivePersonIndex } from '../src/lib/index-vaults/person-index-map.ts';
-import { definitionForDb, enrichPublicVaultLegSymbols, readPublicVaultDefinition, type PublicVaultLeg } from '../src/lib/index-vaults/vault-definition-store.ts';
+import { enrichPublicVaultLegSymbols, readPublicVaultDefinition, type PublicVaultLeg } from '../src/lib/index-vaults/vault-definition-store.ts';
 import { indexCatalog } from '../src/lib/venues/catalog-parse.ts';
 import { snapshotCatalog } from '../src/lib/venues/solana-catalog.ts';
 import { PENDING_POOL_SOURCE } from '../src/lib/index-vaults/pool-evidence.ts';
@@ -66,13 +66,6 @@ test('person index allocation keeps source-only rows and supplied token symbols'
  const proof=renderToStaticMarkup(createElement(PersonIndexProof,{items:rows,coverageBps:10000,updated:'Sep 23, 2026'}));
  assert.match(proof,/3 holdings/);
  assert.match(proof,/Sep 23, 2026/);
-});
-test('published vault legs retain catalog token symbols',()=>{
- const book=JSON.parse(text('data/insiderindex-source-buckets/pelositracker-fmp-latest-top20/holdings/nancy-pelosi.json'));
- const definition=derivePersonIndex(book,catalog,PENDING_POOL_SOURCE);
- const stored=definitionForDb(definition) as {legs:{mint:string;symbol?:string}[]};
- assert.equal(stored.legs.length,definition.legs.length);
- for(const leg of definition.legs)assert.equal(stored.legs.find(row=>row.mint===leg.mint)?.symbol,leg.symbol);
 });
 test('public vault legs enrich symbols by exact catalog mint only',()=>{
  const knownMint='A'.repeat(44);

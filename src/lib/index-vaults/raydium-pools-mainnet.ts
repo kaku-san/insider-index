@@ -1,14 +1,12 @@
 import snapshot from "./raydium-pools-mainnet.json" with { type: "json" };
-import type { RaydiumOracleKind } from "./raydium-oracles.ts";
+export type RaydiumPoolKind = "raydium_clmm" | "raydium_cpmm";
 
 /**
  * Documented mainnet `mint → Raydium USDC pool` observations for tokenised-stock mints.
  *
- * Symmetry prices are Raydium-only, so a name can only join a vault composition when a Raydium
- * CLMM/CPMM pool quoted in mainnet USDC has actually been observed for its mint. The snapshot is
- * written by `npm run raydium:snapshot` from Raydium's public pool API and is evidence of what was
- * observed on `fetchedAt`, not a live quote and not the devnet settlement bindings
- * (`DEVNET_RAYDIUM_POOLS`). Never edit it by hand; re-run the snapshot before any deployer step.
+ * CLMM/CPMM pools quoted in mainnet USDC are recorded only when observed for that mint.
+ * `npm run raydium:snapshot` generates this evidence from Raydium's public API. It describes
+ * `fetchedAt`, not a live quote or NAV readiness. Never edit the snapshot by hand.
  */
 export const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 export const RAYDIUM_CLMM_PROGRAM = "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK";
@@ -23,7 +21,7 @@ export type MainnetRaydiumPool = {
   mint: string;
   symbol: string | null;
   pool: string;
-  kind: RaydiumOracleKind;
+  kind: RaydiumPoolKind;
   programId: string;
   quoteMint: typeof MAINNET_USDC_MINT;
   tvlUsd: number;

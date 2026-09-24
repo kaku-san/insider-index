@@ -8,7 +8,7 @@ import { PublicKey, TransactionInstruction, type Connection } from "@solana/web3
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { buildCycleRoute } from "../index-vaults/cycle-routes.ts";
 import { fetchJupiterBuild } from "../index-vaults/jupiter-build.ts";
-import { MAINNET_USDC } from "../index-vaults/native-defaults.ts";
+import { MAINNET_USDC } from "./constants.ts";
 import type { PersistedVaultLeg } from "../index-vaults/vault-definition-store.ts";
 import { firstRoute, jupiterV1SwapBuilder, markFromQuote, type MarkSource, type SwapBuilder } from "./keeper.ts";
 import { legAccount, legIndex } from "./program.ts";

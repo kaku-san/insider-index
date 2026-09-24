@@ -1,15 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { indexCatalog, type CatalogToken } from "../src/lib/venues/catalog-parse.ts";
-import { KAKU_SAN_ASSETS } from "../src/lib/index-vaults/kaku-san.ts";
 import {
   allocateBps, derivePersonIndex, holdingValue, NATIVE_TOKEN_CAP, type PersonBook,
 } from "../src/lib/index-vaults/person-index-map.ts";
-import { buildPersonVaultInit } from "../src/lib/index-vaults/person-vault-init.ts";
 import { PENDING_POOL_SOURCE, poolSourceFromEvidence, type PoolEvidence } from "../src/lib/index-vaults/pool-evidence.ts";
 
-/** Real, valid mint+pool pairs so the vault-init builder's address/oracle guards run for real. */
-const A = KAKU_SAN_ASSETS[0], B = KAKU_SAN_ASSETS[1], C = KAKU_SAN_ASSETS[2];
+/** Synthetic catalog identities for pure disclosed-book mapping tests. */
+const A = { mint: "MINT_A", pool: "POOL_A" }, B = { mint: "MINT_B", pool: "POOL_B" }, C = { mint: "MINT_C", pool: "POOL_C" };
 const xstock = (ticker: string, symbol: string, mint: string): CatalogToken => ({ issuer: "xstock", ticker, symbol, name: symbol, mint, decimals: 8 });
 const backpack = (ticker: string, symbol: string, mint: string): CatalogToken => ({ issuer: "backpack", ticker, symbol, name: symbol, mint, decimals: 6 });
 
@@ -75,7 +73,6 @@ test("transaction-derived books never become weights and stay blocked", () => {
   // Activity is resolved for information only — never a weight.
   assert.equal(def.activity.length, 2);
   assert.ok(def.activity.every((a) => !("targetWeightBps" in a)));
-  assert.throws(() => buildPersonVaultInit(def), /NOT_WEIGHTABLE/);
 });
 
 test("weight bps integrity: legs sum to 10000, unmapped share disclosed", () => {
@@ -121,18 +118,11 @@ test("pool gating: pending source waits, observed pools make it creatable", () =
   const pending = derivePersonIndex(book({ slug: "pend", holdings }), catalog, PENDING_POOL_SOURCE);
   assert.equal(pending.status, "WAIT_POOL_EVIDENCE");
   assert.equal(pending.coverage.vaultReadyLegCount, 0);
-  assert.throws(() => buildPersonVaultInit(pending), /INSUFFICIENT_POOL_READY_LEGS/);
 
   const pools = poolSourceFromEvidence([observed(A.mint, A.pool), observed(B.mint, B.pool), observed(C.mint, C.pool)]);
   const ready = derivePersonIndex(book({ slug: "ready", holdings }), catalog, pools);
   assert.equal(ready.status, "CREATABLE");
   assert.equal(ready.coverage.vaultReadyLegCount, 3);
-  const init = buildPersonVaultInit(ready);
-  assert.equal(init.legs.length, 3);
-  assert.equal(init.legs.reduce((s, l) => s + l.targetWeightBps, 0), 10_000);
-  assert.equal(init.hostEntryFeeBps, 25);
-  assert.equal(init.hostExitFeeBps, 0);
-  assert.ok(init.legs.every((l) => l.pool && l.kind.startsWith("raydium_")));
 });
 
 test("thin pools are recorded, not silently used", () => {
@@ -179,15 +169,6 @@ test("a not-ready leg never contributes to tradable coverage", () => {
   assert.equal(def.status, "CREATABLE");
 });
 
-test("a non-Raydium pool kind fails closed, never coerced to CLMM", () => {
-  const catalog = indexCatalog([xstock("AAPL", "AAPLx", A.mint), xstock("NVDA", "NVDAx", B.mint)]);
-  // Both pools are "observed" (above the TVL floor) but one carries a non-Raydium kind.
-  const pools = poolSourceFromEvidence([observed(A.mint, A.pool, "orca_whirlpool"), observed(B.mint, B.pool, "raydium_clmm")]);
-  const def = derivePersonIndex(book({ slug: "kind", holdings: [{ ticker: "AAPL", value: 500 }, { ticker: "NVDA", value: 500 }] }), catalog, pools);
-  assert.equal(def.status, "CREATABLE");
-  assert.throws(() => buildPersonVaultInit(def), /ORACLE_KIND_FORBIDDEN/);
-});
-
 test("duplicate underlyings in one basket are caught: same-company share classes collapse to one leg", () => {
   // GOOGL (Class A) resolves to a tradable xStock; GOOG (Class C) only to an illiquid Backpack
   // token. They are ONE company (Alphabet), so the basket must carry one Alphabet leg, not two.
@@ -232,5 +213,4 @@ test("native leg cap: a book mapping past the cap throws, never truncates", () =
   assert.equal(def.legs.length, NATIVE_TOKEN_CAP + 1);
   assert.ok(def.blockedReasons.includes("native-token-cap-exceeded"));
   assert.equal(def.status, "BLOCKED");
-  assert.throws(() => buildPersonVaultInit(def), /NATIVE_TOKEN_CAP/);
 });

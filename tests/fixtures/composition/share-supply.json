@@ -1,8 +1,0 @@
-{
-  "source": "Mainnet getAccountInfo jsonParsed share mint (projection, not raw VM account)",
-  "observedAt": "2026-09-17T13:44:14.967Z",
-  "slot": 447809602,
-  "mint": "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4",
-  "amount": "0",
-  "decimals": 6
-}

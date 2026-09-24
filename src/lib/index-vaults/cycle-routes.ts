@@ -8,7 +8,7 @@ export { assertCycleMint } from "./cycle-mint-parse.ts";
 export { CYCLE_CLMM_PROGRAM, assertCycleRouteInstruction, type CycleRoute } from "./cycle-route-parse.ts";
 import { rawAmount } from "./amounts.ts";
 import type { PersistedVaultLeg } from "./vault-definition-store.ts";
-import { MAINNET_USDC } from "./native-defaults.ts";
+import { MAINNET_USDC } from "../nav-vault/constants.ts";
 
 export type PoolMetadata = (pool: string) => Promise<{ pool: ApiV3PoolInfoConcentratedItem; observedAt: number; lookupTable?: string }>;
 export async function readCyclePoolMetadata(pool: string): ReturnType<PoolMetadata> {

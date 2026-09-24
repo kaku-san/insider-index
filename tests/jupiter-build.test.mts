@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { PublicKey } from "@solana/web3.js";
 import { compileJupiterBuild, jupiterBuildUrl, JUPITER_BUILD_NOT_RAW, parseJupiterBuild, requireJupiterApiKey } from "../src/lib/index-vaults/jupiter-build.ts";
-import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
+import { MAINNET_USDC } from "../src/lib/nav-vault/constants.ts";
 
 const taker = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
 const outputMint = PublicKey.unique().toBase58();

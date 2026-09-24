@@ -5,9 +5,8 @@
  *                                            #   (+ published FMP constituents when Supabase env is set)
  *   npm run raydium:snapshot -- --mints=<mint>,<mint>
  *
- * Policy: mainnet USDC quote only, Raydium CLMM/CPMM programs only (the oracle kinds Symmetry
- * supports), highest TVL wins. Mints with no such pool are recorded as unresolved. Nothing is
- * invented and nothing here touches devnet settlement bindings.
+ * Policy: mainnet USDC quote only, Raydium CLMM/CPMM programs only, highest TVL wins.
+ * Mints with no such pool are recorded as unresolved; nothing is invented.
  */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

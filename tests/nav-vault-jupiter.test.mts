@@ -2,26 +2,25 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { address } from "@solana/kit";
 import { ComputeBudgetProgram, Keypair, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
-import { getAta } from "@symmetry-hq/sdk/dist/instructions/pda.js";
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
   NAV_VAULT_PROGRAM_ID, USDC_LEG, decodeRequest, decodeVault, depositIx, fulfillSwapIx, initVaultIx, keeperSwapIx, legIndex, requestPda,
   requestWithdrawIx, settleRequestIx, shareAta, updatePricesIx, vaultPda, vaultTokenAccounts,
 } from "../src/lib/nav-vault/program.ts";
 import { Clock } from "litesvm";
-import { mag7CycleVm, withVmTime, owner, definition, MAINNET_USDC, exitBuild, exitQuote, decodeInstruction, pk } from "./support/mag7-cycle-vm.mts";
+import { navJupiterVm, withVmTime, owner, definition, MAINNET_USDC, exitBuild, exitQuote, decodeInstruction, pk } from "./support/nav-jupiter-vm.mts";
 import { programBinary } from "./support/nav-vault-vm.mts";
 
 /**
  * Mainnet NAV vault build + the captured, hash-checked deployed Jupiter V6 and Raydium CLMM
- * binaries and TSLA→USDC route accounts (tests/fixtures/mag7-cycle). The vault authority PDA is
+ * binaries and TSLA→USDC route accounts (tests/fixtures/nav-jupiter). The vault authority PDA is
  * the Jupiter taker via `keeper_swap` CPI. Vault TSLA inventory is a SYNTHETIC local input (not
  * DEX evidence); the sale itself runs through the real deployed programs. Offline, no keys.
  */
 test("keeper_swap and a keeper USDC cash-out (fulfill_swap → settle) CPI the real deployed Jupiter V6 route with the vault PDA as taker (Mag7 legs)", async () => {
-  const vm = mag7CycleVm();
+  const vm = navJupiterVm();
   await withVmTime(vm, async () => {
-    vm.loadDex("exit");
+    vm.loadDex();
     vm.svm.addProgram(address(NAV_VAULT_PROGRAM_ID.toBase58()), programBinary("nav_vault.so"));
     const admin = Keypair.generate(), keeper = Keypair.generate();
     for (const k of [admin, keeper]) vm.svm.airdrop(address(k.publicKey.toBase58()), 5_000_000_000n as never);
@@ -34,7 +33,7 @@ test("keeper_swap and a keeper USDC cash-out (fulfill_swap → settle) CPI the r
       return vm.apply(Buffer.from(tx.serialize()).toString("base64"));
     };
     const tablesFor = async () => Promise.all(exitBuild.addressLookupTableAddresses.map(async key => (await vm.connection.getAddressLookupTable(pk(key))).value!));
-    const feeAccount = getAta(admin.publicKey, pk(MAINNET_USDC), TOKEN_PROGRAM_ID);
+    const feeAccount = getAssociatedTokenAddressSync(pk(MAINNET_USDC), admin.publicKey, true, TOKEN_PROGRAM_ID);
     send([
       createAssociatedTokenAccountIdempotentInstruction(admin.publicKey, feeAccount, admin.publicKey, pk(MAINNET_USDC)),
       createAssociatedTokenAccountIdempotentInstruction(admin.publicKey, accounts.usdc, accounts.authority, pk(MAINNET_USDC)),
@@ -59,8 +58,8 @@ test("keeper_swap and a keeper USDC cash-out (fulfill_swap → settle) CPI the r
 
     const substitutions = new Map([
       [owner, accounts.authority.toBase58()],
-      [getAta(pk(owner), pk(exitQuote.inputMint), TOKEN_2022_PROGRAM_ID).toBase58(), vault.legs[tsla]!.account.toBase58()],
-      [getAta(pk(owner), pk(MAINNET_USDC), TOKEN_PROGRAM_ID).toBase58(), vault.usdcAccount.toBase58()],
+      [getAssociatedTokenAddressSync(pk(exitQuote.inputMint), pk(owner), true, TOKEN_2022_PROGRAM_ID).toBase58(), vault.legs[tsla]!.account.toBase58()],
+      [getAssociatedTokenAddressSync(pk(MAINNET_USDC), pk(owner), true, TOKEN_PROGRAM_ID).toBase58(), vault.usdcAccount.toBase58()],
     ]);
     const swap = decodeInstruction({ ...exitBuild.swapInstruction, accounts: exitBuild.swapInstruction.accounts.map(a => ({ ...a, pubkey: substitutions.get(a.pubkey) ?? a.pubkey })) });
     const minOut = BigInt(exitQuote.otherAmountThreshold);
@@ -81,7 +80,7 @@ test("keeper_swap and a keeper USDC cash-out (fulfill_swap → settle) CPI the r
     // request, and settle pays USDC. SYNTHETIC local inputs: user USDC balance and vault TSLA credit.
     const user = Keypair.generate();
     vm.svm.airdrop(address(user.publicKey.toBase58()), 5_000_000_000n as never);
-    const userUsdc = getAta(user.publicKey, pk(MAINNET_USDC), TOKEN_PROGRAM_ID);
+    const userUsdc = getAssociatedTokenAddressSync(pk(MAINNET_USDC), user.publicKey, true, TOKEN_PROGRAM_ID);
     send([
       createAssociatedTokenAccountIdempotentInstruction(user.publicKey, userUsdc, user.publicKey, pk(MAINNET_USDC)),
       createAssociatedTokenAccountIdempotentInstruction(user.publicKey, shareAta(user.publicKey, vault.shareMint), user.publicKey, vault.shareMint, TOKEN_2022_PROGRAM_ID),

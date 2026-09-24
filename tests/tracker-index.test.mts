@@ -131,7 +131,7 @@ test("all 20 handoff people get a listed tracker index; only those with two pool
     if (view.index.constituents.length) assert.equal(view.index.constituents.reduce((s, c) => s + c.weightBps, 0), 10_000);
     assert.equal(view.index.readiness.status, view.index.constituents.length >= 2 ? "VAULT_CANDIDATE" : "WAIT_READINESS");
     assert.equal(view.index.readiness.firstLiveCandidate, view.profile.id === "P000197");
-    assert.equal(view.release.publicFundsEnabled, true);
+    assert.equal(view.release.publicFundsEnabled, false, "research definitions never authorize NAV deposits");
     assert.equal(view.holdingTokens.length, view.profile.topHoldings.length);
   }
   assert.equal(views.filter((v) => v.index.readiness.firstLiveCandidate).length, 1);

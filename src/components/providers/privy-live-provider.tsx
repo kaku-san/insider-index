@@ -113,6 +113,7 @@ function PrivyLiveBridge({
   const wallet = useMemo(() => selectedSolanaWallet(wallets, selectedAddress), [wallets, selectedAddress]);
   useEffect(() => {
     if (selectedAddress && wallets.some(candidate => candidate.address === selectedAddress)) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronize selection only when the selected external wallet disappears
     setSelectedAddress(selectableWallets[0]?.address ?? null);
   }, [selectedAddress, selectableWallets, wallets]);
 

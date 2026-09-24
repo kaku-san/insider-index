@@ -17,7 +17,7 @@ import { normalizeTicker, preferredToken, type CatalogIndex, type CatalogToken }
 import { canonicalUnderlying } from "./share-classes.ts";
 import type { PoolEvidenceSource, PoolReadinessResult } from "./pool-evidence.ts";
 
-/** Symmetry `MAX_SUPPORTED_TOKENS_PER_VAULT`. The vault-init builder throws past this; here it blocks. */
+/** Historical research-definition cap. NAV program/CLI limits are separate (docs/nav-vault.md). */
 export const NATIVE_TOKEN_CAP = 100;
 /** A one-name "index" is not an index; a vault needs at least two mapped legs. */
 export const MIN_MAPPED_LEGS = 2;

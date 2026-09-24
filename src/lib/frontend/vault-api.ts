@@ -23,8 +23,8 @@ export type VaultIdentity = {
   kind?: "nav-vault";
 };
 
-/** The NAV vault is the public invest/cash-out rail for every index (Symmetry is retired from public
- * flows). `NEXT_PUBLIC_NAV_VAULT_DISABLED=1` is the kill switch; `NEXT_PUBLIC_NAV_VAULT_INDEXES` an optional allowlist. */
+/** Public NAV rail. `NEXT_PUBLIC_NAV_VAULT_DISABLED=1` is the kill switch;
+ * `NEXT_PUBLIC_NAV_VAULT_INDEXES` is an optional allowlist. */
 export function navVaultEnabledFor(indexId: string): boolean {
   if (process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED === "1") return false;
   const explicit = (process.env.NEXT_PUBLIC_NAV_VAULT_INDEXES ?? "").split(",").map(item => item.trim()).filter(Boolean);
@@ -32,7 +32,7 @@ export function navVaultEnabledFor(indexId: string): boolean {
 }
 function navPath(indexId: string, suffix = "") { return `/api/nav-vault/${encodeURIComponent(indexId)}${suffix}`; }
 
-/** NAV vault: Invest follows the vault's own readiness, not the retired Symmetry release gate. Null when NAV is off. */
+/** Invest follows the NAV vault's own readiness. Null when NAV is off. */
 export function navVaultLive(indexId: string, readiness?: VaultReadiness | null): boolean | null {
   if (!navVaultEnabledFor(indexId)) return null;
   return readiness?.kind === "nav-vault" && depositIsEnabled(readiness);
@@ -204,13 +204,6 @@ export function positionValueUsdc(position: Pick<IndexSharePosition, "sharesRaw"
   const fraction = (valueMicroUsdc % 1_000_000n).toString().padStart(6, "0").replace(/0+$/, "");
   return fraction ? `${whole}.${fraction}` : whole.toString();
 }
-
-export const DEPOSIT_PHASES = [
-  "DRAFT","AWAITING_SIGNATURE","SUBMITTED","INTENT_CONFIRMED","AWAITING_LOCK","PRICING","AUCTION","SETTLING","SHARES_RECEIVED","RETURN_PENDING","CLEANUP","COMPLETE"
-] as const;
-export const WITHDRAW_PHASES = [
-  "DRAFT","AWAITING_SIGNATURE","SUBMITTED","REDEMPTION_CLAIM","CLAIM_PENDING","TOKENS_RECEIVED","CONVERTING","COMPLETE_IN_KIND","PARTIAL_USDC","COMPLETE_USDC"
-] as const;
 
 export function depositIsEnabled(readiness?: VaultReadiness | null): boolean {
   return readiness?.depositEnabled !== false && Boolean(readiness?.depositEnabled || readiness?.ready);
@@ -457,24 +450,4 @@ export async function prepareDeposit(indexId: string, input: { owner: string; am
 export async function prepareWithdrawal(indexId: string, input: { owner: string; shareAmountRaw: RawAmount; requestedExitMode: "in-kind" | "verified-native-usdc"; idempotencyKey: string; walletProof?: string }, network: Network): Promise<PreparedStep> {
   if (navVaultEnabledFor(indexId)) return validatePreparedStep(await writeApi<unknown>(navPath(indexId, "/withdraw/prepare"), { owner: input.owner, shareAmountRaw: input.shareAmountRaw }), { owner: input.owner, network });
   return validatePreparedStep(await writeApi<unknown>(`/api/indexes/${encodeURIComponent(indexId)}/withdraw/prepare`, input), { owner: input.owner, network });
-}
-
-export async function prepareNext(operationId: string, owner: string, network: Network, walletProof?: string): Promise<PreparedStep> {
-  return validatePreparedStep(await writeApi<unknown>(`/api/operations/${encodeURIComponent(operationId)}/next`, { owner, walletProof }), { owner, network });
-}
-
-export async function submitReceipts(operationId: string, owner: string, receipts: { stepId: string; signature: string }[]): Promise<ObservedOperation> {
-  return writeApi<ObservedOperation>(`/api/operations/${encodeURIComponent(operationId)}/receipts`, { owner, receipts });
-}
-
-export async function getOperation(operationId: string): Promise<ObservedOperation> {
-  return readApi<ObservedOperation>(`/api/operations/${encodeURIComponent(operationId)}`);
-}
-
-export async function prepareConversion(operationId: string, owner: string, selectedCreditIds: string[], network: Network): Promise<PreparedStep> {
-  return validatePreparedStep(await writeApi<unknown>(`/api/operations/${encodeURIComponent(operationId)}/convert/prepare`, { owner, selectedCreditIds }), { owner, network });
-}
-
-export async function prepareRecovery(operationId: string, owner: string, network: Network): Promise<PreparedStep> {
-  return validatePreparedStep(await writeApi<unknown>(`/api/operations/${encodeURIComponent(operationId)}/recovery/prepare`, { owner }), { owner, network });
 }
