@@ -25,3 +25,15 @@ test("an external replacement fences out an older resource response", async () =
   assert.equal(data, "post-signature");
   assert.equal(loading, false);
 });
+
+test("only the newest concurrent position read may write", async () => {
+  const fence = new ResourceRequestFence();
+  const olderGeneration = fence.begin();
+  const newerGeneration = fence.begin();
+  let position = "cached";
+
+  if (fence.isCurrent(newerGeneration)) position = "newer";
+  if (fence.isCurrent(olderGeneration)) position = "older";
+
+  assert.equal(position, "newer");
+});

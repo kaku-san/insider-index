@@ -12,6 +12,7 @@ import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, na
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
 import { changeReflected } from "@/lib/frontend/position-refresh";
+import { ResourceRequestFence } from "@/lib/frontend/resource-request-fence";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { indexContentFor, indexProofFor } from "@/lib/frontend/index-content";
@@ -168,6 +169,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   const [shareOpen, setShareOpen] = useState(false);
   const ui = useUI();
   const wallet = usePrivySolana();
+  const [positionFence] = useState(() => new ResourceRequestFence());
   const index = resource.data?.index;
 
   useEffect(() => {
@@ -182,20 +184,22 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
   useEffect(() => {
     let alive = true;
     if (!id || !wallet.solanaAddress) {
+      positionFence.invalidate();
       // Reset the wallet-scoped view when the external wallet identity disappears.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPosition(null);
       return;
     }
-    getIndexPosition(routeId, wallet.solanaAddress).then(value => { if (alive) setPosition(value); }).catch(() => { if (alive) setPosition(null); });
+    const requestGeneration = positionFence.begin();
+    getIndexPosition(routeId, wallet.solanaAddress).then(value => { if (alive && positionFence.isCurrent(requestGeneration)) setPosition(value); }).catch(() => { if (alive && positionFence.isCurrent(requestGeneration)) setPosition(null); });
     return () => { alive = false; };
-  }, [id, routeId, wallet.solanaAddress]);
-  useIndexPositionListen(id ? routeId : null, wallet.solanaAddress, position, value => setPosition(value), !investOpen);
+  }, [id, routeId, wallet.solanaAddress, positionFence]);
+  useIndexPositionListen(id ? routeId : null, wallet.solanaAddress, position, value => setPosition(value), !investOpen, positionFence);
   usePositionRefresh<IndexSharePosition | null>({
     owner: wallet.solanaAddress,
     indexId: routeId,
     load: () => getIndexPosition(routeId, wallet.solanaAddress!),
-    apply: value => setPosition(value),
+    apply: value => { positionFence.invalidate(); setPosition(value); },
     reflected: (value, change) => changeReflected(change, value),
     enabled: Boolean(id),
   });
@@ -279,7 +283,7 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName ?? "Person index"} kind="Person index" detail={`${allocationItems.length} holdings`} image={image} />
-    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); if (wallet.solanaAddress) void getIndexPosition(routeId, wallet.solanaAddress).then(value => setPosition(value)).catch(() => {}); }} onPosition={value => { if (value) setPosition(value); }} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} position={position} />
+    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); if (wallet.solanaAddress) { const requestGeneration = positionFence.begin(); void getIndexPosition(routeId, wallet.solanaAddress).then(value => { if (positionFence.isCurrent(requestGeneration)) setPosition(value); }).catch(() => {}); } }} onPosition={value => { if (value) { positionFence.invalidate(); setPosition(value); } }} indexId={routeId} indexName={index.indexName ?? "Person index"} readiness={flowReadiness} mode={investMode} position={position} />
   </div>;
 }
 

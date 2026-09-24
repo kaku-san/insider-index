@@ -14,6 +14,7 @@ import { CASH_OUT_BEFORE_SIGN, CASH_OUT_STILL_NOTE } from "@/lib/frontend/positi
 import { CashOutAssetList, HeldNowBook, PositionBook } from "./position-book";
 import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
 import { changeReflected } from "@/lib/frontend/position-refresh";
+import { ResourceRequestFence } from "@/lib/frontend/resource-request-fence";
 import { VaultFlow } from "./vault-flow";
 import { SettlementListen } from "./settlement-listen";
 import { ShareCard } from "./share-card";
@@ -40,6 +41,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   const [cashOutOpen, setCashOutOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [sharesArrived, setSharesArrived] = useState(false);
+  const [positionFence] = useState(() => new ResourceRequestFence());
   const pendingSignature = pendingKey(position);
 
   // Synchronize the wallet-scoped view with the external position endpoints.
@@ -50,38 +52,40 @@ export function PositionDetail({ indexId }: { indexId: string }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
+    const requestGeneration = positionFence.begin();
     Promise.all([getIndexPosition(indexId, wallet.solanaAddress), getVaultReadiness(indexId).catch(() => null)])
       .then(([nextPosition, nextReadiness]) => {
         if (alive) {
-          setPosition(nextPosition);
           setReadiness(nextReadiness);
+          if (positionFence.isCurrent(requestGeneration)) setPosition(nextPosition);
         }
       })
-      .catch((nextError) => { if (alive) setError(errorText(nextError)); })
-      .finally(() => { if (alive) setLoading(false); });
+      .catch((nextError) => { if (alive && positionFence.isCurrent(requestGeneration)) setError(errorText(nextError)); })
+      .finally(() => { if (alive && positionFence.isCurrent(requestGeneration)) setLoading(false); });
     return () => { alive = false; };
-  }, [indexId, wallet.solanaAddress]);
+  }, [indexId, wallet.solanaAddress, positionFence]);
 
   useEffect(() => {
     if (!wallet.solanaAddress || cashOutOpen || !positionNeedsListen(position)) return;
     let alive = true;
     const timer = setInterval(() => {
+      const requestGeneration = positionFence.begin();
       void getIndexPosition(indexId, wallet.solanaAddress!).then(next => {
-        if (!alive || !next) return;
+        if (!alive || !next || !positionFence.isCurrent(requestGeneration)) return;
         setSharesArrived(noticedShareArrival(position, next) || (sharesArrived && !positionNeedsListen(next)));
         if (positionNeedsListen(next)) setSharesArrived(false);
         setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next);
       }).catch(() => {});
     }, SETTLEMENT_POLL_MS);
     return () => { alive = false; clearInterval(timer); };
-  }, [indexId, wallet.solanaAddress, cashOutOpen, position, sharesArrived, pendingSignature]);
+  }, [indexId, wallet.solanaAddress, cashOutOpen, position, sharesArrived, pendingSignature, positionFence]);
 
   // After a confirmed deposit/cash-out (or on focus) re-read at once; poll until the new share balance shows.
   const refresh = usePositionRefresh<IndexSharePosition | null>({
     owner: wallet.solanaAddress,
     indexId,
     load: () => getIndexPosition(indexId, wallet.solanaAddress!),
-    apply: next => { setError(null); setPosition(current => next && current && pendingKey(current) === pendingKey(next) && current.sharesRaw === next.sharesRaw && current.vaultValueUsdc === next.vaultValueUsdc ? current : next); },
+    apply: next => { positionFence.invalidate(); setLoading(false); setError(null); setPosition(current => next && current && pendingKey(current) === pendingKey(next) && current.sharesRaw === next.sharesRaw && current.vaultValueUsdc === next.vaultValueUsdc ? current : next); },
     reflected: (next, change) => changeReflected(change, next),
   });
 
@@ -130,7 +134,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
 
       {position.outstandingClaims?.length ? <section className={styles.claims}><h2>Outstanding claims</h2>{position.outstandingClaims.map((claim) => <div key={claim.mint}><strong>{claim.symbol ?? claim.mint.slice(0, 7)}</strong><span>{claim.amountRemainingRaw} units remaining</span><b>{claim.transferBlocked ? "NEEDS ATTENTION" : "PENDING"}</b></div>)}</section> : null}
       <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={name} kind={themed ? "Theme index" : "Person index"} detail={shareDetail} image={shareImage} url={typeof window !== "undefined" ? `${window.location.origin}/indexes/${encodeURIComponent(indexId)}` : undefined} />
-      <VaultFlow open={cashOutOpen} onClose={() => setCashOutOpen(false)} indexId={indexId} indexName={name} readiness={readiness} mode="withdraw" position={position} onPosition={next => { if (!next) return; setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next); }} />
+      <VaultFlow open={cashOutOpen} onClose={() => setCashOutOpen(false)} indexId={indexId} indexName={name} readiness={readiness} mode="withdraw" position={position} onPosition={next => { if (!next) return; positionFence.invalidate(); setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next); }} />
     </>}
   </div>;
 }

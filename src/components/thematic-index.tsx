@@ -22,6 +22,7 @@ import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
 import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
 import { changeReflected } from "@/lib/frontend/position-refresh";
+import { ResourceRequestFence } from "@/lib/frontend/resource-request-fence";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import styles from "./consumer-index.module.css";
 
@@ -55,6 +56,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const [positionErrorKey, setPositionErrorKey] = useState<string | null>(null);
   const [positionRefresh, setPositionRefresh] = useState(0);
   const wallet = usePrivySolana();
+  const [positionFence] = useState(() => new ResourceRequestFence());
   useEffect(() => {
     let alive = true;
     getVaultReadiness(vaultId).then(value => { if (alive) { setVault(value); setVaultLoaded(true); } }).catch(() => { if (alive) setVault(null); });
@@ -62,19 +64,20 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   }, [vaultId]);
   useEffect(() => {
     let alive = true;
-    if ((vaultId !== "idx-theme-mag7-caucus" && !navVaultEnabledFor(vaultId)) || !wallet.solanaAddress) return () => { alive = false; };
+    if ((vaultId !== "idx-theme-mag7-caucus" && !navVaultEnabledFor(vaultId)) || !wallet.solanaAddress) { positionFence.invalidate(); return () => { alive = false; }; }
     const key = `${vaultId}:${wallet.solanaAddress}`;
-    getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive) { setPosition(value); setLoadedPositionKey(key); } }).catch(error => { if (alive) { setPosition(null); setLoadedPositionKey(null); setPositionError(error instanceof Error ? error.message : "Your share balance is unavailable right now."); setPositionErrorKey(key); } });
+    const requestGeneration = positionFence.begin();
+    getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive && positionFence.isCurrent(requestGeneration)) { setPosition(value); setLoadedPositionKey(key); } }).catch(error => { if (alive && positionFence.isCurrent(requestGeneration)) { setPosition(null); setLoadedPositionKey(null); setPositionError(error instanceof Error ? error.message : "Your share balance is unavailable right now."); setPositionErrorKey(key); } });
     return () => { alive = false; };
-  }, [vaultId, wallet.solanaAddress, positionRefresh]);
+  }, [vaultId, wallet.solanaAddress, positionRefresh, positionFence]);
   const positionKey = wallet.solanaAddress ? `${vaultId}:${wallet.solanaAddress}` : null;
   const currentPosition = loadedPositionKey === positionKey ? position : null;
-  useIndexPositionListen(vaultId, wallet.solanaAddress, currentPosition, value => { setPosition(value); if (wallet.solanaAddress) setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); }, !investOpen);
+  useIndexPositionListen(vaultId, wallet.solanaAddress, currentPosition, value => { setPosition(value); if (wallet.solanaAddress) setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); }, !investOpen, positionFence);
   const positionRefreshState = usePositionRefresh<IndexSharePosition | null>({
     owner: wallet.solanaAddress,
     indexId: vaultId,
     load: () => getIndexPosition(vaultId, wallet.solanaAddress!),
-    apply: value => { if (!wallet.solanaAddress) return; setPosition(value); setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); },
+    apply: value => { if (!wallet.solanaAddress) return; positionFence.invalidate(); setPosition(value); setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); },
     reflected: (value, change) => changeReflected(change, value),
     enabled: vaultId === "idx-theme-mag7-caucus" || navVaultEnabledFor(vaultId),
   });
@@ -142,6 +145,6 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
       </div> : null}
     </section>
     <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={index.indexName} kind="Theme index" detail={`${holdings.length} stocks`} image={art?.src ?? `/index-assets/themes/${index.id}-hero.png`} />
-    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); setPositionRefresh(current => current + 1); }} onPosition={value => { if (!value || !wallet.solanaAddress) return; setPosition(value); setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); }} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} position={currentPosition} />
+    <VaultFlow open={investOpen} onClose={() => { setInvestOpen(false); setPositionRefresh(current => current + 1); }} onPosition={value => { if (!value || !wallet.solanaAddress) return; positionFence.invalidate(); setPosition(value); setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); }} indexId={vaultId} indexName={index.indexName} readiness={readiness} indexKind="theme" mode={investMode} position={currentPosition} />
   </div>;
 }
