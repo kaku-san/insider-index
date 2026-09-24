@@ -209,7 +209,6 @@ function PrivyLiveBridge({
       wallet?.address,
       selectableWallets,
       solanaWalletLabels,
-      wallets,
     ],
   );
 

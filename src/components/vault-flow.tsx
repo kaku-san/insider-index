@@ -133,6 +133,8 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     setAmount(mode === "deposit" ? "10" : positionSharesText(position) ?? "0");
     setQuoteStatus("idle");
     quoteGeneration.current += 1;
+    // `position` is intentionally sampled only when the sheet identity changes; live updates flow through the listener below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode, indexId]);
   useEffect(() => {
     if (!open || screen !== "amount" || mode !== "deposit" || !wallet.solanaAddress || !network) return;
@@ -172,6 +174,8 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     });
     observe();
     return () => { alive = false; if (timer) clearTimeout(timer); };
+    // `activeIntent` only gates listener startup; depending on its polled object would restart the listener on every observation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, screen, mode, indexId, wallet.solanaAddress, sharesBeforeSignature]);
 
   function availableUsdcText() { return availableUsdcRaw === null ? "—" : rawToDecimal(availableUsdcRaw, 6); }
