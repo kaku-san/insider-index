@@ -3,7 +3,7 @@
  *
  *   npm run nav-vault -- init   --index <id> --keeper <pubkey> --fee-owner <pubkey> [--network mainnet-beta] [--definition file.json]
  *                               [--max-price-age 300] [--max-slippage 100] [--entry-fee 25] [--buffer 500] [--max-deposit-raw N (default 0 = no cap)] [--execute --keypair <admin file>]
- *   npm run nav-vault -- keeper (--all | --indexes a,b | --index <id>) [--network mainnet-beta] [--execute --keypair <keeper file>] [--loop <cycle seconds>]
+ *   npm run nav-vault -- keeper (--all | --indexes a,b | --index <id>) [--network mainnet-beta] [--execute --keypair <keeper file>] [--loop <cycle seconds>] [--rpc-interval-ms 125]
  *   npm run nav-vault -- pause|unpause --index <id> [--execute --keypair <admin file>]
  *
  * Legs/weights come from insiderindex_vault_definitions (service-role Supabase from .env.local) unless
@@ -25,6 +25,8 @@ import {
 } from "../src/lib/nav-vault/program.ts";
 import { keeperCycleAll, keeperTick, mockVenue } from "../src/lib/nav-vault/keeper.ts";
 import { mainnetVenue } from "../src/lib/nav-vault/mainnet-venue.ts";
+import { throttledFetch } from "../src/lib/nav-vault/rpc-throttle.ts";
+import type { KeeperDeferrals } from "../src/lib/nav-vault/keeper.ts";
 
 const MAX_LEGS = 16;
 const argv = process.argv.slice(2);
@@ -36,7 +38,14 @@ const network = (opt("--network") ?? "mainnet-beta") as "mainnet-beta" | "devnet
 if (network !== "mainnet-beta" && network !== "devnet") throw new Error("--network must be mainnet-beta or devnet");
 const execute = flag("--execute");
 const rpc = opt("--rpc") ?? (network === "mainnet-beta" ? getHeliusRpcUrl() : "https://api.devnet.solana.com");
-const connection = new Connection(rpc, { commitment: "confirmed" });
+// Keeper RPC pacing: sequential requests, spaced, with 429 backoff (web3.js' own 500 ms retry storm is off).
+// No websocket: confirmations poll getSignatureStatuses, so no ws subscription is ever opened.
+let rateLimited = 0;
+const connection = new Connection(rpc, {
+  commitment: "confirmed",
+  disableRetryOnRateLimit: true,
+  fetch: throttledFetch({ minIntervalMs: Number(opt("--rpc-interval-ms") ?? 125), onRateLimited: () => { rateLimited += 1; } }),
+});
 const PROGRAM_DEFAULT = network === "mainnet-beta" ? NAV_VAULT_PROGRAM_ID : NAV_VAULT_DEVNET_PROGRAM_ID;
 setDefaultProgramId(new PublicKey(opt("--program-id") ?? PROGRAM_DEFAULT.toBase58()));
 const loadKey = (path: string) => Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(path, "utf8"))));
@@ -159,32 +168,39 @@ async function init() {
   console.log(JSON.stringify(report, null, 2));
 }
 
+/** Preflighted send, then poll signature status (no websocket) with re-broadcast until confirmed or expired. */
 async function sendConfirmed(keypair: Keypair) {
   return async (tx: VersionedTransaction, step: string) => {
     tx.sign([keypair]);
-    const signature = await connection.sendTransaction(tx);
-    const latest = await connection.getLatestBlockhash("confirmed");
-    const confirmed = await connection.confirmTransaction({ signature, ...latest }, "confirmed");
-    if (confirmed.value.err) throw new Error(`${step}: ${JSON.stringify(confirmed.value.err)}`);
-    log(`${step}: ${signature}`);
-    return signature;
+    const raw = tx.serialize();
+    // Preflight simulation throws on a failing swap, so a doomed transaction never pays a fee.
+    const signature = await connection.sendRawTransaction(raw, { maxRetries: 0 });
+    const deadline = Date.now() + 75_000;
+    for (;;) {
+      await new Promise(r => setTimeout(r, 2_000));
+      const status = (await connection.getSignatureStatuses([signature])).value[0];
+      if (status?.err) throw new Error(`${step}: ${JSON.stringify(status.err)}`);
+      if (status?.confirmationStatus === "confirmed" || status?.confirmationStatus === "finalized") { log(`${step}: ${signature}`); return signature; }
+      if (Date.now() > deadline) throw new Error(`${step}: ${signature} not confirmed in 75 s`);
+      await connection.sendRawTransaction(raw, { skipPreflight: true, maxRetries: 0 }).catch(() => undefined);
+    }
   };
 }
 const afterPrices = async () => { const slot = await connection.getSlot("confirmed"); while ((await connection.getSlot("confirmed")) <= slot) await new Promise(r => setTimeout(r, 400)); };
 const jsonOut = (value: unknown) => console.log(JSON.stringify(value, (_, v) => typeof v === "bigint" ? v.toString() : v, 2));
 
-/** --all: every DB index with an on-chain NAV vault; --indexes a,b: explicit list; --index a: one vault. */
-async function keeperIndexIds(programId: PublicKey): Promise<string[]> {
-  if (opt("--index")) return [need("--index")];
+/** --all: every DB index with an on-chain NAV vault; --indexes a,b: explicit list; --index a: one vault. One RPC read. */
+async function keeperVaults(programId: PublicKey): Promise<{ indexId: string; state: ReturnType<typeof decodeVault> }[]> {
   let ids: string[];
-  if (opt("--indexes")) ids = opt("--indexes")!.split(",").map(id => id.trim()).filter(Boolean);
+  if (opt("--index")) ids = [need("--index")];
+  else if (opt("--indexes")) ids = opt("--indexes")!.split(",").map(id => id.trim()).filter(Boolean);
   else if (flag("--all")) {
     const db = createServiceSupabase();
     if (!db) throw new Error("--all needs Supabase service-role credentials to list indexes.");
     ids = (await readVaultDefinitions(db)).map(row => row.indexId);
   } else throw new Error("--index, --indexes or --all is required");
   const infos = await connection.getMultipleAccountsInfo(ids.map(id => vaultPda(id, programId)));
-  return ids.filter((_, i) => Boolean(infos[i]));
+  return ids.flatMap((indexId, i) => infos[i] ? [{ indexId, state: decodeVault(vaultPda(indexId, programId), infos[i]!.data) }] : []);
 }
 
 async function keeper() {
@@ -194,10 +210,14 @@ async function keeper() {
   const minTrade = opt("--min-trade-raw") ? { minTradeUsdcRaw: BigInt(opt("--min-trade-raw")!) } : {};
   const loop = Number(opt("--loop") ?? 0);
   if (loop && !execute) throw new Error("--loop requires --execute.");
+  // Kept across loop cycles: failing legs back off instead of retrying every cycle; LUTs are read once.
+  const deferrals: KeeperDeferrals = new Map();
+  const lookupTables = new Map<string, AddressLookupTableAccount>();
   const once = async () => {
-    const indexIds = await keeperIndexIds(programId);
-    if (!indexIds.length) { log("no NAV vaults to keep"); return; }
-    const states = await Promise.all(indexIds.map(async id => decodeVault(vaultPda(id, programId), (await connection.getAccountInfo(vaultPda(id, programId)))!.data)));
+    rateLimited = 0;
+    const vaults = await keeperVaults(programId);
+    if (!vaults.length) { log("no NAV vaults to keep"); return; }
+    const indexIds = vaults.map(v => v.indexId), states = vaults.map(v => v.state);
     const keeperKey = keypair?.publicKey ?? states[0]!.keeper;
     if (keypair && states.some(state => state.admin.equals(keypair.publicKey))) throw new Error("Refusing: the admin key is not a keeper key.");
     const legs = network === "mainnet-beta"
@@ -208,12 +228,17 @@ async function keeper() {
       : mockVenue(connection, states[0]!.usdcMint);
     const execute_ = keypair ? await sendConfirmed(keypair) : undefined;
     if (indexIds.length === 1) {
-      jsonOut(await keeperTick({ connection, indexId: indexIds[0]!, keeper: keeperKey, programId, ...venue, priorityMicroLamports, ...minTrade, execute: execute_, afterPrices }));
+      jsonOut(await keeperTick({ connection, indexId: indexIds[0]!, keeper: keeperKey, programId, ...venue, priorityMicroLamports, ...minTrade, execute: execute_, afterPrices, deferrals, lookupTables }));
       return;
     }
-    const cycle = await keeperCycleAll({ connection, indexIds, keeper: keeperKey, programId, ...venue, priorityMicroLamports, ...minTrade, execute: execute_, afterPrices });
-    for (const vault of cycle.vaults) if (!vault.ok) log(`vault ${vault.indexId} skipped: ${vault.error}`);
-    jsonOut({ priceTransactions: cycle.priceTransactions, marks: cycle.marks, vaults: cycle.vaults.map(v => ({ indexId: v.indexId, ok: v.ok, error: v.error, plan: v.result?.plan, signatures: v.result?.signatures, after: v.result?.after })) });
+    const cycle = await keeperCycleAll({ connection, indexIds, keeper: keeperKey, programId, ...venue, priorityMicroLamports, ...minTrade, execute: execute_, afterPrices, deferrals, lookupTables });
+    for (const vault of cycle.vaults) {
+      if (!vault.ok) log(`vault ${vault.indexId} skipped: ${vault.error?.split("\n")[0]}`);
+      for (const s of vault.result?.skipped ?? []) log(`vault ${vault.indexId} ${s.step ?? "swap"} ${s.mint} deferred: ${s.reason}${s.retryAt ? ` (retry after ${new Date(s.retryAt * 1000).toISOString()})` : ""}`);
+      for (const e of vault.result?.errors ?? []) log(`vault ${vault.indexId} ${e.step} failed: ${e.error}`);
+    }
+    if (rateLimited) log(`rpc: ${rateLimited} rate-limited responses backed off this cycle`);
+    jsonOut({ priceTransactions: cycle.priceTransactions, marks: cycle.marks, vaults: cycle.vaults.map(v => ({ indexId: v.indexId, ok: v.ok, error: v.error?.split("\n")[0], plan: v.result?.plan, signatures: v.result?.signatures, skipped: v.result?.skipped, errors: v.result?.errors, after: v.result?.after })) });
   };
   if (!loop) return once();
   for (;;) {
