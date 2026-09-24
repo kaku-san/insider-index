@@ -22,6 +22,44 @@ export function tradableSliceFor(indexId: string): TradableSlice | null {
   return slices.get(indexId) ?? null;
 }
 
+const count = (value: unknown) => typeof value === "number" && Number.isInteger(value) && value >= 0;
+const bps = (value: unknown) => count(value) && (value as number) <= 10_000;
+const legList = (value: unknown, check: (item: Record<string, unknown>) => boolean) =>
+  Array.isArray(value) && value.every(item => item && typeof item === "object" && typeof (item as Record<string, unknown>).ticker === "string" && typeof (item as Record<string, unknown>).mint === "string" && bps((item as Record<string, unknown>).disclosedWeightBps) && check(item as Record<string, unknown>));
+
+/** A published `insiderindex_nav_vault_slices` row (snake_case, via read_insiderindex_nav_vault_slice) → slice; null if malformed. */
+export function sliceFromPublishedRow(row: unknown, indexId: string): TradableSlice | null {
+  if (!row || typeof row !== "object") return null;
+  const r = row as Record<string, unknown>;
+  if (r.index_id !== indexId || !count(r.total_legs) || !count(r.tradable_legs) || !bps(r.disclosed_weight_bps)) return null;
+  if (!legList(r.vault_legs, item => bps(item.targetWeightBps)) || !legList(r.excluded, item => typeof item.reason === "string")) return null;
+  const vaultLegs = r.vault_legs as TradableSlice["vaultLegs"], excluded = r.excluded as TradableSlice["excluded"];
+  const mints = [...vaultLegs, ...excluded].map(leg => leg.mint);
+  const disclosedWeightBps = vaultLegs.reduce((sum, leg) => sum + leg.disclosedWeightBps, 0);
+  const totalWeightBps = disclosedWeightBps + excluded.reduce((sum, leg) => sum + leg.disclosedWeightBps, 0);
+  if (vaultLegs.length !== r.tradable_legs || mints.length !== r.total_legs || new Set(mints).size !== mints.length || disclosedWeightBps !== r.disclosed_weight_bps || totalWeightBps !== 10_000) return null;
+  return {
+    indexId, totalLegs: r.total_legs as number, tradableLegs: r.tradable_legs as number, disclosedWeightBps: r.disclosed_weight_bps as number, eligible: vaultLegs.length > 0,
+    vaultLegs: vaultLegs.map(leg => ({ ticker: leg.ticker, mint: leg.mint, disclosedWeightBps: leg.disclosedWeightBps, targetWeightBps: leg.targetWeightBps })),
+    excluded: excluded.map(item => ({ ticker: item.ticker, mint: item.mint, disclosedWeightBps: item.disclosedWeightBps, reason: item.reason })),
+  };
+}
+
+export type SliceRpc = (fn: "read_insiderindex_nav_vault_slice", args: { p_index_id: string }) => Promise<{ data: unknown; error: unknown }>;
+
+/** The published slice table first; the committed JSON when the table is unreachable, empty or malformed. */
+export async function publishedSliceFor(indexId: string, rpc?: SliceRpc | null, accepts: (slice: TradableSlice) => boolean = () => true): Promise<TradableSlice | null> {
+  if (rpc) {
+    try {
+      const { data, error } = await rpc("read_insiderindex_nav_vault_slice", { p_index_id: indexId });
+      const published = error ? null : sliceFromPublishedRow(data, indexId);
+      if (published && accepts(published)) return published;
+    } catch { /* fall back to the committed scan */ }
+  }
+  const committed = tradableSliceFor(indexId);
+  return committed && accepts(committed) ? committed : null;
+}
+
 /** "Tradable slice: 5 of 18 holdings (72.6% of disclosed weight)". */
 export function tradableSliceLabel(slice: Pick<TradableSlice, "tradableLegs" | "totalLegs" | "disclosedWeightBps">): string {
   return `Tradable slice: ${slice.tradableLegs} of ${slice.totalLegs} holdings (${(slice.disclosedWeightBps / 100).toFixed(1)}% of disclosed weight)`;
