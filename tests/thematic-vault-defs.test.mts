@@ -2,15 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { indexCatalog, type CatalogToken } from "../src/lib/venues/catalog-parse.ts";
 import { snapshotCatalog } from "../src/lib/venues/solana-catalog.ts";
-import { KAKU_SAN_ASSETS } from "../src/lib/index-vaults/kaku-san.ts";
 import { NATIVE_TOKEN_CAP } from "../src/lib/index-vaults/person-index-map.ts";
-import { buildPersonVaultInit } from "../src/lib/index-vaults/person-vault-init.ts";
 import { PENDING_POOL_SOURCE, poolSourceFromEvidence, type PoolEvidence } from "../src/lib/index-vaults/pool-evidence.ts";
 import { deriveAllThematicIndexes, deriveThematicIndex, thematicSymbol } from "../src/lib/index-vaults/thematic-index-map.ts";
-import { definitionForDb } from "../src/lib/index-vaults/vault-definition-store.ts";
 import { listThematicViews } from "../src/lib/thematic/views.ts";
 
-const A = KAKU_SAN_ASSETS[0], B = KAKU_SAN_ASSETS[1], C = KAKU_SAN_ASSETS[2];
+const A = { mint: "MINT_A", pool: "POOL_A" }, B = { mint: "MINT_B", pool: "POOL_B" }, C = { mint: "MINT_C", pool: "POOL_C" };
 const xstock = (ticker: string, symbol: string, mint: string): CatalogToken => ({ issuer: "xstock", ticker, symbol, name: symbol, mint, decimals: 8 });
 const observed = (mint: string, pool: string, kind = "raydium_clmm", tvlUsd = 250_000): PoolEvidence => ({
   mint, pool, kind, programId: "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK", quoteMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", tvlUsd, observedAt: "2026-09-16T00:00:00Z",
@@ -47,10 +44,6 @@ test("a thematic definition never claims person provenance", () => {
   assert.equal(def.provenance.holdingsCount, 0);
   assert.equal(def.provenance.fmpYear, null);
   assert.equal(def.weightBasis, "thematic-multi-member-value");
-  // The persisted record carries the kind, so it cannot read as a person index in the DB either.
-  const db = definitionForDb(def) as { kind: string; provenance: { kind: string } };
-  assert.equal(db.kind, "thematic");
-  assert.equal(db.provenance.kind, "thematic");
 });
 
 test("deposits default closed for every thematic index (no pool evidence)", () => {
@@ -60,25 +53,16 @@ test("deposits default closed for every thematic index (no pool evidence)", () =
   for (const def of defs) {
     assert.equal(def.kind, "thematic");
     assert.equal(def.depositsEnabled, false);
-    // Structure can be creatable while deposits stay closed: creation never implies deposits.
-    const db = definitionForDb(def) as { deposits: { enabled: boolean; effectiveEnabled: boolean; releaseGated: boolean } };
-    assert.equal(db.deposits.enabled, false);
-    assert.equal(db.deposits.effectiveEnabled, false);
-    assert.equal(db.deposits.releaseGated, false);
   }
 });
 
-test("even with full pool evidence deposits stay release-gated, and creation never opens them", () => {
+test("full pool evidence is recorded on the research definition independently of NAV readiness", () => {
   const catalog = indexCatalog([xstock("AAPL", "AAPLx", A.mint), xstock("NVDA", "NVDAx", B.mint)]);
   const pools = poolSourceFromEvidence([observed(A.mint, A.pool), observed(B.mint, B.pool)]);
   const def = deriveThematicIndex(fakeView(), catalog, pools);
   assert.equal(def.status, "CREATABLE");
   // Per-vault gate opens on full tradable coverage...
   assert.equal(def.depositsEnabled, true);
-  // The open release flag allows the fully covered per-vault gate to take effect.
-  const db = definitionForDb(def) as { deposits: { enabled: boolean; effectiveEnabled: boolean } };
-  assert.equal(db.deposits.enabled, true);
-  assert.equal(db.deposits.effectiveEnabled, true);
 });
 
 test("a not-ready leg never counts toward tradable coverage", () => {
@@ -117,7 +101,6 @@ test("exceeding the native leg cap throws rather than truncating", () => {
   assert.ok(def.blockedReasons.includes("native-token-cap-exceeded"));
   assert.equal(def.status, "BLOCKED");
   assert.equal(def.depositsEnabled, false);
-  assert.throws(() => buildPersonVaultInit(def), /NATIVE_TOKEN_CAP/);
 });
 
 test("the live feed derives 10 thematic definitions in the person-index shape", () => {

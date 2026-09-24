@@ -1,4 +1,4 @@
-import { publicCycleDirectory } from "@/lib/index-vaults/public-cycle-release";
+import { publicVaultDirectory } from "@/lib/index-vaults/public-directory";
 import { vaultIndexService } from "@/lib/index-vaults/server";
 
 export const runtime = "nodejs";
@@ -8,7 +8,7 @@ export async function GET() {
   const headers = { "Cache-Control": "private, no-store" };
   try {
     const indexes = await vaultIndexService.list();
-    return Response.json(publicCycleDirectory(indexes), { headers });
+    return Response.json(publicVaultDirectory(indexes), { headers });
   } catch {
     return Response.json({ error: "vault-definitions-unavailable" }, { status: 503, headers });
   }

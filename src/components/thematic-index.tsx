@@ -20,7 +20,6 @@ import { markedDollars } from "@/lib/frontend/research-format";
 import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
-import { PUBLIC_MAG7 } from "@/lib/index-vaults/public-cycle-parse";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import styles from "./consumer-index.module.css";
 
@@ -61,7 +60,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   }, [vaultId]);
   useEffect(() => {
     let alive = true;
-    if ((vaultId !== PUBLIC_MAG7.indexId && !navVaultEnabledFor(vaultId)) || !wallet.solanaAddress) return () => { alive = false; };
+    if ((vaultId !== "idx-theme-mag7-caucus" && !navVaultEnabledFor(vaultId)) || !wallet.solanaAddress) return () => { alive = false; };
     const key = `${vaultId}:${wallet.solanaAddress}`;
     getIndexPosition(vaultId, wallet.solanaAddress).then(value => { if (alive) { setPosition(value); setLoadedPositionKey(key); } }).catch(error => { if (alive) { setPosition(null); setLoadedPositionKey(null); setPositionError(error instanceof Error ? error.message : "Your share balance is unavailable right now."); setPositionErrorKey(key); } });
     return () => { alive = false; };

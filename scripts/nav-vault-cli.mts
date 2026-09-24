@@ -18,7 +18,7 @@ import {
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import { getHeliusRpcUrl } from "../src/lib/helius.ts";
 import { createServiceSupabase } from "../src/lib/supabase.ts";
-import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
+import { MAINNET_USDC } from "../src/lib/nav-vault/constants.ts";
 import { readVaultDefinition, readVaultDefinitions, type PersistedVaultDefinition } from "../src/lib/index-vaults/vault-definition-store.ts";
 import {
   NAV_VAULT_DEVNET_PROGRAM_ID, NAV_VAULT_PROGRAM_ID, ata, mintAuthorityPda, setDefaultProgramId, shareMintPda, decodeVault, initVaultIx, setLookupTableIx, setPausedIx, vaultPda, vaultTokenAccounts,

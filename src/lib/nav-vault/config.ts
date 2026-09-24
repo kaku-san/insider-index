@@ -15,7 +15,7 @@ export function parseIndexList(value: string | undefined): string[] {
 }
 
 /**
- * The NAV vault is THE public invest/cash-out rail (Symmetry is retired from public flows). It serves
+ * The NAV vault is the public invest/cash-out rail. It serves
  * every index id on mainnet by default; an index without an on-chain NAV vault simply 404s (Research).
  * `STOCKLANA_NAV_VAULT_INDEXES` optionally narrows to an allowlist; `STOCKLANA_NAV_VAULT_DISABLED=1` turns it off.
  */

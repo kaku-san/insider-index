@@ -3,9 +3,8 @@ import { test } from "node:test";
 import { TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, unpackMint } from "@solana/spl-token";
 import { allSevenVm, definition, pk } from "./support/all-seven-vm.mts";
-import { MAINNET_USDC } from "../src/lib/index-vaults/native-defaults.ts";
+import { MAINNET_USDC } from "../src/lib/nav-vault/constants.ts";
 import { buildCycleRoute, assertCycleRouteInstruction, assertCycleMint } from "../src/lib/index-vaults/cycle-routes.ts";
-import { encodeCycleWire } from "../src/lib/index-vaults/cycle-wire.ts";
 
 test("route instruction independently binds exact input, on-chain minimum, pool and canonical owner ATAs", async () => {
   const vm = allSevenVm(), leg = definition.vaultLegs.find(l => l.ticker === "TSLA")!;
@@ -20,7 +19,6 @@ test("route instruction independently binds exact input, on-chain minimum, pool 
   assert.throws(() => assertCycleRouteInstruction(floor, vm.keeper), /AMOUNTS/);
   const exactOut = clone(); exactOut.instruction.data[40] = 0;
   assert.throws(() => assertCycleRouteInstruction(exactOut, vm.keeper), /SHAPE/);
-  assert.throws(() => encodeCycleWire({ instructions: [route.instruction], payer: vm.keeper, blockhash: vm.svm.latestBlockhash(), computeUnits: 1_400_000, microLamports: "1", maxPriorityFeeLamports: "1" }), /PRIORITY_FEE_CAP/);
 });
 test("unsupported pools, sub-$10k TVL, stale metadata, impossible min-out and transfer-fee extensions refuse", async () => {
   const vm = allSevenVm(), leg = definition.vaultLegs[0];

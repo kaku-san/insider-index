@@ -99,7 +99,7 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
   const quoteGeneration = useRef(0);
   const sawWithdrawRef = useRef(false);
   const onPositionRef = useRef(onPosition);
-  onPositionRef.current = onPosition;
+  useEffect(() => { onPositionRef.current = onPosition; }, [onPosition]);
   const activeIntent = pendingIntent(position);
   const holdingsLabel = positionHoldingsLabel(position);
   const network = readiness?.identity?.network ?? readiness?.vault?.network;
@@ -117,11 +117,11 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     mode, sharesBeforeRaw: sharesBeforeSignature, position: observedPosition, timedOut: mode === "deposit" && timedOut, sawWithdrawPending: sawWithdrawPending || sawWithdraw(observedPosition),
   });
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => {
     if (!open) return;
     const pending = pendingIntent(position);
     sawWithdrawRef.current = sawWithdraw(position);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the sheet when opened or its action/index changes
     setScreen(pending ? "submitted" : "amount");
     setPrepared(null);
     setSettlementPosition(pending ? position ?? null : null);
@@ -133,6 +133,8 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     setAmount(mode === "deposit" ? "10" : positionSharesText(position) ?? "0");
     setQuoteStatus("idle");
     quoteGeneration.current += 1;
+    // `position` is intentionally sampled only when the sheet identity changes; live updates flow through the listener below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode, indexId]);
   useEffect(() => {
     if (!open || screen !== "amount" || mode !== "deposit" || !wallet.solanaAddress || !network) return;
@@ -147,8 +149,8 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     return () => { alive = false; };
   }, [open, screen, mode, wallet.solanaAddress, network, usdcMint]);
   // An already-open sheet should switch to the listener when a pending read appears.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- an observed pending request switches the sheet to the listener
     if (open && activeIntent) setScreen("submitted");
   }, [open, activeIntent]);
   useEffect(() => {
@@ -172,6 +174,8 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
     });
     observe();
     return () => { alive = false; if (timer) clearTimeout(timer); };
+    // `activeIntent` only gates listener startup; depending on its polled object would restart the listener on every observation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, screen, mode, indexId, wallet.solanaAddress, sharesBeforeSignature]);
 
   function availableUsdcText() { return availableUsdcRaw === null ? "—" : rawToDecimal(availableUsdcRaw, 6); }
@@ -263,23 +267,9 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
       setSharesBeforeSignature(position?.sharesRaw ?? "0");
       sawWithdrawRef.current = false;
       setSawWithdrawPending(false);
-      const signatures: string[] = [];
       for (const transaction of step.transactions) {
         const signature = await wallet.signAndSendTransaction(transaction.messageBase64, step.network);
         await confirmSignature(signature, step.network);
-        signatures.push(signature);
-      }
-      if (mode === "deposit" && prepared.step.basket?.stage === "acquire") {
-        const next = await prepareDeposit(indexId, { owner: wallet.solanaAddress, amountRaw: usdcRaw(amount), idempotencyKey: crypto.randomUUID(), stage: "contribute", signatures }, prepared.step.network);
-        if (next.requires !== "user-signature" || !next.transactions.length) {
-          setError(next.blockers?.[0] || next.basket?.statusLine || "Some names did not buy. Shares were not minted.");
-          setPrepared(null); setSettlementPosition(null); setTimedOut(false); setScreen("submitted");
-          return;
-        }
-        for (const transaction of next.transactions) {
-          const signature = await wallet.signAndSendTransaction(transaction.messageBase64, next.network);
-          await confirmSignature(signature, next.network);
-        }
       }
       // NAV vault exits settle inside the signed transaction: a confirmed signature is the finished cash out.
       if (isNav && mode === "withdraw") { sawWithdrawRef.current = true; setSawWithdrawPending(true); }

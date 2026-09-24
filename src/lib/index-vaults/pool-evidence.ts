@@ -1,19 +1,15 @@
 /**
  * Pluggable per-mint Raydium pool evidence for person-index vault legs.
  *
- * Symmetry prices are Raydium-only, so a leg can only carry an oracle when a mainnet USDC Raydium
- * CLMM/CPMM pool has actually been *observed* for its mint. The concrete evidence lives in the
- * person-pages task's `raydium-pools-mainnet.ts` (owner of the pool snapshot). Until that lands we
- * do not stand up a second pool registry: the mapping resolves catalog mints now, and this thin
- * interface leaves the pool source pluggable. `PENDING_POOL_SOURCE` reports every mint as
- * unobserved with reason `pool-evidence-pending`; `poolSourceFromReadiness` adapts the landed
- * `raydium-pools-mainnet` `poolReadiness` without any shape change.
+ * Pool identity comes from observed mainnet USDC CLMM/CPMM evidence, never guessed addresses.
+ * `raydium-pools-mainnet.ts` owns the snapshot. `PENDING_POOL_SOURCE` represents missing
+ * evidence; `poolSourceFromReadiness` adapts the snapshot without changing its meaning.
  */
 
 export type PoolEvidence = {
   mint: string;
   pool: string;
-  /** Raydium oracle kind Symmetry supports. */
+  /** Observed Raydium pool kind. */
   kind: string;
   programId: string;
   quoteMint: string;

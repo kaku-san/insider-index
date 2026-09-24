@@ -1,10 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
-import { VAULTS_V3_PROGRAM_ID } from "@symmetry-hq/sdk/dist/constants.js";
-import { RebalanceIntentLayout } from "@symmetry-hq/sdk/dist/layouts/intents/rebalanceIntent.js";
 
-// Preserve the existing proxy contract, including user-signed relay. New cycle capabilities
-// below are reads only, constrained to the shapes used by the independent wallet validator.
+// Preserve user-signed relay and bounded reads. Program-wide scans are not exposed.
 const EXISTING_METHODS = new Set([
   "getAccountInfo", "getBalance", "getBlockHeight", "getEpochInfo", "getFeeForMessage",
   "getHealth", "getLatestBlockhash", "getMinimumBalanceForRentExemption", "getMultipleAccounts",
@@ -49,15 +46,6 @@ function allowed(call: unknown): boolean {
     return address(p[0]) && keysOnly(c, ["commitment", "limit", "before", "minContextSlot"])
       && c.commitment === "finalized" && Number.isInteger(c.limit) && Number(c.limit) >= 1 && Number(c.limit) <= 100
       && slot(c.minContextSlot) && (c.before === undefined || signature(c.before));
-  }
-  if (call.method === "getProgramAccounts") {
-    if (p[0] !== VAULTS_V3_PROGRAM_ID.toBase58() || !keysOnly(c, ["commitment", "encoding", "filters"])
-      || c.commitment !== "confirmed" || c.encoding !== "base64" || !Array.isArray(c.filters) || c.filters.length !== 2) return false;
-    const sizes = c.filters.filter(f => object(f) && Object.keys(f).length === 1 && f.dataSize === RebalanceIntentLayout.span + 8);
-    const vaults = c.filters.filter(f => object(f) && Object.keys(f).length === 1 && object(f.memcmp)
-      && keysOnly(f.memcmp, ["offset", "bytes", "encoding"]) && f.memcmp.offset === 8 && address(f.memcmp.bytes)
-      && (f.memcmp.encoding === undefined || f.memcmp.encoding === "base58"));
-    return sizes.length === 1 && vaults.length === 1;
   }
   return false;
 }

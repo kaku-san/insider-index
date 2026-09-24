@@ -2,13 +2,13 @@
  * Mainnet mark + swap adapters for the NAV vault keeper. Marks follow the repo price rule:
  * Raydium persisted-pool quote first (`buildCycleRoute`, direct CLMM), Jupiter `/swap/v2/build`
  * only if the leg has no usable pool; never Pyth/Hermes. Quotes are built, never sent.
- * Mainnet use requires the operator to deploy `programs/bin/nav_vault.so` (docs/nav-vault.md).
+ * The deployed mainnet program and the newer committed binary are distinguished in docs/nav-vault.md.
  */
 import { PublicKey, TransactionInstruction, type Connection } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { buildCycleRoute } from "../index-vaults/cycle-routes.ts";
 import { fetchJupiterBuild } from "../index-vaults/jupiter-build.ts";
-import { MAINNET_USDC } from "../index-vaults/native-defaults.ts";
+import { MAINNET_USDC } from "./constants.ts";
 import type { PersistedVaultLeg } from "../index-vaults/vault-definition-store.ts";
 import { firstRoute, jupiterV1SwapBuilder, markFromQuote, type MarkSource, type SwapBuilder } from "./keeper.ts";
 import { legAccount, legIndex } from "./program.ts";
