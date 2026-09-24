@@ -1,1 +1,3 @@
 Artwork extracted from the user-approved generated homepage reference in this conversation (wide_web_app_ui_screenshot_of_a_modern_finance_das.png). Crop: 850,70–1427,434. Decorative illustration, not a photograph of a named official and not evidence of a transaction. No market data or return charts are included in this crop. Native resolution 577 × 364; do not enlarge beyond the supplied responsive layout.
+
+`editorial-collage.webp` is derived from `editorial-collage.png` by `scripts/cutout-editorial-collage.mts`: only the outer paper background becomes transparent (with a soft die-cut edge) so the collage sits on the page in light and dark themes. No art is added or altered; rerun the script after changing the PNG.
