@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
+import { createServer } from "node:http";
+import { promisify } from "node:util";
 import { PublicKey } from "@solana/web3.js";
 import {
   KEEPER_DEFER_BASE_SECS, KEEPER_DEFER_MAX_SECS, errorText, isDeferred, isUnsellableError, planRebalance, rebalanceDeferKey, recordFailure, withinPriceBound,
@@ -95,4 +98,47 @@ test("marks are the mid of ask and bid; the ask alone when the bid is missing or
   assert.equal(midMark(1_000_000n, 980_000n), 990_000n);
   assert.equal(midMark(1_000_000n, null), 1_000_000n);
   assert.equal(midMark(1_000_000n, 1_010_000n), 1_000_000n);
+});
+
+test("throttled RPC fetch honours the full server Retry-After (seconds or HTTP-date); only the fallback backoff is capped", async () => {
+  const run = async (options: Parameters<typeof throttledFetch>[0], first: Response) => {
+    const delays: number[] = [];
+    let calls = 0;
+    const paced = throttledFetch({ minIntervalMs: 0, maxBackoffMs: 8_000, ...options, sleep: async ms => { delays.push(ms); }, fetchImpl: (async () => ++calls === 1 ? first : new Response("", { status: 200 })) as typeof fetch });
+    assert.equal((await paced("rpc")).status, 200);
+    return delays;
+  };
+  assert.deepEqual(await run({}, new Response("", { status: 429, headers: { "retry-after": "60" } })), [60_000], "60 s Retry-After is not cut to the 8 s cap");
+  const now = Date.parse("2026-09-24T00:00:00Z");
+  assert.deepEqual(await run({ now: () => now }, new Response("", { status: 429, headers: { "retry-after": new Date(now + 30_000).toUTCString() } })), [30_000], "HTTP-date form");
+  assert.deepEqual(await run({ baseBackoffMs: 1_000, maxBackoffMs: 600 }, new Response("", { status: 429 })), [600], "no Retry-After: capped exponential fallback");
+});
+
+test("keeper CLI fails loudly for an explicitly requested vault that does not exist", async () => {
+  // Minimal JSON-RPC stub: every getMultipleAccountsInfo returns no account.
+  const server = createServer((request, response) => {
+    let body = "";
+    request.setEncoding("utf8");
+    request.on("data", chunk => { body += chunk; });
+    request.on("end", () => {
+      const { id } = JSON.parse(body) as { id: number | string };
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ jsonrpc: "2.0", id, result: { context: { slot: 1 }, value: [null] } }));
+    });
+  });
+  await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== "string");
+    const cli = promisify(execFile)(process.execPath, [
+      "--experimental-strip-types", "scripts/nav-vault-cli.mts", "keeper", "--network", "devnet", "--rpc", `http://127.0.0.1:${address.port}`, "--index", "missing-vault",
+    ], { cwd: process.cwd() });
+    await assert.rejects(cli, (error: Error & { stderr?: string; code?: number }) => {
+      assert.equal(error.code, 1, "non-zero exit");
+      assert.match(error.stderr ?? "", /No NAV vault for missing-vault on devnet/);
+      return true;
+    });
+  } finally {
+    await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
 });

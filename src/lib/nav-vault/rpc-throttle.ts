@@ -9,7 +9,7 @@ export type ThrottleOptions = {
   minIntervalMs?: number;
   /** Retries after a 429 before the 429 response is returned (default 6). */
   maxRetries?: number;
-  /** First backoff delay; doubles per retry up to `maxBackoffMs` (defaults 500 ms / 8 s). */
+  /** Fallback backoff when the 429 has no Retry-After; doubles per retry up to `maxBackoffMs` (defaults 500 ms / 8 s). */
   baseBackoffMs?: number;
   maxBackoffMs?: number;
   fetchImpl?: typeof fetch;
@@ -35,8 +35,13 @@ export function throttledFetch(options: ThrottleOptions = {}): typeof fetch {
       lastStart = now();
       const response = await fetchImpl(input, init);
       if (response.status !== 429 || attempt >= maxRetries) return response;
-      const retryAfter = Number(response.headers.get("retry-after"));
-      const delay = Math.min(maxBackoff, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : base * 2 ** attempt);
+      // Server Retry-After (delay-seconds or HTTP-date) is honoured in full; only the fallback backoff is capped.
+      const retryAfter = response.headers.get("retry-after");
+      const seconds = retryAfter === null || retryAfter.trim() === "" ? NaN : Number(retryAfter);
+      const date = retryAfter === null ? NaN : Date.parse(retryAfter);
+      const delay = Number.isFinite(seconds) && seconds >= 0
+        ? seconds * 1000
+        : Number.isFinite(date) ? Math.max(0, date - now()) : Math.min(maxBackoff, base * 2 ** attempt);
       options.onRateLimited?.(attempt + 1, delay);
       await sleep(delay);
     }

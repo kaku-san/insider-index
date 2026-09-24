@@ -195,7 +195,8 @@ const jsonOut = (value: unknown) => console.log(JSON.stringify(value, (_, v) => 
 /** --all: every DB index with an on-chain NAV vault; --indexes a,b: explicit list; --index a: one vault. One RPC read. */
 async function keeperVaults(programId: PublicKey, via: Connection = connection): Promise<{ indexId: string; state: ReturnType<typeof decodeVault> }[]> {
   let ids: string[];
-  if (opt("--index")) ids = [need("--index")];
+  const explicitIndex = opt("--index");
+  if (explicitIndex) ids = [explicitIndex];
   else if (opt("--indexes")) ids = opt("--indexes")!.split(",").map(id => id.trim()).filter(Boolean);
   else if (flag("--all")) {
     const db = createServiceSupabase();
@@ -203,6 +204,8 @@ async function keeperVaults(programId: PublicKey, via: Connection = connection):
     ids = (await readVaultDefinitions(db)).map(row => row.indexId);
   } else throw new Error("--index, --indexes or --all is required");
   const infos = await via.getMultipleAccountsInfo(ids.map(id => vaultPda(id, programId)));
+  // An explicitly named vault that does not exist is an operator error, not "nothing to keep".
+  if (explicitIndex && !infos[0]) throw new Error(`No NAV vault for ${explicitIndex} on ${network}.`);
   return ids.flatMap((indexId, i) => infos[i] ? [{ indexId, state: decodeVault(vaultPda(indexId, programId), infos[i]!.data) }] : []);
 }
 
