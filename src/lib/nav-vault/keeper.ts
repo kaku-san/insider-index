@@ -322,7 +322,7 @@ export type KeeperTickResult = {
   dryRun: boolean;
   marks: { mint: string; price: string; venue: string }[];
   plan: { kind: string; mint: string; amountInRaw: string; valueUsdcRaw: string; reason: string }[];
-  requests: { open: number; crosses: number; fulfills: number; settled: number; deliveredInKind: number };
+  requests: { open: number; crosses: number; fulfills: number; settled: number; deliveredInKind: number; paidUsdc: number };
   signatures: { step: string; signature: string }[];
   /** Swaps not sent or failed this cycle; `retryAt` (unix seconds) when the leg is deferred. */
   skipped: { mint: string; reason: string; step?: string; retryAt?: number }[];
@@ -336,10 +336,10 @@ export type KeeperTickResult = {
  * The keeper never pays rent for owner accounts (an owner could close them and keep the rent); a leg
  * without an account stays on the request for the owner's own claim after the timeout.
  */
-async function deliverableLegs(connection: NavConnection, state: NavVaultState, owner: PublicKey, legs: readonly number[]): Promise<number[]> {
+async function deliverableLegs(connection: NavConnection, state: NavVaultState, owner: PublicKey, legs: readonly number[]): Promise<{ usdcAccount: boolean; legs: number[] }> {
   const infos = await connection.getMultipleAccountsInfo([ata(owner, state.usdcMint), ...legs.map(i => ata(owner, state.legs[i]!.mint, state.legs[i]!.tokenProgram))], "confirmed");
-  if (!infos[0]) return [];
-  return legs.filter((_, k) => Boolean(infos[k + 1]));
+  if (!infos[0]) return { usdcAccount: false, legs: [] };
+  return { usdcAccount: true, legs: legs.filter((_, k) => Boolean(infos[k + 1])) };
 }
 
 export async function keeperTick(input: {
@@ -398,7 +398,7 @@ export async function keeperTick(input: {
   const result: KeeperTickResult = {
     indexId: input.indexId, dryRun: !input.execute,
     marks: marks.map((mark, i) => ({ mint: state.legs[i]!.mint.toBase58(), price: mark.price.toString(), venue: mark.venue })),
-    plan: [], requests: { open: requests.length, crosses: 0, fulfills: 0, settled: 0, deliveredInKind: 0 }, signatures: [], skipped: [], errors: [],
+    plan: [], requests: { open: requests.length, crosses: 0, fulfills: 0, settled: 0, deliveredInKind: 0, paidUsdc: 0 }, signatures: [], skipped: [], errors: [],
   };
   const priority = input.priorityMicroLamports ? [ComputeBudgetProgram.setComputeUnitPrice({ microLamports: input.priorityMicroLamports })] : [];
   const compile = async (instructions: TransactionInstruction[], tables: AddressLookupTableAccount[] = []) => {
@@ -497,10 +497,19 @@ export async function keeperTick(input: {
     // Keep selling to USDC until the timeout (the promise the cash-out copy makes); only then do
     // legs that keep failing go in kind.
     const stuck = timedOut ? open.filter(leg => deferrals.has(fulfillDeferKey(request.address, leg))) : [];
-    // Deliver only once every remaining leg is stuck: the claim then pays the USDC owed and closes the request.
+    // Deliver only once every remaining leg is stuck. Every claim also pays the USDC already converted,
+    // so the owner gets that USDC at the timeout even when no stuck leg can be delivered (no owner
+    // account): an empty-leg claim pays it and leaves those legs on the request, claimable in kind.
     if (open.length && stuck.length === open.length) {
-      let deliverable: number[] = [];
-      try { deliverable = await deliverableLegs(input.connection, current, request.owner, stuck); } catch (error) { result.errors.push({ step: "read owner accounts", error: errorText(error) }); }
+      let owner = { usdcAccount: false, legs: [] as number[] };
+      try { owner = await deliverableLegs(input.connection, current, request.owner, stuck); } catch (error) { result.errors.push({ step: "read owner accounts", error: errorText(error) }); }
+      const deliverable = owner.legs;
+      if (owner.usdcAccount && !deliverable.length && request.usdcOwed > 0n) {
+        if (await attempt("pay converted USDC", async () => execute(await compile([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+          claimInKindIx(current, input.keeper, request, [], programId),
+        ], vaultTables), "pay converted USDC"))) result.requests.paidUsdc += 1;
+      }
       const stepLegs = 6;
       for (let k = 0; k < deliverable.length; k += stepLegs) {
         const legs = deliverable.slice(k, k + stepLegs);

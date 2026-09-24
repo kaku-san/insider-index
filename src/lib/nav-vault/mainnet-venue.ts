@@ -1,24 +1,30 @@
 /**
- * Mainnet mark + swap adapters for the NAV vault keeper. Marks follow the repo price rule:
- * Raydium persisted-pool quote first (`buildCycleRoute`, direct CLMM), Jupiter `/swap/v2/build`
- * only if the leg has no usable pool; never Pyth/Hermes. Quotes are built, never sent. A mark is
- * the mid of a $100 ask and the matching bid (sell-side) quote.
+ * Mainnet mark + swap adapters for the NAV vault keeper. Marks: Jupiter v1 quote first (plain HTTP,
+ * CPI-safe DEXes, no Solana RPC), the persisted Raydium pool quote (`buildCycleRoute`, direct CLMM)
+ * only when Jupiter has no quote; never Pyth/Hermes. Quotes are built, never sent. A mark is the mid
+ * of a $100 ask and the matching bid (sell-side) quote.
  * The deployed mainnet program and the newer committed binary are distinguished in docs/nav-vault.md.
  */
 import { PublicKey, TransactionInstruction, type Connection } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { buildCycleRoute } from "../index-vaults/cycle-routes.ts";
-import { fetchJupiterBuild } from "../index-vaults/jupiter-build.ts";
 import { MAINNET_USDC } from "./constants.ts";
 import type { PersistedVaultLeg } from "../index-vaults/vault-definition-store.ts";
-import { firstRoute, jupiterV1SwapBuilder, markFromQuote, type MarkSource, type SwapBuilder } from "./keeper.ts";
+import { JUPITER_CPI_SAFE_DEXES, firstRoute, jupiterV1SwapBuilder, markFromQuote, type MarkSource, type SwapBuilder } from "./keeper.ts";
 import { legAccount, legIndex } from "./program.ts";
 
 export const MARK_PROBE_USDC_RAW = 100_000_000n; // $100 probe on each side of the book.
 
-/** Bid/ask ratio per mint (parts per million), measured by a sell-side quote; refreshed every 5 minutes. */
-const BID_REFRESH_MS = 5 * 60_000;
-const bidSpreads = new Map<string, { bidOverAskPpm: bigint | null; at: number }>();
+/** Bid/ask ratio per mint (parts per million), measured by a sell-side quote and re-measured every 5 minutes. */
+export const BID_REFRESH_MS = 5 * 60_000;
+/**
+ * Sell-side re-quotes per mark round, so refreshing every bid never lands in one round (that round
+ * doubled its quotes and let marks go stale). Mints with no measured spread yet get their own budget.
+ */
+export const BID_REFRESHES_PER_ROUND = 2;
+export const BID_FIRST_QUOTES_PER_ROUND = 4;
+export type BidSpreads = Map<string, { bidOverAskPpm: bigint | null; at: number }>;
+const bidSpreads: BidSpreads = new Map();
 
 /** Mid of an executable ask (USDC → leg) and bid (the same leg amount → USDC); the ask alone when no bid quotes. */
 export function midMark(askPrice: bigint, bidPrice: bigint | null): bigint {
@@ -26,47 +32,59 @@ export function midMark(askPrice: bigint, bidPrice: bigint | null): bigint {
   return (askPrice + bidPrice) / 2n;
 }
 
-export function mainnetVenue(input: { connection: Connection; legs: readonly PersistedVaultLeg[]; quoteOwner: string; env?: { JUPITER_API_KEY?: string } }): { marks: MarkSource; swaps: SwapBuilder } {
-  /** Executable output for `amountRaw` of `inputMint`: persisted Raydium pool first, then Jupiter. */
-  const quoteOut = async (persisted: PersistedVaultLeg | undefined, inputMint: string, outputMint: string, amountRaw: bigint): Promise<{ out: bigint; venue: string }> => {
-    if (persisted?.pool && persisted.kind === "raydium_clmm") {
-      try {
-        const route = await buildCycleRoute({
-          connection: input.connection, leg: persisted, owner: input.quoteOwner, inputMint, outputMint,
-          amountInRaw: amountRaw.toString(), slippageBps: 50, maxAgeMs: 60_000,
-        });
-        return { out: BigInt(route.expectedOutRaw), venue: "raydium" };
-      } catch { /* no usable pool quote: Jupiter below */ }
-    }
-    if (input.env?.JUPITER_API_KEY?.trim()) {
-      const built = await fetchJupiterBuild({ inputMint, outputMint, amountRaw: amountRaw.toString(), taker: input.quoteOwner, env: input.env });
-      if (built) return { out: BigInt(built.outAmount), venue: "jupiter" };
-    }
-    const url = new URL("https://lite-api.jup.ag/swap/v1/quote");
+/** One venue per mark round (`mainnetVenue` is built each round), so the bid budgets are per round. */
+export function mainnetVenue(input: {
+  connection: Connection; legs: readonly PersistedVaultLeg[]; quoteOwner: string; env?: { JUPITER_API_KEY?: string };
+  fetchImpl?: typeof fetch; bidCache?: BidSpreads; now?: () => number;
+}): { marks: MarkSource; swaps: SwapBuilder } {
+  const fetchImpl = input.fetchImpl ?? fetch;
+  const spreads = input.bidCache ?? bidSpreads;
+  const now = input.now ?? Date.now;
+  const apiKey = input.env?.JUPITER_API_KEY?.trim();
+  let refreshes = BID_REFRESHES_PER_ROUND, firsts = BID_FIRST_QUOTES_PER_ROUND;
+  const jupiterQuote = async (inputMint: string, outputMint: string, amountRaw: bigint): Promise<bigint | null> => {
+    const url = new URL(apiKey ? "https://api.jup.ag/swap/v1/quote" : "https://lite-api.jup.ag/swap/v1/quote");
     url.searchParams.set("inputMint", inputMint); url.searchParams.set("outputMint", outputMint);
     url.searchParams.set("amount", amountRaw.toString()); url.searchParams.set("slippageBps", "50");
-    const response = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(15_000) });
-    const quote = response.ok ? await response.json() as { outAmount?: string; inAmount?: string } : null;
-    if (!quote?.outAmount || quote.inAmount !== amountRaw.toString()) throw new Error(`No Raydium or Jupiter quote for ${inputMint} → ${outputMint}.`);
-    return { out: BigInt(quote.outAmount), venue: "jupiter-v1" };
+    url.searchParams.set("swapMode", "ExactIn"); url.searchParams.set("dexes", JUPITER_CPI_SAFE_DEXES.join(","));
+    try {
+      const response = await fetchImpl(url, { headers: { Accept: "application/json", ...(apiKey ? { "x-api-key": apiKey } : {}) }, signal: AbortSignal.timeout(15_000) });
+      const quote = response.ok ? await response.json() as { outAmount?: string; inAmount?: string } : null;
+      return quote?.outAmount && quote.inAmount === amountRaw.toString() && BigInt(quote.outAmount) > 0n ? BigInt(quote.outAmount) : null;
+    } catch { return null; }
+  };
+  /** Executable output for `amountRaw` of `inputMint`: Jupiter (no RPC) first, then the persisted Raydium pool. */
+  const quoteOut = async (persisted: PersistedVaultLeg | undefined, inputMint: string, outputMint: string, amountRaw: bigint): Promise<{ out: bigint; venue: string }> => {
+    const jupiter = await jupiterQuote(inputMint, outputMint, amountRaw);
+    if (jupiter) return { out: jupiter, venue: "jupiter-v1" };
+    if (persisted?.pool && persisted.kind === "raydium_clmm") {
+      const route = await buildCycleRoute({
+        connection: input.connection, leg: persisted, owner: input.quoteOwner, inputMint, outputMint,
+        amountInRaw: amountRaw.toString(), slippageBps: 50, maxAgeMs: 60_000,
+      });
+      return { out: BigInt(route.expectedOutRaw), venue: "raydium" };
+    }
+    throw new Error(`No Jupiter or Raydium quote for ${inputMint} → ${outputMint}.`);
   };
   // Marks are the mid of both sides, so NAV and the on-chain sell bound reflect what the vault can
   // realise, not the ask alone (an ask mark makes every sale look like a loss beyond max_slippage).
-  // The bid side is re-quoted every BID_REFRESH_MS; between refreshes the last measured spread is
-  // applied to the fresh ask, so a mark still costs one quote and the mark cadence holds.
+  // Bids are re-quoted a few mints per round (stalest first as they expire); between refreshes the
+  // last measured spread is applied to the fresh ask, so a round costs about one quote per mint.
   const marks: MarkSource = async leg => {
     const persisted = input.legs.find(item => item.mint === leg.mint.toBase58());
     const mint = leg.mint.toBase58();
-    const ask = await quoteOut(persisted, MAINNET_USDC, mint, MARK_PROBE_USDC_RAW).catch(error => { throw new Error(`No Raydium or Jupiter mark for ${mint}. ${(error as Error).message}`); });
+    const ask = await quoteOut(persisted, MAINNET_USDC, mint, MARK_PROBE_USDC_RAW).catch(error => { throw new Error(`No Jupiter or Raydium mark for ${mint}. ${(error as Error).message}`); });
     const askPrice = markFromQuote(MARK_PROBE_USDC_RAW, ask.out, leg.decimals);
-    let spread = bidSpreads.get(mint);
-    if (!spread || Date.now() - spread.at > BID_REFRESH_MS) {
+    let spread = spreads.get(mint);
+    const due = !spread ? firsts > 0 : now() - spread.at > BID_REFRESH_MS && refreshes > 0;
+    if (due) {
+      if (spread) refreshes -= 1; else firsts -= 1;
       const bid = await quoteOut(persisted, mint, MAINNET_USDC, ask.out).catch(() => null);
       const bidPrice = bid && bid.out > 0n ? (bid.out * 10n ** BigInt(leg.decimals)) / ask.out : null;
-      spread = { bidOverAskPpm: bidPrice && bidPrice <= askPrice ? (bidPrice * 1_000_000n) / askPrice : null, at: Date.now() };
-      bidSpreads.set(mint, spread);
+      spread = { bidOverAskPpm: bidPrice && bidPrice <= askPrice ? (bidPrice * 1_000_000n) / askPrice : null, at: now() };
+      spreads.set(mint, spread);
     }
-    const price = midMark(askPrice, spread.bidOverAskPpm === null ? null : (askPrice * spread.bidOverAskPpm) / 1_000_000n);
+    const price = midMark(askPrice, !spread || spread.bidOverAskPpm === null ? null : (askPrice * spread.bidOverAskPpm) / 1_000_000n);
     return { price, venue: price === askPrice ? `${ask.venue}-ask` : `${ask.venue}-mid` };
   };
   // Jupiter FIRST (v1 /swap-instructions with shared accounts, CPI-safe DEXes: v2 `route_v2` fails

@@ -142,3 +142,45 @@ test("keeper CLI fails loudly for an explicitly requested vault that does not ex
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
 });
+
+test("marks: Jupiter quote first (no RPC), sell-side re-quotes staggered a few mints per round", async () => {
+  const { mainnetVenue, BID_FIRST_QUOTES_PER_ROUND, BID_REFRESHES_PER_ROUND, BID_REFRESH_MS } = await import("../src/lib/nav-vault/mainnet-venue.ts");
+  const { MAINNET_USDC } = await import("../src/lib/nav-vault/constants.ts");
+  const mints = Array.from({ length: 6 }, () => PublicKey.unique());
+  let asks = 0, bids = 0;
+  const fetchImpl = (async (url: URL) => {
+    const input = url.searchParams.get("inputMint"), amount = url.searchParams.get("amount")!;
+    assert.match(url.searchParams.get("dexes") ?? "", /Raydium CLMM/, "CPI-safe DEXes, same venues the keeper trades on");
+    if (input === MAINNET_USDC) { asks += 1; return Response.json({ inAmount: amount, outAmount: "50000000" }); } // $100 → 0.5 token (8 dp): ask 200
+    bids += 1; return Response.json({ inAmount: amount, outAmount: "98000000" }); // 0.5 token → $98: bid 196
+  }) as unknown as typeof fetch;
+  const connection = new Proxy({}, { get: () => { throw new Error("marks must not use Solana RPC when Jupiter quotes"); } }) as never;
+  let clock = 1_000_000;
+  const bidCache = new Map();
+  const round = async () => {
+    const venue = mainnetVenue({ connection, legs: [], quoteOwner: PublicKey.default.toBase58(), fetchImpl, bidCache, now: () => clock });
+    return Promise.all(mints.map((mint, index) => venue.marks({ index, mint, decimals: 8, tokenProgram: PublicKey.default })));
+  };
+  const first = await round();
+  assert.equal(asks, 6);
+  assert.equal(bids, BID_FIRST_QUOTES_PER_ROUND, "first-time bid quotes are capped per round");
+  assert.equal(first.filter(m => m.venue === "jupiter-v1-mid").length, BID_FIRST_QUOTES_PER_ROUND);
+  assert.equal(first.find(m => m.venue === "jupiter-v1-mid")!.price, 198_000_000n, "mid of ask 200 and bid 196");
+  assert.equal(first.find(m => m.venue === "jupiter-v1-ask")!.price, 200_000_000n, "unmeasured mints fall back to the ask");
+  await round();
+  assert.equal(bids, 6, "the remaining mints are measured next round");
+  bids = 0;
+  await round();
+  assert.equal(bids, 0, "no bid re-quotes while spreads are fresh");
+  clock += BID_REFRESH_MS + 1;
+  const later = await round();
+  assert.equal(bids, BID_REFRESHES_PER_ROUND, "expired spreads re-quote a few per round, never all at once");
+  assert.ok(later.every(m => m.price === 198_000_000n), "the last measured spread still applies to every fresh ask");
+});
+
+test("marks: Raydium pool quote only when Jupiter has none", async () => {
+  const { mainnetVenue } = await import("../src/lib/nav-vault/mainnet-venue.ts");
+  const fetchImpl = (async () => new Response("no route", { status: 400 })) as unknown as typeof fetch;
+  const venue = mainnetVenue({ connection: {} as never, legs: [], quoteOwner: PublicKey.default.toBase58(), fetchImpl, bidCache: new Map() });
+  await assert.rejects(venue.marks({ index: 0, mint: PublicKey.unique(), decimals: 8, tokenProgram: PublicKey.default }), /No Jupiter or Raydium mark/);
+});
