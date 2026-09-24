@@ -179,9 +179,10 @@ test("Mag7 cash out uses the position's verified dust decimals", () => {
   assert.match(html, /Cash out\./);
   assert.match(html, /1 approval now/);
   assert.match(html, /Cash out in one signature/);
-  assert.match(html, /keeper sells your share of each stock/);
+  assert.match(html, /keeper sells your share and usually settles in USDC within about a minute/);
   assert.match(html, /sent to you as the token/);
-  assert.doesNotMatch(html, /Shares burn when you sign|not a share refund/);
+  assert.match(html, /claim your share in kind yourself after the 10-minute request timeout/);
+  assert.doesNotMatch(html, /sends USDC within about a minute|Shares burn when you sign|not a share refund/);
   assert.doesNotMatch(html, /verified share decimals|claim every asset|Exit mechanics/i);
 });
 
@@ -251,4 +252,17 @@ test("completed cash out does not present the pre-clear holdings as delivered", 
   }));
   assert.match(html, /Cash out complete — check your wallet\./);
   assert.doesNotMatch(html, /AAPL|Sent to your wallet|Pending holdings/);
+});
+
+test("pending cash out explains usual settlement and the timed-out in-kind claim", async () => {
+  const { CashOutDeliveryStatus } = await import("../src/components/position-book.tsx");
+  const { CASH_OUT_STILL_NOTE } = await import("../src/lib/frontend/position-basket.ts");
+  const html = renderToStaticMarkup(createElement(CashOutDeliveryStatus, {
+    finished: false,
+    pendingNote: CASH_OUT_STILL_NOTE,
+    assets: [{ mint: "mint-aapl", label: "AAPL", amountRaw: "5", kind: "stock" }],
+  }));
+  assert.match(html, /usually sells them and settles in USDC within about a minute/);
+  assert.match(html, /sent to you as the token/);
+  assert.match(html, /claim your share in kind yourself after the 10-minute request timeout/);
 });
