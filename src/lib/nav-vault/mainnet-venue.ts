@@ -1,7 +1,7 @@
 /**
- * Mainnet mark + swap adapters for the NAV vault keeper. Marks: Jupiter v1 quote first (plain HTTP,
- * CPI-safe DEXes, no Solana RPC), the persisted Raydium pool quote (`buildCycleRoute`, direct CLMM)
- * only when Jupiter has no quote; never Pyth/Hermes. Quotes are built, never sent. A mark is the mid
+ * Mainnet mark + swap adapters for the NAV vault keeper. Marks: keyless Jupiter v1 quote first (plain
+ * HTTP, CPI-safe DEXes, no Solana RPC, paced), then the persisted Raydium pool quote (`buildCycleRoute`,
+ * direct CLMM), then keyed Jupiter; never Pyth/Hermes. Quotes are built, never sent. A mark is the mid
  * of a $100 ask and the matching bid (sell-side) quote.
  * The deployed mainnet program and the newer committed binary are distinguished in docs/nav-vault.md.
  */
@@ -17,6 +17,8 @@ export const MARK_PROBE_USDC_RAW = 100_000_000n; // $100 probe on each side of t
 
 /** Bid/ask ratio per mint (parts per million), measured by a sell-side quote and re-measured every 5 minutes. */
 export const BID_REFRESH_MS = 5 * 60_000;
+/** Minimum spacing between mark quotes (keyless Jupiter sustains ~4-5 requests/s). */
+export const MARK_QUOTE_SPACING_MS = 250;
 /**
  * Sell-side re-quotes per mark round, so refreshing every bid never lands in one round (that round
  * doubled its quotes and let marks go stale). Mints with no measured spread yet get their own budget.
@@ -42,28 +44,42 @@ export function mainnetVenue(input: {
   const now = input.now ?? Date.now;
   const apiKey = input.env?.JUPITER_API_KEY?.trim();
   let refreshes = BID_REFRESHES_PER_ROUND, firsts = BID_FIRST_QUOTES_PER_ROUND;
-  const jupiterQuote = async (inputMint: string, outputMint: string, amountRaw: bigint): Promise<bigint | null> => {
-    const url = new URL(apiKey ? "https://api.jup.ag/swap/v1/quote" : "https://lite-api.jup.ag/swap/v1/quote");
+  // Keyless lite API first: the keyed API allows only a small burst (~10 requests, then 429) and the
+  // trading loop's swaps need that budget. Mark quotes are paced to stay inside the lite limit.
+  let lastQuote = 0;
+  const jupiterQuote = async (inputMint: string, outputMint: string, amountRaw: bigint, keyed: boolean): Promise<bigint | null> => {
+    if (keyed && !apiKey) return null;
+    const wait = lastQuote + MARK_QUOTE_SPACING_MS - now();
+    if (wait > 0 && !input.fetchImpl) await new Promise(resolve => setTimeout(resolve, wait));
+    lastQuote = now();
+    const url = new URL(keyed ? "https://api.jup.ag/swap/v1/quote" : "https://lite-api.jup.ag/swap/v1/quote");
     url.searchParams.set("inputMint", inputMint); url.searchParams.set("outputMint", outputMint);
     url.searchParams.set("amount", amountRaw.toString()); url.searchParams.set("slippageBps", "50");
     url.searchParams.set("swapMode", "ExactIn"); url.searchParams.set("dexes", JUPITER_CPI_SAFE_DEXES.join(","));
     try {
-      const response = await fetchImpl(url, { headers: { Accept: "application/json", ...(apiKey ? { "x-api-key": apiKey } : {}) }, signal: AbortSignal.timeout(15_000) });
+      const response = await fetchImpl(url, { headers: { Accept: "application/json", ...(keyed ? { "x-api-key": apiKey! } : {}) }, signal: AbortSignal.timeout(15_000) });
       const quote = response.ok ? await response.json() as { outAmount?: string; inAmount?: string } : null;
       return quote?.outAmount && quote.inAmount === amountRaw.toString() && BigInt(quote.outAmount) > 0n ? BigInt(quote.outAmount) : null;
     } catch { return null; }
   };
-  /** Executable output for `amountRaw` of `inputMint`: Jupiter (no RPC) first, then the persisted Raydium pool. */
+  /**
+   * Executable output for `amountRaw` of `inputMint`: keyless Jupiter (no RPC) first, then the persisted
+   * Raydium pool, then keyed Jupiter; any one venue failing (rate limit, no pool) falls through.
+   */
   const quoteOut = async (persisted: PersistedVaultLeg | undefined, inputMint: string, outputMint: string, amountRaw: bigint): Promise<{ out: bigint; venue: string }> => {
-    const jupiter = await jupiterQuote(inputMint, outputMint, amountRaw);
-    if (jupiter) return { out: jupiter, venue: "jupiter-v1" };
+    const lite = await jupiterQuote(inputMint, outputMint, amountRaw, false);
+    if (lite) return { out: lite, venue: "jupiter-v1" };
     if (persisted?.pool && persisted.kind === "raydium_clmm") {
-      const route = await buildCycleRoute({
-        connection: input.connection, leg: persisted, owner: input.quoteOwner, inputMint, outputMint,
-        amountInRaw: amountRaw.toString(), slippageBps: 50, maxAgeMs: 60_000,
-      });
-      return { out: BigInt(route.expectedOutRaw), venue: "raydium" };
+      try {
+        const route = await buildCycleRoute({
+          connection: input.connection, leg: persisted, owner: input.quoteOwner, inputMint, outputMint,
+          amountInRaw: amountRaw.toString(), slippageBps: 50, maxAgeMs: 60_000,
+        });
+        return { out: BigInt(route.expectedOutRaw), venue: "raydium" };
+      } catch { /* no usable pool quote: keyed Jupiter below */ }
     }
+    const keyed = await jupiterQuote(inputMint, outputMint, amountRaw, true);
+    if (keyed) return { out: keyed, venue: "jupiter" };
     throw new Error(`No Jupiter or Raydium quote for ${inputMint} → ${outputMint}.`);
   };
   // Marks are the mid of both sides, so NAV and the on-chain sell bound reflect what the vault can

@@ -184,3 +184,18 @@ test("marks: Raydium pool quote only when Jupiter has none", async () => {
   const venue = mainnetVenue({ connection: {} as never, legs: [], quoteOwner: PublicKey.default.toBase58(), fetchImpl, bidCache: new Map() });
   await assert.rejects(venue.marks({ index: 0, mint: PublicKey.unique(), decimals: 8, tokenProgram: PublicKey.default }), /No Jupiter or Raydium mark/);
 });
+
+test("marks: keyless Jupiter first; a rate-limited lite quote falls back to the keyed API instead of skipping the vault", async () => {
+  const { mainnetVenue } = await import("../src/lib/nav-vault/mainnet-venue.ts");
+  const hosts: string[] = [];
+  const fetchImpl = (async (url: URL, init?: RequestInit) => {
+    hosts.push(url.host);
+    if (url.host === "lite-api.jup.ag") return new Response("rate limited", { status: 429 });
+    assert.equal((init?.headers as Record<string, string>)["x-api-key"], "k", "keyed fallback sends the key");
+    return Response.json({ inAmount: url.searchParams.get("amount"), outAmount: "50000000" });
+  }) as unknown as typeof fetch;
+  const venue = mainnetVenue({ connection: {} as never, legs: [], quoteOwner: PublicKey.default.toBase58(), env: { JUPITER_API_KEY: "k" }, fetchImpl, bidCache: new Map([[PublicKey.default.toBase58(), { bidOverAskPpm: null, at: Date.now() }]]) });
+  const mark = await venue.marks({ index: 0, mint: PublicKey.default, decimals: 8, tokenProgram: PublicKey.default });
+  assert.equal(mark.price, 200_000_000n);
+  assert.deepEqual(hosts, ["lite-api.jup.ag", "api.jup.ag"], "lite first (keeps the keyed budget for swaps), keyed only as fallback");
+});
