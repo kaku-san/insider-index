@@ -5,7 +5,7 @@ The keeper is a separate operator process, **not a Vercel function or user walle
 ## One cycle
 
 1. Read each on-chain NAV vault, balances, share supply and withdrawal requests.
-2. Quote marks (Jupiter v1 quote first over plain HTTP on CPI-safe DEXes, so marks use no Solana RPC; the persisted Raydium pool only when Jupiter has no quote): the **mid** of a $100 ask and the matching bid (sell-side) quote. Bids are re-measured every 5 minutes, staggered at most 2 mints per round (4 for mints never measured), so no single round doubles its quotes. Multi-vault cycles reuse each mint quote and batch price posts where they fit. With `--loop`, marks post from an independent loop (below), not from this cycle.
+2. Quote marks (keyless Jupiter v1 quote first over plain HTTP on CPI-safe DEXes, paced 250 ms, so marks use no Solana RPC and leave the keyed Jupiter budget to swaps; then the persisted Raydium pool; keyed Jupiter last): the **mid** of a $100 ask and the matching bid (sell-side) quote. Bids are re-measured every 5 minutes, staggered at most 2 mints per round (4 for mints never measured), so no single round doubles its quotes. Multi-vault cycles reuse each mint quote and batch price posts where they fit. With `--loop`, marks post from an independent loop (below), not from this cycle.
 3. Cross reserved withdrawal stock against free vault USDC at the mark.
 4. Sell remaining withdrawal slices, oldest request first.
 5. Rebalance free inventory toward on-chain target weights while respecting the USDC buffer.
