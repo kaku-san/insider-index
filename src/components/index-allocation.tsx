@@ -104,7 +104,7 @@ export function IndexAllocation({ items: sourceItems, basis = "Published target 
                 <i style={{ background: row.missing ? "var(--border)" : ALLOCATION_COLORS[Math.max(0, colorIndex) % ALLOCATION_COLORS.length] }} />
                 {isAggregate ? <span className={styles.unknown}>{row.missing ? "—" : "•••"}</span> : <StockIcon ticker={row.ticker} size="sm" />}
                 <span className={styles.name}><strong>{row.otherCount ? "Other holdings" : row.missing ? "Unreported allocation" : row.ticker}{mark && !mark.held ? <sup className={styles.asterisk} aria-label="not held in the vault yet">*</sup> : null}</strong><small>{row.otherCount ? `${row.otherCount} holdings · expand all` : row.missing ? "Not supplied by this source" : `${companyNameFor(row.ticker, row.name)}${row.detail ? ` · ${row.detail}` : ""}`}</small>{mark && !mark.held ? <span className={styles.sliceExcluded} data-slice-excluded="true">*{mark.reason}</span> : null}{mark?.held && mark.targetWeightBps != null ? <span className={styles.sliceHeld} data-slice-held="true">In vault · vault target {formatBps(mark.targetWeightBps)}</span> : null}{!isAggregate ? <span className={styles.linkedHint}>{token.mint ? <><Icon name="copy" size={10} />{shortMint(token.mint)}</> : "Token details"}</span> : null}</span>
-                <b>{weight != null ? formatBps(weight) : "—"}</b>
+                <b>{weight != null ? headline ? `${(weight / 100).toFixed(2)}%` : formatBps(weight) : "—"}</b>
                 {!row.missing ? <Icon name="chevron" size={13} className={open ? styles.rotated : ""} /> : <span />}
               </button>
               {!isAggregate && open ? <MintDetails key={row.mint ?? row.key} item={row} id={detailsId} /> : null}
