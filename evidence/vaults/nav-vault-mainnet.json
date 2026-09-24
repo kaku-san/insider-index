@@ -141,14 +141,14 @@
     "spentSol": "2.340290045"
   },
   "keeper": {
-    "host": "barelystable (deploy@46.225.64.230)",
-    "container": "nav-vault-keeper (new; existing mag7-keeper untouched)",
+    "host": "operator server (details withheld)",
+    "container": "dedicated keeper container (separate from other operator services)",
     "image": "node:22-bookworm",
-    "source": "/home/deploy/insiderindex/nav-vault (git archive of this branch: src, scripts, workers, package files)",
-    "nodeModules": "/home/deploy/insiderindex/stocklana/node_modules (read-only)",
-    "key": "/home/deploy/keys/mag7-keeper.json (read-only) = GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq",
-    "env": "/home/deploy/insiderindex/mag7-keeper.env (HELIUS, SUPABASE service role, JUPITER_API_KEY)",
-    "command": "npm run -s nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair /keys/mag7-keeper.json --loop 35 --priority-micro-lamports 5000 --min-trade-raw 50000",
+    "source": "<operator checkout> (git archive of this branch: src, scripts, workers, package files)",
+    "nodeModules": "<operator node_modules> (read-only)",
+    "key": "<keeper keypair> (read-only mount) = GLq9gScm99eUypsc5a7WsP7rmsc3aAUfpzqmAPNqXvmq",
+    "env": "<keeper env> (operator-only, not committed)",
+    "command": "npm run -s nav-vault -- keeper --index idx-theme-mag7-caucus --network mainnet-beta --execute --keypair <keeper keypair> --loop 35 --priority-micro-lamports 5000 --min-trade-raw 50000",
     "startedAt": "2026-09-23T12:43:19Z",
     "cadence": "one update_prices about every 40 s (max mark age 60 s, unchanged by captain decision)",
     "feePerPriceUpdateSol": "0.000006015",
@@ -177,8 +177,8 @@
   },
   "preview": {
     "branch": "fm/stocklana-nav-vault-f1",
-    "branchAlias": "https://stocklana-git-fm-stocklana-nav-vault-f1-kakusans-projects.vercel.app",
-    "deployment": "https://stocklana-gqi5b6pc8-kakusans-projects.vercel.app",
+    "branchAlias": "<Vercel branch preview (SSO-protected, withheld)>",
+    "deployment": "<Vercel preview deployment (SSO-protected, withheld)>",
     "commit": "a833b95",
     "protection": "Vercel SSO (captain login required)",
     "flag": "branch-only preview flag: Mag7 → mainnet NAV vault; production never"
@@ -269,7 +269,7 @@
     }
   },
   "production": {
-    "deployment": "https://stocklana-7uahi1k2h-kakusans-projects.vercel.app",
+    "deployment": "<Vercel production deployment (withheld)>",
     "aliases": [
       "https://insiderindex.xyz",
       "https://www.insiderindex.xyz"
