@@ -87,7 +87,16 @@ test("a live vault shows Live/Invest only when its signing path is open", () => 
   assert.ok(!row("Example F Index").includes("Invest"));
 });
 
-test("home lists indexes A–Z by default and keeps the designated featured order as a sort", () => {
+test("home lists Live indexes first, then the rest A–Z, by default", () => {
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [nativeIndex, mag7Index], true);
+  const live = html.indexOf("/indexes/idx-theme-mag7-caucus");
+  const research = html.indexOf("/indexes/insiderindex-example-filer");
+  assert.ok(live >= 0 && research >= 0 && live < research);
+  assert.match(html, /<option value="live" selected="">Live first<\/option>/);
+  assert.match(html, /<option value="name">A–Z<\/option>/);
+});
+
+test("home lists non-live indexes A–Z by default and keeps the designated featured order as a sort", () => {
   const featured = [
     ["insiderindex-josh-gottheimer", "Josh Gottheimer", "person"],
     ["insiderindex-nancy-pelosi", "Nancy Pelosi", "person"],

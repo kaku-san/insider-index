@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <EligibilityBanner />
             <main id="main-content" className="consumer-main">{children}</main>
             <footer className="consumer-footer">
-              <div><strong>InsiderIndex</strong><span>Famous portfolios. Public receipts.</span></div>
+              <div><strong>InsiderIndex</strong><span>Famous portfolios. Public receipts.</span><span className="consumer-footer-credit">Built by Kaku · <a href="https://github.com/kaku-san" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="https://x.com/kakujain" target="_blank" rel="noopener noreferrer">@kakujain on X</a></span></div>
               <p>Public disclosures can be delayed, partial, household-owned, and different from current positions. Research first. Not investment advice.</p>
             </footer>
           </div>

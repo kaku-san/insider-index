@@ -19,7 +19,7 @@ import { PageError, StockIcon } from "./social/shared";
 import styles from "./consumer-home.module.css";
 
 type Filter = "all" | "people" | "themes";
-type Sort = "featured" | "name" | "coverage" | "holdings";
+type Sort = "live" | "featured" | "name" | "coverage" | "holdings";
 
 export type ThematicDirectory = {
   count: number;
@@ -166,7 +166,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
 }) {
   const params = useSearchParams();
   const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<Sort>("name");
+  const [sort, setSort] = useState<Sort>("live");
   const [investableOnly, setInvestableOnly] = useState(false);
   const peopleResource = useResource<PeopleDirectoryResponse>("/api/people", initialData);
   const themeResource = useResource<ThematicDirectory>("/api/thematic-indexes", initialThemes);
@@ -187,6 +187,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
     if (filter === "themes") next = next.filter((row) => row.kind === "theme");
     if (investableOnly) next = next.filter((row) => row.status === "Live");
     if (query) next = next.filter((row) => `${row.name} ${row.description} ${row.tickers.join(" ")}`.toLowerCase().includes(query));
+    if (sort === "live") next.sort((a, b) => Number(b.status === "Live") - Number(a.status === "Live") || a.name.localeCompare(b.name));
     if (sort === "name") next.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "coverage") next.sort((a, b) => (b.coverage ?? 0) - (a.coverage ?? 0) || a.name.localeCompare(b.name));
     if (sort === "holdings") next.sort((a, b) => (b.holdings ?? 0) - (a.holdings ?? 0) || a.name.localeCompare(b.name));
@@ -222,7 +223,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
           </div>
           <label className={styles.sortSelect}>Sort
             <select value={sort} onChange={(event) => setSort(event.target.value as Sort)}>
-              <option value="featured">Featured</option><option value="name">A–Z</option><option value="coverage">Coverage</option><option value="holdings">Holdings</option>
+              <option value="live">Live first</option><option value="featured">Featured</option><option value="name">A–Z</option><option value="coverage">Coverage</option><option value="holdings">Holdings</option>
             </select>
           </label>
           <label className={styles.investToggle}><input type="checkbox" checked={investableOnly} onChange={(event) => setInvestableOnly(event.target.checked)} /><span>Investable only</span></label>
