@@ -9,6 +9,8 @@ export function useResource<T>(url: string | null, initialData?: T | null) {
   const [loading, setLoading] = useState(Boolean(url) && initialData == null);
   const [version, setVersion] = useState(0);
   const reload = useCallback(() => setVersion((value) => value + 1), []);
+  /** Show a fresher read taken outside this hook (e.g. a post-signature refresh) without refetching. */
+  const replace = useCallback((value: T) => { setData(value); setError(null); }, []);
 
   useEffect(() => {
     if (!url) {
@@ -46,8 +48,8 @@ export function useResource<T>(url: string | null, initialData?: T | null) {
   }, [url, version]);
 
   if (!url) {
-    return { data: null, error: null, loading: false, reload };
+    return { data: null, error: null, loading: false, reload, replace };
   }
 
-  return { data, error, loading, reload };
+  return { data, error, loading, reload, replace };
 }

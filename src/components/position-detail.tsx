@@ -12,6 +12,8 @@ import { errorText } from "@/lib/frontend/api";
 import { noticedShareArrival, plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS, settlementDetail } from "@/lib/frontend/settlement-progress";
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_STILL_NOTE } from "@/lib/frontend/position-basket";
 import { CashOutAssetList, HeldNowBook, PositionBook } from "./position-book";
+import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
+import { changeReflected } from "@/lib/frontend/position-refresh";
 import { VaultFlow } from "./vault-flow";
 import { SettlementListen } from "./settlement-listen";
 import { ShareCard } from "./share-card";
@@ -74,6 +76,15 @@ export function PositionDetail({ indexId }: { indexId: string }) {
     return () => { alive = false; clearInterval(timer); };
   }, [indexId, wallet.solanaAddress, cashOutOpen, position, sharesArrived, pendingSignature]);
 
+  // After a confirmed deposit/cash-out (or on focus) re-read at once; poll until the new share balance shows.
+  const refresh = usePositionRefresh<IndexSharePosition | null>({
+    owner: wallet.solanaAddress,
+    indexId,
+    load: () => getIndexPosition(indexId, wallet.solanaAddress!),
+    apply: next => { setError(null); setPosition(current => next && current && pendingKey(current) === pendingKey(next) && current.sharesRaw === next.sharesRaw && current.vaultValueUsdc === next.vaultValueUsdc ? current : next); },
+    reflected: (next, change) => changeReflected(change, next),
+  });
+
   const activeOperation = position?.pendingOperations?.find(operation => !operation.complete) ?? null;
   const depositFill = activeOperation?.kind === "deposit" ? activeOperation.fill : undefined;
   const delivery = activeOperation?.kind === "withdraw" ? activeOperation.delivery ?? [] : [];
@@ -101,13 +112,13 @@ export function PositionDetail({ indexId }: { indexId: string }) {
 
   return <div className={styles.page}>
     <Link className={styles.back} href="/positions"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />Your portfolio</Link>
-    {loading ? <div className={styles.loading}>Reading your shares…</div> : error ? <div className={styles.error}>{error}</div> : !position ? <div className={styles.gate}><span>NO POSITION</span><h1>No index shares found.</h1><p>This wallet does not hold index shares yet.</p><Link href={`/indexes/${encodeURIComponent(indexId)}`}>Open index</Link></div> : <>
+    {loading ? <div className={styles.loading}>Reading your shares…</div> : error ? <div className={styles.error}>{error}</div> : !position && refresh.updating ? <div className={styles.loading} role="status" aria-live="polite" data-position-updating="true">Updating…</div> : !position ? <div className={styles.gate}><span>NO POSITION</span><h1>No index shares found.</h1><p>This wallet does not hold index shares yet.</p><Link href={`/indexes/${encodeURIComponent(indexId)}`}>Open index</Link></div> : <>
       <section className={styles.hero}>
         <div className={styles.identity}>
           <small>INDEX POSITION</small><h1>{name}</h1>
-          <div className={styles.numbers}>
+          {refresh.updating ? <div className={styles.numbers} role="status" aria-live="polite" data-position-updating="true"><div className={styles.valueLead}><strong>Updating…</strong><span>Waiting for your new share balance</span></div></div> : <div className={styles.numbers}>
             {figures.map(figure => <div key={figure.role} className={figure.primary ? styles.valueLead : undefined}><strong>{figure.text}</strong><span>{figure.label}</span></div>)}
-          </div>
+          </div>}
           <div className={styles.actions}><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link><button type="button" className={styles.share} onClick={() => setShareOpen(true)}><Icon name="share" size={13} />Share</button>{activeOperation ? <button type="button" disabled> {activeOperation.kind === "withdraw" ? "Cash out in progress" : "Deposit in progress"}</button> : canCashOut ? <button type="button" onClick={() => setCashOutOpen(true)}>Cash out</button> : null}</div>
           {settlementStatus ? <SettlementListen status={settlementStatus} listening={positionNeedsListen(position)} detail={activeOperation ? settlementDetail({ status: settlementStatus, listening: positionNeedsListen(position), cashOutFinished: false }, position, activeOperation.kind === "withdraw" ? "withdraw" : "deposit") : "Your share balance increased."} /> : null}
           {BigInt(position.sharesRaw) > 0n ? <p className={styles.operation}>{CASH_OUT_BEFORE_SIGN}</p> : null}

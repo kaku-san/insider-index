@@ -21,6 +21,7 @@ import {
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_CHECK, CASH_OUT_STILL_NOTE, cashOutDeliveryOf, humanPrepareMessage, MAG7_FILL_CHECK, prepareCheckControl, prepareRequestKey, withPrepareTimeout, type PrepareCheckStatus } from "@/lib/frontend/position-basket";
 import { CashOutDeliveryStatus } from "./position-book";
 import { prepareWithStaleRetry } from "@/lib/frontend/nav-vault-retry";
+import { announcePositionChange, POSITION_REFRESH_POLL_MS, POSITION_REFRESH_WINDOW_MS } from "@/lib/frontend/position-refresh";
 import styles from "./vault-flow.module.css";
 
 export { sharesIncreasedAfterSignature };
@@ -156,7 +157,9 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
   useEffect(() => {
     if (!open || !wallet.solanaAddress || (screen !== "submitted" && !activeIntent)) return;
     let alive = true, timer: ReturnType<typeof setTimeout> | null = null;
-    const deadline = Date.now() + SETTLEMENT_POLL_TIMEOUT_MS;
+    const startedAt = Date.now(), deadline = startedAt + SETTLEMENT_POLL_TIMEOUT_MS;
+    // Re-read quickly right after the signature confirms, then fall back to the settlement cadence.
+    const nextPollMs = () => Date.now() - startedAt < POSITION_REFRESH_WINDOW_MS ? POSITION_REFRESH_POLL_MS : SETTLEMENT_POLL_MS;
     const observe = () => void getIndexPosition(indexId, wallet.solanaAddress!).then(value => {
       if (!alive) return;
       if (sawWithdraw(value)) sawWithdrawRef.current = true;
@@ -166,11 +169,11 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
       setSettlementPosition(value);
       onPositionRef.current?.(value);
       const next = settlementView({ mode, sharesBeforeRaw: sharesBeforeSignature, position: value, timedOut: expired, sawWithdrawPending: sawWithdrawRef.current });
-      if (next.listening) timer = setTimeout(observe, SETTLEMENT_POLL_MS);
+      if (next.listening) timer = setTimeout(observe, nextPollMs());
     }).catch(() => {
       if (!alive) return;
       if (mode === "deposit" && Date.now() >= deadline) setTimedOut(true);
-      else timer = setTimeout(observe, SETTLEMENT_POLL_MS);
+      else timer = setTimeout(observe, nextPollMs());
     });
     observe();
     return () => { alive = false; if (timer) clearTimeout(timer); };
@@ -264,13 +267,18 @@ export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode =
           : prepareWithdrawal(indexId, { owner, shareAmountRaw: raw, requestedExitMode: "verified-native-usdc", idempotencyKey: crypto.randomUUID() }, prepared.step.network)));
         if (step.requires !== "user-signature" || !step.transactions.length) throw new Error(mode === "deposit" ? "Mag7 could not be checked. Try that amount again." : "Cash out could not be checked. Try again.");
       }
-      setSharesBeforeSignature(position?.sharesRaw ?? "0");
+      const sharesBeforeRaw = position?.sharesRaw ?? "0";
+      setSharesBeforeSignature(sharesBeforeRaw);
       sawWithdrawRef.current = false;
       setSawWithdrawPending(false);
+      let lastSignature: string | undefined;
       for (const transaction of step.transactions) {
         const signature = await wallet.signAndSendTransaction(transaction.messageBase64, step.network);
         await confirmSignature(signature, step.network);
+        lastSignature = signature;
       }
+      // Every mounted position view (position page, Positions list, index page) refetches now and polls until the read shows it.
+      announcePositionChange({ indexId, owner: wallet.solanaAddress, mode, sharesBeforeRaw, signature: lastSignature, at: Date.now() });
       // NAV vault exits settle inside the signed transaction: a confirmed signature is the finished cash out.
       if (isNav && mode === "withdraw") { sawWithdrawRef.current = true; setSawWithdrawPending(true); }
       setPrepared(null); setSettlementPosition(null); setTimedOut(false); setScreen("submitted");

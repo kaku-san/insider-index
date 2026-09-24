@@ -10,6 +10,8 @@ import { useResource } from "@/lib/frontend/use-resource";
 import { errorText } from "@/lib/frontend/api";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navSliceLabel, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, publicIndexStatusCopy, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
+import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
+import { changeReflected } from "@/lib/frontend/position-refresh";
 import { portraitFor } from "@/lib/fomo/portraits";
 import { companyNameFor } from "@/lib/frontend/company-logos";
 import { indexContentFor, indexProofFor } from "@/lib/frontend/index-content";
@@ -189,6 +191,14 @@ function IndexModel({ hash, id }: { hash?: string; id?: string }) {
     return () => { alive = false; };
   }, [id, routeId, wallet.solanaAddress]);
   useIndexPositionListen(id ? routeId : null, wallet.solanaAddress, position, value => setPosition(value), !investOpen);
+  usePositionRefresh<IndexSharePosition | null>({
+    owner: wallet.solanaAddress,
+    indexId: routeId,
+    load: () => getIndexPosition(routeId, wallet.solanaAddress!),
+    apply: value => setPosition(value),
+    reflected: (value, change) => changeReflected(change, value),
+    enabled: Boolean(id),
+  });
 
   if (resource.loading && !index) return <Skeleton />;
   if (resource.error && !index) return <PageError error={resource.error} retry={resource.reload} />;

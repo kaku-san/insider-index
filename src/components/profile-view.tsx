@@ -19,6 +19,8 @@ import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navSliceLabel, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
+import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
+import { changeReflected } from "@/lib/frontend/position-refresh";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
 import { formatUsd } from "@/lib/format";
@@ -129,6 +131,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  // eslint-disable-next-line react-hooks/set-state-in-effect -- never retain a position after wallet/index identity disappears
  useEffect(()=>{let alive=true;if(!vaultIndexId||!wallet.solanaAddress){setPosition(null);return;}getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(alive)setPosition(value)}).catch(()=>{if(alive)setPosition(null)});return()=>{alive=false}},[vaultIndexId,wallet.solanaAddress]);
  useIndexPositionListen(vaultIndexId, wallet.solanaAddress, position, value=>setPosition(value), !investOpen);
+ usePositionRefresh<IndexSharePosition|null>({owner:wallet.solanaAddress,indexId:vaultIndexId,load:()=>getIndexPosition(vaultIndexId!,wallet.solanaAddress!),apply:value=>setPosition(value),reflected:(value,change)=>changeReflected(change,value),enabled:Boolean(vaultIndexId)});
  const loading=!trackerPerson&&!researchBook&&!legacyProfile&&(tracker.loading||research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));
  if(loading)return <Skeleton cards={3}/>;
  if(!trackerPerson&&!researchBook&&!legacyProfile&&tracker.error&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{tracker.reload();research.reload();legacy.reload()}}/>;

@@ -20,6 +20,8 @@ import { markedDollars } from "@/lib/frontend/research-format";
 import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { plainStatusForOperation } from "@/lib/frontend/settlement-progress";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
+import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
+import { changeReflected } from "@/lib/frontend/position-refresh";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import styles from "./consumer-index.module.css";
 
@@ -68,6 +70,14 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
   const positionKey = wallet.solanaAddress ? `${vaultId}:${wallet.solanaAddress}` : null;
   const currentPosition = loadedPositionKey === positionKey ? position : null;
   useIndexPositionListen(vaultId, wallet.solanaAddress, currentPosition, value => { setPosition(value); if (wallet.solanaAddress) setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); }, !investOpen);
+  const positionRefreshState = usePositionRefresh<IndexSharePosition | null>({
+    owner: wallet.solanaAddress,
+    indexId: vaultId,
+    load: () => getIndexPosition(vaultId, wallet.solanaAddress!),
+    apply: value => { if (!wallet.solanaAddress) return; setPosition(value); setLoadedPositionKey(`${vaultId}:${wallet.solanaAddress}`); },
+    reflected: (value, change) => changeReflected(change, value),
+    enabled: vaultId === "idx-theme-mag7-caucus" || navVaultEnabledFor(vaultId),
+  });
   if (resource.loading && !resource.data) return <Skeleton />;
   if (resource.error && !resource.data) return <PageError error={resource.error} retry={resource.reload} />;
   if (!index) return null;
@@ -106,7 +116,7 @@ export function ThematicIndexPage({ id, initialData, initialVault }: { id: strin
         </div>
         {!live ? <p className={styles.availability}>{availability}</p> : null}
         {disclosedSlice ? <TradableSliceNote readiness={vault} className={styles.availability} /> : null}
-        {ownedFigures ? <p className={styles.ownedPosition}>Your position: <strong>{ownedFigures[0].text}</strong> {ownedFigures[0].label}. {ownedFigures[1].text} {ownedFigures[1].label}. <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
+        {positionRefreshState.updating ? <p className={styles.ownedPosition} role="status" aria-live="polite" data-position-updating="true">Your position: <strong>Updating…</strong> <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : ownedFigures ? <p className={styles.ownedPosition}>Your position: <strong>{ownedFigures[0].text}</strong> {ownedFigures[0].label}. {ownedFigures[1].text} {ownedFigures[1].label}. <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View position</Link></p> : null}
         {activeOperation ? <p className={styles.ownedPosition} data-settlement-status={plainStatusForOperation(activeOperation)}>{plainStatusForOperation(activeOperation)}{activeOperation.phase === "FAILED" ? ". This deposit did not finish the basket. It is not shares." : "."} <Link href={`/positions/${encodeURIComponent(vaultId)}`}>View status</Link></p> : null}
         {positionErrorKey === positionKey && positionError ? <p className={styles.availability}>{positionError}</p> : null}
       </div>

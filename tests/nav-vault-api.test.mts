@@ -162,6 +162,17 @@ test("an open keeper request shows as a pending withdraw operation on the positi
   assert.equal(pending.pendingOperations.length, 1);
   assert.equal(pending.pendingOperations[0].kind, "withdraw");
   assert.equal(pending.pendingOperations[0].phase, "CONVERTING");
+  // The wallet positions list reads every open request with ONE owner-scoped program scan (not one per vault) and
+  // reads vaults in parallel; a sequential per-vault fan-out took 6-17 s on mainnet and lagged the Positions screen.
+  const { handleNavPositions } = await import("../src/lib/nav-vault/server.ts");
+  let scans = 0;
+  const counted = { ...deps, config: () => navVaultConfig({ STOCKLANA_NAV_VAULT_NETWORK: "devnet" }), connection: () => ({ ...vm.connection, getProgramAccounts: ((...args: Parameters<typeof vm.connection.getProgramAccounts>) => { scans++; return vm.connection.getProgramAccounts(...args); }) as typeof vm.connection.getProgramAccounts }) };
+  const listIndexes = async () => [{ indexId: s.indexId, name: "Test index" }, { indexId: "idx-no-vault-a" }, { indexId: "idx-no-vault-b" }];
+  const list = await (await handleNavPositions(new Request(`http://local/api/positions/indexes?wallet=${s.alice.publicKey.toBase58()}`), { listIndexes }, counted)).json();
+  assert.equal(scans, 1);
+  assert.equal(list.positions.length, 1, "a zero-share wallet with an open request still lists the position");
+  assert.equal(list.positions[0].sharesRaw, pending.sharesRaw);
+  assert.deepEqual(list.positions[0].pendingOperations, pending.pendingOperations);
   await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds: deps.now });
   assert.equal((await positionOf()).pendingOperations.length, 0, "settled in USDC by the keeper");
 });
