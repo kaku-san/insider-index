@@ -72,6 +72,7 @@ test("published slice table wins; unreachable, empty or malformed rows fall back
   assert.equal(sliceFromPublishedRow({ ...row, tradable_legs: 2 }, "insiderindex-nancy-pelosi"), null, "leg count must match the published vault legs");
   assert.equal(sliceFromPublishedRow({ ...row, total_legs: 3 }, "insiderindex-nancy-pelosi"), null, "every disclosed holding must be classified");
   assert.equal(sliceFromPublishedRow({ ...row, excluded: [{ ...row.excluded[0], mint: "mint-n" }] }, "insiderindex-nancy-pelosi"), null, "a mint cannot appear twice");
+  assert.equal(sliceFromPublishedRow({ ...row, disclosed_weight_bps: 9000 }, "insiderindex-nancy-pelosi"), null, "published coverage must equal the held legs' disclosed weight");
 });
 
 test("a stale published slice falls back to a committed slice matching the vault", async () => {
