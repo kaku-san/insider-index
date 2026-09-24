@@ -70,14 +70,9 @@ export function subscribePositionChanges(listener: Listener): () => void {
   return () => { listeners.delete(listener); };
 }
 
-/** Confirmed changes for this wallet not yet observed by any position read. */
+/** Confirmed changes for this wallet within the refresh window. */
 export function pendingPositionChanges(owner: string, now = Date.now()): PositionChange[] {
   return live(now).filter(change => change.owner === owner);
-}
-
-/** A read observed the change; later mounts no longer need to show "Updating…" for it. */
-export function settlePositionChange(change: PositionChange): void {
-  recent = recent.filter(existing => existing !== change);
 }
 
 /** Test hook. */
@@ -154,7 +149,6 @@ export function createPositionRefresher<T>(options: PositionRefresherOptions<T>)
       if (disposed) return;
       options.apply(value);
       const seen = pending.filter(change => options.reflected(value, change));
-      for (const change of seen) settlePositionChange(change);
       pending = pending.filter(change => !seen.includes(change));
     }, () => { /* keep polling: a failed read is not an observation */ }).finally(() => {
       inflight = null;

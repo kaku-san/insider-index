@@ -145,7 +145,7 @@ test("changes for another wallet or index are ignored; dispose stops every timer
   assert.equal(clock.scheduled(), 0);
 });
 
-test("VaultFlow's announcement reaches mounted views and views mounted later in the tab until a read settles it", () => {
+test("VaultFlow's announcement reaches mounted views and remains available to later views for the refresh window", () => {
   resetPositionChanges();
   const seen: PositionChange[] = [];
   const unsubscribe = subscribePositionChanges(c => seen.push(c));
@@ -160,21 +160,40 @@ test("VaultFlow's announcement reaches mounted views and views mounted later in 
   resetPositionChanges();
 });
 
-test("a refresher that observes the change settles it for later mounts", async () => {
+test("each view settles its own refresh while the announcement remains available to later mounts", async () => {
   resetPositionChanges();
   const clock = fakeTimers();
   const announced = change({ at: Date.now() });
   announcePositionChange(announced);
-  const refresher = createPositionRefresher<{ sharesRaw: string }>({
+  const firstUpdating: string[][] = [];
+  const firstView = createPositionRefresher<{ sharesRaw: string }>({
     load: async () => ({ sharesRaw: "9993498" }),
     apply: () => {},
     reflected: (value, c) => changeReflected(c, value),
     accepts: () => true,
-    onUpdating: () => {},
+    onUpdating: ids => firstUpdating.push(ids),
     timers: { ...clock.timers, now: () => Date.now() },
   });
-  for (const pending of pendingPositionChanges(OWNER)) refresher.track(pending);
+  for (const pending of pendingPositionChanges(OWNER)) firstView.track(pending);
   await clock.flush();
-  assert.deepEqual(pendingPositionChanges(OWNER), []);
-  refresher.dispose();
+  assert.deepEqual(firstUpdating, [[PELOSI], []]);
+  assert.deepEqual(pendingPositionChanges(OWNER), [announced], "one view cannot consume another view's refresh announcement");
+
+  let laterLoads = 0;
+  const laterUpdating: string[][] = [];
+  const laterView = createPositionRefresher<{ sharesRaw: string }>({
+    load: async () => { laterLoads++; return { sharesRaw: "9993498" }; },
+    apply: () => {},
+    reflected: (value, c) => changeReflected(c, value),
+    accepts: () => true,
+    onUpdating: ids => laterUpdating.push(ids),
+    timers: { ...clock.timers, now: () => Date.now() },
+  });
+  for (const pending of pendingPositionChanges(OWNER)) laterView.track(pending);
+  await clock.flush();
+  assert.equal(laterLoads, 1, "the later-mounted view reads immediately");
+  assert.deepEqual(laterUpdating, [[PELOSI], []], "the later view clears its own updating state after observing the change");
+
+  firstView.dispose();
+  laterView.dispose();
 });
