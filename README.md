@@ -4,6 +4,8 @@
 
 **[Live app: InsiderIndex.xyz](https://insiderindex.xyz)** · [Architecture](docs/architecture.md) · [Program & safety](docs/nav-vault.md) · [Keeper](docs/keeper.md) · [Data sources](docs/data-sources.md)
 
+For AI reviewers: see [AGENTS.md](AGENTS.md).
+
 ## 60-second demo
 
 1. Open [InsiderIndex.xyz](https://insiderindex.xyz) and choose a person or theme.
@@ -99,4 +101,4 @@ Tests run offline, including LiteSVM execution of our program and captured Jupit
 
 **Kaku** · [GitHub: kaku-san](https://github.com/kaku-san) · [X: @kakujain](https://x.com/kakujain)
 
-Security preparation: [redacted secret-scan report](evidence/security/secret-scan.json). No hackathon-specific rules document was supplied; this guide covers the demo, implementation, deployment evidence and limitations without claiming event-specific compliance.
+No hackathon-specific rules document was supplied; this guide covers the demo, implementation, deployment evidence and limitations without claiming event-specific compliance.
