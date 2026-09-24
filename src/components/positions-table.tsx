@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { usePrivySolana } from "./providers/privy-provider";
 import { useResource } from "@/lib/frontend/use-resource";
-import { PREVIEW_MODE } from "@/lib/frontend/api";
+import { PREVIEW_MODE, readApi } from "@/lib/frontend/api";
+import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
+import { changeReflected, positionInList } from "@/lib/frontend/position-refresh";
 import { positionValueUsdc, type IndexSharePosition } from "@/lib/frontend/vault-api";
 import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { positionBookLine } from "@/lib/frontend/position-basket";
@@ -22,7 +24,18 @@ type IndexPositionsResponse = { positions: IndexSharePosition[] };
 export function PositionsTable() {
   const wallet = usePrivySolana();
   const connected = wallet.mode === "live" && wallet.authenticated && wallet.solanaAddress;
-  const indexes = useResource<IndexPositionsResponse>(connected ? `/api/positions/indexes?wallet=${encodeURIComponent(connected)}` : null);
+  const positionsUrl = connected ? `/api/positions/indexes?wallet=${encodeURIComponent(connected)}` : null;
+  const indexes = useResource<IndexPositionsResponse>(positionsUrl);
+  // After a confirmed deposit/cash-out (or on focus) re-read at once; poll until the new share balance shows.
+  const refresh = usePositionRefresh<IndexPositionsResponse>({
+    owner: connected || null,
+    indexId: null,
+    load: () => readApi<IndexPositionsResponse>(positionsUrl!),
+    apply: indexes.replace,
+    reflected: (value, change) => changeReflected(change, positionInList(value.positions, change.indexId)),
+    enabled: Boolean(positionsUrl),
+  });
+  const updatingIds = new Set(refresh.updatingIndexIds);
   const ownedIndexes = indexes.data?.positions ?? [];
   const pendingIndexOperations = ownedIndexes.flatMap(position => position.pendingOperations?.filter(operation => !operation.complete) ?? []);
   const listenKey = ownedIndexes.filter(position => positionNeedsListen(position)).map(position => position.indexId).join(",");
@@ -94,8 +107,9 @@ export function PositionsTable() {
           <small>Share counts come from chain reads. A dollar value is shown only when one is verified.</small>
         </div>
         <div className={styles.balanceStats}>
-          <span><b>{indexes.loading ? "—" : ownedIndexes.length}</b> index {ownedIndexes.length === 1 ? "position" : "positions"}</span>
-          <span><b>{indexes.loading ? "—" : pendingIndexOperations.length}</b> settlement{pendingIndexOperations.length === 1 ? "" : "s"} pending</span>
+          <span><b>{indexes.loading || refresh.updating ? "—" : ownedIndexes.length}</b> index {ownedIndexes.length === 1 ? "position" : "positions"}</span>
+          <span><b>{indexes.loading || refresh.updating ? "—" : pendingIndexOperations.length}</b> settlement{pendingIndexOperations.length === 1 ? "" : "s"} pending</span>
+          {refresh.updating ? <span role="status" aria-live="polite" data-position-updating="true">Updating…</span> : null}
         </div>
         <Link href="/">Explore <Icon name="arrow" size={13} /></Link>
       </section>
@@ -107,7 +121,11 @@ export function PositionsTable() {
               <p>USDC value is the number to read. Share counts are raw mint units, not a price.</p>
             </div>
           </div>
-          {indexes.loading && !indexes.data ? <Skeleton cards={2} /> : indexes.error ? <PageError error={indexes.error} retry={indexes.reload} /> : !ownedIndexes.length ? <div className={styles.empty}>
+          {indexes.loading && !indexes.data ? <Skeleton cards={2} /> : indexes.error ? <PageError error={indexes.error} retry={indexes.reload} /> : !ownedIndexes.length && refresh.updating ? <div className={styles.empty} role="status" aria-live="polite" data-position-updating="true">
+            <Icon name="refresh" size={26} />
+            <h2>Updating…</h2>
+            <p>Your signed transaction confirmed. Waiting for your share balance to show.</p>
+          </div> : !ownedIndexes.length ? <div className={styles.empty}>
             <Icon name="grid" size={26} />
             <h2>No index shares yet.</h2>
             <p>When you own shares in an index, they will appear here.</p>
@@ -118,7 +136,7 @@ export function PositionsTable() {
             const figures = positionHoldingFigures({ sharesRaw: position.sharesRaw, shareDecimals: position.shareDecimals, valueText });
             const bookLine = positionBookLine(position);
             return <Link className={styles.indexCard} key={position.indexId} href={`/positions/${encodeURIComponent(position.indexId)}`}>
-              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX VALUE</small></div><h3>{position.indexName ?? "Index"}</h3><div className={styles.indexNumbers}>{figures.map(figure => <span key={figure.role} className={figure.primary ? styles.valueLead : undefined}><b>{figure.text}</b><small>{figure.label}</small></span>)}</div>{bookLine ? <p className={styles.bookLine}>{bookLine}</p> : null}{pending.length ? <div className={styles.pending} data-settlement-status={plainStatusForOperation(pending[0])} aria-busy={positionNeedsListen(position) ? true : undefined}><i />{plainStatusForOperation(pending[0])}</div> : null}</div>
+              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX VALUE</small></div><h3>{position.indexName ?? "Index"}</h3>{updatingIds.has(position.indexId) ? <div className={styles.indexNumbers} role="status" aria-live="polite" data-position-updating="true"><span className={styles.valueLead}><b>Updating…</b><small>Waiting for your new share balance</small></span></div> : <div className={styles.indexNumbers}>{figures.map(figure => <span key={figure.role} className={figure.primary ? styles.valueLead : undefined}><b>{figure.text}</b><small>{figure.label}</small></span>)}</div>}{bookLine ? <p className={styles.bookLine}>{bookLine}</p> : null}{pending.length ? <div className={styles.pending} data-settlement-status={plainStatusForOperation(pending[0])} aria-busy={positionNeedsListen(position) ? true : undefined}><i />{plainStatusForOperation(pending[0])}</div> : null}</div>
             </Link>;
           })}</div>}
         </section>

@@ -12,6 +12,9 @@ import { errorText } from "@/lib/frontend/api";
 import { noticedShareArrival, plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS, settlementDetail } from "@/lib/frontend/settlement-progress";
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_STILL_NOTE } from "@/lib/frontend/position-basket";
 import { CashOutAssetList, HeldNowBook, PositionBook } from "./position-book";
+import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
+import { changeReflected } from "@/lib/frontend/position-refresh";
+import { ResourceRequestFence } from "@/lib/frontend/resource-request-fence";
 import { VaultFlow } from "./vault-flow";
 import { SettlementListen } from "./settlement-listen";
 import { ShareCard } from "./share-card";
@@ -38,6 +41,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
   const [cashOutOpen, setCashOutOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [sharesArrived, setSharesArrived] = useState(false);
+  const [positionFence] = useState(() => new ResourceRequestFence());
   const pendingSignature = pendingKey(position);
 
   // Synchronize the wallet-scoped view with the external position endpoints.
@@ -48,31 +52,42 @@ export function PositionDetail({ indexId }: { indexId: string }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
+    const requestGeneration = positionFence.begin();
     Promise.all([getIndexPosition(indexId, wallet.solanaAddress), getVaultReadiness(indexId).catch(() => null)])
       .then(([nextPosition, nextReadiness]) => {
         if (alive) {
-          setPosition(nextPosition);
           setReadiness(nextReadiness);
+          if (positionFence.isCurrent(requestGeneration)) setPosition(nextPosition);
         }
       })
-      .catch((nextError) => { if (alive) setError(errorText(nextError)); })
-      .finally(() => { if (alive) setLoading(false); });
+      .catch((nextError) => { if (alive && positionFence.isCurrent(requestGeneration)) setError(errorText(nextError)); })
+      .finally(() => { if (alive && positionFence.isCurrent(requestGeneration)) setLoading(false); });
     return () => { alive = false; };
-  }, [indexId, wallet.solanaAddress]);
+  }, [indexId, wallet.solanaAddress, positionFence]);
 
   useEffect(() => {
     if (!wallet.solanaAddress || cashOutOpen || !positionNeedsListen(position)) return;
     let alive = true;
     const timer = setInterval(() => {
+      const requestGeneration = positionFence.begin();
       void getIndexPosition(indexId, wallet.solanaAddress!).then(next => {
-        if (!alive || !next) return;
+        if (!alive || !next || !positionFence.isCurrent(requestGeneration)) return;
         setSharesArrived(noticedShareArrival(position, next) || (sharesArrived && !positionNeedsListen(next)));
         if (positionNeedsListen(next)) setSharesArrived(false);
         setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next);
       }).catch(() => {});
     }, SETTLEMENT_POLL_MS);
     return () => { alive = false; clearInterval(timer); };
-  }, [indexId, wallet.solanaAddress, cashOutOpen, position, sharesArrived, pendingSignature]);
+  }, [indexId, wallet.solanaAddress, cashOutOpen, position, sharesArrived, pendingSignature, positionFence]);
+
+  // After a confirmed deposit/cash-out (or on focus) re-read at once; poll until the new share balance shows.
+  const refresh = usePositionRefresh<IndexSharePosition | null>({
+    owner: wallet.solanaAddress,
+    indexId,
+    load: () => getIndexPosition(indexId, wallet.solanaAddress!),
+    apply: next => { positionFence.invalidate(); setLoading(false); setError(null); setPosition(current => next && current && pendingKey(current) === pendingKey(next) && current.sharesRaw === next.sharesRaw && current.vaultValueUsdc === next.vaultValueUsdc ? current : next); },
+    reflected: (next, change) => changeReflected(change, next),
+  });
 
   const activeOperation = position?.pendingOperations?.find(operation => !operation.complete) ?? null;
   const depositFill = activeOperation?.kind === "deposit" ? activeOperation.fill : undefined;
@@ -101,13 +116,13 @@ export function PositionDetail({ indexId }: { indexId: string }) {
 
   return <div className={styles.page}>
     <Link className={styles.back} href="/positions"><Icon name="arrow" size={13} style={{ transform: "rotate(180deg)" }} />Your portfolio</Link>
-    {loading ? <div className={styles.loading}>Reading your shares…</div> : error ? <div className={styles.error}>{error}</div> : !position ? <div className={styles.gate}><span>NO POSITION</span><h1>No index shares found.</h1><p>This wallet does not hold index shares yet.</p><Link href={`/indexes/${encodeURIComponent(indexId)}`}>Open index</Link></div> : <>
+    {loading ? <div className={styles.loading}>Reading your shares…</div> : error ? <div className={styles.error}>{error}</div> : !position && refresh.updating ? <div className={styles.loading} role="status" aria-live="polite" data-position-updating="true">Updating…</div> : !position ? <div className={styles.gate}><span>NO POSITION</span><h1>No index shares found.</h1><p>This wallet does not hold index shares yet.</p><Link href={`/indexes/${encodeURIComponent(indexId)}`}>Open index</Link></div> : <>
       <section className={styles.hero}>
         <div className={styles.identity}>
           <small>INDEX POSITION</small><h1>{name}</h1>
-          <div className={styles.numbers}>
+          {refresh.updating ? <div className={styles.numbers} role="status" aria-live="polite" data-position-updating="true"><div className={styles.valueLead}><strong>Updating…</strong><span>Waiting for your new share balance</span></div></div> : <div className={styles.numbers}>
             {figures.map(figure => <div key={figure.role} className={figure.primary ? styles.valueLead : undefined}><strong>{figure.text}</strong><span>{figure.label}</span></div>)}
-          </div>
+          </div>}
           <div className={styles.actions}><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link><button type="button" className={styles.share} onClick={() => setShareOpen(true)}><Icon name="share" size={13} />Share</button>{activeOperation ? <button type="button" disabled> {activeOperation.kind === "withdraw" ? "Cash out in progress" : "Deposit in progress"}</button> : canCashOut ? <button type="button" onClick={() => setCashOutOpen(true)}>Cash out</button> : null}</div>
           {settlementStatus ? <SettlementListen status={settlementStatus} listening={positionNeedsListen(position)} detail={activeOperation ? settlementDetail({ status: settlementStatus, listening: positionNeedsListen(position), cashOutFinished: false }, position, activeOperation.kind === "withdraw" ? "withdraw" : "deposit") : "Your share balance increased."} /> : null}
           {BigInt(position.sharesRaw) > 0n ? <p className={styles.operation}>{CASH_OUT_BEFORE_SIGN}</p> : null}
@@ -119,7 +134,7 @@ export function PositionDetail({ indexId }: { indexId: string }) {
 
       {position.outstandingClaims?.length ? <section className={styles.claims}><h2>Outstanding claims</h2>{position.outstandingClaims.map((claim) => <div key={claim.mint}><strong>{claim.symbol ?? claim.mint.slice(0, 7)}</strong><span>{claim.amountRemainingRaw} units remaining</span><b>{claim.transferBlocked ? "NEEDS ATTENTION" : "PENDING"}</b></div>)}</section> : null}
       <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} title={name} kind={themed ? "Theme index" : "Person index"} detail={shareDetail} image={shareImage} url={typeof window !== "undefined" ? `${window.location.origin}/indexes/${encodeURIComponent(indexId)}` : undefined} />
-      <VaultFlow open={cashOutOpen} onClose={() => setCashOutOpen(false)} indexId={indexId} indexName={name} readiness={readiness} mode="withdraw" position={position} onPosition={next => { if (!next) return; setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next); }} />
+      <VaultFlow open={cashOutOpen} onClose={() => setCashOutOpen(false)} indexId={indexId} indexName={name} readiness={readiness} mode="withdraw" position={position} onPosition={next => { if (!next) return; positionFence.invalidate(); setPosition(current => pendingKey(current) === pendingKey(next) && current?.sharesRaw === next.sharesRaw ? current : next); }} />
     </>}
   </div>;
 }

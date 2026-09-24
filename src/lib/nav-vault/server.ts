@@ -1,14 +1,16 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { navVaultConfig, navVaultServes, type NavVaultConfig } from "./config.ts";
-import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, decodeVault, shareAta, tokenAmount, vaultPda } from "./program.ts";
+import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, decodeVault, shareAta, tokenAmount, vaultPda, type NavRequest } from "./program.ts";
 import { indexDisplayName, publishedSliceFor, sliceDisplayName, type TradableSlice } from "./slices.ts";
 import { navHeldSlice } from "./held.ts";
-import { memo } from "../cache.ts";
+import { mapLimit, memo } from "../cache.ts";
 import { createServiceSupabase } from "../supabase.ts";
 import { prepareNavClaim, prepareNavDeposit, prepareNavWithdraw, readNavRequests, readNavVault, type NavConnection } from "./prepare.ts";
 
 const HEADERS = { "Cache-Control": "no-store" };
 const REQUEST_LIMIT = 4096;
+/** Vaults read at once for the wallet positions list (each read is ~3 RPC calls). */
+const POSITIONS_CONCURRENCY = 4;
 export type NavDependencies = { config: () => NavVaultConfig; connection: (config: NavVaultConfig) => NavConnection; now?: () => number; slice?: (indexId: string, vaultMints: readonly string[]) => Promise<TradableSlice | null> };
 /** Published slice table (service role) with the committed JSON as fallback; memoised so readiness polls stay cheap. */
 function defaultSlice(indexId: string, vaultMints: readonly string[]): Promise<TradableSlice | null> {
@@ -89,40 +91,51 @@ export async function handleNavReadiness(indexId: string, deps: NavDependencies 
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 503); }
 }
 
+/** One wallet's NAV position payload. `requests` lets the list read every open request once instead of per vault. */
+async function navPositionPayload(owner: PublicKey, indexId: string, config: NavVaultConfig, connection: NavConnection, deps: NavDependencies, requests?: NavRequest[]) {
+  const snapshot = await readNavVault(connection, indexId, config.programId, deps.now?.());
+  if (!snapshot) return null;
+  const { state } = snapshot;
+  const [shareAccount, openRequests] = await Promise.all([
+    connection.getAccountInfo(shareAta(owner, state.shareMint), "confirmed"),
+    requests ? Promise.resolve(requests.filter(request => request.vault.equals(state.address))) : readNavRequests(connection, state.address, owner, config.programId),
+  ]);
+  const shares = tokenAmount(shareAccount?.data);
+  const now = deps.now?.() ?? Math.floor(Date.now() / 1000);
+  // Open exit requests are observed operations: VaultFlow shows "cash out settling" until they close.
+  const pendingOperations = openRequests.map(request => ({
+    operationId: request.address.toBase58(), owner: owner.toBase58(), kind: "withdraw", complete: false,
+    phase: now >= request.claimableAt ? "CLAIMABLE_IN_KIND" : "CONVERTING",
+    confirmedSharesBurnedRaw: request.shares.toString(),
+    nextAction: now >= request.claimableAt ? "Claim your share of the vault in kind." : "The keeper is converting your share of the vault to USDC.",
+    blockers: [],
+  }));
+  const markedAt = state.pricesUpdatedAt > 0 ? new Date(state.pricesUpdatedAt * 1000).toISOString() : null;
+  // Tickers label the on-chain legs; balances and marks come only from the chain read above.
+  const mints = state.legs.map(leg => leg.mint.toBase58());
+  const slice = shares > 0n ? await (deps.slice ?? defaultSlice)(indexId, mints).catch(() => null) : null;
+  const held = navHeldSlice({
+    shares, supply: snapshot.supply, usdcBalance: snapshot.usdcBalance, reservedUsdc: state.reservedUsdc, markedAt, pricesFresh: snapshot.pricesFresh,
+    legs: state.legs.map((leg, i) => ({ ticker: slice?.vaultLegs.find(row => row.mint === mints[i])?.ticker ?? `${mints[i]!.slice(0, 4)}…${mints[i]!.slice(-4)}`, mint: mints[i]!, decimals: leg.decimals, price: leg.price, reserved: leg.reserved, balance: snapshot.legBalances[i] ?? 0n })),
+  });
+  return {
+    indexId, indexName: sliceDisplayName(indexId) ?? undefined, owner: owner.toBase58(), shareMint: state.shareMint.toBase58(), shareDecimals: SHARE_DECIMALS,
+    sharesRaw: shares.toString(), shareSupplyRaw: snapshot.supply.toString(), vaultValueUsdc: micro(snapshot.nav),
+    markedAt,
+    priceBasis: "NAV vault: USDC buffer + keeper-posted stock marks (cash may be pending investment)",
+    pendingOperations,
+    ...(held ? { held } : {}),
+  };
+}
+
 export async function handleNavPosition(request: Request, indexId: string, deps: NavDependencies = defaults): Promise<Response> {
   try {
     const wallet = new URL(request.url).searchParams.get("wallet") ?? "";
     const owner = new PublicKey(wallet);
     const { config, connection } = served(indexId, deps, request);
-    const snapshot = await readNavVault(connection, indexId, config.programId, deps.now?.());
-    if (!snapshot) return plain(new Error("This index does not have a NAV vault yet."), 404);
-    const shares = tokenAmount((await connection.getAccountInfo(shareAta(owner, snapshot.state.shareMint), "confirmed"))?.data);
-    const now = deps.now?.() ?? Math.floor(Date.now() / 1000);
-    // Open exit requests are observed operations: VaultFlow shows "cash out settling" until they close.
-    const pendingOperations = (await readNavRequests(connection, snapshot.state.address, owner, config.programId)).map(request => ({
-      operationId: request.address.toBase58(), owner: owner.toBase58(), kind: "withdraw", complete: false,
-      phase: now >= request.claimableAt ? "CLAIMABLE_IN_KIND" : "CONVERTING",
-      confirmedSharesBurnedRaw: request.shares.toString(),
-      nextAction: now >= request.claimableAt ? "Claim your share of the vault in kind." : "The keeper is converting your share of the vault to USDC.",
-      blockers: [],
-    }));
-    const { state } = snapshot;
-    const markedAt = state.pricesUpdatedAt > 0 ? new Date(state.pricesUpdatedAt * 1000).toISOString() : null;
-    // Tickers label the on-chain legs; balances and marks come only from the chain read above.
-    const mints = state.legs.map(leg => leg.mint.toBase58());
-    const slice = shares > 0n ? await (deps.slice ?? defaultSlice)(indexId, mints).catch(() => null) : null;
-    const held = navHeldSlice({
-      shares, supply: snapshot.supply, usdcBalance: snapshot.usdcBalance, reservedUsdc: state.reservedUsdc, markedAt, pricesFresh: snapshot.pricesFresh,
-      legs: state.legs.map((leg, i) => ({ ticker: slice?.vaultLegs.find(row => row.mint === mints[i])?.ticker ?? `${mints[i]!.slice(0, 4)}…${mints[i]!.slice(-4)}`, mint: mints[i]!, decimals: leg.decimals, price: leg.price, reserved: leg.reserved, balance: snapshot.legBalances[i] ?? 0n })),
-    });
-    return Response.json({
-      indexId, indexName: sliceDisplayName(indexId) ?? undefined, owner: owner.toBase58(), shareMint: state.shareMint.toBase58(), shareDecimals: SHARE_DECIMALS,
-      sharesRaw: shares.toString(), shareSupplyRaw: snapshot.supply.toString(), vaultValueUsdc: micro(snapshot.nav),
-      markedAt,
-      priceBasis: "NAV vault: USDC buffer + keeper-posted stock marks (cash may be pending investment)",
-      pendingOperations,
-      ...(held ? { held } : {}),
-    }, { headers: HEADERS });
+    const position = await navPositionPayload(owner, indexId, config, connection, deps);
+    if (!position) return plain(new Error("This index does not have a NAV vault yet."), 404);
+    return Response.json(position, { headers: HEADERS });
   } catch (error) { return plain(error, (error as { status?: number }).status ?? 400); }
 }
 
@@ -156,15 +169,20 @@ export async function handleNavPositions(request: Request, dependencies: { listI
     if (!config.enabled) return Response.json({ positions: [] }, { headers: HEADERS });
     const connection = deps.connection(config);
     const indexes = (await dependencies.listIndexes()).filter(index => navVaultServes(index.indexId, config));
-    const vaults = await connection.getMultipleAccountsInfo(indexes.map(index => vaultPda(index.indexId, config.programId)), "confirmed");
-    const positions = [];
-    for (const [i, index] of indexes.entries()) {
-      if (!vaults[i]) continue;
-      const response = await handleNavPosition(new Request(`http://local/?wallet=${owner.toBase58()}`), index.indexId, deps);
-      if (!response.ok) throw new Error("position read failed");
-      const position = await response.json() as { sharesRaw: string; pendingOperations: unknown[]; indexName?: string };
-      if (position.sharesRaw !== "0" || position.pendingOperations.length) positions.push({ ...position, indexName: indexDisplayName(index.name) ?? position.indexName ?? index.indexId });
-    }
+    // One vault-existence read, one owner-scoped request scan, then the vaults in parallel: a
+    // sequential per-vault fan-out (each with its own program scan) took 6-17 s on mainnet and made
+    // the Positions screen lag well behind a confirmed deposit.
+    const [vaults, requests] = await Promise.all([
+      connection.getMultipleAccountsInfo(indexes.map(index => vaultPda(index.indexId, config.programId)), "confirmed"),
+      indexes.length ? readNavRequests(connection, null, owner, config.programId) : Promise.resolve([]),
+    ]);
+    const live = indexes.filter((_, i) => Boolean(vaults[i]));
+    const read = await mapLimit(live, POSITIONS_CONCURRENCY, async index => {
+      const position = await navPositionPayload(owner, index.indexId, config, connection, deps, requests);
+      if (!position) throw new Error("position read failed");
+      return { ...position, indexName: indexDisplayName(index.name) ?? position.indexName ?? index.indexId };
+    });
+    const positions = read.filter(position => position.sharesRaw !== "0" || position.pendingOperations.length);
     return Response.json({ positions }, { headers: HEADERS });
   } catch { return plain(new Error("Your positions aren't available right now."), 503); }
 }

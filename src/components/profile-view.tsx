@@ -19,6 +19,9 @@ import { usePrivySolana } from "./providers/privy-provider";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
 import { getIndexPosition, getVaultReadiness, hasIndexShares, navIndexStatus, navSliceLabel, navVaultLive, publicIndexCanCashOut, publicIndexIsLive, publicIndexStatus, vaultReadinessFromIndex, type IndexSharePosition, type VaultReadiness } from "@/lib/frontend/vault-api";
 import { useIndexPositionListen } from "@/lib/frontend/use-position-listen";
+import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
+import { changeReflected } from "@/lib/frontend/position-refresh";
+import { ResourceRequestFence } from "@/lib/frontend/resource-request-fence";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
 import type { TrackerPerson, TrackerPersonResponse } from "@/lib/tracker/types";
 import { formatUsd } from "@/lib/format";
@@ -120,6 +123,7 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  const[vault,setVault]=useState<VaultReadiness|null>(null);
  const[vaultLoaded,setVaultLoaded]=useState(false);
  const[position,setPosition]=useState<IndexSharePosition|null>(null);
+ const[positionFence]=useState(()=>new ResourceRequestFence());
  const researchBook=research.data,legacyProfile=legacy.data?.profile??null;
  const trackerPerson=tracker.data?.person??null;
  const vaultIndex=vaultDir.data?.indexes.find(item=>item.bioguideId===id);
@@ -127,8 +131,9 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
  // eslint-disable-next-line react-hooks/set-state-in-effect -- clear observed data when its index identity disappears
  useEffect(()=>{let alive=true;if(!vaultIndexId){setVault(null);return;}getVaultReadiness(vaultIndexId).then(value=>{if(alive){setVault(value);setVaultLoaded(true)}}).catch(()=>{if(alive)setVault(null)});return()=>{alive=false}},[vaultIndexId]);
  // eslint-disable-next-line react-hooks/set-state-in-effect -- never retain a position after wallet/index identity disappears
- useEffect(()=>{let alive=true;if(!vaultIndexId||!wallet.solanaAddress){setPosition(null);return;}getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(alive)setPosition(value)}).catch(()=>{if(alive)setPosition(null)});return()=>{alive=false}},[vaultIndexId,wallet.solanaAddress]);
- useIndexPositionListen(vaultIndexId, wallet.solanaAddress, position, value=>setPosition(value), !investOpen);
+ useEffect(()=>{let alive=true;if(!vaultIndexId||!wallet.solanaAddress){positionFence.invalidate();setPosition(null);return;}const requestGeneration=positionFence.begin();getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(alive&&positionFence.isCurrent(requestGeneration))setPosition(value)}).catch(()=>{if(alive&&positionFence.isCurrent(requestGeneration))setPosition(null)});return()=>{alive=false}},[vaultIndexId,wallet.solanaAddress,positionFence]);
+ useIndexPositionListen(vaultIndexId, wallet.solanaAddress, position, value=>setPosition(value), !investOpen, positionFence);
+ usePositionRefresh<IndexSharePosition|null>({owner:wallet.solanaAddress,indexId:vaultIndexId,load:()=>getIndexPosition(vaultIndexId!,wallet.solanaAddress!),apply:value=>{positionFence.invalidate();setPosition(value)},reflected:(value,change)=>changeReflected(change,value),enabled:Boolean(vaultIndexId)});
  const loading=!trackerPerson&&!researchBook&&!legacyProfile&&(tracker.loading||research.loading||(legacyNeeded&&legacy.data==null&&legacy.error==null));
  if(loading)return <Skeleton cards={3}/>;
  if(!trackerPerson&&!researchBook&&!legacyProfile&&tracker.error&&research.error&&legacy.error)return <PageError error={research.error} retry={()=>{tracker.reload();research.reload();legacy.reload()}}/>;
@@ -173,6 +178,6 @@ export function ProfileView({id, initialData}:{id:string; initialData?: PersonPo
 
    <div className={`${styles.mobileBar} ${live?styles.liveBar:""}`}><button className={following?styles.following:""} onClick={()=>ui.toggleDeviceFollow(id)}>{following?"Following":"Follow"}</button>{live?<>{canCashOut?<button onClick={()=>{setInvestMode("withdraw");setInvestOpen(true)}}>Cash out</button>:null}<button onClick={()=>{setInvestMode("deposit");setInvestOpen(true)}}>Invest</button></>:<button onClick={()=>setShareOpen(true)}>Share</button>}</div>
    <ShareSheet open={shareOpen} onClose={()=>setShareOpen(false)} name={name} indexName={indexName} image={image} profile={legacyProfile} holdings={holdings}/>
-   {live&&vaultIndexId?<VaultFlow open={investOpen} onClose={()=>{setInvestOpen(false); if(wallet.solanaAddress) void getIndexPosition(vaultIndexId, wallet.solanaAddress).then(value=>{if(value)setPosition(value)}).catch(()=>{})}} onPosition={value=>{if(value)setPosition(value)}} indexId={vaultIndexId} indexName={indexName} readiness={flowReadiness} mode={investMode} position={position}/>:null}
+   {live&&vaultIndexId?<VaultFlow open={investOpen} onClose={()=>{setInvestOpen(false);if(wallet.solanaAddress){const requestGeneration=positionFence.begin();void getIndexPosition(vaultIndexId,wallet.solanaAddress).then(value=>{if(value&&positionFence.isCurrent(requestGeneration))setPosition(value)}).catch(()=>{})}}} onPosition={value=>{if(value){positionFence.invalidate();setPosition(value)}}} indexId={vaultIndexId} indexName={indexName} readiness={flowReadiness} mode={investMode} position={position}/>:null}
  </div>
 }
