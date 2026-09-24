@@ -10,7 +10,7 @@ import { slugifyPerson } from "@/lib/frontend/research-format";
 import type { PeopleDirectoryResponse, ResearchPerson } from "@/lib/frontend/research-contract";
 import type { CopySignal } from "@/lib/disclosures/types";
 import type { PublicVaultDefinition } from "@/lib/index-vaults/vault-definition-store";
-import { navVaultEnabledFor, publicIndexStatus } from "@/lib/frontend/vault-api";
+import { navVaultEnabledFor } from "@/lib/frontend/vault-api";
 import { indexContentFor } from "@/lib/frontend/index-content";
 import { themeArtFor } from "@/lib/frontend/theme-art";
 import { EcosystemLogos } from "./ecosystem-logos";
@@ -19,7 +19,7 @@ import { PageError, StockIcon } from "./social/shared";
 import styles from "./consumer-home.module.css";
 
 type Filter = "all" | "people" | "themes";
-type Sort = "featured" | "name" | "coverage" | "holdings";
+type Sort = "live" | "featured" | "name" | "coverage" | "holdings";
 
 export type ThematicDirectory = {
   count: number;
@@ -40,6 +40,10 @@ export type VaultIndexDirectory = {
   indexes: PublicVaultDefinition[];
   publicFundsEnabled: boolean;
   storage: string;
+};
+
+type NavVaultDirectory = {
+  indexes: { indexId: string; paused?: boolean }[];
 };
 
 type IndexRowData = {
@@ -119,19 +123,11 @@ function vaultRow(
   index: PublicVaultDefinition,
   people: ResearchPerson[],
   themes: ThematicDirectory["indexes"],
-  publicFundsEnabled: boolean,
   navLive: ReadonlySet<string> | null,
 ): IndexRowData {
   const person = people.find((item) => item.id === index.bioguideId || slugifyPerson(item.name) === index.personSlug);
   const theme = themes.find((item) => item.id === index.indexId);
-  // NAV rail: Live iff the index has a NAV vault on chain; the retired Symmetry gate no longer decides.
-  const status = navLive && navVaultEnabledFor(index.indexId) ? (navLive.has(index.indexId) ? "Live" : "Research") : publicIndexStatus({
-    vaultAddress: index.vaultAddress,
-    shareMint: index.shareMint,
-    network: index.network,
-    depositsEnabled: index.depositsEnabled,
-    publicFundsEnabled: publicFundsEnabled && index.publicFundsEnabled === true,
-  });
+  const status = navVaultEnabledFor(index.indexId) && navLive?.has(index.indexId) === true ? "Live" : "Research";
   const coverage = index.coverage.mappableByWeightBps == null ? null : index.coverage.mappableByWeightBps / 100;
   const content = indexContentFor(index.indexId);
   return {
@@ -159,14 +155,15 @@ export function FilingTape({ disclosures, error, loading = false, retry }: { dis
   return <div>{disclosures.length ? `${disclosures.length} disclosures` : "Nothing new on the tape."}</div>;
 }
 
-export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
+export function ConsumerHome({ initialData, initialThemes, initialIndexes, initialNav }: {
   initialData?: PeopleDirectoryResponse;
   initialThemes?: ThematicDirectory;
   initialIndexes?: VaultIndexDirectory;
+  initialNav?: NavVaultDirectory;
 }) {
   const params = useSearchParams();
   const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<Sort>("name");
+  const [sort, setSort] = useState<Sort>("live");
   const [investableOnly, setInvestableOnly] = useState(false);
   const peopleResource = useResource<PeopleDirectoryResponse>("/api/people", initialData);
   const themeResource = useResource<ThematicDirectory>("/api/thematic-indexes", initialThemes);
@@ -179,20 +176,21 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
     [indexResource.data],
   );
   const navIds = definitions.map(index => index.indexId).join(",");
-  const navResource = useResource<{ indexes: { indexId: string; paused?: boolean }[] }>(navIds ? `/api/nav-vault?ids=${encodeURIComponent(navIds)}` : null);
+  const navResource = useResource<NavVaultDirectory>(navIds ? `/api/nav-vault?ids=${encodeURIComponent(navIds)}` : null, initialNav);
   const navLive = useMemo(() => navResource.data ? new Set(navResource.data.indexes.filter(item => !item.paused).map(item => item.indexId)) : null, [navResource.data]);
   const rows = useMemo(() => {
-    let next = definitions.map((index) => vaultRow(index, people, themes, indexResource.data?.publicFundsEnabled ?? false, navLive));
+    let next = definitions.map((index) => vaultRow(index, people, themes, navLive));
     if (filter === "people") next = next.filter((row) => row.kind === "person");
     if (filter === "themes") next = next.filter((row) => row.kind === "theme");
     if (investableOnly) next = next.filter((row) => row.status === "Live");
     if (query) next = next.filter((row) => `${row.name} ${row.description} ${row.tickers.join(" ")}`.toLowerCase().includes(query));
+    if (sort === "live") next.sort((a, b) => Number(b.status === "Live") - Number(a.status === "Live") || a.name.localeCompare(b.name));
     if (sort === "name") next.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "coverage") next.sort((a, b) => (b.coverage ?? 0) - (a.coverage ?? 0) || a.name.localeCompare(b.name));
     if (sort === "holdings") next.sort((a, b) => (b.holdings ?? 0) - (a.holdings ?? 0) || a.name.localeCompare(b.name));
     if (sort === "featured") next.sort((a, b) => (featuredRank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (featuredRank.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name));
     return next;
-  }, [definitions, filter, indexResource.data?.publicFundsEnabled, investableOnly, people, query, sort, themes, navLive]);
+  }, [definitions, filter, investableOnly, people, query, sort, themes, navLive]);
   const loading = !initialIndexes && indexResource.loading;
   const peopleCount = definitions.filter((index) => index.kind === "person").length;
   const themeCount = definitions.filter((index) => index.kind === "thematic").length;
@@ -222,7 +220,7 @@ export function ConsumerHome({ initialData, initialThemes, initialIndexes }: {
           </div>
           <label className={styles.sortSelect}>Sort
             <select value={sort} onChange={(event) => setSort(event.target.value as Sort)}>
-              <option value="featured">Featured</option><option value="name">A–Z</option><option value="coverage">Coverage</option><option value="holdings">Holdings</option>
+              <option value="live">Live first</option><option value="featured">Featured</option><option value="name">A–Z</option><option value="coverage">Coverage</option><option value="holdings">Holdings</option>
             </select>
           </label>
           <label className={styles.investToggle}><input type="checkbox" checked={investableOnly} onChange={(event) => setInvestableOnly(event.target.checked)} /><span>Investable only</span></label>

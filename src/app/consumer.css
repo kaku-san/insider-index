@@ -92,6 +92,7 @@ h1,h2,h3{font-weight:760;letter-spacing:-.045em}
 .consumer-mobile-nav{display:none}
 .consumer-footer{width:min(var(--consumer-max),calc(100% - 40px));margin:0 auto 26px;padding:28px 0 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:30px;color:var(--muted-foreground)}
 .consumer-footer>div{display:grid;gap:5px}.consumer-footer strong{font-size:17px;color:var(--foreground);letter-spacing:-.04em}.consumer-footer span{font-size:11px}.consumer-footer p{max-width:650px;font-size:10px;line-height:1.7;text-align:right}
+.consumer-footer-credit a{color:var(--foreground);text-decoration:underline;text-underline-offset:2px}.consumer-footer-credit a:hover{color:var(--primary)}
 .toast{left:50%;bottom:26px;border-radius:12px;background:var(--ink);color:var(--ink-text)}
 
 /* Bring legacy money flows into the new system without changing their behavior. */

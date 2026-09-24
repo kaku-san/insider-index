@@ -9,15 +9,17 @@ import type { PublicVaultDefinition } from "../src/lib/index-vaults/vault-defini
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { ConsumerHome, FilingTape } = await import("../src/components/consumer-home.tsx");
+const { default: RootLayout } = await import("../src/app/layout.tsx");
 const { FmpPerson, PublishedTarget } = await import("../src/components/fmp-person.tsx");
 const { PrivySolanaProvider, usePrivySolana } = await import("../src/components/providers/privy-provider.tsx");
 const { UIProvider } = await import("../src/components/providers/ui-provider.tsx");
 function renderPerson(book: NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>) {
   return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(FmpPerson, { id: person.id, initialData: book }))));
 }
-function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }, indexes: PublicVaultDefinition[] = [], publicFundsEnabled = false) {
+function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }, indexes: PublicVaultDefinition[] = [], publicFundsEnabled = false, navIndexes?: { indexId: string; paused?: boolean }[]) {
   const initialIndexes = { count: indexes.length, indexes, publicFundsEnabled, storage: "supabase" };
-  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData, initialIndexes }))));
+  const initialNav = navIndexes ? { indexes: navIndexes } : undefined;
+  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData, initialIndexes, initialNav }))));
 }
 
 const person: StoredPerson = {
@@ -46,6 +48,13 @@ const mag7Index: PublicVaultDefinition = {
   unmapped: [], vaultAddress: "AwDFvjEPPwdF1YgXV8asNt6LeEFDduinYneCn6mHDAsh", shareMint: "9ihGfswnUZ6MysSR3KgmrZ57FXDVAiAQ6sEHwLuWwzJ4", updatedAt: "2026-09-17T13:33:30Z",
 };
 
+test("site footer credits Kaku with GitHub and X links", () => {
+  const html = renderToStaticMarkup(createElement(RootLayout, null, createElement("div", null, "Page content")));
+  assert.match(html, /Built by Kaku/);
+  assert.match(html, /href="https:\/\/github\.com\/kaku-san"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*>GitHub<\/a>/);
+  assert.match(html, /href="https:\/\/x\.com\/kakujain"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*>@kakujain on X<\/a>/);
+});
+
 // Assertions below inspect generated HTML, the public render output, not implementation source.
 test("home is one index catalog surface without stacked discovery sections", () => {
   const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" });
@@ -73,8 +82,8 @@ test("unpublished books do not appear in the 20-index catalog", () => {
   assert.match(html, /No indexes match this view|Loading index catalog/);
 });
 
-test("a live vault shows Live/Invest only when its signing path is open", () => {
-  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index, nativeIndex], true);
+test("a live NAV vault shows Live/Invest only when its signing path is open", () => {
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index, nativeIndex], true, [{ indexId: mag7Index.indexId }]);
   assert.match(html, /Mag7 Caucus/);
   assert.match(html, />Live</);
   assert.match(html, /href="\/indexes\/idx-theme-mag7-caucus"[^>]*>Invest/);
@@ -87,7 +96,35 @@ test("a live vault shows Live/Invest only when its signing path is open", () => 
   assert.ok(!row("Example F Index").includes("Invest"));
 });
 
-test("home lists indexes A–Z by default and keeps the designated featured order as a sort", () => {
+test("home fails closed when NAV readiness is absent or the NAV kill switch is on", () => {
+  const unavailable = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index], true);
+  assert.match(unavailable, />Research</);
+  assert.doesNotMatch(unavailable, />Live</);
+  assert.doesNotMatch(unavailable, />Invest <svg/);
+
+  const previous = process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED;
+  process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED = "1";
+  try {
+    const disabled = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index], true, [{ indexId: mag7Index.indexId }]);
+    assert.match(disabled, />Research</);
+    assert.doesNotMatch(disabled, />Live</);
+    assert.doesNotMatch(disabled, />Invest <svg/);
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED;
+    else process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED = previous;
+  }
+});
+
+test("home lists Live indexes first, then the rest A–Z, by default", () => {
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [nativeIndex, mag7Index], true, [{ indexId: mag7Index.indexId }]);
+  const live = html.indexOf("/indexes/idx-theme-mag7-caucus");
+  const research = html.indexOf("/indexes/insiderindex-example-filer");
+  assert.ok(live >= 0 && research >= 0 && live < research);
+  assert.match(html, /<option value="live" selected="">Live first<\/option>/);
+  assert.match(html, /<option value="name">A–Z<\/option>/);
+});
+
+test("home lists non-live indexes A–Z by default and keeps the designated featured order as a sort", () => {
   const featured = [
     ["insiderindex-josh-gottheimer", "Josh Gottheimer", "person"],
     ["insiderindex-nancy-pelosi", "Nancy Pelosi", "person"],
