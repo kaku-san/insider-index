@@ -15,9 +15,10 @@ const { UIProvider } = await import("../src/components/providers/ui-provider.tsx
 function renderPerson(book: NonNullable<ComponentProps<typeof FmpPerson>["initialData"]>) {
   return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(FmpPerson, { id: person.id, initialData: book }))));
 }
-function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }, indexes: PublicVaultDefinition[] = [], publicFundsEnabled = false) {
+function renderHome(initialData: { people: StoredPerson[]; total: number; partial: boolean; savedAt: string | null; storage: string }, indexes: PublicVaultDefinition[] = [], publicFundsEnabled = false, navIndexes?: { indexId: string; paused?: boolean }[]) {
   const initialIndexes = { count: indexes.length, indexes, publicFundsEnabled, storage: "supabase" };
-  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData, initialIndexes }))));
+  const initialNav = navIndexes ? { indexes: navIndexes } : undefined;
+  return renderToStaticMarkup(createElement(PrivySolanaProvider, null, createElement(UIProvider, null, createElement(ConsumerHome, { initialData, initialIndexes, initialNav }))));
 }
 
 const person: StoredPerson = {
@@ -73,8 +74,8 @@ test("unpublished books do not appear in the 20-index catalog", () => {
   assert.match(html, /No indexes match this view|Loading index catalog/);
 });
 
-test("a live vault shows Live/Invest only when its signing path is open", () => {
-  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index, nativeIndex], true);
+test("a live NAV vault shows Live/Invest only when its signing path is open", () => {
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index, nativeIndex], true, [{ indexId: mag7Index.indexId }]);
   assert.match(html, /Mag7 Caucus/);
   assert.match(html, />Live</);
   assert.match(html, /href="\/indexes\/idx-theme-mag7-caucus"[^>]*>Invest/);
@@ -87,8 +88,27 @@ test("a live vault shows Live/Invest only when its signing path is open", () => 
   assert.ok(!row("Example F Index").includes("Invest"));
 });
 
+test("home fails closed when NAV readiness is absent or the NAV kill switch is on", () => {
+  const unavailable = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index], true);
+  assert.match(unavailable, />Research</);
+  assert.doesNotMatch(unavailable, />Live</);
+  assert.doesNotMatch(unavailable, />Invest/);
+
+  const previous = process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED;
+  process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED = "1";
+  try {
+    const disabled = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [mag7Index], true, [{ indexId: mag7Index.indexId }]);
+    assert.match(disabled, />Research</);
+    assert.doesNotMatch(disabled, />Live</);
+    assert.doesNotMatch(disabled, />Invest/);
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED;
+    else process.env.NEXT_PUBLIC_NAV_VAULT_DISABLED = previous;
+  }
+});
+
 test("home lists Live indexes first, then the rest A–Z, by default", () => {
-  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [nativeIndex, mag7Index], true);
+  const html = renderHome({ people: directory, total: 540, partial: false, savedAt: null, storage: "supabase" }, [nativeIndex, mag7Index], true, [{ indexId: mag7Index.indexId }]);
   const live = html.indexOf("/indexes/idx-theme-mag7-caucus");
   const research = html.indexOf("/indexes/insiderindex-example-filer");
   assert.ok(live >= 0 && research >= 0 && live < research);
