@@ -11,7 +11,7 @@ For AI reviewers: see [AGENTS.md](AGENTS.md).
 1. Open [InsiderIndex.xyz](https://insiderindex.xyz) and choose a person or theme.
 2. Open [Mag7 Caucus](https://insiderindex.xyz/indexes/idx-theme-mag7-caucus). Inspect **Allocation** and the source labels. Compare with [Pelosi](https://insiderindex.xyz/indexes/insiderindex-nancy-pelosi): excluded holdings remain visible with an asterisk and a reason.
 3. On a **Live** index, connect a Solana wallet and inspect **Invest**. The minimum is $10 USDC, plus SOL for network fees. Nothing moves without approval; judges can inspect without funding or signing.
-4. If eligible and intentionally testing with real funds, approve once: USDC enters and shares mint atomically. See the observed position at [/positions](https://insiderindex.xyz/positions). Cash out also starts with one approval: available USDC pays immediately; otherwise a withdrawal request reserves your portion for keeper settlement or in-kind delivery.
+4. If eligible and intentionally testing with real funds, approve once: USDC enters and shares mint atomically. At [/positions](https://insiderindex.xyz/positions), the observed position shows the human share count and your pro-rata slice of the vault's on-chain stocks and USDC at keeper marks. **Share** makes a public index image to copy or download and opens an X post; cash out starts with one approval, paying available USDC immediately or reserving your portion for keeper settlement or in-kind delivery.
 
 This is **unaudited mainnet software**, not a risk-free demo. Do not invest money you cannot lose. Access restrictions and token-issuer terms apply.
 
