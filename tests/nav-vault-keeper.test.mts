@@ -79,3 +79,20 @@ test("throttled RPC fetch: one request at a time, spaced, 429 backoff honouring 
   const giveUp = throttledFetch({ fetchImpl: (async () => new Response("", { status: 429 })) as typeof fetch, maxRetries: 2, sleep: async () => undefined });
   assert.equal((await giveUp("rpc")).status, 429, "returns the 429 after the retry budget");
 });
+
+test("request slices retry on a short backoff so the keeper keeps selling until the request timeout", async () => {
+  const { KEEPER_FULFILL_DEFER_BASE_SECS, KEEPER_FULFILL_DEFER_MAX_SECS, fulfillDeferKey } = await import("../src/lib/nav-vault/keeper.ts");
+  const deferrals: KeeperDeferrals = new Map();
+  const key = fulfillDeferKey(PublicKey.default, 1);
+  assert.equal(recordFailure(deferrals, key, 0, "SwapPriceBound", true).until, KEEPER_FULFILL_DEFER_BASE_SECS);
+  for (let i = 0; i < 10; i++) recordFailure(deferrals, key, 1_000, "x", true);
+  assert.equal(deferrals.get(key)!.until, 1_000 + KEEPER_FULFILL_DEFER_MAX_SECS, "capped well inside the 600 s request timeout");
+  assert.ok(KEEPER_FULFILL_DEFER_MAX_SECS * 4 <= 600);
+});
+
+test("marks are the mid of ask and bid; the ask alone when the bid is missing or crossed", async () => {
+  const { midMark } = await import("../src/lib/nav-vault/mainnet-venue.ts");
+  assert.equal(midMark(1_000_000n, 980_000n), 990_000n);
+  assert.equal(midMark(1_000_000n, null), 1_000_000n);
+  assert.equal(midMark(1_000_000n, 1_010_000n), 1_000_000n);
+});

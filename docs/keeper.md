@@ -5,13 +5,13 @@ The keeper is a separate operator process, **not a Vercel function or user walle
 ## One cycle
 
 1. Read each on-chain NAV vault, balances, share supply and withdrawal requests.
-2. Quote marks (Raydium first, Jupiter fallback). Multi-vault cycles reuse each mint quote and batch price posts where they fit.
+2. Quote marks (Raydium first, Jupiter fallback): the **mid** of a $100 ask and the matching bid (sell-side) quote, the bid re-measured every 5 minutes. Multi-vault cycles reuse each mint quote and batch price posts where they fit. With `--loop`, marks post from an independent loop (below), not from this cycle.
 3. Cross reserved withdrawal stock against free vault USDC at the mark.
 4. Sell remaining withdrawal slices, oldest request first.
 5. Rebalance free inventory toward on-chain target weights while respecting the USDC buffer.
-6. Settle converted requests; deliver unsellable slices in kind only to their owners.
+6. Settle converted requests; after a request's timeout, deliver slices that still cannot sell in kind, only to their owners.
 
-A failing step never aborts the cycle: later legs, settles and other vaults still run. A swap whose venue quote cannot pass the on-chain posted-price bound is refused before sending; any failed swap is **deferred per leg** with backoff (2 min doubling to 30 min, in-process memory) so the planner tries the next leg instead of retrying forever. Marks are ask-side quotes, so a sale whose bid/ask spread exceeds the vault's `max_slippage_bps` cannot fill; for a withdrawal request that slice is **delivered in kind, pro-rata, to the owner** in the same cycle (the keeper creates the owner's token accounts and pays that rent). A transiently failing slice is retried and goes in kind once the request's timeout passes.
+A failing step never aborts the cycle: later legs, settles and other vaults still run. A swap whose venue quote cannot pass the on-chain posted-price bound is refused before sending; any failed swap is **deferred per leg** with backoff (2 min doubling to 30 min, in-process memory) so the planner tries the next leg instead of retrying forever. A withdrawal-request slice that fails to sell retries on a short backoff (30 s doubling to 2 min) for the whole request timeout, so the keeper keeps trying to pay USDC first. Only after the timeout does a slice that still fails go **in kind, pro-rata, to the owner**, and only into token accounts the owner already has: the keeper never creates or pays rent for owner accounts (an owner could close them and keep the rent). A slice with no owner account stays on the request for the owner's own in-kind claim.
 
 Swaps try **Jupiter v1 quote + swap-instructions first**, restricted to CPI-safe DEXes. If no usable route exists, the builder falls back to a direct persisted Raydium CLMM pool. Jupiter v2 builds are used for marks, not the mainnet swap CPI path. No keeper side-payment funds a user's fill. Each on-chain swap independently enforces venue, inventory, reserve, slippage and authority constraints.
 
@@ -42,6 +42,8 @@ npm run nav-vault -- keeper --all --network mainnet-beta \
 ```
 
 RPC use is paced: one request in flight, `--rpc-interval-ms` apart (default 125), with 429 backoff that honours `Retry-After`; confirmations poll signature status, so no websocket is opened. Lookup tables and failing-leg deferrals are cached across `--loop` cycles.
+
+With `--loop`, marks run on an **independent schedule** (`--marks-every`, default 20 s) with their own paced RPC connection: that loop only quotes and posts `update_prices` for every vault, so swaps, settles and in-kind deliveries can never delay a price post past the 60 s `max_price_age`. The trading cycle then trades on the posted on-chain marks and skips a vault whose posted marks are stale. `--marks-every 0` restores marks inside the trading cycle.
 
 `--loop` is a target cycle period in seconds and requires execution. Mainnet vaults have **60-second marks**. Monitor observed price age, errors, request age, failed quotes and keeper SOL; do not assume a requested loop period proves fresh marks. Near or beyond the freshness boundary, deposits must refuse until a new mark lands.
 

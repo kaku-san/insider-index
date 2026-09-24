@@ -457,6 +457,42 @@ test("one keeper cycles many vaults: marks quoted once per mint, prices batched 
   assert.ok(!sent.some(step => step === "update_prices"), "no per-vault price re-post");
 });
 
+test("independent mark loop: postMarksAll posts every vault's marks alone; the trading cycle then trades on posted marks without quoting", async () => {
+  const { keeperCycleAll, postMarksAll } = await import("../src/lib/nav-vault/keeper.ts");
+  const vm = navVaultVm();
+  const a = seedIndex(vm, "idx-test-a");
+  const b = seedIndex(vm, "idx-test-b", { keeper: a.keeper });
+  postPrices(vm, a);
+  postPrices(vm, b);
+  vm.must(deposit(vm, a, a.alice, 500_000_000n));
+  vm.must(deposit(vm, b, b.alice, 300_000_000n));
+  const venueA = mockVenue(vm.connection, a.usdc), venueB = mockVenue(vm.connection, b.usdc);
+  const byMint = new Map([...a.legs, ...b.legs].map((leg, i) => [leg.mint.toBase58(), i < 2 ? venueA : venueB]));
+  let quotes = 0;
+  const marks = async (leg: Parameters<typeof venueA.marks>[0]) => { quotes += 1; return byMint.get(leg.mint.toBase58())!.marks(leg); };
+  const swaps = async (input: Parameters<typeof venueA.swaps>[0]) => (input.inMint.equals(a.usdc) || input.outMint.equals(a.usdc) ? venueA : venueB).swaps(input);
+  const sent: string[] = [];
+  const execute = async (tx: VersionedTransaction, step: string) => { tx.sign([a.keeper]); vm.must(vm.sendRaw(tx.serialize()), step); sent.push(step); return step; };
+  const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
+  vm.advance(100);
+  const posted = await postMarksAll({ connection: vm.connection, indexIds: ["idx-test-a", "idx-test-b"], keeper: a.keeper.publicKey, marks, execute, nowSeconds });
+  assert.equal(quotes, 4, "each mint quoted once");
+  assert.equal(posted.priceTransactions.length, 1);
+  assert.ok(sent.every(step => step.startsWith("update_prices")), "the mark loop sends nothing but price posts");
+  assert.equal(Number(vm.vault("idx-test-a").pricesUpdatedAt), nowSeconds(), "marks refreshed on chain");
+  vm.advance(1);
+  sent.length = 0;
+  const cycle = await keeperCycleAll({ connection: vm.connection, indexIds: ["idx-test-a", "idx-test-b"], keeper: a.keeper.publicKey, marks, swaps, execute, nowSeconds, marksPosted: true });
+  assert.equal(quotes, 4, "the trading cycle does not quote marks");
+  assert.equal(cycle.priceTransactions.length, 0, "nor post them");
+  assert.ok(sent.some(step => /^buy:/.test(step)), "it still rebalances on the posted marks");
+  for (const s of [a, b]) assert.ok(navOf(vm, s).legs.every(x => x > 0n), `${s.indexId} holds every leg`);
+  // Posted marks gone stale: the trading cycle skips the vaults instead of trading on them.
+  vm.advance(400);
+  const stale = await keeperCycleAll({ connection: vm.connection, indexIds: ["idx-test-a"], keeper: a.keeper.publicKey, marks, swaps, execute, nowSeconds, marksPosted: true });
+  assert.match(stale.vaults[0]!.error ?? "", /stale/);
+});
+
 /** Ask-side marks: posted 3% above the venue price, so a sale at the venue misses the 1% on-chain bound. */
 function askPremiumVenue(vm: NavVm, s: Seeded, options: { staleQuote?: boolean } = {}) {
   const venue = mockVenue(vm.connection, s.usdc);
@@ -501,9 +537,9 @@ test("an unsellable rebalance sell is deferred, never aborts the cycle: the conv
   }
 });
 
-test("a request slice that cannot sell inside the price bound is delivered in kind, pro-rata, with the USDC owed", async () => {
+test("an unsellable request slice keeps retrying to USDC until the timeout, then goes in kind only into accounts the owner already has", async () => {
   const vm = navVaultVm();
-  const s = seedIndex(vm);
+  const s = seedIndex(vm, "idx-test-nav", { requestTimeoutSecs: 120 });
   postPrices(vm, s);
   vm.must(deposit(vm, s, s.alice, 1_000_000_000n));
   vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, 0, 560_000_000n));
@@ -513,18 +549,31 @@ test("a request slice that cannot sell inside the price bound is delivered in ki
   const carved = r.read();
   assert.ok(carved.legAmounts.every(a => a > 0n));
   const v = vm.vault(s.indexId);
-  assert.equal(vm.info(ata(s.alice.publicKey, v.legs[1]!.mint, v.legs[1]!.tokenProgram)), null, "owner has no stock accounts yet");
+  const legAta = (i: number) => ata(s.alice.publicKey, v.legs[i]!.mint, v.legs[i]!.tokenProgram);
+  assert.equal(vm.info(legAta(1)), null, "owner has no stock accounts yet");
   const nowSeconds = () => Number(vm.svm.getClock().unixTimestamp);
-  const steps: string[] = [];
-  const execute = async (tx: VersionedTransaction, step: string) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), step); steps.push(step); return step; };
+  const execute = async (tx: VersionedTransaction, step: string) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize()), step); return step; };
+  const deferrals = new Map();
+  const tick = async () => { postPrices(vm, s); return keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...askPremiumVenue(vm, s), execute, afterPrices: async () => vm.advance(1), nowSeconds, deferrals }); };
+  const first = await tick();
+  assert.equal(first.requests.fulfills, 0);
+  assert.equal(first.requests.deliveredInKind, 0, "no in-kind delivery before the timeout: the cash-out promises USDC first");
+  assert.ok(vm.info(r.address), "request still open");
+  assert.ok([...deferrals.keys()].every(k => k.startsWith("fulfill:")) && [...deferrals.values()].every(d => d.until - nowSeconds() <= 31), "request slices retry on a short backoff");
+  vm.advance(125);
+  const timedOut = await tick();
+  assert.equal(timedOut.requests.deliveredInKind, 0, "the keeper never creates (pays rent for) owner accounts");
+  assert.equal(vm.info(legAta(0)), null);
+  assert.equal(vm.info(legAta(1)), null);
+  assert.ok(vm.info(r.address), "the request stays claimable by its owner");
+  ownerAtas(vm, s, s.alice);
   const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
-  const tick = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...askPremiumVenue(vm, s), execute, afterPrices: async () => vm.advance(1), nowSeconds, deferrals: new Map() });
-  assert.equal(tick.requests.fulfills, 0);
-  assert.equal(tick.requests.deliveredInKind, 2, "both unsellable legs delivered in kind this cycle, before the timeout");
-  assert.ok(nowSeconds() < carved.claimableAt);
+  vm.advance(5);
+  const delivered = await tick();
+  assert.equal(delivered.requests.deliveredInKind, 2, "both still-unsellable legs delivered into the owner's existing accounts");
   assert.equal(vm.info(r.address), null, "request closed");
-  assert.equal(vm.balance(ata(s.alice.publicKey, v.legs[0]!.mint, v.legs[0]!.tokenProgram)), carved.legAmounts[0]);
-  assert.equal(vm.balance(ata(s.alice.publicKey, v.legs[1]!.mint, v.legs[1]!.tokenProgram)), carved.legAmounts[1]);
+  assert.equal(vm.balance(legAta(0)), carved.legAmounts[0]);
+  assert.equal(vm.balance(legAta(1)), carved.legAmounts[1]);
   assert.equal(vm.balance(ata(s.alice.publicKey, s.usdc)) - usdcBefore, carved.usdcOwed, "carved USDC paid with the stock");
   const after = navOf(vm, s);
   assert.equal(after.v.reservedUsdc, 0n);
@@ -550,7 +599,46 @@ test("a transiently failing fulfil is retried later, and delivered in kind once 
   assert.ok(vm.info(r.address));
   assert.ok([...deferrals.values()].every(d => !d.unsellable));
   vm.advance(61);
+  ownerAtas(vm, s, s.alice);
   const second = await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...flaky, execute, afterPrices: async () => vm.advance(1), nowSeconds, deferrals });
   assert.equal(second.requests.deliveredInKind, 2, "timed-out request with failing legs goes in kind");
   assert.equal(vm.info(r.address), null);
+});
+
+test("live QA fixes: marks headroom, stale exits refuse, priority fee, full exit closes the share account, 11-leg in-kind fits the trace limit", async () => {
+  const { NAV_MARK_HEADROOM_SECS, NAV_STALE_PRICES, simulationMessage } = await import("../src/lib/nav-vault/prepare.ts");
+  const vm = navVaultVm();
+  const s = seedIndex(vm, "idx-test-11", { legCount: 11 });
+  postPrices(vm, s);
+  const sign = (b64: string, who: Keypair) => { const tx = VersionedTransaction.deserialize(Buffer.from(b64, "base64")); tx.sign([who]); return tx.serialize(); };
+  const now = () => Number(vm.svm.getClock().unixTimestamp);
+  const common = () => ({ connection: vm.connection, network: "devnet" as const, indexId: s.indexId, owner: s.alice.publicKey.toBase58(), nowSeconds: now() });
+  const dep = await prepareNavDeposit({ ...common(), amountRaw: "1000000000" });
+  const depTx = VersionedTransaction.deserialize(Buffer.from(dep.transactions[0]!.messageBase64, "base64"));
+  const budget = ComputeBudgetProgram.programId.toBase58();
+  const prices = depTx.message.compiledInstructions.filter(ix => depTx.message.staticAccountKeys[ix.programIdIndex]!.toBase58() === budget && ix.data[0] === 3);
+  assert.equal(prices.length, 1, "user transactions carry a compute-unit price (B2)");
+  vm.must(vm.sendRaw(sign(dep.transactions[0]!.messageBase64, s.alice)), "prepared deposit");
+  for (const leg of [0, 1, 5, 10]) vm.must(keeperSwap(vm, s, s.keeper, USDC_LEG, leg, 80_000_000n), `buy leg ${leg}`);
+  postPrices(vm, s);
+  // Marks still valid on chain but inside the headroom window: deposit and USDC exit refuse (B3, B6).
+  const maxAge = vm.vault(s.indexId).maxPriceAgeSecs;
+  vm.advance(maxAge - NAV_MARK_HEADROOM_SECS + 2);
+  await assert.rejects(prepareNavDeposit({ ...common(), amountRaw: "1000000" }), new RegExp(NAV_STALE_PRICES.slice(0, 20)));
+  const shares = sharesOf(vm, s, s.alice).toString();
+  await assert.rejects(prepareNavWithdraw({ ...common(), shareAmountRaw: shares }), new RegExp(NAV_STALE_PRICES.slice(0, 20)), "no silent in-kind exit on stale marks");
+  // An explicit in-kind full exit on 11 legs: missing owner accounts are created first, then request + claim + close (B5, B10).
+  const inKind = await prepareNavWithdraw({ ...common(), shareAmountRaw: shares, inKind: true });
+  assert.equal(inKind.navVault.path, "in-kind");
+  assert.ok(inKind.transactions.length > 1, "owner accounts move to setup transactions");
+  // The VM expires the blockhash after every send; on chain these share one blockhash, signed in order.
+  const fresh = (b64: string) => { const tx = VersionedTransaction.deserialize(Buffer.from(b64, "base64")); tx.message.recentBlockhash = vm.svm.latestBlockhash(); tx.sign([s.alice]); return tx.serialize(); };
+  for (const [i, tx] of inKind.transactions.entries()) vm.must(vm.sendRaw(fresh(tx.messageBase64)), `in-kind transaction ${i + 1}`);
+  assert.equal(vm.info(new PublicKey(inKind.navVault.request!)), null, "request fully claimed");
+  assert.equal(vm.info(shareAta(s.alice.publicKey, vm.vault(s.indexId).shareMint)), null, "emptied share account closed");
+  const v = vm.vault(s.indexId);
+  for (const leg of [0, 1, 5, 10]) assert.ok(vm.balance(ata(s.alice.publicKey, v.legs[leg]!.mint, v.legs[leg]!.tokenProgram)) > 0n, `leg ${leg} delivered`);
+  // A fee payer with no SOL fails with no logs: the wallet-funds message, not the generic one (B1).
+  assert.equal(simulationMessage([], "AccountNotFound"), "This wallet does not have enough USDC or SOL.");
+  assert.equal(simulationMessage([], { InstructionError: [0, "InvalidAccountData"] }), "The vault transaction did not simulate.");
 });

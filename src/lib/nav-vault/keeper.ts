@@ -7,10 +7,9 @@
  * No env, no `@/` aliases; network adapters are injected.
  */
 import { AddressLookupTableAccount, ComputeBudgetProgram, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import {
   BPS, CLAIM_LEGS_PER_TX, JUPITER_V6_PROGRAM_ID, defaultProgramId, USDC_LEG, ata, authorityPda, claimInKindIx, crossRequestLegIx, fulfillSwapIx,
-  keeperSwapIx, legAccount, legMint, legTokenProgram, legValue, mockPoolPda, mockSwapIx, settleRequestIx, TOKEN_PROGRAM_ID, updatePricesIx, withSlippage,
+  keeperSwapIx, legAccount, legMint, legTokenProgram, legValue, mockPoolPda, mockSwapIx, settleRequestIx, updatePricesIx, withSlippage,
   type NavRequest, type NavVaultState,
 } from "./program.ts";
 import { readNavRequests, readNavVault, type NavConnection, type NavVaultSnapshot } from "./prepare.ts";
@@ -34,6 +33,12 @@ export type KeeperAction = { kind: "buy" | "sell"; leg: number; inLeg: number; o
 export const KEEPER_DEFER_BASE_SECS = 120;
 export const KEEPER_DEFER_MAX_SECS = 1_800;
 /**
+ * Request slices retry on a short backoff so the keeper keeps trying to sell to USDC for the whole
+ * request timeout (10 min on mainnet) before anything goes in kind.
+ */
+export const KEEPER_FULFILL_DEFER_BASE_SECS = 30;
+export const KEEPER_FULFILL_DEFER_MAX_SECS = 120;
+/**
  * Per-process memory of failing swaps, keyed by vault/request + leg. A deferred leg is not retried
  * until `until` (unix seconds), so one unsellable leg cannot block other legs or vaults, or be retried
  * every cycle forever. `unsellable` = the venue cannot fill it inside the on-chain price bound.
@@ -48,7 +53,9 @@ export function isDeferred(deferrals: KeeperDeferrals, key: string, now: number)
 }
 export function recordFailure(deferrals: KeeperDeferrals, key: string, now: number, reason: string, unsellable: boolean): KeeperDeferral {
   const failures = (deferrals.get(key)?.failures ?? 0) + 1;
-  const delay = Math.min(KEEPER_DEFER_MAX_SECS, KEEPER_DEFER_BASE_SECS * 2 ** (failures - 1));
+  const fulfill = key.startsWith("fulfill:");
+  const base = fulfill ? KEEPER_FULFILL_DEFER_BASE_SECS : KEEPER_DEFER_BASE_SECS, max = fulfill ? KEEPER_FULFILL_DEFER_MAX_SECS : KEEPER_DEFER_MAX_SECS;
+  const delay = Math.min(max, base * 2 ** (failures - 1));
   const entry = { until: now + delay, failures, reason, unsellable };
   deferrals.set(key, entry);
   return entry;
@@ -324,12 +331,15 @@ export type KeeperTickResult = {
   after?: { usdcRaw: string; navRaw: string; bufferBps: number };
 };
 
-/** Owner token accounts to create (idempotently, keeper pays rent) before an in-kind delivery. */
-function ownerAccountIxs(keeper: PublicKey, state: NavVaultState, owner: PublicKey, legs: readonly number[]): TransactionInstruction[] {
-  return [
-    createAssociatedTokenAccountIdempotentInstruction(keeper, ata(owner, state.usdcMint), owner, state.usdcMint, TOKEN_PROGRAM_ID),
-    ...legs.map(i => { const leg = state.legs[i]!; return createAssociatedTokenAccountIdempotentInstruction(keeper, ata(owner, leg.mint, leg.tokenProgram), owner, leg.mint, leg.tokenProgram); }),
-  ];
+/**
+ * Legs the keeper may deliver in kind to an owner: only into token accounts the owner already has.
+ * The keeper never pays rent for owner accounts (an owner could close them and keep the rent); a leg
+ * without an account stays on the request for the owner's own claim after the timeout.
+ */
+async function deliverableLegs(connection: NavConnection, state: NavVaultState, owner: PublicKey, legs: readonly number[]): Promise<number[]> {
+  const infos = await connection.getMultipleAccountsInfo([ata(owner, state.usdcMint), ...legs.map(i => ata(owner, state.legs[i]!.mint, state.legs[i]!.tokenProgram))], "confirmed");
+  if (!infos[0]) return [];
+  return legs.filter((_, k) => Boolean(infos[k + 1]));
 }
 
 export async function keeperTick(input: {
@@ -469,16 +479,14 @@ export async function keeperTick(input: {
     return { ok: true };
   };
   // 2. Exits: request slices that could not be crossed are sold into their request (one per leg).
-  const unsellableNow = new Set<string>();
   for (const f of plan.fulfills) {
     const outcome = await trySwap("fulfill", f.leg, f.leg, USDC_LEG, f.amount, fulfillDeferKey(f.request, f.leg), f.request);
     if (outcome.ok) result.requests.fulfills += 1;
-    else if (outcome.unsellable) unsellableNow.add(fulfillDeferKey(f.request, f.leg));
   }
   // 3. Rebalance on free balances for the remaining legs.
   for (const action of plan.swaps) await trySwap(action.kind, action.leg, action.inLeg, action.outLeg, action.amountInRaw, rebalanceDeferKey(state.address, action.kind, action.leg));
-  // 4. Settle converted requests. Captain rule: a slice that cannot be sold is delivered in kind,
-  //    pro-rata, to the request owner (keeper creates the owner's token accounts; only the owner is paid).
+  // 4. Settle converted requests. A slice the keeper could not sell to USDC before the request timeout
+  //    is delivered in kind, pro-rata, to the owner (existing owner accounts only; only the owner is paid).
   let fresh: NavRequest[] = [];
   if (requestsReadable && result.requests.open > 0) { try { fresh = await readNavRequests(input.connection, state.address, undefined, programId); } catch { fresh = []; } }
   let current: NavVaultState = snapshot?.state ?? state;
@@ -486,19 +494,18 @@ export async function keeperTick(input: {
   for (const request of fresh) {
     const open = request.legAmounts.map((amount, leg) => ({ amount, leg })).filter(item => item.amount > 0n).map(item => item.leg);
     const timedOut = now() >= request.claimableAt;
-    const stuck = open.filter(leg => {
-      const key = fulfillDeferKey(request.address, leg);
-      const entry = deferrals.get(key);
-      return unsellableNow.has(key) || Boolean(entry?.unsellable) || (timedOut && Boolean(entry));
-    });
-    // Deliver only once every remaining leg is unsellable: the claim then pays the USDC owed and closes the request.
+    // Keep selling to USDC until the timeout (the promise the cash-out copy makes); only then do
+    // legs that keep failing go in kind.
+    const stuck = timedOut ? open.filter(leg => deferrals.has(fulfillDeferKey(request.address, leg))) : [];
+    // Deliver only once every remaining leg is stuck: the claim then pays the USDC owed and closes the request.
     if (open.length && stuck.length === open.length) {
-      const stepLegs = 4;
-      for (let k = 0; k < stuck.length; k += stepLegs) {
-        const legs = stuck.slice(k, k + stepLegs);
+      let deliverable: number[] = [];
+      try { deliverable = await deliverableLegs(input.connection, current, request.owner, stuck); } catch (error) { result.errors.push({ step: "read owner accounts", error: errorText(error) }); }
+      const stepLegs = 6;
+      for (let k = 0; k < deliverable.length; k += stepLegs) {
+        const legs = deliverable.slice(k, k + stepLegs);
         const ok = await attempt("deliver in kind", async () => execute(await compile([
           ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-          ...ownerAccountIxs(input.keeper, current, request.owner, legs),
           claimInKindIx(current, input.keeper, request, legs.slice(0, CLAIM_LEGS_PER_TX), programId),
         ], vaultTables), "deliver in kind"));
         if (!ok) break;
@@ -545,13 +552,8 @@ export function cachedMarks(source: MarkSource): MarkSource {
   };
 }
 
-/**
- * One keeper cycle across many vaults: quote each mint once, post every vault's marks in as few
- * transactions as fit (several `update_prices` per tx), wait a slot, then run each vault's netted
- * cycle (crosses, exits, rebalance, settles) without re-posting prices. A failing vault never stops
- * the others. Open requests are read once for the whole program.
- */
-export async function keeperCycleAll(input: {
+type ReadyVault = { indexId: string; state: NavVaultState; prices: bigint[]; table: AddressLookupTableAccount | null };
+type CycleInput = {
   connection: NavConnection;
   indexIds: readonly string[];
   keeper: PublicKey;
@@ -565,14 +567,14 @@ export async function keeperCycleAll(input: {
   minTradeUsdcRaw?: bigint;
   deferrals?: KeeperDeferrals;
   lookupTables?: Map<string, AddressLookupTableAccount>;
-}): Promise<KeeperCycleResult> {
+};
+
+/** Read each vault and quote its marks (each mint once); a failing vault is reported, never thrown. */
+async function readyVaults(input: CycleInput, result: KeeperCycleResult, quote: boolean): Promise<ReadyVault[]> {
   const programId = input.programId ?? defaultProgramId();
   const now = input.nowSeconds ?? (() => Math.floor(Date.now() / 1000));
-  input = { ...input, deferrals: input.deferrals ?? new Map(), lookupTables: input.lookupTables ?? new Map() };
   const marks = cachedMarks(input.marks);
-  const result: KeeperCycleResult = { vaults: [], priceTransactions: [], marks: 0 };
-  type Ready = { indexId: string; state: NavVaultState; prices: bigint[]; table: AddressLookupTableAccount | null };
-  const ready: Ready[] = [];
+  const ready: ReadyVault[] = [];
   for (const indexId of input.indexIds) {
     try {
       const snapshot = await readNavVault(input.connection, indexId, programId, now());
@@ -580,12 +582,19 @@ export async function keeperCycleAll(input: {
       const { state } = snapshot;
       if (!state.keeper.equals(input.keeper)) throw new Error("this wallet is not the vault keeper");
       if (state.paused) throw new Error("paused");
-      const prices: bigint[] = [];
-      for (const [index, leg] of state.legs.entries()) prices.push((await marks({ index, mint: leg.mint, decimals: leg.decimals, tokenProgram: leg.tokenProgram })).price);
-      if (prices.some(p => p <= 0n)) throw new Error("a mark is missing");
-      for (const [i, leg] of state.legs.entries()) {
-        const old = leg.price, next = prices[i]!;
-        if (old > 0n && (next > old ? next - old : old - next) * BPS > old * BigInt(state.maxPriceMoveBps)) throw new Error(`mark for ${leg.mint.toBase58()} moved more than ${state.maxPriceMoveBps} bps; admin override required`);
+      let prices: bigint[];
+      if (quote) {
+        prices = [];
+        for (const [index, leg] of state.legs.entries()) prices.push((await marks({ index, mint: leg.mint, decimals: leg.decimals, tokenProgram: leg.tokenProgram })).price);
+        if (prices.some(p => p <= 0n)) throw new Error("a mark is missing");
+        for (const [i, leg] of state.legs.entries()) {
+          const old = leg.price, next = prices[i]!;
+          if (old > 0n && (next > old ? next - old : old - next) * BPS > old * BigInt(state.maxPriceMoveBps)) throw new Error(`mark for ${leg.mint.toBase58()} moved more than ${state.maxPriceMoveBps} bps; admin override required`);
+        }
+      } else {
+        // Trading on marks the independent mark loop already posted: stale marks mean no trading this cycle.
+        if (!snapshot.pricesFresh) throw new Error("posted marks are stale; waiting for the mark loop");
+        prices = state.legs.map(leg => leg.price);
       }
       const table = state.lookupTable ? await cachedLookupTable(input.connection, state.lookupTable, input.lookupTables) : null;
       ready.push({ indexId, state, prices, table });
@@ -593,19 +602,19 @@ export async function keeperCycleAll(input: {
       result.vaults.push({ indexId, ok: false, error: error instanceof Error ? error.message : String(error) });
     }
   }
-  result.marks = ready.reduce((n, r) => n + r.prices.length, 0);
-  if (!input.execute) {
-    for (const r of ready) result.vaults.push({ indexId: r.indexId, ok: true, result: await keeperTick({ ...input, indexId: r.indexId, marks: async leg => ({ price: r.prices[leg.index]!, venue: "cycle" }), execute: undefined }) });
-    return result;
-  }
-  // Batched price posts: pack as many update_prices as fit one transaction.
+  return ready;
+}
+
+/** Batched price posts: pack as many update_prices as fit one transaction. */
+async function postPrices(input: CycleInput, ready: readonly ReadyVault[], result: KeeperCycleResult): Promise<void> {
+  const programId = input.programId ?? defaultProgramId();
   const priority = input.priorityMicroLamports ? [ComputeBudgetProgram.setComputeUnitPrice({ microLamports: input.priorityMicroLamports })] : [];
-  const build = async (batch: Ready[]) => {
+  const build = async (batch: ReadyVault[]) => {
     const latest = await input.connection.getLatestBlockhash("confirmed");
     const instructions = [ComputeBudgetProgram.setComputeUnitLimit({ units: Math.min(1_400_000, 60_000 * batch.length + 20_000) }), ...priority, ...batch.map(r => updatePricesIx(r.state, input.keeper, r.prices, programId))];
     return new VersionedTransaction(new TransactionMessage({ payerKey: input.keeper, recentBlockhash: latest.blockhash, instructions }).compileToV0Message(batch.flatMap(r => r.table ? [r.table] : [])));
   };
-  let batch: Ready[] = [];
+  let batch: ReadyVault[] = [];
   const flush = async () => {
     if (!batch.length) return;
     result.priceTransactions.push(await input.execute!(await build(batch), `update_prices x${batch.length}`));
@@ -617,12 +626,49 @@ export async function keeperCycleAll(input: {
     batch.push(r);
   }
   await flush();
-  await input.afterPrices?.();
+}
+
+/**
+ * Marks only, for every vault: quote each mint once and post all marks in as few transactions as fit.
+ * Run on its own schedule (and its own RPC pacing) so swaps, settles and in-kind deliveries in the
+ * trading cycle can never delay a price post past the vaults' `max_price_age`.
+ */
+export async function postMarksAll(input: Omit<CycleInput, "swaps">): Promise<KeeperCycleResult> {
+  const result: KeeperCycleResult = { vaults: [], priceTransactions: [], marks: 0 };
+  const cycle = { ...input, swaps: async () => null } as CycleInput;
+  const ready = await readyVaults(cycle, result, true);
+  result.marks = ready.reduce((n, r) => n + r.prices.length, 0);
+  if (input.execute && ready.length) await postPrices(cycle, ready, result);
+  for (const r of ready) result.vaults.push({ indexId: r.indexId, ok: true });
+  return result;
+}
+
+/**
+ * One keeper cycle across many vaults: quote each mint once, post every vault's marks in as few
+ * transactions as fit (several `update_prices` per tx), wait a slot, then run each vault's netted
+ * cycle (crosses, exits, rebalance, settles) without re-posting prices. A failing vault never stops
+ * the others. Open requests are read once for the whole program. `marksPosted`: an independent mark
+ * loop (`postMarksAll`) owns price posts; this cycle trades on the posted on-chain marks only.
+ */
+export async function keeperCycleAll(input: CycleInput & { marksPosted?: boolean }): Promise<KeeperCycleResult> {
+  const programId = input.programId ?? defaultProgramId();
+  input = { ...input, deferrals: input.deferrals ?? new Map(), lookupTables: input.lookupTables ?? new Map() };
+  const result: KeeperCycleResult = { vaults: [], priceTransactions: [], marks: 0 };
+  const ready = await readyVaults(input, result, !input.marksPosted);
+  result.marks = ready.reduce((n, r) => n + r.prices.length, 0);
+  if (!input.execute) {
+    for (const r of ready) result.vaults.push({ indexId: r.indexId, ok: true, result: await keeperTick({ ...input, indexId: r.indexId, marks: async leg => ({ price: r.prices[leg.index]!, venue: "cycle" }), execute: undefined }) });
+    return result;
+  }
+  if (!input.marksPosted) {
+    await postPrices(input, ready, result);
+    await input.afterPrices?.();
+  }
   let requests: NavRequest[] | null;
   try { requests = await readNavRequests(input.connection, null, undefined, programId); } catch { requests = null; }
   for (const r of ready) {
     try {
-      const tick = await keeperTick({ ...input, indexId: r.indexId, marks: async leg => ({ price: r.prices[leg.index]!, venue: "cycle" }), pricesPosted: true, requestsOverride: requests });
+      const tick = await keeperTick({ ...input, indexId: r.indexId, marks: async leg => ({ price: r.prices[leg.index]!, venue: input.marksPosted ? "posted" : "cycle" }), pricesPosted: true, requestsOverride: requests });
       result.vaults.push({ indexId: r.indexId, ok: true, result: tick });
     } catch (error) {
       result.vaults.push({ indexId: r.indexId, ok: false, error: error instanceof Error ? error.message : String(error) });
