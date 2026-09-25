@@ -11,7 +11,9 @@ import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { errorText } from "@/lib/frontend/api";
 import { noticedShareArrival, plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS, settlementDetail } from "@/lib/frontend/settlement-progress";
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_STILL_NOTE } from "@/lib/frontend/position-basket";
+import { cashOutRequestView } from "@/lib/frontend/cash-out-claim";
 import { CashOutAssetList, HeldNowBook, PositionBook } from "./position-book";
+import { CashOutClaimPanel } from "./cash-out-claim-panel";
 import { usePositionRefresh } from "@/lib/frontend/use-position-refresh";
 import { changeReflected } from "@/lib/frontend/position-refresh";
 import { ResourceRequestFence } from "@/lib/frontend/resource-request-fence";
@@ -104,6 +106,10 @@ export function PositionDetail({ indexId }: { indexId: string }) {
     network: cashOutNetwork,
   }));
   const settlementStatus = activeOperation ? plainStatusForOperation(activeOperation) : sharesArrived ? "shares received" : null;
+  // A reserved cash-out keeps an explicit next step (converting, or claim in kind) instead of a dead end.
+  const cashOutRequest = cashOutRequestView(position);
+  // A claimable request waits on the owner, not the keeper: the claim panel owns the next step and the listener's loader stops.
+  const ownerClaimDue = cashOutRequest?.claimable === true;
   const name = position?.indexName ?? indexId;
   const valueText = position ? markedDollars(positionValueUsdc(position) ?? position.markedValueUsdc) : "—";
   // The share card shares the public index (never this wallet's balance).
@@ -124,7 +130,8 @@ export function PositionDetail({ indexId }: { indexId: string }) {
             {figures.map(figure => <div key={figure.role} className={figure.primary ? styles.valueLead : undefined}><strong>{figure.text}</strong><span>{figure.label}</span></div>)}
           </div>}
           <div className={styles.actions}><Link href={`/indexes/${encodeURIComponent(indexId)}`}>View index</Link><button type="button" className={styles.share} onClick={() => setShareOpen(true)}><Icon name="share" size={13} />Share</button>{activeOperation ? <button type="button" disabled> {activeOperation.kind === "withdraw" ? "Cash out in progress" : "Deposit in progress"}</button> : canCashOut ? <button type="button" onClick={() => setCashOutOpen(true)}>Cash out</button> : null}</div>
-          {settlementStatus ? <SettlementListen status={settlementStatus} listening={positionNeedsListen(position)} detail={activeOperation ? settlementDetail({ status: settlementStatus, listening: positionNeedsListen(position), cashOutFinished: false }, position, activeOperation.kind === "withdraw" ? "withdraw" : "deposit") : "Your share balance increased."} /> : null}
+          {settlementStatus && !ownerClaimDue ? <SettlementListen status={settlementStatus} listening={positionNeedsListen(position)} detail={activeOperation ? settlementDetail({ status: settlementStatus, listening: positionNeedsListen(position), cashOutFinished: false }, position, activeOperation.kind === "withdraw" ? "withdraw" : "deposit") : "Your share balance increased."} /> : null}
+          {cashOutRequest ? <CashOutClaimPanel indexId={indexId} position={position} onPosition={next => { positionFence.invalidate(); setPosition(next); refresh.refetch(); }} /> : null}
           {BigInt(position.sharesRaw) > 0n ? <p className={styles.operation}>{CASH_OUT_BEFORE_SIGN}</p> : null}
         </div>
       </section>

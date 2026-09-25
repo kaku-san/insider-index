@@ -21,6 +21,8 @@ flowchart LR
 - **Program:** `programs/nav-vault/src/lib.rs`. One PDA vault per index ID, PDA-owned inventory, and its own Token-2022 share mint. Share supply and token balances—not purchase rows—define ownership. NAV excludes inventory reserved for withdrawal requests.
 - **App:** `src/lib/nav-vault/server.ts` / `prepare.ts` read chain state and build unsigned transactions. `src/components/vault-flow.tsx` validates preparation, asks the wallet to approve, confirms signatures and polls observed positions. After confirmation it announces the change (`src/lib/frontend/position-refresh.ts`); every mounted position view refetches at once, shows "Updating…" and re-reads every 3 s for up to 30 s until the chain read shows the new share balance, and refetches on window focus. The web server never loads a keeper or admin keypair.
 - **Keeper:** `scripts/nav-vault-cli.mts` and `src/lib/nav-vault/keeper.ts`. Separate signing process with an explicit file-path key; posts marks and manages free inventory/withdrawal requests. See [keeper.md](keeper.md).
+- **Wallet:** Solana external wallets only (`src/lib/frontend/privy-wallet-selection.ts`). Privy email login and embedded wallets are not offered or listed; a legacy embedded-only session is refused for every signature with "connect an external Solana wallet".
+- **Cash-out settling:** a reserved withdrawal stays visible on the position (`src/lib/frontend/cash-out-claim.ts`, `src/components/cash-out-claim-panel.tsx`) with its observed next step: the keeper converting to USDC, or — after the request timeout — an explicit owner claim-in-kind action prepared by `POST /api/nav-vault/[id]/claim/prepare`.
 
 ## Public API map
 
@@ -31,7 +33,7 @@ flowchart LR
 | `GET /api/nav-vault/[id]/position?wallet=<pubkey>` | Display name, share balance, marked value, pro-rata free on-chain holdings and pending requests |
 | `POST /api/nav-vault/[id]/deposit/prepare` | Unsigned deposit (`owner`, `amountRaw`) |
 | `POST /api/nav-vault/[id]/withdraw/prepare` | Unsigned exit (`owner`, `shareAmountRaw`) |
-| `POST /api/nav-vault/[id]/claim/prepare` | Remaining in-kind claim chunks |
+| `POST /api/nav-vault/[id]/claim/prepare` | Owner in-kind claim for a timed-out reserved request (chunked by the program's leg limit) |
 | `GET /api/positions/indexes?wallet=<pubkey>` | Wallet positions across NAV vaults (one owner-scoped request scan, vaults read in parallel) |
 | `GET /api/vault-indexes` | Research definitions; not authority to sign |
 | `GET /api/people`, `/api/tracker-profiles`, `/api/thematic-indexes` | Source-backed discovery |

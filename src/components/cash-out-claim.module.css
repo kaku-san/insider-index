@@ -1,0 +1,8 @@
+.panel{margin:18px 0;background:#10172c;color:white;border-radius:20px;padding:18px;display:grid;gap:8px}
+.panel h2{font-size:21px;margin:0;letter-spacing:-.035em}
+.panel p{font-size:12px;line-height:1.5;color:#bdc6db;margin:0}
+.fine{color:#8f9ab1}
+.done{align-items:center;color:#9ff0b8;display:flex;gap:6px}
+.error{color:#ffb3b3}
+.action{background:#fff;border:0;border-radius:12px;color:#10172c;cursor:pointer;font:inherit;font-weight:600;justify-self:start;padding:10px 16px}
+.action:disabled{cursor:default;opacity:.6}

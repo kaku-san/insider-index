@@ -12,7 +12,7 @@ import {
 import { STUB_WALLET_ADDRESS as STUB_WALLET } from "@/lib/wallet";
 import { PREVIEW_MODE } from "@/lib/frontend/api";
 
-export type WalletConnectMethod = "wallet" | "email";
+export type WalletConnectMethod = "wallet";
 export type PrivySolanaWallet = {
   ready: boolean;
   configured: boolean;
@@ -20,10 +20,12 @@ export type PrivySolanaWallet = {
   authenticated: boolean;
   previewConnection: boolean;
   solanaAddress: string | null;
-  /** Available live addresses; the selected address is used consistently for header and signing. */
+  /** Available live addresses (external wallets only); the selected address is used consistently for header and signing. */
   solanaWallets: string[];
-  /** Provenance labels make embedded wallets distinguishable from connected external wallets. */
+  /** Provenance labels for the listed external wallets. */
   solanaWalletLabels?: Record<string, string>;
+  /** True when the session holds only Privy embedded wallets, which are never used for money actions. */
+  embeddedOnly?: boolean;
   selectSolanaWallet: (address: string) => void;
   appId: string | null;
   connectionMethod: WalletConnectMethod | null;

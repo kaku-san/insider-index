@@ -177,6 +177,47 @@ test("an open keeper request shows as a pending withdraw operation on the positi
   assert.equal((await positionOf()).pendingOperations.length, 0, "settled in USDC by the keeper");
 });
 
+test("an open request becomes owner-claimable in kind after its timeout; the claim route prepares and delivers it", async () => {
+  const { vm, s, deps } = setup();
+  const { handleNavClaimPrepare } = await import("../src/lib/nav-vault/server.ts");
+  const { VersionedTransaction, PublicKey } = await import("@solana/web3.js");
+  const { keeperTick, mockVenue } = await import("../src/lib/nav-vault/keeper.ts");
+  const { ata } = await import("../src/lib/nav-vault/program.ts");
+  const signSteps = async (response: Response) => {
+    const step = await response.json();
+    for (const transaction of step.transactions) {
+      const tx = VersionedTransaction.deserialize(Buffer.from(transaction.messageBase64, "base64"));
+      tx.sign([s.alice]);
+      vm.must(vm.sendRaw(tx.serialize()));
+    }
+    return step;
+  };
+  // Deposit, let the keeper fill the basket (so the free USDC buffer is short) and open a request.
+  await signSteps(await handleNavDepositPrepare(post({ owner: s.alice.publicKey.toBase58(), amountRaw: "1000000000" }), s.indexId, deps));
+  const venue = mockVenue(vm.connection, s.usdc);
+  const execute = async (tx: InstanceType<typeof VersionedTransaction>) => { tx.sign([s.keeper]); vm.must(vm.sendRaw(tx.serialize())); return "local"; };
+  await keeperTick({ connection: vm.connection, indexId: s.indexId, keeper: s.keeper.publicKey, ...venue, execute, afterPrices: async () => vm.advance(1), nowSeconds: deps.now });
+  const positionOf = async () => (await handleNavPosition(new Request(`http://local/api?wallet=${s.alice.publicKey.toBase58()}`), s.indexId, deps)).json();
+  const withdraw = await signSteps(await handleNavWithdrawPrepare(post({ owner: s.alice.publicKey.toBase58(), shareAmountRaw: (await positionOf()).sharesRaw }), s.indexId, deps));
+  assert.equal(withdraw.navVault.path, "request");
+  const requestId = withdraw.navVault.request as string;
+  const { decodeRequest } = await import("../src/lib/nav-vault/program.ts");
+  const owed = decodeRequest(new PublicKey(requestId), vm.info(new PublicKey(requestId))!.data).usdcOwed;
+  const notYet = await handleNavClaimPrepare(post({ owner: s.alice.publicKey.toBase58(), request: requestId }), s.indexId, deps);
+  assert.equal(notYet.status, 400, "before the timeout the owner cannot claim in kind");
+  assert.match((await notYet.json()).error, /timeout|converted to USDC/i);
+  const usdcBefore = vm.balance(ata(s.alice.publicKey, s.usdc));
+  // Past the request timeout the same endpoint prepares the owner-only in-kind delivery.
+  vm.advance(601);
+  const claim = await signSteps(await handleNavClaimPrepare(post({ owner: s.alice.publicKey.toBase58(), request: requestId }), s.indexId, deps));
+  assert.equal(claim.requires, "user-signature");
+  assert.ok(claim.transactions.length >= 1);
+  assert.equal(vm.info(new PublicKey(requestId)), null, "the claim closed the request");
+  const v = vm.vault(s.indexId);
+  assert.ok(v.legs.some(leg => vm.balance(ata(s.alice.publicKey, leg.mint, leg.tokenProgram)) > 0n), "alice received at least one stock leg in kind");
+  assert.equal(vm.balance(ata(s.alice.publicKey, s.usdc)) - usdcBefore, owed, "the request's reserved USDC is delivered to the owner");
+});
+
 test("keeper Jupiter swaps use v1 shared-accounts routes restricted to CPI-safe DEXes (no prop AMMs)", async () => {
   const { jupiterV1SwapBuilder, JUPITER_CPI_SAFE_DEXES } = await import("../src/lib/nav-vault/keeper.ts");
   const { PublicKey } = await import("@solana/web3.js");

@@ -10,7 +10,7 @@ import { changeReflected, positionInList } from "@/lib/frontend/position-refresh
 import { positionValueUsdc, type IndexSharePosition } from "@/lib/frontend/vault-api";
 import { positionHoldingFigures } from "@/lib/frontend/position-share-copy";
 import { positionBookLine } from "@/lib/frontend/position-basket";
-import { markedDollars } from "@/lib/frontend/research-format";
+import { positionNeedsOwnerClaim } from "@/lib/frontend/cash-out-claim";import { markedDollars } from "@/lib/frontend/research-format";
 import { plainStatusForOperation, positionNeedsListen, SETTLEMENT_POLL_MS } from "@/lib/frontend/settlement-progress";
 import { Icon } from "./social/icon";
 import { PageError, Skeleton } from "./social/shared";
@@ -135,8 +135,11 @@ export function PositionsTable() {
             const valueText = markedDollars(positionValueUsdc(position) ?? position.markedValueUsdc);
             const figures = positionHoldingFigures({ sharesRaw: position.sharesRaw, shareDecimals: position.shareDecimals, valueText });
             const bookLine = positionBookLine(position);
+            const needsClaim = positionNeedsOwnerClaim(position);
+            // A claimable request is waiting on the owner, not on the keeper: stop the loader and name the action.
+            const pendingLabel = needsClaim ? "Claim in kind" : plainStatusForOperation(pending[0]);
             return <Link className={styles.indexCard} key={position.indexId} href={`/positions/${encodeURIComponent(position.indexId)}`}>
-              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX VALUE</small></div><h3>{position.indexName ?? "Index"}</h3>{updatingIds.has(position.indexId) ? <div className={styles.indexNumbers} role="status" aria-live="polite" data-position-updating="true"><span className={styles.valueLead}><b>Updating…</b><small>Waiting for your new share balance</small></span></div> : <div className={styles.indexNumbers}>{figures.map(figure => <span key={figure.role} className={figure.primary ? styles.valueLead : undefined}><b>{figure.text}</b><small>{figure.label}</small></span>)}</div>}{bookLine ? <p className={styles.bookLine}>{bookLine}</p> : null}{pending.length ? <div className={styles.pending} data-settlement-status={plainStatusForOperation(pending[0])} aria-busy={positionNeedsListen(position) ? true : undefined}><i />{plainStatusForOperation(pending[0])}</div> : null}</div>
+              <div className={styles.indexBody}><div className={styles.indexTop}><small>INDEX VALUE</small></div><h3>{position.indexName ?? "Index"}</h3>{updatingIds.has(position.indexId) ? <div className={styles.indexNumbers} role="status" aria-live="polite" data-position-updating="true"><span className={styles.valueLead}><b>Updating…</b><small>Waiting for your new share balance</small></span></div> : <div className={styles.indexNumbers}>{figures.map(figure => <span key={figure.role} className={figure.primary ? styles.valueLead : undefined}><b>{figure.text}</b><small>{figure.label}</small></span>)}</div>}{bookLine ? <p className={styles.bookLine}>{bookLine}</p> : null}{pending.length ? <div className={styles.pending} data-settlement-status={plainStatusForOperation(pending[0])} aria-busy={!needsClaim && positionNeedsListen(position) ? true : undefined}><i />{pendingLabel}</div> : null}</div>
             </Link>;
           })}</div>}
         </section>

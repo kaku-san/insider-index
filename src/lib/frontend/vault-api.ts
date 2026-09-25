@@ -454,3 +454,9 @@ export async function prepareWithdrawal(indexId: string, input: { owner: string;
   if (navVaultEnabledFor(indexId)) return validatePreparedStep(await writeApi<unknown>(navPath(indexId, "/withdraw/prepare"), { owner: input.owner, shareAmountRaw: input.shareAmountRaw }), { owner: input.owner, network });
   return validatePreparedStep(await writeApi<unknown>(`/api/indexes/${encodeURIComponent(indexId)}/withdraw/prepare`, input), { owner: input.owner, network });
 }
+
+/** Claim an open cash-out request in kind (owner, after its request timeout, or an admin-forced request).
+ * Chunked by the program's leg limit, so the flow signs however many transactions prepare returns. */
+export async function prepareClaim(indexId: string, input: { owner: string; request: string }, network: Network): Promise<PreparedStep> {
+  return validatePreparedStep(await writeApi<unknown>(navPath(indexId, "/claim/prepare"), { owner: input.owner, request: input.request }), { owner: input.owner, network });
+}
