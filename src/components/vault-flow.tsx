@@ -21,6 +21,7 @@ import {
 import { CASH_OUT_BEFORE_SIGN, CASH_OUT_CHECK, CASH_OUT_STILL_NOTE, cashOutDeliveryOf, humanPrepareMessage, MAG7_FILL_CHECK, prepareCheckControl, prepareRequestKey, withPrepareTimeout, type PrepareCheckStatus } from "@/lib/frontend/position-basket";
 import { CashOutDeliveryStatus } from "./position-book";
 import { prepareWithStaleRetry } from "@/lib/frontend/nav-vault-retry";
+import { confirmSignature } from "@/lib/frontend/confirm-signature";
 import { announcePositionChange, POSITION_REFRESH_POLL_MS, POSITION_REFRESH_WINDOW_MS, readSharesBeforeSignature } from "@/lib/frontend/position-refresh";
 import styles from "./vault-flow.module.css";
 
@@ -69,20 +70,6 @@ function positionHoldingsLabel(position?: IndexSharePosition | null) {
 function pendingIntent(position?: IndexSharePosition | null) { return position?.pendingOperations?.find(operation => !operation.complete) ?? null; }
 function sawWithdraw(position?: IndexSharePosition | null) {
   return Boolean(position?.pendingOperations?.some(operation => operation.kind === "withdraw" && operation.complete !== true && operation.phase !== "FAILED"));
-}
-async function confirmSignature(signature: string, network: "mainnet-beta" | "devnet") {
-  const endpoint = network === "devnet" ? "https://api.devnet.solana.com" : `${window.location.origin}/api/rpc`;
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    const response = await fetch(endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: `vault-confirm-${attempt}`, method: "getSignatureStatuses", params: [[signature], { searchTransactionHistory: true }] }) });
-    if (!response.ok) throw new Error("Transaction confirmation is unavailable.");
-    const payload = await response.json() as { error?: { message?: string }; result?: { value?: Array<{ confirmationStatus?: string | null; err?: unknown } | null> } };
-    if (payload.error) throw new Error(payload.error.message || "Transaction confirmation failed.");
-    const status = payload.result?.value?.[0];
-    if (status?.err) throw new Error("The wallet transaction failed on chain.");
-    if (status?.confirmationStatus === "confirmed" || status?.confirmationStatus === "finalized") return;
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  throw new Error("Transaction confirmation timed out.");
 }
 
 export function VaultFlow({ open, onClose, indexId, indexName, readiness, mode = "deposit", position, onPosition }: { open: boolean; onClose: () => void; indexId: string; indexName: string; readiness?: VaultReadiness | null; mode?: Mode; position?: IndexSharePosition | null; indexKind?: "person" | "theme"; onPosition?: (position: IndexSharePosition | null) => void }) {

@@ -3,7 +3,6 @@
 import { PrivyProvider, useLogin, usePrivy } from "@privy-io/react-auth";
 import {
   toSolanaWalletConnectors,
-  useCreateWallet,
   useSignAndSendTransaction,
   useSignTransaction,
   useSignMessage,
@@ -16,7 +15,7 @@ import {
   type PrivySolanaWallet,
   type WalletConnectMethod,
 } from "@/components/providers/privy-provider";
-import { selectableSolanaWallets, selectedSolanaWallet, solanaWalletSourceLabel } from "@/lib/frontend/privy-wallet-selection";
+import { EXTERNAL_WALLET_REQUIRED, hasEmbeddedOnlySession, selectableSolanaWallets, selectedSolanaWallet, solanaWalletSourceLabel } from "@/lib/frontend/privy-wallet-selection";
 
 function base64ToBytes(value: string): Uint8Array {
   const binary = atob(value);
@@ -97,18 +96,19 @@ function PrivyLiveBridge({
   appId: string;
   children: ReactNode;
 }) {
-  const { ready, authenticated, logout } = usePrivy();
+  const { ready, authenticated, logout, connectWallet } = usePrivy();
   const { login } = useLogin();
   const { wallets } = useWallets();
-  const { createWallet } = useCreateWallet();
   const { signTransaction: signWithPrivy } = useSignTransaction();
   const { signMessage: signMessageWithPrivy } = useSignMessage();
   const { signAndSendTransaction: signAndSendWithPrivy } = useSignAndSendTransaction();
   const [connectionMethod, setConnectionMethod] = useState<WalletConnectMethod | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   // Privy's wallet ordering can put an embedded/email wallet before a connected Phantom. Never
-  // bind signing or a public journal to that incidental array position.
+  // bind signing or a public journal to that incidental array position, and never offer an
+  // embedded wallet for money actions: external wallets only.
   const selectableWallets = useMemo(() => selectableSolanaWallets(wallets), [wallets]);
+  const embeddedOnly = useMemo(() => hasEmbeddedOnlySession(wallets), [wallets]);
   const solanaWalletLabels = useMemo(() => Object.fromEntries(selectableWallets.map(candidate => [candidate.address, solanaWalletSourceLabel(candidate)])), [selectableWallets]);
   const wallet = useMemo(() => selectedSolanaWallet(wallets, selectedAddress), [wallets, selectedAddress]);
   useEffect(() => {
@@ -117,16 +117,17 @@ function PrivyLiveBridge({
     setSelectedAddress(selectableWallets[0]?.address ?? null);
   }, [selectedAddress, selectableWallets, wallets]);
 
-  const connect = useCallback(async (method: WalletConnectMethod = "wallet") => {
-    setConnectionMethod(method);
+  // Solana external wallets only: no email login, no embedded wallet, not even as a fallback.
+  const connect = useCallback(async () => {
+    setConnectionMethod("wallet");
     if (authenticated) {
-      // Creating an embedded wallet is an explicit email choice, never a side effect of merely
-      // being authenticated or opening a trading surface.
-      if (!wallet && method === "email") await createWallet();
+      // The session may still be an embedded-only one: open the external wallet picker so the
+      // user can connect a wallet they control instead of a Privy-created one.
+      connectWallet({ walletChainType: "solana-only" });
       return;
     }
-    await login({ loginMethods: [method === "email" ? "email" : "wallet"], walletChainType: "solana-only" });
-  }, [authenticated, createWallet, login, wallet]);
+    await login({ loginMethods: ["wallet"], walletChainType: "solana-only" });
+  }, [authenticated, connectWallet, login]);
 
   const disconnect = useCallback(async () => {
     await logout();
@@ -135,6 +136,7 @@ function PrivyLiveBridge({
 
   const signTransaction = useCallback(
     async (transactionBase64: string, network: "mainnet-beta" | "devnet" = "mainnet-beta") => {
+      if (embeddedOnly) throw new Error(EXTERNAL_WALLET_REQUIRED);
       if (!authenticated || !wallet) {
         throw new Error("Connect a Solana wallet before signing.");
       }
@@ -149,17 +151,19 @@ function PrivyLiveBridge({
       });
       return encodeSignedTransaction(signed);
     },
-    [authenticated, signWithPrivy, wallet],
+    [authenticated, embeddedOnly, signWithPrivy, wallet],
   );
 
   const signMessage = useCallback(async (message: string) => {
+    if (embeddedOnly) throw new Error(EXTERNAL_WALLET_REQUIRED);
     if (!authenticated || !wallet || !message) throw new Error("Connect a Solana wallet before authorizing access.");
     const result = await signMessageWithPrivy({ wallet, message: new TextEncoder().encode(message), options: { uiOptions: { showWalletUIs: true } } });
     return bytesToBase58(result.signature);
-  }, [authenticated, signMessageWithPrivy, wallet]);
+  }, [authenticated, embeddedOnly, signMessageWithPrivy, wallet]);
 
   const signAndSendTransaction = useCallback(
     async (transactionBase64: string, network: "mainnet-beta" | "devnet" = "mainnet-beta") => {
+      if (embeddedOnly) throw new Error(EXTERNAL_WALLET_REQUIRED);
       if (!authenticated || !wallet) {
         throw new Error("Connect a Solana wallet before signing.");
       }
@@ -174,7 +178,7 @@ function PrivyLiveBridge({
       });
       return encodeSignature(sent);
     },
-    [authenticated, signAndSendWithPrivy, wallet],
+    [authenticated, embeddedOnly, signAndSendWithPrivy, wallet],
   );
 
   const value = useMemo<PrivySolanaWallet>(
@@ -187,6 +191,7 @@ function PrivyLiveBridge({
       solanaAddress: wallet?.address ?? null,
       solanaWallets: selectableWallets.map(candidate => candidate.address),
       solanaWalletLabels,
+      embeddedOnly,
       selectSolanaWallet: address => { if (selectableWallets.some(candidate => candidate.address === address)) setSelectedAddress(address); },
       appId,
       connectionMethod: connectionMethod ?? (authenticated ? "wallet" : null),
@@ -202,6 +207,7 @@ function PrivyLiveBridge({
       connect,
       connectionMethod,
       disconnect,
+      embeddedOnly,
       ready,
       signMessage,
       signAndSendTransaction,
@@ -242,7 +248,8 @@ export function PrivyLiveRoot({
           showWalletLoginFirst: true,
           walletChainType: "solana-only",
         },
-        loginMethods: ["wallet", "email"],
+        // External wallets only: Privy email login and embedded wallets are not offered.
+        loginMethods: ["wallet"],
         embeddedWallets: {
           solana: {
             createOnLogin: "off",

@@ -120,18 +120,33 @@ test("Mag7 invest sheet names the same selected wallet used by the header", () =
   assert.match(html, /C7ye6UvJ…zgCWYQyB/);
 });
 
-test("wallet picker identifies external and embedded choices", () => {
+test("wallet picker lists external wallets only, never a Privy embedded one", () => {
   const external = "C7ye6UvJ7jirwCmt3fKmt55MvcW9yBVpgqzZzgCWYQyB";
-  const embedded = "8m9vvWgNey5UR4oeioMtnDgmEKdB8iQmyYVGXCBCnFqH";
+  const second = "Jh7cFNUT5FrtBwKakApsc3Gg5aTQjsZtYxa4dbrCoB8";
   const wallet = {
     ready: true, configured: true, mode: "live" as const, authenticated: true, previewConnection: false, solanaAddress: external,
-    solanaWallets: [external, embedded], solanaWalletLabels: { [external]: "Phantom/external", [embedded]: "Privy embedded" }, selectSolanaWallet() {}, appId: "test", connectionMethod: "wallet" as const,
+    solanaWallets: [external, second], solanaWalletLabels: { [external]: "Phantom/external", [second]: "Solflare/external" }, selectSolanaWallet() {}, appId: "test", connectionMethod: "wallet" as const,
     connect: async () => {}, disconnect: async () => {}, signMessage: async () => "", signTransaction: async () => "", signAndSendTransaction: async () => "",
   };
   const html = renderToStaticMarkup(createElement(PrivySolanaContext.Provider, { value: wallet }, createElement(WalletConnectSheet, { open: true, onClose() {} })));
   assert.match(html, /Phantom\/external/);
-  assert.match(html, /Privy embedded/);
   assert.match(html, /Use this wallet/);
+  assert.doesNotMatch(html, /Privy embedded|Continue with email|embedded Solana wallet|Embedded Solana wallet/i);
+});
+
+test("an old Privy email session is told to connect an external wallet", async () => {
+  const { EXTERNAL_WALLET_REQUIRED } = await import("../src/lib/frontend/privy-wallet-selection.ts");
+  const embedded = "8m9vvWgNey5UR4oeioMtnDgmEKdB8iQmyYVGXCBCnFqH";
+  const wallet = {
+    ready: true, configured: true, mode: "live" as const, authenticated: true, previewConnection: false, solanaAddress: embedded,
+    solanaWallets: [embedded], embeddedOnly: true, solanaWalletLabels: { [embedded]: "Privy embedded" }, selectSolanaWallet() {}, appId: "test", connectionMethod: "wallet" as const,
+    connect: async () => {}, disconnect: async () => {}, signMessage: async () => "", signTransaction: async () => "", signAndSendTransaction: async () => "",
+  };
+  const html = renderToStaticMarkup(createElement(PrivySolanaContext.Provider, { value: wallet }, createElement(WalletConnectSheet, { open: true, onClose() {} })));
+  assert.match(html, /Connect an external Solana wallet/);
+  assert.match(html, /data-embedded-only="true"/);
+  assert.doesNotMatch(html, /Use this wallet|You’re connected|Privy embedded/);
+  assert.ok(EXTERNAL_WALLET_REQUIRED);
 });
 
 test("Mag7 invest sheet shows chain share balance as Your position", () => {
