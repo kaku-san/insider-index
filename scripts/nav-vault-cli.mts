@@ -26,6 +26,7 @@ import {
 import { keeperCycleAll, keeperTick, mockVenue, postMarksAll } from "../src/lib/nav-vault/keeper.ts";
 import { mainnetVenue } from "../src/lib/nav-vault/mainnet-venue.ts";
 import { throttledFetch } from "../src/lib/nav-vault/rpc-throttle.ts";
+import { rpcMaxMultipleAccounts } from "../src/lib/rpc-multiple-accounts.ts";
 import type { KeeperDeferrals } from "../src/lib/nav-vault/keeper.ts";
 
 const MAX_LEGS = 16;
@@ -44,7 +45,7 @@ let rateLimited = 0;
 const pacedConnection = () => new Connection(rpc, {
   commitment: "confirmed",
   disableRetryOnRateLimit: true,
-  fetch: throttledFetch({ minIntervalMs: Number(opt("--rpc-interval-ms") ?? 125), onRateLimited: () => { rateLimited += 1; } }),
+  fetch: throttledFetch({ maxMultipleAccounts: rpcMaxMultipleAccounts(), minIntervalMs: Number(opt("--rpc-interval-ms") ?? 125), onRateLimited: () => { rateLimited += 1; } }),
 });
 const connection = pacedConnection();
 // The independent mark loop gets its own paced connection, so trading traffic never queues ahead of a price post.
@@ -192,7 +193,7 @@ async function sendConfirmed(keypair: Keypair, via: Connection = connection) {
 const afterPrices = async () => { const slot = await connection.getSlot("confirmed"); while ((await connection.getSlot("confirmed")) <= slot) await new Promise(r => setTimeout(r, 400)); };
 const jsonOut = (value: unknown) => console.log(JSON.stringify(value, (_, v) => typeof v === "bigint" ? v.toString() : v, 2));
 
-/** --all: every DB index with an on-chain NAV vault; --indexes a,b: explicit list; --index a: one vault. One RPC read. */
+/** --all: every DB index with an on-chain NAV vault; --indexes a,b: explicit list; --index a: one vault. Chunked RPC reads. */
 async function keeperVaults(programId: PublicKey, via: Connection = connection): Promise<{ indexId: string; state: ReturnType<typeof decodeVault> }[]> {
   let ids: string[];
   const explicitIndex = opt("--index");

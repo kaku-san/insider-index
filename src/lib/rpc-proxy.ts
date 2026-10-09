@@ -1,5 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
+import { chunkedRpcFetch } from "./rpc-multiple-accounts.ts";
 
 // Preserve user-signed relay and bounded reads. Program-wide scans are not exposed.
 const EXISTING_METHODS = new Set([
@@ -67,6 +68,11 @@ function validEnvelope(call: Record<string, unknown>): boolean {
 
 function allowed(call: unknown): boolean {
   if (!object(call) || !validEnvelope(call) || typeof call.method !== "string") return false;
+  if (call.method === "getMultipleAccounts") {
+    return Array.isArray(call.params) && call.params.length >= 1 && call.params.length <= 2
+      && Array.isArray(call.params[0]) && call.params[0].length <= 100 && call.params[0].every(address)
+      && (call.params[1] === undefined || object(call.params[1]));
+  }
   if (EXISTING_METHODS.has(call.method)) return true;
   const p = call.params;
   if (call.method === "getGenesisHash") return p === undefined || (Array.isArray(p) && p.length === 0);
@@ -92,6 +98,7 @@ function allowed(call: unknown): boolean {
 export async function handleRpcProxy(request: Request, options: {
   upstream: () => string;
   provider: "rpc" | "helius" | "public";
+  maxMultipleAccounts?: number;
   fetcher?: typeof fetch;
 }): Promise<Response> {
   const headers = { "Cache-Control": "no-store" };
@@ -104,7 +111,8 @@ export async function handleRpcProxy(request: Request, options: {
   }
   try {
     const url = options.upstream();
-    const upstream = await (options.fetcher ?? fetch)(url, {
+    const fetcher = chunkedRpcFetch({ fetchImpl: options.fetcher, maxMultipleAccounts: options.maxMultipleAccounts });
+    const upstream = await fetcher(url, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       cache: "no-store", redirect: "error", signal: AbortSignal.timeout(20_000),
     });

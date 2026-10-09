@@ -4,7 +4,11 @@
  * disableRetryOnRateLimit: true })` so web3.js does not stack its own 500 ms retry storm on top.
  * No env, no `@/` aliases.
  */
+import { chunkedRpcFetch } from "../rpc-multiple-accounts.ts";
+
 export type ThrottleOptions = {
+  /** Per-call getMultipleAccounts limit (default 5). */
+  maxMultipleAccounts?: number;
   /** Minimum milliseconds between request starts (default 125 ms ≈ 8 req/s). */
   minIntervalMs?: number;
   /** Retries after a 429 before the 429 response is returned (default 6). */
@@ -46,9 +50,12 @@ export function throttledFetch(options: ThrottleOptions = {}): typeof fetch {
       await sleep(delay);
     }
   };
-  return ((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-    const run = queue.then(() => paced(input, init));
-    queue = run.catch(() => undefined);
-    return run;
-  }) as typeof fetch;
+  return chunkedRpcFetch({
+    maxMultipleAccounts: options.maxMultipleAccounts,
+    fetchImpl: (input, init) => {
+      const run = queue.then(() => paced(input, init));
+      queue = run.catch(() => undefined);
+      return run;
+    },
+  });
 }

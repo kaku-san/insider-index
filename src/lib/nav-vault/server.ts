@@ -1,4 +1,5 @@
 import { Connection, PublicKey } from "@solana/web3.js";
+import { chunkedRpcFetch, rpcMaxMultipleAccounts } from "../rpc-multiple-accounts.ts";
 import { navVaultConfig, navVaultServes, type NavVaultConfig } from "./config.ts";
 import { NAV_VAULT_PROGRAM_ID, SHARE_DECIMALS, decodeVault, shareAta, tokenAmount, vaultPda, type NavRequest } from "./program.ts";
 import { indexDisplayName, publishedSliceFor, sliceDisplayName, type TradableSlice } from "./slices.ts";
@@ -23,7 +24,10 @@ function defaultSlice(indexId: string, vaultMints: readonly string[]): Promise<T
 }
 const defaults: NavDependencies = {
   config: () => navVaultConfig(process.env),
-  connection: config => new Connection(config.rpcUrl, { commitment: "confirmed" }),
+  connection: config => new Connection(config.rpcUrl, {
+    commitment: "confirmed",
+    fetch: chunkedRpcFetch({ maxMultipleAccounts: rpcMaxMultipleAccounts() }),
+  }),
   slice: defaultSlice,
 };
 

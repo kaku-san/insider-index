@@ -41,7 +41,7 @@ npm run nav-vault -- keeper --all --network mainnet-beta \
   --execute --keypair /secure/path/keeper.json --loop 40
 ```
 
-RPC use is paced: one request in flight, `--rpc-interval-ms` apart (default 125), with 429 backoff that honours `Retry-After`; confirmations poll signature status, so no websocket is opened. Lookup tables and failing-leg deferrals are cached across `--loop` cycles.
+RPC use is paced: one request in flight, `--rpc-interval-ms` apart (default 125), with 429 backoff that honours `Retry-After`; confirmations poll signature status, so no websocket is opened. Both keeper connections, NAV website reads and `/api/rpc` split `getMultipleAccounts` into at most `RPC_MAX_MULTIPLE_ACCOUNTS` accounts per call (default 5, configurable 1–100). Every keeper chunk remains paced; merged reads preserve account order but are not atomic across chunks. Lookup tables and failing-leg deferrals are cached across `--loop` cycles.
 
 With `--loop`, marks run on an **independent schedule** (`--marks-every`, default 20 s) with their own paced RPC connection: that loop only quotes and posts `update_prices` for every vault, so swaps, settles and in-kind deliveries can never delay a price post past the 60 s `max_price_age`. The trading cycle then trades on the posted on-chain marks and skips a vault whose posted marks are stale. `--marks-every 0` restores marks inside the trading cycle.
 

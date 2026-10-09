@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getHeliusRpcUrl, getRpcProvider } from "@/lib/helius";
 import { handleRpcProxy } from "@/lib/rpc-proxy";
+import { rpcMaxMultipleAccounts } from "@/lib/rpc-multiple-accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export async function POST(request: Request) {
   return handleRpcProxy(request, {
     upstream: getHeliusRpcUrl,
     provider: getRpcProvider(),
+    maxMultipleAccounts: rpcMaxMultipleAccounts(),
   });
 }
 
