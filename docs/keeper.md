@@ -18,7 +18,7 @@ Swaps try **Jupiter v1 quote + swap-instructions first**, restricted to CPI-safe
 ## Configuration
 
 - Node.js 22.18+, installed npm dependencies.
-- `HELIUS_API_KEY` or an explicit operator `--rpc` endpoint.
+- An explicit operator `--rpc` endpoint or server-only `SOLANA_RPC_URL`; `HELIUS_API_KEY` remains the fallback when neither is set.
 - `JUPITER_API_KEY` for Jupiter routes/marks.
 - `NEXT_PUBLIC_SUPABASE_URL` and **server-only** `SUPABASE_SERVICE_ROLE_KEY` for DB definitions and `--all` enumeration. `--definition <file.json>` can supply a single persisted definition instead.
 - A dedicated keeper keypair, stored outside this repository. It must match the vault's keeper and must not be its admin. Fund only the SOL needed for network fees; vault inventory pays for swaps.

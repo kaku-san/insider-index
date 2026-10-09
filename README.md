@@ -76,7 +76,7 @@ npm run dev
 
 Open `http://localhost:3000`. For a **read-only UI preview without credentials**, set `NEXT_PUBLIC_INSIDERINDEX_PREVIEW=1` in `.env.local`; preview writes are disabled. Without preview or saved-data credentials, unavailable data is labelled rather than fabricated.
 
-For real data and wallet interaction, configure `NEXT_PUBLIC_PRIVY_APP_ID`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and an RPC provider (`HELIUS_API_KEY` recommended). Apply the Supabase migrations in filename order to your own database and ingest/publish saved books as described in [data-sources.md](docs/data-sources.md). The NAV keeper additionally needs `JUPITER_API_KEY`. Never put service-role, RPC, Jupiter, or wallet secrets in `NEXT_PUBLIC_*` variables. `.env.example` is the configuration reference.
+For real data and wallet interaction, configure `NEXT_PUBLIC_PRIVY_APP_ID`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a server RPC provider (`SOLANA_RPC_URL`, or `HELIUS_API_KEY` as a fallback). Apply the Supabase migrations in filename order to your own database and ingest/publish saved books as described in [data-sources.md](docs/data-sources.md). The NAV keeper additionally needs `JUPITER_API_KEY`. Never put service-role, RPC, Jupiter, or wallet secrets in `NEXT_PUBLIC_*` variables. `.env.example` is the configuration reference.
 
 ```sh
 npm run typecheck
