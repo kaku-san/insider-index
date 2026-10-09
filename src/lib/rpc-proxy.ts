@@ -71,6 +71,7 @@ export async function handleRpcProxy(request: Request, options: {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       cache: "no-store", redirect: "error", signal: AbortSignal.timeout(20_000),
     });
+    if (!upstream.ok) throw new Error("UPSTREAM_HTTP_ERROR");
     const text = await upstream.text(), key = new URL(url).searchParams.get("api-key");
     // An upstream diagnostic must not echo its credential or private request URL into the browser.
     if (text.includes(url) || (key && text.includes(key))) throw new Error("UPSTREAM_CREDENTIAL_ECHO");

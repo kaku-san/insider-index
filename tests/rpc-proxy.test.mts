@@ -106,8 +106,13 @@ test("proxy preserves relay and batch payloads but never signs or returns server
   for (const fetcher of [
     async () => { throw new Error("Failed at " + upstream); },
     async () => new Response("Upstream diagnostic containing " + key, { status: 401 }),
+    async () => new Response("Upstream diagnostic containing SYNTHETIC-PATH-TOKEN", { status: 429 }),
   ]) {
-    const refused = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), { ...options, fetcher });
+    const refused = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), {
+      ...options,
+      upstream: () => "https://rpc.example.invalid/SYNTHETIC-PATH-TOKEN/",
+      fetcher,
+    });
     assert.equal(refused.status, 502);
     assert.deepEqual(await refused.json(), { error: "RPC upstream unavailable." });
   }

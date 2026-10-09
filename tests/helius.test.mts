@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { register } from "node:module";
 import { test } from "node:test";
-import { getHeliusRpcUrl, heliusConfigured } from "../src/lib/helius.ts";
+import { getHeliusRpcUrl, heliusConfigured, rpcConfigured } from "../src/lib/helius.ts";
 
 register("./support/ui-loader.mjs", import.meta.url);
 const { getAdapterStatus, getRuntimeModes } = await import("../src/lib/health.ts");
@@ -13,8 +13,10 @@ const publicUrl = "https://api.mainnet-beta.solana.com";
 const cases = [
   { name: "server RPC overrides an exhausted Helius key", rpc: customUrl, helius: heliusKey, url: customUrl, provider: "rpc", configured: true },
   { name: "server RPC works without a Helius key", rpc: customUrl, helius: undefined, url: customUrl, provider: "rpc", configured: true },
+  { name: "server RPC is normalized", rpc: `  ${customUrl}  `, helius: undefined, url: customUrl, provider: "rpc", configured: true },
   { name: "Helius remains the fallback without an override", rpc: undefined, helius: heliusKey, url: `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`, provider: "helius", configured: true },
   { name: "empty override keeps the Helius fallback", rpc: "", helius: heliusKey, url: `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`, provider: "helius", configured: true },
+  { name: "whitespace override keeps the Helius fallback", rpc: "   ", helius: heliusKey, url: `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`, provider: "helius", configured: true },
   { name: "public mainnet remains the keyless fallback", rpc: undefined, helius: undefined, url: publicUrl, provider: "public", configured: false },
   { name: "empty settings keep the public fallback", rpc: "", helius: "", url: publicUrl, provider: "public", configured: false },
 ];
@@ -34,7 +36,8 @@ for (const scenario of cases) {
     }
 
     assert.equal(getHeliusRpcUrl(), scenario.url);
-    assert.equal(heliusConfigured(), scenario.configured);
+    assert.equal(rpcConfigured(), scenario.configured);
+    assert.equal(heliusConfigured(), Boolean(scenario.helius?.trim()));
     const adapters = getAdapterStatus();
     assert.equal(adapters.rpc, scenario.configured);
     assert.equal(adapters.helius, Boolean(scenario.helius), "Helius credential presence remains distinct from RPC readiness");

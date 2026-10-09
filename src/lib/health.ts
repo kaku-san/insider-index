@@ -1,7 +1,7 @@
 /** Boolean adapter probes only. Never return secret values or key fragments. */
 
 import { jupiterMode, mocksAllowed } from "@/lib/runtime";
-import { getRpcProvider, heliusConfigured } from "@/lib/helius";
+import { getRpcProvider, rpcConfigured } from "@/lib/helius";
 
 export type AdapterStatus = {
   /** SEC EDGAR needs no key; true means the crawler is enabled. */
@@ -39,7 +39,7 @@ export function getAdapterStatus(): AdapterStatus {
     form4: present(process.env.FORM4API_KEY),
     jupiter: present(process.env.JUPITER_API_KEY),
     helius: present(process.env.HELIUS_API_KEY),
-    rpc: heliusConfigured(),
+    rpc: rpcConfigured(),
     privy: present(process.env.NEXT_PUBLIC_PRIVY_APP_ID) || present(process.env.NEXT_PUBLIC_PRIVY_APPID),
     supabase:
       present(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
