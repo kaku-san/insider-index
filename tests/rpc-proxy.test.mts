@@ -94,6 +94,8 @@ test("proxy refuses program scans, unbounded history and malformed batches befor
 
 test("proxy preserves relay and batch payloads but never signs or returns server credentials", async () => {
   const calls = [{ jsonrpc: "2.0", id: "a", method: "getGenesisHash", params: [] }, { jsonrpc: "2.0", id: "b", method: "sendTransaction", params: ["MOCK-ONLY-NOT-A-WIRE", { encoding: "base64" }] }];
+  const pathCredential = "SYNTHETIC PATH TOKEN";
+  const pathUpstream = "https://rpc.example.invalid/rpc/" + encodeURIComponent(pathCredential) + "/";
   let forwarded = 0;
   const options = { upstream: () => upstream, provider: "helius" as const, fetcher: async (_url: unknown, init?: RequestInit) => {
     forwarded++; assert.deepEqual(JSON.parse(String(init?.body)), calls);
@@ -103,14 +105,27 @@ test("proxy preserves relay and batch payloads but never signs or returns server
   assert.equal(response.status, 200); assert.equal(forwarded, 1);
   assert.equal(response.headers.get("X-Stocklana-Rpc"), "helius");
   assert.deepEqual((await response.json()).map((r: { id: string }) => r.id), ["a", "b"]);
+
+  const successful = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), {
+    ...options,
+    upstream: () => pathUpstream,
+    fetcher: async () => Response.json({ jsonrpc: "2.0", id: 1, result: blockhash }),
+  });
+  assert.equal(successful.status, 200);
+  assert.deepEqual(await successful.json(), { jsonrpc: "2.0", id: 1, result: blockhash });
+
   for (const fetcher of [
     async () => { throw new Error("Failed at " + upstream); },
     async () => new Response("Upstream diagnostic containing " + key, { status: 401 }),
-    async () => new Response("Upstream diagnostic containing SYNTHETIC-PATH-TOKEN", { status: 429 }),
+    async () => Response.json({ jsonrpc: "2.0", id: 1, error: { code: -32000, message: pathCredential + " invalid" } }),
+    async () => Response.json([
+      { jsonrpc: "2.0", id: "a", error: { code: -32000, message: encodeURIComponent(pathCredential) + " invalid" } },
+      { jsonrpc: "2.0", id: "b", result: blockhash },
+    ]),
   ]) {
     const refused = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), {
       ...options,
-      upstream: () => "https://rpc.example.invalid/SYNTHETIC-PATH-TOKEN/",
+      upstream: () => pathUpstream,
       fetcher,
     });
     assert.equal(refused.status, 502);

@@ -21,6 +21,23 @@ const signature = (v: unknown) => {
   try { return bs58.decode(v).length === 64; } catch { return false; }
 };
 
+function decoded(value: string): string {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+function credentialEchoes(url: string): string[] {
+  const parsed = new URL(url);
+  const credentials = [parsed.username, parsed.password, ...parsed.searchParams.values()];
+  for (const segment of parsed.pathname.split("/")) {
+    if (decoded(segment).length >= 5) credentials.push(segment);
+  }
+  return [...new Set(credentials.flatMap(value => {
+    if (!value) return [];
+    const plain = decoded(value);
+    return [value, plain, encodeURIComponent(plain)];
+  }).filter(Boolean))];
+}
+
 function validEnvelope(call: Record<string, unknown>): boolean {
   if (call.jsonrpc !== "2.0") return false;
   if (Object.hasOwn(call, "id") && call.id !== null
@@ -72,9 +89,11 @@ export async function handleRpcProxy(request: Request, options: {
       cache: "no-store", redirect: "error", signal: AbortSignal.timeout(20_000),
     });
     if (!upstream.ok) throw new Error("UPSTREAM_HTTP_ERROR");
-    const text = await upstream.text(), key = new URL(url).searchParams.get("api-key");
+    const text = await upstream.text();
     // An upstream diagnostic must not echo its credential or private request URL into the browser.
-    if (text.includes(url) || (key && text.includes(key))) throw new Error("UPSTREAM_CREDENTIAL_ECHO");
+    if (text.includes(url) || credentialEchoes(url).some(credential => text.includes(credential))) {
+      throw new Error("UPSTREAM_CREDENTIAL_ECHO");
+    }
     return new Response(text, { status: upstream.status, headers: {
       ...headers, "Content-Type": "application/json", "X-Stocklana-Rpc": options.provider,
     } });
