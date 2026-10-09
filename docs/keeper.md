@@ -18,7 +18,7 @@ Swaps try **Jupiter v1 quote + swap-instructions first**, restricted to CPI-safe
 ## Configuration
 
 - Node.js 22.18+, installed npm dependencies.
-- `HELIUS_API_KEY` or an explicit operator `--rpc` endpoint.
+- An explicit operator `--rpc` endpoint or server-only `SOLANA_RPC_URL`; `HELIUS_API_KEY` remains the fallback when neither is set.
 - `JUPITER_API_KEY` for Jupiter routes/marks.
 - `NEXT_PUBLIC_SUPABASE_URL` and **server-only** `SUPABASE_SERVICE_ROLE_KEY` for DB definitions and `--all` enumeration. `--definition <file.json>` can supply a single persisted definition instead.
 - A dedicated keeper keypair, stored outside this repository. It must match the vault's keeper and must not be its admin. Fund only the SOL needed for network fees; vault inventory pays for swaps.
@@ -41,7 +41,7 @@ npm run nav-vault -- keeper --all --network mainnet-beta \
   --execute --keypair /secure/path/keeper.json --loop 40
 ```
 
-RPC use is paced: one request in flight, `--rpc-interval-ms` apart (default 125), with 429 backoff that honours `Retry-After`; confirmations poll signature status, so no websocket is opened. Lookup tables and failing-leg deferrals are cached across `--loop` cycles.
+RPC use is paced: one request in flight, `--rpc-interval-ms` apart (default 125), with 429 backoff that honours `Retry-After`; confirmations poll signature status, so no websocket is opened. Both keeper connections, NAV website reads and `/api/rpc` split `getMultipleAccounts` into at most `RPC_MAX_MULTIPLE_ACCOUNTS` accounts per call (default 5, configurable 1–100). Every keeper chunk remains paced; merged reads preserve account order but are not atomic across chunks. Lookup tables and failing-leg deferrals are cached across `--loop` cycles.
 
 With `--loop`, marks run on an **independent schedule** (`--marks-every`, default 20 s) with their own paced RPC connection: that loop only quotes and posts `update_prices` for every vault, so swaps, settles and in-kind deliveries can never delay a price post past the 60 s `max_price_age`. The trading cycle then trades on the posted on-chain marks and skips a vault whose posted marks are stale. `--marks-every 0` restores marks inside the trading cycle.
 

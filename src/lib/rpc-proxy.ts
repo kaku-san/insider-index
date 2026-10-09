@@ -1,5 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
+import { chunkedRpcFetch } from "./rpc-multiple-accounts.ts";
 
 // Preserve user-signed relay and bounded reads. Program-wide scans are not exposed.
 const EXISTING_METHODS = new Set([
@@ -21,6 +22,43 @@ const signature = (v: unknown) => {
   try { return bs58.decode(v).length === 64; } catch { return false; }
 };
 
+function decoded(value: string): string {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+function credentialEchoes(values: string[]): string[] {
+  return [...new Set(values.flatMap(value => {
+    if (!value) return [];
+    const plain = decoded(value);
+    return [value, plain, encodeURIComponent(plain)];
+  }).filter(Boolean))];
+}
+
+function urlCredentialEchoes(url: string): string[] {
+  const parsed = new URL(url);
+  return credentialEchoes([parsed.username, parsed.password, ...parsed.searchParams.values()]);
+}
+
+function pathCredentialEchoes(url: string): string[] {
+  const segments = new URL(url).pathname.split("/")
+    .filter(segment => decoded(segment).length >= 5);
+  return credentialEchoes(segments);
+}
+
+function jsonRpcErrorText(text: string): string {
+  try {
+    const payload: unknown = JSON.parse(text);
+    const responses = Array.isArray(payload) ? payload : [payload];
+    return responses
+      .map(response => object(response) && Object.hasOwn(response, "error")
+        ? JSON.stringify(response.error) ?? ""
+        : "")
+      .join("\n");
+  } catch {
+    return "";
+  }
+}
+
 function validEnvelope(call: Record<string, unknown>): boolean {
   if (call.jsonrpc !== "2.0") return false;
   if (Object.hasOwn(call, "id") && call.id !== null
@@ -30,6 +68,11 @@ function validEnvelope(call: Record<string, unknown>): boolean {
 
 function allowed(call: unknown): boolean {
   if (!object(call) || !validEnvelope(call) || typeof call.method !== "string") return false;
+  if (call.method === "getMultipleAccounts") {
+    return Array.isArray(call.params) && call.params.length >= 1 && call.params.length <= 2
+      && Array.isArray(call.params[0]) && call.params[0].length <= 100 && call.params[0].every(address)
+      && (call.params[1] === undefined || object(call.params[1]));
+  }
   if (EXISTING_METHODS.has(call.method)) return true;
   const p = call.params;
   if (call.method === "getGenesisHash") return p === undefined || (Array.isArray(p) && p.length === 0);
@@ -54,7 +97,8 @@ function allowed(call: unknown): boolean {
  * permits offline HTTP-contract tests; no key, environment lookup, signing or database access here. */
 export async function handleRpcProxy(request: Request, options: {
   upstream: () => string;
-  provider: "helius" | "public";
+  provider: "rpc" | "helius" | "public";
+  maxMultipleAccounts?: number;
   fetcher?: typeof fetch;
 }): Promise<Response> {
   const headers = { "Cache-Control": "no-store" };
@@ -67,13 +111,20 @@ export async function handleRpcProxy(request: Request, options: {
   }
   try {
     const url = options.upstream();
-    const upstream = await (options.fetcher ?? fetch)(url, {
+    const fetcher = chunkedRpcFetch({ fetchImpl: options.fetcher, maxMultipleAccounts: options.maxMultipleAccounts });
+    const upstream = await fetcher(url, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       cache: "no-store", redirect: "error", signal: AbortSignal.timeout(20_000),
     });
-    const text = await upstream.text(), key = new URL(url).searchParams.get("api-key");
+    if (!upstream.ok) throw new Error("UPSTREAM_HTTP_ERROR");
+    const text = await upstream.text();
+    const errorText = jsonRpcErrorText(text);
     // An upstream diagnostic must not echo its credential or private request URL into the browser.
-    if (text.includes(url) || (key && text.includes(key))) throw new Error("UPSTREAM_CREDENTIAL_ECHO");
+    if (text.includes(url)
+      || urlCredentialEchoes(url).some(credential => text.includes(credential))
+      || pathCredentialEchoes(url).some(credential => errorText.includes(credential))) {
+      throw new Error("UPSTREAM_CREDENTIAL_ECHO");
+    }
     return new Response(text, { status: upstream.status, headers: {
       ...headers, "Content-Type": "application/json", "X-Stocklana-Rpc": options.provider,
     } });

@@ -13,7 +13,7 @@ export async function GET() {
   if (adapters.supabase) {
     try { await assertPositionStoreReady(); receipts = true; } catch { /* report unavailable, never secret details */ }
   }
-  const copyReady = receipts && adapters.privy && adapters.helius && modes.jupiter !== "stub" && !modes.mocksAllowed && catalog.size > 0;
+  const copyReady = receipts && adapters.privy && adapters.rpc && modes.jupiter !== "stub" && !modes.mocksAllowed && catalog.size > 0;
   return NextResponse.json(
     {
       ok: copyReady,

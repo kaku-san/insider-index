@@ -1,6 +1,7 @@
 /** Boolean adapter probes only. Never return secret values or key fragments. */
 
 import { jupiterMode, mocksAllowed } from "@/lib/runtime";
+import { getRpcProvider, rpcConfigured } from "@/lib/helius";
 
 export type AdapterStatus = {
   /** SEC EDGAR needs no key; true means the crawler is enabled. */
@@ -12,6 +13,8 @@ export type AdapterStatus = {
   /** JUPITER_API_KEY present (keyless live quoting is reported under modes). */
   jupiter: boolean;
   helius: boolean;
+  /** A server RPC override or Helius key is configured; not a live probe. */
+  rpc: boolean;
   privy: boolean;
   supabase: boolean;
 };
@@ -20,7 +23,7 @@ export type RuntimeModes = {
   insiders: "edgar" | "form4" | "mock" | "off";
   congress: "ainvest" | "form4" | "mock" | "off";
   jupiter: "live-keyed" | "live-keyless" | "stub";
-  rpc: "helius" | "public";
+  rpc: "rpc" | "helius" | "public";
   wallet: "privy" | "unavailable";
   mocksAllowed: boolean;
 };
@@ -36,6 +39,7 @@ export function getAdapterStatus(): AdapterStatus {
     form4: present(process.env.FORM4API_KEY),
     jupiter: present(process.env.JUPITER_API_KEY),
     helius: present(process.env.HELIUS_API_KEY),
+    rpc: rpcConfigured(),
     privy: present(process.env.NEXT_PUBLIC_PRIVY_APP_ID) || present(process.env.NEXT_PUBLIC_PRIVY_APPID),
     supabase:
       present(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
@@ -52,7 +56,7 @@ export function getRuntimeModes(): RuntimeModes {
     insiders: adapters.edgar ? "edgar" : adapters.form4 ? "form4" : mocks ? "mock" : "off",
     congress: adapters.ainvest ? "ainvest" : adapters.form4 ? "form4" : mocks ? "mock" : "off",
     jupiter: mode === "stub" ? "stub" : adapters.jupiter ? "live-keyed" : "live-keyless",
-    rpc: adapters.helius ? "helius" : "public",
+    rpc: getRpcProvider(),
     wallet: adapters.privy ? "privy" : "unavailable",
     mocksAllowed: mocks,
   };
