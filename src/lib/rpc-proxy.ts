@@ -25,17 +25,37 @@ function decoded(value: string): string {
   try { return decodeURIComponent(value); } catch { return value; }
 }
 
-function credentialEchoes(url: string): string[] {
-  const parsed = new URL(url);
-  const credentials = [parsed.username, parsed.password, ...parsed.searchParams.values()];
-  for (const segment of parsed.pathname.split("/")) {
-    if (decoded(segment).length >= 5) credentials.push(segment);
-  }
-  return [...new Set(credentials.flatMap(value => {
+function credentialEchoes(values: string[]): string[] {
+  return [...new Set(values.flatMap(value => {
     if (!value) return [];
     const plain = decoded(value);
     return [value, plain, encodeURIComponent(plain)];
   }).filter(Boolean))];
+}
+
+function urlCredentialEchoes(url: string): string[] {
+  const parsed = new URL(url);
+  return credentialEchoes([parsed.username, parsed.password, ...parsed.searchParams.values()]);
+}
+
+function pathCredentialEchoes(url: string): string[] {
+  const segments = new URL(url).pathname.split("/")
+    .filter(segment => decoded(segment).length >= 5);
+  return credentialEchoes(segments);
+}
+
+function jsonRpcErrorText(text: string): string {
+  try {
+    const payload: unknown = JSON.parse(text);
+    const responses = Array.isArray(payload) ? payload : [payload];
+    return responses
+      .map(response => object(response) && Object.hasOwn(response, "error")
+        ? JSON.stringify(response.error) ?? ""
+        : "")
+      .join("\n");
+  } catch {
+    return "";
+  }
 }
 
 function validEnvelope(call: Record<string, unknown>): boolean {
@@ -90,8 +110,11 @@ export async function handleRpcProxy(request: Request, options: {
     });
     if (!upstream.ok) throw new Error("UPSTREAM_HTTP_ERROR");
     const text = await upstream.text();
+    const errorText = jsonRpcErrorText(text);
     // An upstream diagnostic must not echo its credential or private request URL into the browser.
-    if (text.includes(url) || credentialEchoes(url).some(credential => text.includes(credential))) {
+    if (text.includes(url)
+      || urlCredentialEchoes(url).some(credential => text.includes(credential))
+      || pathCredentialEchoes(url).some(credential => errorText.includes(credential))) {
       throw new Error("UPSTREAM_CREDENTIAL_ECHO");
     }
     return new Response(text, { status: upstream.status, headers: {

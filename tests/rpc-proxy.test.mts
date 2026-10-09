@@ -106,21 +106,31 @@ test("proxy preserves relay and batch payloads but never signs or returns server
   assert.equal(response.headers.get("X-Stocklana-Rpc"), "helius");
   assert.deepEqual((await response.json()).map((r: { id: string }) => r.id), ["a", "b"]);
 
-  const successful = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), {
-    ...options,
-    upstream: () => pathUpstream,
-    fetcher: async () => Response.json({ jsonrpc: "2.0", id: 1, result: blockhash }),
-  });
-  assert.equal(successful.status, 200);
-  assert.deepEqual(await successful.json(), { jsonrpc: "2.0", id: 1, result: blockhash });
+  for (const [successfulUpstream, result] of [
+    [`https://rpc.example.invalid/jsonrpc/${encodeURIComponent(pathCredential)}/`, blockhash],
+    [`https://rpc.example.invalid/solana/${encodeURIComponent(pathCredential)}/`, { "solana-core": "2.3.7" }],
+  ] as const) {
+    const successful = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), {
+      ...options,
+      upstream: () => successfulUpstream,
+      fetcher: async () => Response.json({ jsonrpc: "2.0", id: 1, result }),
+    });
+    assert.equal(successful.status, 200);
+    assert.deepEqual(await successful.json(), { jsonrpc: "2.0", id: 1, result });
+  }
 
   for (const fetcher of [
     async () => { throw new Error("Failed at " + upstream); },
     async () => new Response("Upstream diagnostic containing " + key, { status: 401 }),
     async () => Response.json({ jsonrpc: "2.0", id: 1, error: { code: -32000, message: pathCredential + " invalid" } }),
+    async () => Response.json({ jsonrpc: "2.0", id: 1, error: { code: -32000, message: "Invalid token", data: { detail: encodeURIComponent(pathCredential) } } }),
     async () => Response.json([
       { jsonrpc: "2.0", id: "a", error: { code: -32000, message: encodeURIComponent(pathCredential) + " invalid" } },
       { jsonrpc: "2.0", id: "b", result: blockhash },
+    ]),
+    async () => Response.json([
+      { jsonrpc: "2.0", id: "a", result: blockhash },
+      { jsonrpc: "2.0", id: "b", error: { code: -32000, message: "Invalid token", data: pathCredential } },
     ]),
   ]) {
     const refused = await handleRpcProxy(request({ jsonrpc: "2.0", id: 1, method: "getGenesisHash", params: [] }), {
