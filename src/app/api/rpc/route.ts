@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getHeliusRpcUrl, heliusConfigured } from "@/lib/helius";
+import { getHeliusRpcUrl, getRpcProvider } from "@/lib/helius";
 import { handleRpcProxy } from "@/lib/rpc-proxy";
 
 export const dynamic = "force-dynamic";
@@ -9,10 +9,10 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   return handleRpcProxy(request, {
     upstream: getHeliusRpcUrl,
-    provider: heliusConfigured() ? "helius" : "public",
+    provider: getRpcProvider(),
   });
 }
 
 export async function GET() {
-  return NextResponse.json({ rpc: heliusConfigured() ? "helius" : "public" });
+  return NextResponse.json({ rpc: getRpcProvider() });
 }

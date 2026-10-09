@@ -54,7 +54,7 @@ function allowed(call: unknown): boolean {
  * permits offline HTTP-contract tests; no key, environment lookup, signing or database access here. */
 export async function handleRpcProxy(request: Request, options: {
   upstream: () => string;
-  provider: "helius" | "public";
+  provider: "rpc" | "helius" | "public";
   fetcher?: typeof fetch;
 }): Promise<Response> {
   const headers = { "Cache-Control": "no-store" };
